@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Interest } from "@/lib/storage";
+import type { Interest } from "@/lib/types";
 
 type GoalsSelectorProps = {
   interests: Interest[];

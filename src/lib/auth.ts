@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { cookies } from "next/headers";
-import { findModeratorByEmail } from "@/lib/storage";
+import { getAdminByEmail, getModeratorByEmail } from "@/lib/db";
 
 const sessionCookie = "rfts_session";
 
@@ -11,6 +11,10 @@ export const verifyAdminCredentials = async (
   email: string,
   password: string
 ) => {
+  const dbAdmin = await getAdminByEmail(email);
+  if (dbAdmin && dbAdmin.status === "active") {
+    return bcrypt.compare(password, dbAdmin.passwordHash);
+  }
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
   if (!adminEmail || !adminPasswordHash) {
@@ -26,7 +30,7 @@ export const verifyModeratorCredentials = async (
   email: string,
   password: string
 ) => {
-  const moderator = findModeratorByEmail(email);
+  const moderator = await getModeratorByEmail(email);
   if (!moderator || moderator.status !== "active") {
     return false;
   }
@@ -87,25 +91,29 @@ export const getSessionEmail = () => {
   return email;
 };
 
-export const getSessionRole = () => {
+export const getSessionRole = async () => {
   const email = getSessionEmail();
   if (!email) {
     return null;
+  }
+  const dbAdmin = await getAdminByEmail(email);
+  if (dbAdmin && dbAdmin.status === "active") {
+    return "admin";
   }
   const adminEmail = process.env.ADMIN_EMAIL;
   if (adminEmail && email.toLowerCase() === adminEmail.toLowerCase()) {
     return "admin";
   }
-  const moderator = findModeratorByEmail(email);
+  const moderator = await getModeratorByEmail(email);
   if (moderator && moderator.status === "active") {
     return "moderator";
   }
   return null;
 };
 
-export const isAdminSession = () => getSessionRole() === "admin";
+export const isAdminSession = async () => (await getSessionRole()) === "admin";
 
-export const isModeratorSession = () => {
-  const role = getSessionRole();
+export const isModeratorSession = async () => {
+  const role = await getSessionRole();
   return role === "moderator" || role === "admin";
 };

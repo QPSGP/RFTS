@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { Interest, LibraryItem } from "@/lib/storage";
+import type { Interest, LibraryItem } from "@/lib/types";
 
 const ADULT_KEY = "rfts_adult_consent";
 

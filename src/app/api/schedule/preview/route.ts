@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
-import { getLibrarySorted, getPlaybackSettings } from "@/lib/storage";
+import { getPlaybackSettings, listLibrary } from "@/lib/db";
 import { buildSchedulePreview } from "@/lib/scheduler";
 
 const schema = z.object({
@@ -11,7 +11,7 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -19,8 +19,8 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const library = getLibrarySorted();
-  const settings = getPlaybackSettings();
+  const library = await listLibrary();
+  const settings = await getPlaybackSettings();
   const schedule = buildSchedulePreview({
     interests: parsed.data.interests,
     library,

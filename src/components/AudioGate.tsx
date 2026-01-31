@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import AudioPlayer from "@/components/AudioPlayer";
-import type { LibraryItem } from "@/lib/storage";
+import type { LibraryItem } from "@/lib/types";
 
 const ADULT_KEY = "rfts_adult_consent";
 

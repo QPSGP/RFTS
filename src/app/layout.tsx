@@ -12,6 +12,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const stripeMode = process.env.NEXT_PUBLIC_STRIPE_MODE;
   return (
     <html lang="en">
       <body>
@@ -41,6 +42,19 @@ export default function RootLayout({
             </nav>
           </div>
         </header>
+        {stripeMode === "demo" && (
+          <div
+            style={{
+              background: "#fef3c7",
+              color: "#92400e",
+              padding: "10px 16px",
+              textAlign: "center",
+              borderBottom: "1px solid #fde68a"
+            }}
+          >
+            Stripe is in demo mode. Use test cards only.
+          </div>
+        )}
         {children}
       </body>
     </html>

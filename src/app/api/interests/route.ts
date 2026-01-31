@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
-import { getInterests, saveInterests } from "@/lib/storage";
+import {
+  createInterest,
+  deleteInterest,
+  listInterests,
+  updateInterest
+} from "@/lib/db";
 
 const createSchema = z.object({
   name: z.string().min(2),
@@ -19,14 +24,14 @@ const deleteSchema = z.object({
 });
 
 export async function GET() {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-  return NextResponse.json({ interests: getInterests() });
+  return NextResponse.json({ interests: await listInterests() });
 }
 
 export async function POST(request: Request) {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -34,20 +39,12 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const interests = getInterests();
-  const record = {
-    id: crypto.randomUUID(),
-    name: parsed.data.name,
-    description: parsed.data.description || "",
-    createdAt: new Date().toISOString()
-  };
-  interests.unshift(record);
-  saveInterests(interests);
+  const record = await createInterest(parsed.data.name, parsed.data.description);
   return NextResponse.json({ ok: true, record });
 }
 
 export async function PATCH(request: Request) {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -55,22 +52,19 @@ export async function PATCH(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const interests = getInterests();
-  const index = interests.findIndex((item) => item.id === parsed.data.id);
-  if (index === -1) {
+  const record = await updateInterest(
+    parsed.data.id,
+    parsed.data.name,
+    parsed.data.description
+  );
+  if (!record) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
-  interests[index] = {
-    ...interests[index],
-    name: parsed.data.name,
-    description: parsed.data.description || ""
-  };
-  saveInterests(interests);
   return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(request: Request) {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -78,7 +72,6 @@ export async function DELETE(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const interests = getInterests().filter((item) => item.id !== parsed.data.id);
-  saveInterests(interests);
+  await deleteInterest(parsed.data.id);
   return NextResponse.json({ ok: true });
 }

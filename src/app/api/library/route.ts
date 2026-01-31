@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
-import { getLibrary, saveLibrary } from "@/lib/storage";
+import {
+  createLibraryItem,
+  deleteLibraryItem,
+  listLibrary,
+  reorderLibraryItems,
+  updateLibraryItem
+} from "@/lib/db";
 
 const createSchema = z.object({
   title: z.string().min(2),
@@ -33,14 +39,14 @@ const reorderSchema = z.object({
 });
 
 export async function GET() {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-  return NextResponse.json({ library: getLibrary() });
+  return NextResponse.json({ library: await listLibrary() });
 }
 
 export async function POST(request: Request) {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -48,21 +54,19 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const library = getLibrary();
-  const maxOrder = library.reduce((max, item) => Math.max(max, item.order), 0);
-  const record = {
-    id: crypto.randomUUID(),
-    ...parsed.data,
-    createdAt: new Date().toISOString(),
-    order: maxOrder + 1
-  };
-  library.push(record);
-  saveLibrary(library);
+  const record = await createLibraryItem({
+    title: parsed.data.title,
+    description: parsed.data.description,
+    coverUrl: parsed.data.coverUrl,
+    audioUrl: parsed.data.audioUrl,
+    interestIds: parsed.data.interestIds,
+    allowedUserEmails: parsed.data.allowedUserEmails
+  });
   return NextResponse.json({ ok: true, record });
 }
 
 export async function PATCH(request: Request) {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -70,18 +74,25 @@ export async function PATCH(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const library = getLibrary();
-  const index = library.findIndex((item) => item.id === parsed.data.id);
-  if (index === -1) {
+  const record = await updateLibraryItem({
+    id: parsed.data.id,
+    title: parsed.data.title,
+    description: parsed.data.description,
+    coverUrl: parsed.data.coverUrl,
+    audioUrl: parsed.data.audioUrl,
+    interestIds: parsed.data.interestIds,
+    allowedUserEmails: parsed.data.allowedUserEmails,
+    order: parsed.data.order,
+    isAdult: parsed.data.isAdult
+  });
+  if (!record) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
-  library[index] = { ...library[index], ...parsed.data };
-  saveLibrary(library);
   return NextResponse.json({ ok: true });
 }
 
 export async function PUT(request: Request) {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -89,18 +100,12 @@ export async function PUT(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const library = getLibrary();
-  const orderMap = new Map(parsed.data.orderedIds.map((id, index) => [id, index + 1]));
-  const reordered = library.map((item) => ({
-    ...item,
-    order: orderMap.get(item.id) ?? item.order
-  }));
-  saveLibrary(reordered);
+  await reorderLibraryItems(parsed.data.orderedIds);
   return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(request: Request) {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -108,7 +113,6 @@ export async function DELETE(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const library = getLibrary().filter((item) => item.id !== parsed.data.id);
-  saveLibrary(library);
+  await deleteLibraryItem(parsed.data.id);
   return NextResponse.json({ ok: true });
 }

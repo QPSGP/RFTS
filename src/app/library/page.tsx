@@ -1,10 +1,12 @@
-import { getInterests, getLibrarySorted } from "@/lib/storage";
+import { listInterests, listLibrary } from "@/lib/db";
 import LibraryBrowser from "@/components/LibraryBrowser";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 
-export default function LibraryPage() {
-  const library = getLibrarySorted();
-  const interests = getInterests();
+export default async function LibraryPage() {
+  const [library, interests] = await Promise.all([
+    listLibrary(),
+    listInterests()
+  ]);
 
   return (
     <main>

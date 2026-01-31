@@ -1,15 +1,14 @@
 import { notFound } from "next/navigation";
 import AudioGate from "@/components/AudioGate";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
-import { getLibrarySorted } from "@/lib/storage";
+import { getLibraryItem } from "@/lib/db";
 
 type PageProps = {
   params: { id: string };
 };
 
-export default function LibraryItemPage({ params }: PageProps) {
-  const library = getLibrarySorted();
-  const item = library.find((track) => track.id === params.id);
+export default async function LibraryItemPage({ params }: PageProps) {
+  const item = await getLibraryItem(params.id);
 
   if (!item) {
     notFound();

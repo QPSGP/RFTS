@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
-import { getModerationQueue, saveModerationQueue } from "@/lib/storage";
+import {
+  createModerationItem,
+  listModerationQueue,
+  updateModerationItem
+} from "@/lib/db";
 
 const submitSchema = z.object({
   title: z.string().min(2),
@@ -15,10 +19,10 @@ const updateSchema = z.object({
 });
 
 export async function GET() {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-  const queue = getModerationQueue();
+  const queue = await listModerationQueue();
   return NextResponse.json({ queue });
 }
 
@@ -32,20 +36,12 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const queue = getModerationQueue();
-  const record = {
-    id: crypto.randomUUID(),
-    ...parsed.data,
-    submittedAt: new Date().toISOString(),
-    status: "pending" as const
-  };
-  queue.unshift(record);
-  saveModerationQueue(queue);
+  const record = await createModerationItem(parsed.data);
   return NextResponse.json({ ok: true, record });
 }
 
 export async function PATCH(request: Request) {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -53,16 +49,13 @@ export async function PATCH(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const queue = getModerationQueue();
-  const index = queue.findIndex((item) => item.id === parsed.data.id);
-  if (index === -1) {
-    return NextResponse.json({ error: "Not found." }, { status: 404 });
-  }
-  queue[index] = {
-    ...queue[index],
+  const record = await updateModerationItem({
+    id: parsed.data.id,
     status: parsed.data.status,
     notes: parsed.data.notes
-  };
-  saveModerationQueue(queue);
+  });
+  if (!record) {
+    return NextResponse.json({ error: "Not found." }, { status: 404 });
+  }
   return NextResponse.json({ ok: true });
 }

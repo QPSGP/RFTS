@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
-import {
-  getModeratorApplications,
-  saveModeratorApplications
-} from "@/lib/storage";
+import { createModeratorApplication, listModeratorApplications } from "@/lib/db";
 
 const createSchema = z.object({
   name: z.string().min(2),
@@ -15,10 +12,10 @@ const createSchema = z.object({
 });
 
 export async function GET() {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-  return NextResponse.json({ applications: getModeratorApplications() });
+  return NextResponse.json({ applications: await listModeratorApplications() });
 }
 
 export async function POST(request: Request) {
@@ -27,18 +24,12 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const applications = getModeratorApplications();
-  const record = {
-    id: crypto.randomUUID(),
+  await createModeratorApplication({
     name: parsed.data.name,
     email: parsed.data.email,
     focusAreas: parsed.data.focusAreas,
     experience: parsed.data.experience,
-    links: parsed.data.links || "",
-    submittedAt: new Date().toISOString(),
-    status: "pending" as const
-  };
-  applications.push(record);
-  saveModeratorApplications(applications);
+    links: parsed.data.links || ""
+  });
   return NextResponse.json({ ok: true });
 }

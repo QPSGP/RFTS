@@ -1,8 +1,8 @@
-import { getInterests } from "@/lib/storage";
+import { listInterests } from "@/lib/db";
 import GoalsSelector from "@/components/GoalsSelector";
 
-export default function GoalsPage() {
-  const interests = getInterests();
+export default async function GoalsPage() {
+  const interests = await listInterests();
 
   return (
     <main>

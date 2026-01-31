@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
-import { getSubscriptionPlans, saveSubscriptionPlans } from "@/lib/storage";
+import { listSubscriptionPlans, saveSubscriptionPlans } from "@/lib/db";
 
 const planSchema = z.object({
   id: z.string(),
@@ -16,11 +16,11 @@ const updateSchema = z.object({
 });
 
 export async function GET() {
-  return NextResponse.json({ plans: getSubscriptionPlans() });
+  return NextResponse.json({ plans: await listSubscriptionPlans() });
 }
 
 export async function PUT(request: Request) {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -28,6 +28,6 @@ export async function PUT(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  saveSubscriptionPlans(parsed.data.plans);
+  await saveSubscriptionPlans(parsed.data.plans);
   return NextResponse.json({ ok: true });
 }

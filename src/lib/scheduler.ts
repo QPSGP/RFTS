@@ -1,4 +1,4 @@
-import type { LibraryItem, PlaybackSettings } from "@/lib/storage";
+import type { LibraryItem, PlaybackSettings } from "@/lib/types";
 
 export type ScheduleNight = {
   night: number;

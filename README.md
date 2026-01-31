@@ -11,9 +11,11 @@ moderation workflows, and admin tooling.
 
 ## Admin Credentials
 
-- Set `ADMIN_EMAIL` and `ADMIN_PASSWORD_HASH`.
+- You can either set `ADMIN_EMAIL` and `ADMIN_PASSWORD_HASH` (legacy), or create
+  the first admin account at `/admin/setup`.
 - To generate a bcrypt hash, run:
   - `node -e "const bcrypt=require('bcryptjs'); console.log(bcrypt.hashSync('YourPassword', 10));"`
+ - Optional: set `ADMIN_SETUP_TOKEN` to require a token on `/admin/setup`.
 
 ## Crypto Payments
 
@@ -23,6 +25,8 @@ to the configured `NEXT_PUBLIC_TREASURY_ADDRESS`.
 ## Fiat Payments (Stripe)
 
 - Set `STRIPE_SECRET_KEY` and plan price IDs.
+- Set `STRIPE_MODE=demo` for test keys (guardrail against live keys).
+- Set `NEXT_PUBLIC_STRIPE_MODE=demo` to show a demo banner in the UI.
 - Plans support trials via `NEXT_PUBLIC_STRIPE_TRIAL_*`.
 - The "Start Trial" button uses Stripe Checkout in subscription mode.
 - Set `NEXT_PUBLIC_SITE_URL` for correct redirect URLs.
@@ -36,4 +40,9 @@ Creator submissions are accepted via `POST /api/moderators` with header
 
 - Sessions are signed with `SESSION_SECRET` and stored in HTTP-only cookies.
 - Admin endpoints require a valid session.
-- For production, replace JSON file storage with a real database and add rate limits.
+- Add rate limits to public/admin endpoints before production.
+
+## Admin Data Persistence
+
+- Admin content (library, interests, affiliates, moderation, moderators, plans, playback settings) now uses Postgres tables.
+- Run `scripts/schema.sql` against your Vercel Postgres instance before first use.

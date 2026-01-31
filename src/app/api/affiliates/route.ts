@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
-import { getAffiliates, saveAffiliates } from "@/lib/storage";
+import { createAffiliate, listAffiliates, updateAffiliateStatus } from "@/lib/db";
 
 const createSchema = z.object({
   name: z.string().min(2),
@@ -15,10 +15,10 @@ const updateSchema = z.object({
 });
 
 export async function GET() {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-  const affiliates = getAffiliates();
+  const affiliates = await listAffiliates();
   return NextResponse.json({ affiliates });
 }
 
@@ -28,20 +28,12 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const affiliates = getAffiliates();
-  const record = {
-    id: crypto.randomUUID(),
-    ...parsed.data,
-    createdAt: new Date().toISOString(),
-    status: "pending" as const
-  };
-  affiliates.unshift(record);
-  saveAffiliates(affiliates);
+  const record = await createAffiliate(parsed.data);
   return NextResponse.json({ ok: true, record });
 }
 
 export async function PATCH(request: Request) {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -49,12 +41,9 @@ export async function PATCH(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const affiliates = getAffiliates();
-  const index = affiliates.findIndex((item) => item.id === parsed.data.id);
-  if (index === -1) {
+  const record = await updateAffiliateStatus(parsed.data.id, parsed.data.status);
+  if (!record) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
-  affiliates[index] = { ...affiliates[index], status: parsed.data.status };
-  saveAffiliates(affiliates);
   return NextResponse.json({ ok: true });
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { SubscriptionPlan } from "@/lib/storage";
+import type { SubscriptionPlan } from "@/lib/types";
 
 const inputStyle = {
   padding: 10,

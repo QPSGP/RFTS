@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { SubscriptionPlan } from "@/lib/storage";
+import type { SubscriptionPlan } from "@/lib/types";
 
 type SubscriptionSelectionProps = {
   plans: SubscriptionPlan[];

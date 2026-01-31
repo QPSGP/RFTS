@@ -1,4 +1,5 @@
 import LoginForm from "@/components/LoginForm";
+import AdminSetupHint from "@/components/AdminSetupHint";
 
 export default function LoginPage() {
   return (
@@ -7,6 +8,7 @@ export default function LoginPage() {
         <h1>Admin Access</h1>
         <p>Sign in to manage affiliates, moderation, and crypto settings.</p>
       </section>
+      <AdminSetupHint />
       <LoginForm />
     </main>
   );

@@ -1,4 +1,22 @@
+import crypto from "crypto";
 import { sql } from "@vercel/postgres";
+import type {
+  AdminAccount,
+  AffiliateRecord,
+  Interest,
+  LibraryItem,
+  ModerationItem,
+  ModeratorAccount,
+  ModeratorApplication,
+  PlaybackSettings,
+  SubscriptionPlan
+} from "@/lib/types";
+import {
+  buildLibrarySeedFromAssets,
+  defaultInterests,
+  defaultPlaybackSettings,
+  defaultSubscriptionPlans
+} from "@/lib/content-seed";
 
 export type DbUser = {
   id: string;
@@ -109,4 +127,601 @@ export const listUsers = async () => {
     ORDER BY u.created_at DESC
   `;
   return rows;
+};
+
+export const getAdminCount = async () => {
+  const { rows } = await sql<{ count: number }>`
+    SELECT COUNT(*)::int AS count FROM admins
+  `;
+  return rows[0]?.count || 0;
+};
+
+export const getAdminByEmail = async (email: string) => {
+  const { rows } = await sql<AdminAccount>`
+    SELECT
+      id,
+      email,
+      password_hash as "passwordHash",
+      status,
+      created_at as "createdAt"
+    FROM admins
+    WHERE LOWER(email) = LOWER(${email})
+    LIMIT 1
+  `;
+  return rows[0] || null;
+};
+
+export const createAdmin = async (email: string, passwordHash: string) => {
+  const { rows } = await sql<AdminAccount>`
+    INSERT INTO admins (email, password_hash, status)
+    VALUES (${email}, ${passwordHash}, 'active')
+    RETURNING
+      id,
+      email,
+      password_hash as "passwordHash",
+      status,
+      created_at as "createdAt"
+  `;
+  return rows[0];
+};
+
+const toPgArray = (values: string[]) => {
+  if (!values || values.length === 0) {
+    return "{}";
+  }
+  const escaped = values.map((value) =>
+    `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`
+  );
+  return `{${escaped.join(",")}}`;
+};
+
+const ensureInterestsSeeded = async () => {
+  const { rows } = await sql<{ count: number }>`
+    SELECT COUNT(*)::int AS count FROM interests
+  `;
+  if (rows[0]?.count) {
+    return;
+  }
+  await Promise.all(
+    defaultInterests.map((interest) =>
+      sql`
+        INSERT INTO interests (id, name, description, created_at)
+        VALUES (${interest.id}, ${interest.name}, ${interest.description || ""}, ${interest.createdAt})
+        ON CONFLICT (id) DO NOTHING
+      `
+    )
+  );
+};
+
+const ensureSubscriptionPlansSeeded = async () => {
+  const { rows } = await sql<{ count: number }>`
+    SELECT COUNT(*)::int AS count FROM subscription_plans
+  `;
+  if (rows[0]?.count) {
+    return;
+  }
+  await Promise.all(
+    defaultSubscriptionPlans.map((plan) =>
+      sql`
+        INSERT INTO subscription_plans (id, name, price_id, trial_days, description)
+        VALUES (${plan.id}, ${plan.name}, ${plan.priceId}, ${plan.trialDays}, ${plan.description})
+        ON CONFLICT (id) DO NOTHING
+      `
+    )
+  );
+};
+
+const ensurePlaybackSettingsSeeded = async () => {
+  const { rows } = await sql<{ count: number }>`
+    SELECT COUNT(*)::int AS count FROM playback_settings
+  `;
+  if (rows[0]?.count) {
+    return;
+  }
+  const settings = defaultPlaybackSettings;
+  await sql`
+    INSERT INTO playback_settings
+      (id, plays_per_recording, nightly_gap_hours, add_new_track_every_nights, initial_tracks, cgmr_track_id, fallback_track_id)
+    VALUES
+      (1, ${settings.playsPerRecording}, ${settings.nightlyGapHours}, ${settings.addNewTrackEveryNights},
+       ${settings.initialTracks}, ${settings.cgmrTrackId}, ${settings.fallbackTrackId})
+    ON CONFLICT (id) DO NOTHING
+  `;
+};
+
+const ensureLibrarySeeded = async () => {
+  const { rows } = await sql<{ count: number }>`
+    SELECT COUNT(*)::int AS count FROM library_items
+  `;
+  if (rows[0]?.count) {
+    return;
+  }
+  const seedItems = buildLibrarySeedFromAssets();
+  if (seedItems.length === 0) {
+    return;
+  }
+  await Promise.all(
+    seedItems.map((item) =>
+      sql`
+        INSERT INTO library_items
+          (title, description, cover_url, audio_url, interest_ids, allowed_user_emails, order_index, is_adult)
+        VALUES
+          (${item.title}, ${item.description}, ${item.coverUrl}, ${item.audioUrl},
+           ${toPgArray(item.interestIds)}::text[], ${toPgArray(item.allowedUserEmails)}::text[],
+           ${item.order}, ${item.isAdult})
+      `
+    )
+  );
+};
+
+export const listInterests = async () => {
+  await ensureInterestsSeeded();
+  const { rows } = await sql<Interest>`
+    SELECT id, name, description, created_at as "createdAt"
+    FROM interests
+    ORDER BY created_at DESC
+  `;
+  return rows;
+};
+
+export const createInterest = async (name: string, description?: string) => {
+  const id = crypto.randomUUID();
+  const { rows } = await sql<Interest>`
+    INSERT INTO interests (id, name, description, created_at)
+    VALUES (${id}, ${name}, ${description || ""}, now())
+    RETURNING id, name, description, created_at as "createdAt"
+  `;
+  return rows[0];
+};
+
+export const updateInterest = async (id: string, name: string, description?: string) => {
+  const { rows } = await sql<Interest>`
+    UPDATE interests
+    SET name = ${name}, description = ${description || ""}
+    WHERE id = ${id}
+    RETURNING id, name, description, created_at as "createdAt"
+  `;
+  return rows[0] || null;
+};
+
+export const deleteInterest = async (id: string) => {
+  await sql`DELETE FROM interests WHERE id = ${id}`;
+};
+
+export const listLibrary = async () => {
+  await ensureLibrarySeeded();
+  const { rows } = await sql<LibraryItem>`
+    SELECT
+      id,
+      title,
+      description,
+      cover_url as "coverUrl",
+      audio_url as "audioUrl",
+      COALESCE(interest_ids, ARRAY[]::text[]) as "interestIds",
+      COALESCE(allowed_user_emails, ARRAY[]::text[]) as "allowedUserEmails",
+      created_at as "createdAt",
+      order_index as "order",
+      is_adult as "isAdult"
+    FROM library_items
+    ORDER BY order_index ASC
+  `;
+  return rows;
+};
+
+export const getLibraryItem = async (id: string) => {
+  await ensureLibrarySeeded();
+  const { rows } = await sql<LibraryItem>`
+    SELECT
+      id,
+      title,
+      description,
+      cover_url as "coverUrl",
+      audio_url as "audioUrl",
+      COALESCE(interest_ids, ARRAY[]::text[]) as "interestIds",
+      COALESCE(allowed_user_emails, ARRAY[]::text[]) as "allowedUserEmails",
+      created_at as "createdAt",
+      order_index as "order",
+      is_adult as "isAdult"
+    FROM library_items
+    WHERE id = ${id}
+    LIMIT 1
+  `;
+  return rows[0] || null;
+};
+
+export const createLibraryItem = async (payload: {
+  title: string;
+  description: string;
+  coverUrl: string;
+  audioUrl: string;
+  interestIds: string[];
+  allowedUserEmails: string[];
+}) => {
+  const { rows: orderRows } = await sql<{ max: number }>`
+    SELECT COALESCE(MAX(order_index), 0)::int as max FROM library_items
+  `;
+  const order = (orderRows[0]?.max || 0) + 1;
+  const { rows } = await sql<LibraryItem>`
+    INSERT INTO library_items
+      (title, description, cover_url, audio_url, interest_ids, allowed_user_emails, order_index, is_adult)
+    VALUES
+      (${payload.title}, ${payload.description}, ${payload.coverUrl}, ${payload.audioUrl},
+       ${toPgArray(payload.interestIds)}::text[], ${toPgArray(payload.allowedUserEmails)}::text[],
+       ${order}, false)
+    RETURNING
+      id,
+      title,
+      description,
+      cover_url as "coverUrl",
+      audio_url as "audioUrl",
+      COALESCE(interest_ids, ARRAY[]::text[]) as "interestIds",
+      COALESCE(allowed_user_emails, ARRAY[]::text[]) as "allowedUserEmails",
+      created_at as "createdAt",
+      order_index as "order",
+      is_adult as "isAdult"
+  `;
+  return rows[0];
+};
+
+export const updateLibraryItem = async (payload: {
+  id: string;
+  title: string;
+  description: string;
+  coverUrl: string;
+  audioUrl: string;
+  interestIds: string[];
+  allowedUserEmails: string[];
+  order?: number;
+  isAdult?: boolean;
+}) => {
+  const { rows } = await sql<LibraryItem>`
+    UPDATE library_items
+    SET
+      title = ${payload.title},
+      description = ${payload.description},
+      cover_url = ${payload.coverUrl},
+      audio_url = ${payload.audioUrl},
+      interest_ids = ${toPgArray(payload.interestIds)}::text[],
+      allowed_user_emails = ${toPgArray(payload.allowedUserEmails)}::text[],
+      order_index = COALESCE(${payload.order ?? null}, order_index),
+      is_adult = COALESCE(${payload.isAdult ?? null}, is_adult)
+    WHERE id = ${payload.id}
+    RETURNING
+      id,
+      title,
+      description,
+      cover_url as "coverUrl",
+      audio_url as "audioUrl",
+      COALESCE(interest_ids, ARRAY[]::text[]) as "interestIds",
+      COALESCE(allowed_user_emails, ARRAY[]::text[]) as "allowedUserEmails",
+      created_at as "createdAt",
+      order_index as "order",
+      is_adult as "isAdult"
+  `;
+  return rows[0] || null;
+};
+
+export const reorderLibraryItems = async (orderedIds: string[]) => {
+  await Promise.all(
+    orderedIds.map((id, index) =>
+      sql`UPDATE library_items SET order_index = ${index + 1} WHERE id = ${id}`
+    )
+  );
+};
+
+export const deleteLibraryItem = async (id: string) => {
+  await sql`DELETE FROM library_items WHERE id = ${id}`;
+};
+
+export const listAffiliates = async () => {
+  const { rows } = await sql<AffiliateRecord>`
+    SELECT
+      id,
+      name,
+      email,
+      payout_address as "payoutAddress",
+      created_at as "createdAt",
+      status
+    FROM affiliate_applications
+    ORDER BY created_at DESC
+  `;
+  return rows;
+};
+
+export const createAffiliate = async (payload: {
+  name: string;
+  email: string;
+  payoutAddress: string;
+}) => {
+  const { rows } = await sql<AffiliateRecord>`
+    INSERT INTO affiliate_applications (name, email, payout_address, status)
+    VALUES (${payload.name}, ${payload.email}, ${payload.payoutAddress}, 'pending')
+    RETURNING
+      id,
+      name,
+      email,
+      payout_address as "payoutAddress",
+      created_at as "createdAt",
+      status
+  `;
+  return rows[0];
+};
+
+export const updateAffiliateStatus = async (id: string, status: AffiliateRecord["status"]) => {
+  const { rows } = await sql<AffiliateRecord>`
+    UPDATE affiliate_applications
+    SET status = ${status}
+    WHERE id = ${id}
+    RETURNING
+      id,
+      name,
+      email,
+      payout_address as "payoutAddress",
+      created_at as "createdAt",
+      status
+  `;
+  return rows[0] || null;
+};
+
+export const listModerationQueue = async () => {
+  const { rows } = await sql<ModerationItem>`
+    SELECT
+      id,
+      title,
+      creator,
+      submitted_at as "submittedAt",
+      status,
+      notes
+    FROM moderation_queue
+    ORDER BY submitted_at DESC
+  `;
+  return rows;
+};
+
+export const createModerationItem = async (payload: { title: string; creator: string }) => {
+  const { rows } = await sql<ModerationItem>`
+    INSERT INTO moderation_queue (title, creator, status)
+    VALUES (${payload.title}, ${payload.creator}, 'pending')
+    RETURNING
+      id,
+      title,
+      creator,
+      submitted_at as "submittedAt",
+      status,
+      notes
+  `;
+  return rows[0];
+};
+
+export const updateModerationItem = async (payload: {
+  id: string;
+  status: ModerationItem["status"];
+  notes?: string;
+}) => {
+  const { rows } = await sql<ModerationItem>`
+    UPDATE moderation_queue
+    SET status = ${payload.status}, notes = ${payload.notes || null}
+    WHERE id = ${payload.id}
+    RETURNING
+      id,
+      title,
+      creator,
+      submitted_at as "submittedAt",
+      status,
+      notes
+  `;
+  return rows[0] || null;
+};
+
+export const listModeratorApplications = async () => {
+  const { rows } = await sql<ModeratorApplication>`
+    SELECT
+      id,
+      name,
+      email,
+      focus_areas as "focusAreas",
+      experience,
+      links,
+      submitted_at as "submittedAt",
+      status
+    FROM moderator_applications
+    ORDER BY submitted_at DESC
+  `;
+  return rows;
+};
+
+export const createModeratorApplication = async (payload: {
+  name: string;
+  email: string;
+  focusAreas: string;
+  experience: string;
+  links?: string;
+}) => {
+  const { rows } = await sql<ModeratorApplication>`
+    INSERT INTO moderator_applications
+      (name, email, focus_areas, experience, links, status)
+    VALUES
+      (${payload.name}, ${payload.email}, ${payload.focusAreas}, ${payload.experience}, ${
+    payload.links || ""
+  }, 'pending')
+    RETURNING
+      id,
+      name,
+      email,
+      focus_areas as "focusAreas",
+      experience,
+      links,
+      submitted_at as "submittedAt",
+      status
+  `;
+  return rows[0];
+};
+
+export const updateModeratorApplicationStatus = async (
+  id: string,
+  status: ModeratorApplication["status"]
+) => {
+  const { rows } = await sql<ModeratorApplication>`
+    UPDATE moderator_applications
+    SET status = ${status}
+    WHERE id = ${id}
+    RETURNING
+      id,
+      name,
+      email,
+      focus_areas as "focusAreas",
+      experience,
+      links,
+      submitted_at as "submittedAt",
+      status
+  `;
+  return rows[0] || null;
+};
+
+export const listModerators = async () => {
+  const { rows } = await sql<ModeratorAccount>`
+    SELECT
+      id,
+      name,
+      email,
+      password_hash as "passwordHash",
+      COALESCE(assigned_user_emails, ARRAY[]::text[]) as "assignedUserEmails",
+      status,
+      created_at as "createdAt"
+    FROM moderators
+    ORDER BY created_at DESC
+  `;
+  return rows;
+};
+
+export const getModeratorByEmail = async (email: string) => {
+  const { rows } = await sql<ModeratorAccount>`
+    SELECT
+      id,
+      name,
+      email,
+      password_hash as "passwordHash",
+      COALESCE(assigned_user_emails, ARRAY[]::text[]) as "assignedUserEmails",
+      status,
+      created_at as "createdAt"
+    FROM moderators
+    WHERE LOWER(email) = LOWER(${email})
+    LIMIT 1
+  `;
+  return rows[0] || null;
+};
+
+export const createModeratorAccount = async (payload: {
+  name: string;
+  email: string;
+  passwordHash: string;
+  assignedUserEmails: string[];
+}) => {
+  const { rows } = await sql<ModeratorAccount>`
+    INSERT INTO moderators
+      (name, email, password_hash, assigned_user_emails, status)
+    VALUES
+      (${payload.name}, ${payload.email}, ${payload.passwordHash},
+       ${toPgArray(payload.assignedUserEmails)}::text[], 'active')
+    RETURNING
+      id,
+      name,
+      email,
+      password_hash as "passwordHash",
+      COALESCE(assigned_user_emails, ARRAY[]::text[]) as "assignedUserEmails",
+      status,
+      created_at as "createdAt"
+  `;
+  return rows[0];
+};
+
+export const updateModeratorAccount = async (payload: {
+  moderatorId: string;
+  assignedUserEmails?: string[];
+  status?: ModeratorAccount["status"];
+  passwordHash?: string;
+}) => {
+  const { rows } = await sql<ModeratorAccount>`
+    UPDATE moderators
+    SET
+      assigned_user_emails = COALESCE(
+        ${payload.assignedUserEmails ? toPgArray(payload.assignedUserEmails) : null}::text[],
+        assigned_user_emails
+      ),
+      status = COALESCE(${payload.status ?? null}, status),
+      password_hash = COALESCE(${payload.passwordHash ?? null}, password_hash)
+    WHERE id = ${payload.moderatorId}
+    RETURNING
+      id,
+      name,
+      email,
+      password_hash as "passwordHash",
+      COALESCE(assigned_user_emails, ARRAY[]::text[]) as "assignedUserEmails",
+      status,
+      created_at as "createdAt"
+  `;
+  return rows[0] || null;
+};
+
+export const listSubscriptionPlans = async () => {
+  await ensureSubscriptionPlansSeeded();
+  const { rows } = await sql<SubscriptionPlan>`
+    SELECT id, name, price_id as "priceId", trial_days as "trialDays", description
+    FROM subscription_plans
+    ORDER BY id ASC
+  `;
+  return rows;
+};
+
+export const saveSubscriptionPlans = async (plans: SubscriptionPlan[]) => {
+  await Promise.all(
+    plans.map((plan) =>
+      sql`
+        INSERT INTO subscription_plans (id, name, price_id, trial_days, description)
+        VALUES (${plan.id}, ${plan.name}, ${plan.priceId}, ${plan.trialDays}, ${plan.description})
+        ON CONFLICT (id)
+        DO UPDATE SET
+          name = EXCLUDED.name,
+          price_id = EXCLUDED.price_id,
+          trial_days = EXCLUDED.trial_days,
+          description = EXCLUDED.description
+      `
+    )
+  );
+};
+
+export const getPlaybackSettings = async () => {
+  await ensurePlaybackSettingsSeeded();
+  const { rows } = await sql<PlaybackSettings>`
+    SELECT
+      plays_per_recording as "playsPerRecording",
+      nightly_gap_hours as "nightlyGapHours",
+      add_new_track_every_nights as "addNewTrackEveryNights",
+      initial_tracks as "initialTracks",
+      cgmr_track_id as "cgmrTrackId",
+      fallback_track_id as "fallbackTrackId"
+    FROM playback_settings
+    WHERE id = 1
+    LIMIT 1
+  `;
+  return rows[0] || defaultPlaybackSettings;
+};
+
+export const savePlaybackSettings = async (settings: PlaybackSettings) => {
+  await sql`
+    INSERT INTO playback_settings
+      (id, plays_per_recording, nightly_gap_hours, add_new_track_every_nights, initial_tracks, cgmr_track_id, fallback_track_id)
+    VALUES
+      (1, ${settings.playsPerRecording}, ${settings.nightlyGapHours},
+       ${settings.addNewTrackEveryNights}, ${settings.initialTracks},
+       ${settings.cgmrTrackId}, ${settings.fallbackTrackId})
+    ON CONFLICT (id)
+    DO UPDATE SET
+      plays_per_recording = EXCLUDED.plays_per_recording,
+      nightly_gap_hours = EXCLUDED.nightly_gap_hours,
+      add_new_track_every_nights = EXCLUDED.add_new_track_every_nights,
+      initial_tracks = EXCLUDED.initial_tracks,
+      cgmr_track_id = EXCLUDED.cgmr_track_id,
+      fallback_track_id = EXCLUDED.fallback_track_id
+  `;
 };

@@ -1,8 +1,8 @@
 import SubscriptionSelection from "@/components/SubscriptionSelection";
-import { getSubscriptionPlans } from "@/lib/storage";
+import { listSubscriptionPlans } from "@/lib/db";
 
-export default function SubscriptionSelectionPage() {
-  const plans = getSubscriptionPlans();
+export default async function SubscriptionSelectionPage() {
+  const plans = await listSubscriptionPlans();
   return (
     <div className="signup-shell">
       <div className="signup-card">

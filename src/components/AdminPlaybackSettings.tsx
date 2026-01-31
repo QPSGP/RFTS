@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { PlaybackSettings } from "@/lib/storage";
+import type { PlaybackSettings } from "@/lib/types";
 
 const inputStyle = {
   padding: 10,

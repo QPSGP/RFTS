@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
-import { getPlaybackSettings, savePlaybackSettings } from "@/lib/storage";
+import { getPlaybackSettings, savePlaybackSettings } from "@/lib/db";
 
 const schema = z.object({
   playsPerRecording: z.number().int().min(1).max(365),
@@ -13,11 +13,11 @@ const schema = z.object({
 });
 
 export async function GET() {
-  return NextResponse.json({ settings: getPlaybackSettings() });
+  return NextResponse.json({ settings: await getPlaybackSettings() });
 }
 
 export async function PUT(request: Request) {
-  if (!isAdminSession()) {
+  if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -25,6 +25,6 @@ export async function PUT(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  savePlaybackSettings(parsed.data);
+  await savePlaybackSettings(parsed.data);
   return NextResponse.json({ ok: true });
 }

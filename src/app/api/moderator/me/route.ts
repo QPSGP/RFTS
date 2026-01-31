@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { getSessionEmail, getSessionRole } from "@/lib/auth";
-import { findModeratorByEmail } from "@/lib/storage";
+import { getModeratorByEmail } from "@/lib/db";
 
 export async function GET() {
-  if (getSessionRole() !== "moderator") {
+  if ((await getSessionRole()) !== "moderator") {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const email = getSessionEmail();
   if (!email) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-  const moderator = findModeratorByEmail(email);
+  const moderator = await getModeratorByEmail(email);
   if (!moderator) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
