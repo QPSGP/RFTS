@@ -61,13 +61,19 @@ export const ensureSubscription = async (
 };
 
 export const setUserGoals = async (userId: string, goalIds: string[]) => {
-  const goalArray =
-    goalIds.length > 0
-      ? sql`ARRAY[${sql.join(goalIds)}]::text[]`
-      : sql`ARRAY[]::text[]`;
+  const toPgArray = (values: string[]) => {
+    if (values.length === 0) {
+      return "{}";
+    }
+    const escaped = values.map((value) =>
+      `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`
+    );
+    return `{${escaped.join(",")}}`;
+  };
+  const goalArray = toPgArray(goalIds);
   const { rows } = await sql<DbUser>`
     UPDATE users
-    SET goal_ids = ${goalArray}
+    SET goal_ids = ${goalArray}::text[]
     WHERE id = ${userId}
     RETURNING id, email, password_hash, goal_ids, created_at
   `;
