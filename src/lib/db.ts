@@ -63,7 +63,7 @@ export const ensureSubscription = async (
 export const setUserGoals = async (userId: string, goalIds: string[]) => {
   const { rows } = await sql<DbUser>`
     UPDATE users
-    SET goal_ids = ${goalIds}
+    SET goal_ids = ${sql.array(goalIds, "text")}
     WHERE id = ${userId}
     RETURNING id, email, password_hash, goal_ids, created_at
   `;
