@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 
 const schema = z.object({
   priceId: z.string().min(4),
@@ -14,6 +14,15 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+  }
+  let stripe;
+  try {
+    stripe = getStripe();
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Stripe unavailable." },
+      { status: 500 }
+    );
   }
   const { priceId, trialDays, successPath, cancelPath } = parsed.data;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
