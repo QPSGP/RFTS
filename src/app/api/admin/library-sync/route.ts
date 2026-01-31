@@ -40,11 +40,21 @@ const extractCode = (name: string) => {
 
 const getFileNameFromUrl = (url: string) => {
   if (!url) return "";
-  const last = url.split("/").pop() || "";
   try {
+    const parsed = new URL(url, "http://localhost");
+    const fileParam = parsed.searchParams.get("file");
+    if (fileParam) {
+      return fileParam;
+    }
+    const last = parsed.pathname.split("/").pop() || "";
     return decodeURIComponent(last);
   } catch {
-    return last;
+    const last = url.split("/").pop() || "";
+    try {
+      return decodeURIComponent(last);
+    } catch {
+      return last;
+    }
   }
 };
 
@@ -79,7 +89,7 @@ export async function POST() {
   let skipped = 0;
 
   for (const item of library) {
-    const fileName = getFileNameFromUrl(item.audioUrl);
+    const fileName = getFileNameFromUrl(item.audioUrl) || getFileNameFromUrl(item.coverUrl);
     const code = fileName ? extractCode(fileName) : null;
     if (!code) {
       skipped += 1;
