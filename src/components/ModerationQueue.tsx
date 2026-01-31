@@ -16,7 +16,7 @@ export default function ModerationQueue() {
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
-    const response = await fetch("/api/moderators");
+    const response = await fetch("/api/moderation-queue");
     if (!response.ok) {
       setError("Admin session required.");
       return;
@@ -30,7 +30,7 @@ export default function ModerationQueue() {
   }, []);
 
   const updateStatus = async (id: string, status: ModerationItem["status"]) => {
-    const response = await fetch("/api/moderators", {
+    const response = await fetch("/api/moderation-queue", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, status })

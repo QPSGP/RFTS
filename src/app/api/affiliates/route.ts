@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSessionEmail } from "@/lib/auth";
+import { isAdminSession } from "@/lib/auth";
 import { getAffiliates, saveAffiliates } from "@/lib/storage";
 
 const createSchema = z.object({
@@ -15,8 +15,7 @@ const updateSchema = z.object({
 });
 
 export async function GET() {
-  const sessionEmail = getSessionEmail();
-  if (!sessionEmail) {
+  if (!isAdminSession()) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const affiliates = getAffiliates();
@@ -42,8 +41,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const sessionEmail = getSessionEmail();
-  if (!sessionEmail) {
+  if (!isAdminSession()) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();

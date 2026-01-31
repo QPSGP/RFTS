@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+
 type AudioPlayerProps = {
   title: string;
   description: string;
@@ -13,6 +15,74 @@ export default function AudioPlayer({
   audioUrl,
   coverUrl
 }: AudioPlayerProps) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const [wakeLockSupported, setWakeLockSupported] = useState(true);
+  const [wakeLockActive, setWakeLockActive] = useState(false);
+
+  const releaseWakeLock = async () => {
+    try {
+      if (wakeLockRef.current) {
+        await wakeLockRef.current.release();
+        wakeLockRef.current = null;
+      }
+    } catch {
+      // Ignore wake lock release errors
+    } finally {
+      setWakeLockActive(false);
+    }
+  };
+
+  const requestWakeLock = async () => {
+    if (!("wakeLock" in navigator)) {
+      setWakeLockSupported(false);
+      return;
+    }
+    try {
+      wakeLockRef.current = await navigator.wakeLock.request("screen");
+      setWakeLockActive(true);
+      wakeLockRef.current.addEventListener("release", () => {
+        setWakeLockActive(false);
+      });
+    } catch {
+      setWakeLockSupported(false);
+    }
+  };
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) {
+      return;
+    }
+
+    const handlePlay = () => {
+      requestWakeLock();
+    };
+
+    const handlePause = () => {
+      releaseWakeLock();
+    };
+
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
+    audio.addEventListener("ended", handlePause);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && !audio.paused) {
+        requestWakeLock();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
+      audio.removeEventListener("ended", handlePause);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      releaseWakeLock();
+    };
+  }, []);
+
   return (
     <div className="card">
       <div
@@ -35,8 +105,20 @@ export default function AudioPlayer({
         <div>
           <h2 style={{ marginBottom: 8 }}>{title}</h2>
           <p style={{ color: "#4b5563", marginTop: 0 }}>{description}</p>
+          {wakeLockSupported ? (
+            <p style={{ color: "#6b7280", fontSize: 13, marginTop: 8 }}>
+              {wakeLockActive
+                ? "Screen sleep disabled while audio plays."
+                : "Play audio to keep the screen awake."}
+            </p>
+          ) : (
+            <p style={{ color: "#b45309", fontSize: 13, marginTop: 8 }}>
+              Your browser does not support screen wake lock. Keep the app open
+              while listening.
+            </p>
+          )}
         </div>
-        <audio controls style={{ width: "100%" }}>
+        <audio ref={audioRef} controls style={{ width: "100%" }}>
           <source src={audioUrl} />
           Your browser does not support the audio element.
         </audio>

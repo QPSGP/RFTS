@@ -16,6 +16,8 @@ type LibraryItem = {
   audioUrl: string;
   interestIds: string[];
   order: number;
+  isAdult?: boolean;
+  allowedUserEmails?: string[];
 };
 
 const inputStyle = {
@@ -29,6 +31,9 @@ export default function AdminContent() {
   const [interests, setInterests] = useState<Interest[]>([]);
   const [library, setLibrary] = useState<LibraryItem[]>([]);
   const [status, setStatus] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<LibraryItem | null>(null);
+  const [editInterestIds, setEditInterestIds] = useState<string[]>([]);
 
   const load = async () => {
     const [interestRes, libraryRes] = await Promise.all([
@@ -91,12 +96,17 @@ export default function AdminContent() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const interestIds = formData.getAll("interestIds") as string[];
+    const allowedUsersRaw = String(formData.get("allowedUserEmails") || "").trim();
+    const allowedUserEmails = allowedUsersRaw
+      ? allowedUsersRaw.split(",").map((email) => email.trim()).filter(Boolean)
+      : [];
     const payload = {
       title: formData.get("title"),
       description: formData.get("description"),
-      coverUrl: formData.get("coverUrl"),
-      audioUrl: formData.get("audioUrl"),
-      interestIds
+      coverUrl: formData.get("coverUrl") || "",
+      audioUrl: formData.get("audioUrl") || "",
+      interestIds,
+      allowedUserEmails
     };
     const response = await fetch("/api/library", {
       method: "POST",
@@ -128,6 +138,44 @@ export default function AdminContent() {
       body: JSON.stringify({ orderedIds: reordered.map((item) => item.id) })
     });
     await load();
+  };
+
+  const startEdit = (item: LibraryItem) => {
+    setEditingId(item.id);
+    setEditDraft({ ...item });
+    setEditInterestIds(item.interestIds);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditDraft(null);
+    setEditInterestIds([]);
+  };
+
+  const saveEdit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editDraft) {
+      return;
+    }
+    const payload = {
+      id: editDraft.id,
+      title: editDraft.title,
+      description: editDraft.description,
+      coverUrl: editDraft.coverUrl || "",
+      audioUrl: editDraft.audioUrl || "",
+      interestIds: editInterestIds,
+      allowedUserEmails: editDraft.allowedUserEmails || [],
+      isAdult: editDraft.isAdult || false
+    };
+    const response = await fetch("/api/library", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (response.ok) {
+      cancelEdit();
+      await load();
+    }
   };
 
   return (
@@ -172,8 +220,13 @@ export default function AdminContent() {
             required
             style={inputStyle}
           />
-          <input name="coverUrl" placeholder="Cover URL" required style={inputStyle} />
-          <input name="audioUrl" placeholder="Audio URL" required style={inputStyle} />
+          <input name="coverUrl" placeholder="Cover URL (optional)" style={inputStyle} />
+          <input name="audioUrl" placeholder="Audio URL (optional)" style={inputStyle} />
+          <input
+            name="allowedUserEmails"
+            placeholder="Allowed user emails (comma-separated, optional)"
+            style={inputStyle}
+          />
           <label style={{ fontSize: 13 }}>Attach interests</label>
           <select name="interestIds" multiple style={inputStyle}>
             {interestOptions.map((interest) => (
@@ -189,25 +242,133 @@ export default function AdminContent() {
         <div className="grid" style={{ marginTop: 16 }}>
           {library.map((item) => (
             <div key={item.id} className="card">
-              <strong>{item.title}</strong>
-              <p>{item.description}</p>
-              <p>Cover: {item.coverUrl}</p>
-              <p>Audio: {item.audioUrl}</p>
-              <p>Interests: {item.interestIds.join(", ") || "None"}</p>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button
-                  className="button button-secondary"
-                  onClick={() => moveItem(item.id, "up")}
-                >
-                  Move Up
-                </button>
-                <button
-                  className="button button-secondary"
-                  onClick={() => moveItem(item.id, "down")}
-                >
-                  Move Down
-                </button>
-              </div>
+              {editingId === item.id && editDraft ? (
+                <form onSubmit={saveEdit} className="grid">
+                  <input
+                    name="title"
+                    value={editDraft.title}
+                    onChange={(event) =>
+                      setEditDraft({ ...editDraft, title: event.target.value })
+                    }
+                    required
+                    style={inputStyle}
+                  />
+                  <input
+                    name="description"
+                    value={editDraft.description}
+                    onChange={(event) =>
+                      setEditDraft({ ...editDraft, description: event.target.value })
+                    }
+                    required
+                    style={inputStyle}
+                  />
+                  <input
+                    name="coverUrl"
+                    value={editDraft.coverUrl}
+                    onChange={(event) =>
+                      setEditDraft({ ...editDraft, coverUrl: event.target.value })
+                    }
+                    placeholder="Cover URL (optional)"
+                    style={inputStyle}
+                  />
+                  <input
+                    name="audioUrl"
+                    value={editDraft.audioUrl}
+                    onChange={(event) =>
+                      setEditDraft({ ...editDraft, audioUrl: event.target.value })
+                    }
+                    placeholder="Audio URL (optional)"
+                    style={inputStyle}
+                  />
+                  <input
+                    name="allowedUserEmails"
+                    value={(editDraft.allowedUserEmails || []).join(", ")}
+                    onChange={(event) =>
+                      setEditDraft({
+                        ...editDraft,
+                        allowedUserEmails: event.target.value
+                          .split(",")
+                          .map((email) => email.trim())
+                          .filter(Boolean)
+                      })
+                    }
+                    placeholder="Allowed user emails (comma-separated, optional)"
+                    style={inputStyle}
+                  />
+                  <label style={{ fontSize: 13 }}>Attach interests</label>
+                  <select
+                    name="interestIds"
+                    multiple
+                    value={editInterestIds}
+                    onChange={(event) =>
+                      setEditInterestIds(
+                        Array.from(event.target.selectedOptions, (option) => option.value)
+                      )
+                    }
+                    style={inputStyle}
+                  >
+                    {interestOptions.map((interest) => (
+                      <option key={interest.value} value={interest.value}>
+                        {interest.label}
+                      </option>
+                    ))}
+                  </select>
+                  <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input
+                      type="checkbox"
+                      checked={!!editDraft.isAdult}
+                      onChange={(event) =>
+                        setEditDraft({ ...editDraft, isAdult: event.target.checked })
+                      }
+                    />
+                    Adult content (18+)
+                  </label>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button className="button" type="submit">
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={cancelEdit}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <strong>{item.title}</strong>
+                  <p>{item.description || "Description pending."}</p>
+                  <p>Cover: {item.coverUrl || "Pending"}</p>
+                  <p>Audio: {item.audioUrl || "Pending"}</p>
+                  <p>Interests: {item.interestIds.join(", ") || "None"}</p>
+                  <p>
+                    Allowed Users:{" "}
+                    {item.allowedUserEmails && item.allowedUserEmails.length > 0
+                      ? item.allowedUserEmails.join(", ")
+                      : "All users"}
+                  </p>
+                  {item.isAdult && <p>Adult content</p>}
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button
+                      className="button button-secondary"
+                      onClick={() => moveItem(item.id, "up")}
+                    >
+                      Move Up
+                    </button>
+                    <button
+                      className="button button-secondary"
+                      onClick={() => moveItem(item.id, "down")}
+                    >
+                      Move Down
+                    </button>
+                    <button className="button" onClick={() => startEdit(item)}>
+                      Edit
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>

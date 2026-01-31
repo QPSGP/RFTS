@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSessionEmail } from "@/lib/auth";
+import { isAdminSession } from "@/lib/auth";
 import { getInterests, saveInterests } from "@/lib/storage";
 
 const createSchema = z.object({
@@ -19,16 +19,14 @@ const deleteSchema = z.object({
 });
 
 export async function GET() {
-  const sessionEmail = getSessionEmail();
-  if (!sessionEmail) {
+  if (!isAdminSession()) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   return NextResponse.json({ interests: getInterests() });
 }
 
 export async function POST(request: Request) {
-  const sessionEmail = getSessionEmail();
-  if (!sessionEmail) {
+  if (!isAdminSession()) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -49,8 +47,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const sessionEmail = getSessionEmail();
-  if (!sessionEmail) {
+  if (!isAdminSession()) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -73,8 +70,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const sessionEmail = getSessionEmail();
-  if (!sessionEmail) {
+  if (!isAdminSession()) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();

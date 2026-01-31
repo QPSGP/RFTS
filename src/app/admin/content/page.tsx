@@ -1,4 +1,9 @@
 import AdminContent from "@/components/AdminContent";
+import AdminSubscriptions from "@/components/AdminSubscriptions";
+import AdminPlaybackSettings from "@/components/AdminPlaybackSettings";
+import AdminModerators from "@/components/AdminModerators";
+import ModerationQueue from "@/components/ModerationQueue";
+import AdminUsers from "@/components/AdminUsers";
 
 export default function AdminContentPage() {
   return (
@@ -8,6 +13,11 @@ export default function AdminContentPage() {
         <p>Manage interests, audio library items, and ordering.</p>
       </section>
       <AdminContent />
+      <AdminPlaybackSettings />
+      <AdminSubscriptions />
+      <AdminModerators />
+      <AdminUsers />
+      <ModerationQueue />
     </main>
   );
 }

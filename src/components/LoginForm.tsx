@@ -21,7 +21,12 @@ export default function LoginForm() {
       body: JSON.stringify(payload)
     });
     if (response.ok) {
-      setStatus("Logged in. You can now access admin tools.");
+      const data = await response.json();
+      setStatus(
+        data.role === "moderator"
+          ? "Logged in. You can now access moderator tools."
+          : "Logged in. You can now access admin tools."
+      );
     } else {
       setStatus("Login failed.");
     }
@@ -35,11 +40,11 @@ export default function LoginForm() {
 
   return (
     <div className="card">
-      <h2>Admin Login</h2>
+      <h2>Admin / Moderator Login</h2>
       <form onSubmit={onSubmit} className="grid">
         <input
           name="email"
-          placeholder="Admin email"
+          placeholder="Email"
           type="email"
           required
           style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}

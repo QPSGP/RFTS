@@ -1,74 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import type { SubscriptionPlan } from "@/lib/storage";
 
-type Plan = {
-  id: string;
-  label: string;
-  priceId: string;
-  trialDays: number;
-  description: string;
-  displayPrice: string;
-  stripClass: "platinum" | "gold" | "bronze";
-  features: string[];
+type SubscriptionSelectionProps = {
+  plans: SubscriptionPlan[];
 };
 
-const toNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
+const mapStripClass = (id: string) => {
+  if (id === "platinum") return "platinum";
+  if (id === "gold") return "gold";
+  return "bronze";
 };
 
-export default function SubscriptionSelection() {
+export default function SubscriptionSelection({ plans }: SubscriptionSelectionProps) {
   const [status, setStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  const plans = useMemo<Plan[]>(() => {
-    return [
-      {
-        id: "starter",
-        label: "Bronze Package",
-        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER || "",
-        trialDays: toNumber(process.env.NEXT_PUBLIC_STRIPE_TRIAL_STARTER, 7),
-        description: "Total of recordings as published.",
-        displayPrice: "$14.95",
-        stripClass: "bronze",
-        features: [
-          "15 minute guided meditation",
-          "Push button and listen to it",
-          "No charge until trial ends"
-        ]
-      },
-      {
-        id: "growth",
-        label: "Gold Package",
-        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_GROWTH || "",
-        trialDays: toNumber(process.env.NEXT_PUBLIC_STRIPE_TRIAL_GROWTH, 14),
-        description: "Includes everything from the Bronze package, plus:",
-        displayPrice: "$24.95",
-        stripClass: "gold",
-        features: [
-          "Listening history and session saves",
-          "Mood change guide every 90 days",
-          "Expanded playlist library"
-        ]
-      },
-      {
-        id: "elite",
-        label: "Platinum Package",
-        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ELITE || "",
-        trialDays: toNumber(process.env.NEXT_PUBLIC_STRIPE_TRIAL_ELITE, 21),
-        description: "Includes everything from Gold Package, plus:",
-        displayPrice: "$39.95",
-        stripClass: "platinum",
-        features: [
-          "Unlimited access to all recordings",
-          "Session refresh every 90 days",
-          "Priority creator releases"
-        ]
-      }
-    ].filter((plan) => plan.priceId);
-  }, []);
 
   const selectedPlan = plans.find((plan) => plan.id === selectedId);
 
@@ -128,21 +76,14 @@ export default function SubscriptionSelection() {
             onClick={() => setSelectedId(plan.id)}
             style={{ cursor: "pointer" }}
           >
-            <div className={`plan-strip ${plan.stripClass}`}>
-              {selectedId === plan.id ? "Selected Subscription" : plan.label}
+            <div className={`plan-strip ${mapStripClass(plan.id)}`}>
+              {selectedId === plan.id ? "Selected Subscription" : plan.name}
             </div>
             <div className="plan-body">
-              <div className="plan-title">{plan.label}</div>
-              <div className="plan-price">
-                {plan.displayPrice} <span style={{ fontSize: 12 }}>/mo</span>
-              </div>
+              <div className="plan-title">{plan.name}</div>
+              <div className="plan-price">{plan.trialDays} day trial</div>
               <div className="plan-trial">{plan.trialDays}-Day Free Trial</div>
               <p style={{ fontSize: 12, color: "#4b5563" }}>{plan.description}</p>
-              <ul className="plan-features">
-                {plan.features.map((feature) => (
-                  <li key={feature}>{feature}</li>
-                ))}
-              </ul>
               <div className="plan-cta">
                 <span className="badge">Select Plan</span>
               </div>

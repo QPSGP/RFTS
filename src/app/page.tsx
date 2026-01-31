@@ -1,10 +1,12 @@
+/* eslint-disable react/no-unescaped-entities */
 import SubscriptionPlans from "@/components/SubscriptionPlans";
 import WalletPanel from "@/components/WalletPanel";
 
 export default function HomePage() {
   return (
     <main>
-      <section style={{ marginBottom: 32 }}>
+      <section className="hero section">
+        <span className="pill">Conscious Growth Engine</span>
         <h1>Imagine … The Best You</h1>
         <p>
           Overcome present challenges and take your goals from dream to reality
@@ -15,10 +17,25 @@ export default function HomePage() {
           uses your specified, prioritized goals to provide targeted meditations
           each night you listen.
         </p>
+        <div className="cta-row" style={{ marginTop: 16 }}>
+          <a className="button" href="/signup/step-1-subscription-selection">
+            Start Your Journey
+          </a>
+          <a className="button button-secondary" href="/play-options">
+            Explore Play Options
+          </a>
+        </div>
       </section>
 
-      <section style={{ marginBottom: 32 }}>
-        <h2>How It Works</h2>
+      <section className="section">
+        <div className="section-head">
+          <span className="eyebrow">How It Works</span>
+          <h2 className="section-title">Personalized sleep sessions, nightly.</h2>
+          <p className="section-subtitle">
+            Guided meditations cycle through your goals so your subconscious receives
+            the right messages at the right time.
+          </p>
+        </div>
         <p>
           The Reach for the Stars application customizes guided meditation
           recordings to your specific desires. With this application, recordings
@@ -47,18 +64,24 @@ export default function HomePage() {
         </p>
       </section>
 
-      <section style={{ marginBottom: 32 }}>
-        <h2>Imagine the Genie of Your Powerful Subconscious Mind Activated Each Night to Create:</h2>
+      <section className="section">
+        <div className="section-head">
+          <span className="eyebrow">Nightly Activation</span>
+          <h2 className="section-title">
+            Imagine the Genie of Your Powerful Subconscious Mind Activated Each
+            Night to Create:
+          </h2>
+        </div>
         <section className="grid grid-3" style={{ marginTop: 16 }}>
-          <div className="card">
+          <div className="card glow">
             <h3>Health</h3>
             <p>Healthy longevity, vibrant energy, a body to delight in</p>
           </div>
-          <div className="card">
+          <div className="card glow">
             <h3>Wealth</h3>
             <p>Financial Abundance</p>
           </div>
-          <div className="card">
+          <div className="card glow">
             <h3>Relationship</h3>
             <p>A joyful new or enhanced present relationship</p>
           </div>
@@ -81,9 +104,11 @@ export default function HomePage() {
         </section>
       </section>
 
-      <section style={{ marginBottom: 32 }}>
-        <h2>Guided Meditations</h2>
-        <p>10 Scientifically Proven Benefits</p>
+      <section className="section">
+        <div className="section-head">
+          <span className="eyebrow">Guided Meditations</span>
+          <h2 className="section-title">10 Scientifically Proven Benefits</h2>
+        </div>
         <section className="grid grid-2" style={{ marginTop: 16 }}>
           <div className="card">Reduced Stress</div>
           <div className="card">Memory Enhancement</div>
@@ -119,12 +144,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section style={{ marginBottom: 32 }}>
-        <h2>About Terry Brussel-Rogers, CCHt.</h2>
-        <p>
-          Certified Clinical Hypnotherapist Registered With The National Guild
-          Of Hypnotists
-        </p>
+      <section className="section">
+        <div className="section-head">
+          <span className="eyebrow">About</span>
+          <h2 className="section-title">About Terry Brussel-Rogers, CCHt.</h2>
+          <p className="section-subtitle">
+            Certified Clinical Hypnotherapist Registered With The National Guild Of
+            Hypnotists
+          </p>
+        </div>
         <p>
           With over 5 decades of experience, Terry Brussel-Rogers, CCHt has been
           helping clients reach their highest potential most of her life. She
@@ -164,32 +192,38 @@ export default function HomePage() {
         </p>
       </section>
 
-      <section style={{ marginBottom: 32 }}>
-        <h2>Thousands Of People Already Trust Us</h2>
-        <p>... For A Reason</p>
+      <section className="section">
+        <div className="section-head">
+          <span className="eyebrow">Trust</span>
+          <h2 className="section-title">Thousands Of People Already Trust Us</h2>
+          <p className="section-subtitle">... For A Reason</p>
+        </div>
         <section className="grid grid-4" style={{ marginTop: 16 }}>
-          <div className="card">
+          <div className="card stat-card">
             <h3>50 +</h3>
             <p>Years Experience</p>
           </div>
-          <div className="card">
+          <div className="card stat-card">
             <h3>5000 +</h3>
             <p>Happy Clients</p>
           </div>
-          <div className="card">
+          <div className="card stat-card">
             <h3>1000 +</h3>
             <p>Seminars Delivered</p>
           </div>
-          <div className="card">
+          <div className="card stat-card">
             <h3>∞</h3>
             <p>Number of Learning Paths</p>
           </div>
         </section>
       </section>
 
-      <section style={{ marginBottom: 32 }}>
-        <h2>Customer Reviews</h2>
-        <p>All Testimonials</p>
+      <section className="section">
+        <div className="section-head">
+          <span className="eyebrow">Testimonials</span>
+          <h2 className="section-title">Customer Reviews</h2>
+          <p className="section-subtitle">All Testimonials</p>
+        </div>
         <section className="grid">
           <div className="card">
             <h3>Positive Assertiveness and Effective Time Management</h3>
@@ -398,7 +432,7 @@ export default function HomePage() {
         </section>
       </section>
 
-      <section className="grid grid-2">
+      <section className="grid grid-2 section">
         <SubscriptionPlans />
         <WalletPanel />
       </section>

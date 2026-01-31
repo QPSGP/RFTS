@@ -1,24 +1,27 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSessionEmail } from "@/lib/auth";
+import { isAdminSession } from "@/lib/auth";
 import { getLibrary, saveLibrary } from "@/lib/storage";
 
 const createSchema = z.object({
   title: z.string().min(2),
   description: z.string().min(2),
-  coverUrl: z.string().min(2),
-  audioUrl: z.string().min(2),
-  interestIds: z.array(z.string()).default([])
+  coverUrl: z.string().optional().default(""),
+  audioUrl: z.string().optional().default(""),
+  interestIds: z.array(z.string()).default([]),
+  allowedUserEmails: z.array(z.string().email()).optional().default([])
 });
 
 const updateSchema = z.object({
   id: z.string(),
   title: z.string().min(2),
   description: z.string().min(2),
-  coverUrl: z.string().min(2),
-  audioUrl: z.string().min(2),
+  coverUrl: z.string().optional().default(""),
+  audioUrl: z.string().optional().default(""),
   interestIds: z.array(z.string()).default([]),
-  order: z.number().int().optional()
+  allowedUserEmails: z.array(z.string().email()).optional().default([]),
+  order: z.number().int().optional(),
+  isAdult: z.boolean().optional()
 });
 
 const deleteSchema = z.object({
@@ -30,16 +33,14 @@ const reorderSchema = z.object({
 });
 
 export async function GET() {
-  const sessionEmail = getSessionEmail();
-  if (!sessionEmail) {
+  if (!isAdminSession()) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   return NextResponse.json({ library: getLibrary() });
 }
 
 export async function POST(request: Request) {
-  const sessionEmail = getSessionEmail();
-  if (!sessionEmail) {
+  if (!isAdminSession()) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -61,8 +62,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const sessionEmail = getSessionEmail();
-  if (!sessionEmail) {
+  if (!isAdminSession()) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -81,8 +81,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const sessionEmail = getSessionEmail();
-  if (!sessionEmail) {
+  if (!isAdminSession()) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
@@ -101,8 +100,7 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const sessionEmail = getSessionEmail();
-  if (!sessionEmail) {
+  if (!isAdminSession()) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();

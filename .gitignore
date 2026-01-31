@@ -4,3 +4,4 @@ out/
 dist/
 .env*
 data/*.json
+!data/recording-descriptions.json

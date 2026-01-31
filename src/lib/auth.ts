@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { cookies } from "next/headers";
+import { findModeratorByEmail } from "@/lib/storage";
 
 const sessionCookie = "rfts_session";
 
@@ -19,6 +20,17 @@ export const verifyAdminCredentials = async (
     return false;
   }
   return bcrypt.compare(password, adminPasswordHash);
+};
+
+export const verifyModeratorCredentials = async (
+  email: string,
+  password: string
+) => {
+  const moderator = findModeratorByEmail(email);
+  if (!moderator || moderator.status !== "active") {
+    return false;
+  }
+  return bcrypt.compare(password, moderator.passwordHash);
 };
 
 const sign = (value: string) => {
@@ -73,4 +85,27 @@ export const getSessionEmail = () => {
     return null;
   }
   return email;
+};
+
+export const getSessionRole = () => {
+  const email = getSessionEmail();
+  if (!email) {
+    return null;
+  }
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (adminEmail && email.toLowerCase() === adminEmail.toLowerCase()) {
+    return "admin";
+  }
+  const moderator = findModeratorByEmail(email);
+  if (moderator && moderator.status === "active") {
+    return "moderator";
+  }
+  return null;
+};
+
+export const isAdminSession = () => getSessionRole() === "admin";
+
+export const isModeratorSession = () => {
+  const role = getSessionRole();
+  return role === "moderator" || role === "admin";
 };

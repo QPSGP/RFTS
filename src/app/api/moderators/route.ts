@@ -1,70 +1,44 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSessionEmail } from "@/lib/auth";
-import { getModerationQueue, saveModerationQueue } from "@/lib/storage";
+import { isAdminSession } from "@/lib/auth";
+import {
+  getModeratorApplications,
+  saveModeratorApplications
+} from "@/lib/storage";
 
-const submitSchema = z.object({
-  title: z.string().min(2),
-  creator: z.string().min(2)
-});
-
-const updateSchema = z.object({
-  id: z.string(),
-  status: z.enum(["pending", "approved", "rejected"]),
-  notes: z.string().optional()
+const createSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  focusAreas: z.string().min(3),
+  experience: z.string().min(10),
+  links: z.string().optional().default("")
 });
 
 export async function GET() {
-  const sessionEmail = getSessionEmail();
-  if (!sessionEmail) {
+  if (!isAdminSession()) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-  const queue = getModerationQueue();
-  return NextResponse.json({ queue });
+  return NextResponse.json({ applications: getModeratorApplications() });
 }
 
 export async function POST(request: Request) {
-  const submissionKey = request.headers.get("x-submission-key");
-  if (process.env.SUBMISSION_KEY && submissionKey !== process.env.SUBMISSION_KEY) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
   const body = await request.json();
-  const parsed = submitSchema.safeParse(body);
+  const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const queue = getModerationQueue();
+  const applications = getModeratorApplications();
   const record = {
     id: crypto.randomUUID(),
-    ...parsed.data,
+    name: parsed.data.name,
+    email: parsed.data.email,
+    focusAreas: parsed.data.focusAreas,
+    experience: parsed.data.experience,
+    links: parsed.data.links || "",
     submittedAt: new Date().toISOString(),
     status: "pending" as const
   };
-  queue.unshift(record);
-  saveModerationQueue(queue);
-  return NextResponse.json({ ok: true, record });
-}
-
-export async function PATCH(request: Request) {
-  const sessionEmail = getSessionEmail();
-  if (!sessionEmail) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
-  const body = await request.json();
-  const parsed = updateSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid input." }, { status: 400 });
-  }
-  const queue = getModerationQueue();
-  const index = queue.findIndex((item) => item.id === parsed.data.id);
-  if (index === -1) {
-    return NextResponse.json({ error: "Not found." }, { status: 404 });
-  }
-  queue[index] = {
-    ...queue[index],
-    status: parsed.data.status,
-    notes: parsed.data.notes
-  };
-  saveModerationQueue(queue);
+  applications.push(record);
+  saveModeratorApplications(applications);
   return NextResponse.json({ ok: true });
 }

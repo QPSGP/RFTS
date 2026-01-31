@@ -1,22 +1,17 @@
 import { getInterests } from "@/lib/storage";
+import GoalsSelector from "@/components/GoalsSelector";
 
 export default function GoalsPage() {
   const interests = getInterests();
 
   return (
     <main>
-      <section style={{ marginBottom: 24 }}>
-        <h1>Goals</h1>
-        <p>Select an interest to tailor your listening experience.</p>
+      <section className="hero section">
+        <span className="pill">Goal Setting</span>
+        <h1>Set your priorities</h1>
+        <p>Select the focus areas you want your sessions to reinforce.</p>
       </section>
-      <section className="grid">
-        {interests.map((interest) => (
-          <div key={interest.id} className="card">
-            <strong>{interest.name}</strong>
-            {interest.description && <p>{interest.description}</p>}
-          </div>
-        ))}
-      </section>
+      <GoalsSelector interests={interests} />
     </main>
   );
 }

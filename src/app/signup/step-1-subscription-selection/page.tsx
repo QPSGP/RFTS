@@ -1,6 +1,8 @@
 import SubscriptionSelection from "@/components/SubscriptionSelection";
+import { getSubscriptionPlans } from "@/lib/storage";
 
 export default function SubscriptionSelectionPage() {
+  const plans = getSubscriptionPlans();
   return (
     <div className="signup-shell">
       <div className="signup-card">
@@ -8,7 +10,7 @@ export default function SubscriptionSelectionPage() {
         <div className="signup-subtitle">
           Begin reaching your highest potential, all while you sleep.
         </div>
-        <SubscriptionSelection />
+        <SubscriptionSelection plans={plans} />
       </div>
     </div>
   );

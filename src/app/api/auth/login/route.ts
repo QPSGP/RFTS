@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createSessionToken, setSession, verifyAdminCredentials } from "@/lib/auth";
+import {
+  createSessionToken,
+  setSession,
+  verifyAdminCredentials,
+  verifyModeratorCredentials
+} from "@/lib/auth";
 
 const schema = z.object({
   email: z.string().email(),
@@ -14,11 +19,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
   const { email, password } = parsed.data;
-  const isValid = await verifyAdminCredentials(email, password);
-  if (!isValid) {
+  const isAdmin = await verifyAdminCredentials(email, password);
+  const isModerator = isAdmin ? false : await verifyModeratorCredentials(email, password);
+  if (!isAdmin && !isModerator) {
     return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
   }
   const token = createSessionToken(email);
   setSession(token);
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, role: isAdmin ? "admin" : "moderator" });
 }

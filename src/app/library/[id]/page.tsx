@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import AudioPlayer from "@/components/AudioPlayer";
+import AudioGate from "@/components/AudioGate";
+import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import { getLibrarySorted } from "@/lib/storage";
 
 type PageProps = {
@@ -20,12 +21,8 @@ export default function LibraryItemPage({ params }: PageProps) {
         <h1>Now Playing</h1>
         <p>Stream your selected audio session.</p>
       </section>
-      <AudioPlayer
-        title={item.title}
-        description={item.description}
-        audioUrl={item.audioUrl}
-        coverUrl={item.coverUrl}
-      />
+      <ScreenWakeToggle />
+      <AudioGate item={item} />
     </main>
   );
 }

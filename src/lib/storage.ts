@@ -2,6 +2,8 @@ import fs from "fs";
 import path from "path";
 
 const dataDir = path.join(process.cwd(), "data");
+const audiosDir = path.join(process.cwd(), "Audios");
+const coversDir = path.join(process.cwd(), "Covers");
 
 const ensureDataDir = () => {
   if (!fs.existsSync(dataDir)) {
@@ -48,6 +50,27 @@ export type ModerationItem = {
   notes?: string;
 };
 
+export type ModeratorApplication = {
+  id: string;
+  name: string;
+  email: string;
+  focusAreas: string;
+  experience: string;
+  links?: string;
+  submittedAt: string;
+  status: "pending" | "approved" | "declined";
+};
+
+export type ModeratorAccount = {
+  id: string;
+  name: string;
+  email: string;
+  passwordHash: string;
+  assignedUserEmails: string[];
+  status: "active" | "paused";
+  createdAt: string;
+};
+
 export type Interest = {
   id: string;
   name: string;
@@ -62,8 +85,10 @@ export type LibraryItem = {
   coverUrl: string;
   audioUrl: string;
   interestIds: string[];
+  allowedUserEmails?: string[];
   createdAt: string;
   order: number;
+  isAdult?: boolean;
 };
 
 export const getAffiliates = () =>
@@ -85,6 +110,25 @@ export const getModerationQueue = () =>
 
 export const saveModerationQueue = (records: ModerationItem[]) =>
   writeJson("moderation.json", records);
+
+export const getModeratorApplications = () =>
+  readJson<ModeratorApplication[]>("moderator-applications.json", []);
+
+export const saveModeratorApplications = (records: ModeratorApplication[]) =>
+  writeJson("moderator-applications.json", records);
+
+export const getModerators = () =>
+  readJson<ModeratorAccount[]>("moderators.json", []);
+
+export const saveModerators = (records: ModeratorAccount[]) =>
+  writeJson("moderators.json", records);
+
+export const findModeratorByEmail = (email: string) => {
+  const moderators = getModerators();
+  return moderators.find(
+    (moderator) => moderator.email.toLowerCase() === email.toLowerCase()
+  );
+};
 
 export const getInterests = () =>
   readJson<Interest[]>("interests.json", [
@@ -183,22 +227,158 @@ export const getInterests = () =>
 export const saveInterests = (records: Interest[]) =>
   writeJson("interests.json", records);
 
-export const getLibrary = () =>
-  readJson<LibraryItem[]>("library.json", [
-    {
-      id: "track-1",
-      title: "Night Reset",
-      description: "Guided meditation for deep sleep.",
-      coverUrl: "/covers/placeholder.png",
-      audioUrl: "/audio/placeholder.mp3",
-      interestIds: ["sleep"],
-      createdAt: new Date().toISOString(),
-      order: 1
+const listFiles = (dirPath: string, ext: string) => {
+  if (!fs.existsSync(dirPath)) {
+    return [];
+  }
+  return fs
+    .readdirSync(dirPath)
+    .filter((file) => file.toLowerCase().endsWith(ext))
+    .sort((a, b) => a.localeCompare(b));
+};
+
+const normalizeCode = (prefix: string, number: string, suffix?: string) => {
+  const padded = number.length === 1 ? number.padStart(2, "0") : number;
+  return `${prefix.toUpperCase()}-${padded}${suffix ? `-${suffix.toUpperCase()}` : ""}`;
+};
+
+const extractCode = (name: string) => {
+  const match = name
+    .toUpperCase()
+    .match(/([A-Z]{1,3})[\s-]*([0-9]{1,3})([A-Z])?/);
+  if (!match) {
+    return null;
+  }
+  return normalizeCode(match[1], match[2], match[3]);
+};
+
+const cleanTitle = (name: string) => {
+  const base = name.replace(/\.[^/.]+$/, "");
+  return base
+    .replace(/^RFTS!?[-\s]*/i, "")
+    .replace(/^[A-Z]\s*[-\s]*\d{1,3}\s*[-\s]*/i, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+const isAdultContent = (name: string) => {
+  const upper = name.toUpperCase();
+  return (
+    upper.includes("MATURE CONTENT") ||
+    upper.includes("EROTICA") ||
+    upper.includes("ORGASM") ||
+    upper.includes("SEXUAL")
+  );
+};
+
+const getRecordingDescriptions = () => {
+  return readJson<Record<string, string>>("recording-descriptions.json", {});
+};
+
+const buildLibraryFromFiles = () => {
+  const audioFiles = listFiles(audiosDir, ".mp3");
+  const coverFiles = listFiles(coversDir, ".png");
+  const coverMap = new Map<string, string>();
+  const descriptionMap = getRecordingDescriptions();
+
+  coverFiles.forEach((file) => {
+    const upper = file.toUpperCase();
+    const match = upper.match(/SKU-([A-Z]{1,3})-(\d{1,3})([A-Z])?/);
+    if (match) {
+      const code = normalizeCode(match[1], match[2], match[3]);
+      if (!coverMap.has(code)) {
+        coverMap.set(code, file);
+      }
     }
-  ]);
+  });
+
+  return audioFiles.map((file, index) => {
+    const code = extractCode(file);
+    const coverFile = code ? coverMap.get(code) : undefined;
+    const baseCode = code ? code.replace(/-[A-Z]+$/, "") : null;
+    const description = code
+      ? descriptionMap[code] || (baseCode ? descriptionMap[baseCode] || "" : "")
+      : "";
+    return {
+      id: `track-${index + 1}`,
+      title: cleanTitle(file),
+      description,
+      coverUrl: coverFile
+        ? `/api/asset?type=cover&file=${encodeURIComponent(coverFile)}`
+        : "",
+      audioUrl: `/api/asset?type=audio&file=${encodeURIComponent(file)}`,
+      interestIds: [],
+      createdAt: new Date().toISOString(),
+      order: index + 1,
+      isAdult: isAdultContent(file) || (coverFile ? isAdultContent(coverFile) : false)
+    };
+  });
+};
+
+export const getLibrary = () =>
+  readJson<LibraryItem[]>("library.json", buildLibraryFromFiles());
 
 export const saveLibrary = (records: LibraryItem[]) =>
   writeJson("library.json", records);
 
 export const getLibrarySorted = () =>
   getLibrary().slice().sort((a, b) => a.order - b.order);
+
+export type SubscriptionPlan = {
+  id: string;
+  name: string;
+  priceId: string;
+  trialDays: number;
+  description: string;
+};
+
+export const getSubscriptionPlans = () =>
+  readJson<SubscriptionPlan[]>("subscriptions.json", [
+    {
+      id: "bronze",
+      name: "Bronze Package",
+      priceId: "",
+      trialDays: 14,
+      description: "Core access with goal-based scheduling."
+    },
+    {
+      id: "gold",
+      name: "Gold Package",
+      priceId: "",
+      trialDays: 14,
+      description: "Includes playlist access out of sequence."
+    },
+    {
+      id: "platinum",
+      name: "Platinum Package",
+      priceId: "",
+      trialDays: 14,
+      description: "Full library access and concierge support."
+    }
+  ]);
+
+export const saveSubscriptionPlans = (records: SubscriptionPlan[]) =>
+  writeJson("subscriptions.json", records);
+
+export type PlaybackSettings = {
+  playsPerRecording: number;
+  nightlyGapHours: number;
+  addNewTrackEveryNights: number;
+  initialTracks: number;
+  cgmrTrackId: string;
+  fallbackTrackId: string;
+};
+
+export const getPlaybackSettings = () =>
+  readJson<PlaybackSettings>("playback-settings.json", {
+    playsPerRecording: 21,
+    nightlyGapHours: 2.5,
+    addNewTrackEveryNights: 7,
+    initialTracks: 3,
+    cgmrTrackId: "",
+    fallbackTrackId: "T-18"
+  });
+
+export const savePlaybackSettings = (settings: PlaybackSettings) =>
+  writeJson("playback-settings.json", settings);
