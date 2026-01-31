@@ -42,7 +42,8 @@ const uploadSet = async (dirPath, files, prefix) => {
     const stream = fs.createReadStream(fullPath);
     const blob = await put(`${prefix}/${file}`, stream, {
       access: "public",
-      contentType: contentTypeFor(file)
+      contentType: contentTypeFor(file),
+      allowOverwrite: true
     });
     map[file] = blob.url;
     console.log(`Uploaded ${file} -> ${blob.url}`);
