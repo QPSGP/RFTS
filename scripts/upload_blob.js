@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { put } = require("@vercel/blob");
+require("dotenv").config({ path: path.join(__dirname, "..", ".env.local") });
 
 const rootDir = path.join(__dirname, "..");
 const audiosDir = path.join(rootDir, "Audios");
