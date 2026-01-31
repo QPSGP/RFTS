@@ -20,25 +20,45 @@ const needsSetup = async () => {
 };
 
 export async function GET() {
-  return NextResponse.json({ needsSetup: await needsSetup() });
+  try {
+    return NextResponse.json({ needsSetup: await needsSetup() });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Unknown error while checking setup."
+      },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(request: Request) {
-  if (!(await needsSetup())) {
-    return NextResponse.json({ error: "Setup is already complete." }, { status: 409 });
+  try {
+    if (!(await needsSetup())) {
+      return NextResponse.json({ error: "Setup is already complete." }, { status: 409 });
+    }
+    const body = await request.json();
+    const parsed = schema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+    }
+    const requiredToken = process.env.ADMIN_SETUP_TOKEN;
+    if (requiredToken && parsed.data.setupToken !== requiredToken) {
+      return NextResponse.json({ error: "Invalid setup token." }, { status: 401 });
+    }
+    const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+    await createAdmin(parsed.data.email, passwordHash);
+    const token = createSessionToken(parsed.data.email);
+    setSession(token);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Unknown error while creating admin."
+      },
+      { status: 500 }
+    );
   }
-  const body = await request.json();
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid input." }, { status: 400 });
-  }
-  const requiredToken = process.env.ADMIN_SETUP_TOKEN;
-  if (requiredToken && parsed.data.setupToken !== requiredToken) {
-    return NextResponse.json({ error: "Invalid setup token." }, { status: 401 });
-  }
-  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
-  await createAdmin(parsed.data.email, passwordHash);
-  const token = createSessionToken(parsed.data.email);
-  setSession(token);
-  return NextResponse.json({ ok: true });
 }
