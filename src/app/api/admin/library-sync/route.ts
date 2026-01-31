@@ -38,6 +38,16 @@ const extractCode = (name: string) => {
   return normalizeCode(match[1], match[2], match[3]);
 };
 
+const cleanTitle = (name: string) => {
+  const base = name.replace(/\.[^/.]+$/, "");
+  return base
+    .replace(/^RFTS!?[-\s]*/i, "")
+    .replace(/^[A-Z]\s*[-\s]*\d{1,3}\s*[-\s]*/i, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
 const getFileNameFromUrl = (url: string) => {
   if (!url) return "";
   try {
@@ -83,13 +93,22 @@ export async function POST() {
     {}
   );
   const coverMap = buildCoverMap(blobAssets);
+  const audioFiles = Object.keys(blobAssets.audios || {});
+  const titleToAudio = new Map<string, string>();
+  audioFiles.forEach((file) => {
+    titleToAudio.set(cleanTitle(file).toLowerCase(), file);
+  });
 
   const library = await listLibrary();
   let updated = 0;
   let skipped = 0;
 
   for (const item of library) {
-    const fileName = getFileNameFromUrl(item.audioUrl) || getFileNameFromUrl(item.coverUrl);
+    const fileName =
+      getFileNameFromUrl(item.audioUrl) ||
+      getFileNameFromUrl(item.coverUrl) ||
+      titleToAudio.get(item.title.toLowerCase()) ||
+      "";
     const code = fileName ? extractCode(fileName) : null;
     if (!code) {
       skipped += 1;
@@ -101,11 +120,17 @@ export async function POST() {
 
     const coverFile = coverMap.get(code) || coverMap.get(baseCode);
     const coverUrl = coverFile ? blobAssets.covers?.[coverFile] || "" : "";
+    const audioUrl = blobAssets.audios?.[fileName] || item.audioUrl || "";
 
     const nextDescription = item.description || description || "";
     const nextCoverUrl = item.coverUrl || coverUrl || "";
+    const nextAudioUrl = item.audioUrl || audioUrl || "";
 
-    if (nextDescription === item.description && nextCoverUrl === item.coverUrl) {
+    if (
+      nextDescription === item.description &&
+      nextCoverUrl === item.coverUrl &&
+      nextAudioUrl === item.audioUrl
+    ) {
       skipped += 1;
       continue;
     }
@@ -115,7 +140,7 @@ export async function POST() {
       title: item.title,
       description: nextDescription,
       coverUrl: nextCoverUrl,
-      audioUrl: item.audioUrl,
+      audioUrl: nextAudioUrl,
       interestIds: item.interestIds,
       allowedUserEmails: item.allowedUserEmails || [],
       order: item.order,
