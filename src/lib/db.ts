@@ -61,9 +61,13 @@ export const ensureSubscription = async (
 };
 
 export const setUserGoals = async (userId: string, goalIds: string[]) => {
+  const goalArray =
+    goalIds.length > 0
+      ? sql`ARRAY[${sql.join(goalIds)}]::text[]`
+      : sql`ARRAY[]::text[]`;
   const { rows } = await sql<DbUser>`
     UPDATE users
-    SET goal_ids = ${sql.array(goalIds, "text")}
+    SET goal_ids = ${goalArray}
     WHERE id = ${userId}
     RETURNING id, email, password_hash, goal_ids, created_at
   `;
