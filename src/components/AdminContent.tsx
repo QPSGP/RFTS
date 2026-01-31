@@ -31,6 +31,7 @@ export default function AdminContent() {
   const [interests, setInterests] = useState<Interest[]>([]);
   const [library, setLibrary] = useState<LibraryItem[]>([]);
   const [status, setStatus] = useState<string | null>(null);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<LibraryItem | null>(null);
   const [editInterestIds, setEditInterestIds] = useState<string[]>([]);
@@ -117,6 +118,20 @@ export default function AdminContent() {
       event.currentTarget.reset();
       await load();
     }
+  };
+
+  const syncLibraryMetadata = async () => {
+    setSyncStatus(null);
+    const response = await fetch("/api/admin/library-sync", { method: "POST" });
+    if (!response.ok) {
+      setSyncStatus("Sync failed. Admin session required.");
+      return;
+    }
+    const data = await response.json();
+    setSyncStatus(
+      `Sync complete. Updated ${data.updated ?? 0} items. Skipped ${data.skipped ?? 0}.`
+    );
+    await load();
   };
 
   const moveItem = async (id: string, direction: "up" | "down") => {
@@ -212,6 +227,13 @@ export default function AdminContent() {
 
       <div className="card">
         <h2>Audio Library</h2>
+        <p style={{ color: "#4b5563" }}>
+          Use sync to pull descriptions and covers from the assets list.
+        </p>
+        <button className="button button-secondary" onClick={syncLibraryMetadata}>
+          Sync Descriptions & Covers
+        </button>
+        {syncStatus && <p style={{ marginTop: 8 }}>{syncStatus}</p>}
         <form onSubmit={addLibraryItem} className="grid">
           <input name="title" placeholder="Title" required style={inputStyle} />
           <input
