@@ -6,9 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "upload:blob": "node scripts/upload_blob.js"
   },
   "dependencies": {
+    "@vercel/blob": "^2.0.1",
     "@vercel/postgres": "^0.10.0",
     "bcryptjs": "^2.4.3",
     "cookie": "^0.6.0",

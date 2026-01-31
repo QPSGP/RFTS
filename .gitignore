@@ -5,3 +5,6 @@ dist/
 .env*
 data/*.json
 !data/recording-descriptions.json
+!data/blob-assets.json
+Audios/
+Covers/

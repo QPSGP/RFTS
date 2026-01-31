@@ -276,9 +276,27 @@ const getRecordingDescriptions = () => {
   return readJson<Record<string, string>>("recording-descriptions.json", {});
 };
 
+type BlobAssets = {
+  audios?: Record<string, string>;
+  covers?: Record<string, string>;
+};
+
+const getBlobAssets = () => {
+  return readJson<BlobAssets>("blob-assets.json", {});
+};
+
 const buildLibraryFromFiles = () => {
-  const audioFiles = listFiles(audiosDir, ".mp3");
-  const coverFiles = listFiles(coversDir, ".png");
+  const blobAssets = getBlobAssets();
+  const localAudioFiles = listFiles(audiosDir, ".mp3");
+  const localCoverFiles = listFiles(coversDir, ".png");
+  const audioFiles =
+    localAudioFiles.length > 0
+      ? localAudioFiles
+      : Object.keys(blobAssets.audios || {});
+  const coverFiles =
+    localCoverFiles.length > 0
+      ? localCoverFiles
+      : Object.keys(blobAssets.covers || {});
   const coverMap = new Map<string, string>();
   const descriptionMap = getRecordingDescriptions();
 
@@ -300,14 +318,20 @@ const buildLibraryFromFiles = () => {
     const description = code
       ? descriptionMap[code] || (baseCode ? descriptionMap[baseCode] || "" : "")
       : "";
+    const blobCoverUrl = coverFile ? blobAssets.covers?.[coverFile] : undefined;
+    const blobAudioUrl = blobAssets.audios?.[file];
     return {
       id: `track-${index + 1}`,
       title: cleanTitle(file),
       description,
-      coverUrl: coverFile
-        ? `/api/asset?type=cover&file=${encodeURIComponent(coverFile)}`
-        : "",
-      audioUrl: `/api/asset?type=audio&file=${encodeURIComponent(file)}`,
+      coverUrl: blobCoverUrl
+        ? blobCoverUrl
+        : coverFile
+          ? `/api/asset?type=cover&file=${encodeURIComponent(coverFile)}`
+          : "",
+      audioUrl: blobAudioUrl
+        ? blobAudioUrl
+        : `/api/asset?type=audio&file=${encodeURIComponent(file)}`,
       interestIds: [],
       createdAt: new Date().toISOString(),
       order: index + 1,
