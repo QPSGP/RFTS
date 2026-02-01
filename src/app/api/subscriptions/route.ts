@@ -31,3 +31,7 @@ export async function PUT(request: Request) {
   await saveSubscriptionPlans(parsed.data.plans);
   return NextResponse.json({ ok: true });
 }
+
+export async function POST(request: Request) {
+  return PUT(request);
+}

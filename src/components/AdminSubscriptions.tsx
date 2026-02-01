@@ -33,7 +33,7 @@ export default function AdminSubscriptions() {
   const savePlans = async () => {
     setStatus(null);
     const response = await fetch("/api/subscriptions", {
-      method: "PUT",
+      method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ plans })
