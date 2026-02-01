@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash text NOT NULL,
   goal_ids text[] DEFAULT ARRAY[]::text[],
   goal_updated_at timestamptz,
+  plays_per_night integer NOT NULL DEFAULT 2,
   created_at timestamptz DEFAULT now()
 );
 

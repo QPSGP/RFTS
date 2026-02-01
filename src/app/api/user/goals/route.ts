@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getUserProfile, setUserGoals } from "@/lib/db";
+import { getUserProfile, setUserGoals, setUserPlaysPerNight } from "@/lib/db";
 
 const schema = z.object({
-  goalIds: z.array(z.string()).min(1).max(10)
+  goalIds: z.array(z.string()).min(1).max(10).optional(),
+  playsPerNight: z.number().int().min(1).max(2).optional()
 });
 
 const GOAL_LIMIT = 10;
@@ -57,7 +58,8 @@ export async function GET() {
     canEdit: editState.canEdit,
     nextAllowedAt: editState.nextAllowedAt,
     subscriptionTier: profile.subscriptionTier,
-    subscriptionStatus: profile.subscriptionStatus
+    subscriptionStatus: profile.subscriptionStatus,
+    playsPerNight: profile.playsPerNight || 2
   });
 }
 
@@ -70,18 +72,24 @@ export async function PUT(request: Request) {
   if (!profile) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
-  const editState = computeGoalEditState(profile);
-  if (!editState.canEdit) {
-    return NextResponse.json(
-      { error: "Goal changes are not available yet.", nextAllowedAt: editState.nextAllowedAt },
-      { status: 403 }
-    );
-  }
   const body = await request.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  await setUserGoals(profile.id, parsed.data.goalIds);
+  const editState = computeGoalEditState(profile);
+  const nextGoals = parsed.data.goalIds;
+  if (nextGoals) {
+    if (!editState.canEdit) {
+      return NextResponse.json(
+        { error: "Goal changes are not available yet.", nextAllowedAt: editState.nextAllowedAt },
+        { status: 403 }
+      );
+    }
+    await setUserGoals(profile.id, nextGoals);
+  }
+  if (parsed.data.playsPerNight) {
+    await setUserPlaysPerNight(profile.id, parsed.data.playsPerNight);
+  }
   return NextResponse.json({ ok: true });
 }

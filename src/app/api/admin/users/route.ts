@@ -8,21 +8,24 @@ import {
   getUserByEmail,
   getUserProfile,
   listUsers,
-  setUserGoals
+  setUserGoals,
+  setUserPlaysPerNight
 } from "@/lib/db";
 
 const createSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   tier: z.enum(["bronze", "gold", "platinum"]).default("bronze"),
-  status: z.enum(["inactive", "active", "past_due", "canceled"]).default("inactive")
+  status: z.enum(["inactive", "active", "past_due", "canceled"]).default("inactive"),
+  playsPerNight: z.number().int().min(1).max(2).optional()
 });
 
 const updateSchema = z.object({
   email: z.string().email(),
   tier: z.enum(["bronze", "gold", "platinum"]).optional(),
   status: z.enum(["inactive", "active", "past_due", "canceled"]).optional(),
-  goalIds: z.array(z.string()).max(10).optional()
+  goalIds: z.array(z.string()).max(10).optional(),
+  playsPerNight: z.number().int().min(1).max(2).optional()
 });
 
 export async function GET() {
@@ -49,6 +52,9 @@ export async function POST(request: Request) {
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
   const user = await createUser(parsed.data.email, passwordHash);
   await ensureSubscription(user.id, parsed.data.tier, parsed.data.status);
+  if (parsed.data.playsPerNight) {
+    await setUserPlaysPerNight(user.id, parsed.data.playsPerNight);
+  }
   return NextResponse.json({ ok: true });
 }
 
@@ -71,6 +77,9 @@ export async function PATCH(request: Request) {
   await ensureSubscription(user.id, tier, status);
   if (parsed.data.goalIds) {
     await setUserGoals(user.id, parsed.data.goalIds);
+  }
+  if (parsed.data.playsPerNight) {
+    await setUserPlaysPerNight(user.id, parsed.data.playsPerNight);
   }
   return NextResponse.json({ ok: true });
 }

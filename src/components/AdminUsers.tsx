@@ -13,6 +13,7 @@ type UserRow = {
   goalIds: string[];
   subscriptionStatus: "inactive" | "active" | "past_due" | "canceled" | null;
   subscriptionTier: "bronze" | "gold" | "platinum" | null;
+  playsPerNight: number;
 };
 
 const inputStyle = {
@@ -31,6 +32,7 @@ export default function AdminUsers() {
   const [createTier, setCreateTier] = useState<UserRow["subscriptionTier"]>("bronze");
   const [createStatus, setCreateStatus] =
     useState<UserRow["subscriptionStatus"]>("inactive");
+  const [createPlaysPerNight, setCreatePlaysPerNight] = useState<1 | 2>(2);
   const [updates, setUpdates] = useState<Record<string, Partial<UserRow>>>({});
 
 
@@ -62,13 +64,15 @@ export default function AdminUsers() {
         email: createEmail,
         password: createPassword,
         tier: createTier,
-        status: createStatus
+        status: createStatus,
+        playsPerNight: createPlaysPerNight
       })
     });
     if (response.ok) {
       setStatus("User created.");
       setCreateEmail("");
       setCreatePassword("");
+      setCreatePlaysPerNight(2);
       await load();
       return;
     }
@@ -87,7 +91,8 @@ export default function AdminUsers() {
         email,
         tier: update.subscriptionTier,
         status: update.subscriptionStatus,
-        goalIds: update.goalIds
+        goalIds: update.goalIds,
+        playsPerNight: update.playsPerNight
       })
     });
     if (response.ok) {
@@ -144,6 +149,16 @@ export default function AdminUsers() {
               <option value="active">Active</option>
               <option value="past_due">Past Due</option>
               <option value="canceled">Canceled</option>
+            </select>
+            <select
+              style={inputStyle}
+              value={createPlaysPerNight}
+              onChange={(event) =>
+                setCreatePlaysPerNight(Number(event.target.value) as 1 | 2)
+              }
+            >
+              <option value={2}>2 sessions per night (default)</option>
+              <option value={1}>1 session per night</option>
             </select>
             <button className="button" onClick={createUser}>
               Create Subscriber
@@ -205,6 +220,22 @@ export default function AdminUsers() {
                     <option value="active">Active</option>
                     <option value="past_due">Past Due</option>
                     <option value="canceled">Canceled</option>
+                  </select>
+                  <select
+                    style={inputStyle}
+                    value={updates[user.email]?.playsPerNight || user.playsPerNight || 2}
+                    onChange={(event) =>
+                      setUpdates({
+                        ...updates,
+                        [user.email]: {
+                          ...updates[user.email],
+                          playsPerNight: Number(event.target.value) as 1 | 2
+                        }
+                      })
+                    }
+                  >
+                    <option value={2}>2 sessions per night</option>
+                    <option value={1}>1 session per night</option>
                   </select>
                   <label style={{ fontSize: 12 }}>Assigned goals (up to 10)</label>
                   <select

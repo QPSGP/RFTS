@@ -12,6 +12,7 @@ type ScheduleInput = {
   settings: PlaybackSettings;
   tier: "bronze" | "gold" | "platinum";
   nights: number;
+  playsPerNight?: 1 | 2;
 };
 
 const pickFirstByInterest = (library: LibraryItem[], interestId: string) => {
@@ -30,7 +31,8 @@ export const buildSchedulePreview = ({
   library,
   settings,
   tier,
-  nights
+  nights,
+  playsPerNight = 2
 }: ScheduleInput): ScheduleNight[] => {
   const orderedTracks = interests
     .map((id) => pickFirstByInterest(library, id))
@@ -81,7 +83,8 @@ export const buildSchedulePreview = ({
 
     const first = takeNext();
     const second = night % 2 === 1 ? takeNext() : specialTrack;
-    const tracks = [first, second].filter(
+    const selectedTracks = playsPerNight === 1 ? [first] : [first, second];
+    const tracks = selectedTracks.filter(
       (item): item is LibraryItem => !!item
     );
 
@@ -90,7 +93,12 @@ export const buildSchedulePreview = ({
     schedule.push({
       night,
       tracks,
-      note: night % 2 === 1 ? "Rotation night" : "CGMR/T18 night"
+      note:
+        playsPerNight === 1
+          ? "One session per night"
+          : night % 2 === 1
+            ? `Rotation night (${settings.nightlyGapHours} hour gap)`
+            : `CGMR/T18 night (${settings.nightlyGapHours} hour gap)`
     });
 
     // Remove tracks that reached the play target

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import fs from "fs";
+import path from "path";
 import { getUserSessionEmail } from "@/lib/user-auth";
 import { getPlaybackSettings, getUserProfile, listLibrary } from "@/lib/db";
 import { buildSchedulePreview } from "@/lib/scheduler";
@@ -7,6 +9,21 @@ import { buildSchedulePreview } from "@/lib/scheduler";
 const schema = z.object({
   nights: z.number().int().min(1).max(30).optional()
 });
+
+const dataDir = path.join(process.cwd(), "data");
+const PREP_AUDIO_NAME = "RFTS_starting_music.mp3";
+
+const readJson = <T>(fileName: string, fallback: T): T => {
+  const filePath = path.join(dataDir, fileName);
+  if (!fs.existsSync(filePath)) {
+    return fallback;
+  }
+  const raw = fs.readFileSync(filePath, "utf8");
+  if (!raw) {
+    return fallback;
+  }
+  return JSON.parse(raw) as T;
+};
 
 export async function GET(request: Request) {
   const email = getUserSessionEmail();
@@ -38,7 +55,21 @@ export async function GET(request: Request) {
     library,
     settings,
     tier: profile.subscriptionTier || "bronze",
-    nights
+    nights,
+    playsPerNight: profile.playsPerNight === 1 ? 1 : 2
   });
-  return NextResponse.json({ schedule, nights });
+  const blobAssets = readJson<{ audios?: Record<string, string> }>(
+    "blob-assets.json",
+    {}
+  );
+  const prepAudioUrl = blobAssets.audios?.[PREP_AUDIO_NAME] || "";
+  return NextResponse.json({
+    schedule,
+    nights,
+    playsPerNight: profile.playsPerNight === 1 ? 1 : 2,
+    gapHours: settings.nightlyGapHours,
+    prepAudio: prepAudioUrl
+      ? { title: "Preparation Audio", url: prepAudioUrl }
+      : null
+  });
 }

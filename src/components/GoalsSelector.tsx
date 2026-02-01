@@ -14,6 +14,7 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
   const [limit, setLimit] = useState(10);
   const [canEdit, setCanEdit] = useState(true);
   const [nextAllowedAt, setNextAllowedAt] = useState<string | null>(null);
+  const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
 
   useEffect(() => {
     fetch("/api/user/goals")
@@ -28,6 +29,7 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
         setLimit(data.limit || 10);
         setCanEdit(data.canEdit ?? true);
         setNextAllowedAt(data.nextAllowedAt || null);
+        setPlaysPerNight(data.playsPerNight === 1 ? 1 : 2);
         setStatus("ready");
       })
       .catch(() => setStatus("loggedOut"));
@@ -50,10 +52,11 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
     const response = await fetch("/api/user/goals", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ goalIds })
+      body: JSON.stringify({ goalIds, playsPerNight })
     });
     if (response.ok) {
       setMessage("Goals saved.");
+      window.location.href = "/play-options?autoplay=1";
       return;
     }
     const data = await response.json().catch(() => ({}));
@@ -104,6 +107,33 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
             {interest.description && <p>{interest.description}</p>}
           </label>
         ))}
+      </div>
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3>Sessions per night</h3>
+        <p style={{ color: "#4b5563" }}>
+          Choose to play 1 or 2 recordings each night (default is 2). The rotation
+          schedule is managed by the admin.
+        </p>
+        <div style={{ display: "flex", gap: 12 }}>
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input
+              type="radio"
+              name="playsPerNight"
+              checked={playsPerNight === 2}
+              onChange={() => setPlaysPerNight(2)}
+            />
+            2 per night (recommended)
+          </label>
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input
+              type="radio"
+              name="playsPerNight"
+              checked={playsPerNight === 1}
+              onChange={() => setPlaysPerNight(1)}
+            />
+            1 per night
+          </label>
+        </div>
       </div>
       <button
         className="button"

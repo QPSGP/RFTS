@@ -24,6 +24,7 @@ export type DbUser = {
   password_hash: string;
   goal_ids: string[] | null;
   goal_updated_at: string | null;
+  plays_per_night: number | null;
   created_at: string;
 };
 
@@ -42,13 +43,14 @@ export type UserProfile = {
   email: string;
   goalIds: string[];
   goalUpdatedAt: string | null;
+  playsPerNight: number;
   subscriptionStatus: DbSubscription["status"] | null;
   subscriptionTier: DbSubscription["tier"] | null;
 };
 
 export const getUserByEmail = async (email: string) => {
   const { rows } = await sql<DbUser>`
-    SELECT id, email, password_hash, goal_ids, goal_updated_at, created_at
+    SELECT id, email, password_hash, goal_ids, goal_updated_at, plays_per_night, created_at
     FROM users
     WHERE LOWER(email) = LOWER(${email})
     LIMIT 1
@@ -60,7 +62,7 @@ export const createUser = async (email: string, passwordHash: string) => {
   const { rows } = await sql<DbUser>`
     INSERT INTO users (email, password_hash)
     VALUES (${email}, ${passwordHash})
-    RETURNING id, email, password_hash, goal_ids, goal_updated_at, created_at
+    RETURNING id, email, password_hash, goal_ids, goal_updated_at, plays_per_night, created_at
   `;
   return rows[0];
 };
@@ -86,7 +88,17 @@ export const setUserGoals = async (userId: string, goalIds: string[]) => {
     UPDATE users
     SET goal_ids = ${goalArray}::text[], goal_updated_at = now()
     WHERE id = ${userId}
-    RETURNING id, email, password_hash, goal_ids, goal_updated_at, created_at
+    RETURNING id, email, password_hash, goal_ids, goal_updated_at, plays_per_night, created_at
+  `;
+  return rows[0];
+};
+
+export const setUserPlaysPerNight = async (userId: string, playsPerNight: number) => {
+  const { rows } = await sql<DbUser>`
+    UPDATE users
+    SET plays_per_night = ${playsPerNight}
+    WHERE id = ${userId}
+    RETURNING id, email, password_hash, goal_ids, goal_updated_at, plays_per_night, created_at
   `;
   return rows[0];
 };
@@ -98,6 +110,7 @@ export const getUserProfile = async (email: string) => {
       u.email,
       COALESCE(u.goal_ids, ARRAY[]::text[]) AS "goalIds",
       u.goal_updated_at AS "goalUpdatedAt",
+      COALESCE(u.plays_per_night, 2) AS "playsPerNight",
       s.status AS "subscriptionStatus",
       s.tier AS "subscriptionTier"
     FROM users u
@@ -115,6 +128,7 @@ export const listUsers = async () => {
       u.email,
       COALESCE(u.goal_ids, ARRAY[]::text[]) AS "goalIds",
       u.goal_updated_at AS "goalUpdatedAt",
+      COALESCE(u.plays_per_night, 2) AS "playsPerNight",
       s.status AS "subscriptionStatus",
       s.tier AS "subscriptionTier"
     FROM users u

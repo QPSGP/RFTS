@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
+import SessionPlayer from "@/components/SessionPlayer";
 
 export default function PlayOptionsPage() {
   const [status, setStatus] = useState<"loading" | "loggedOut" | "inactive" | "active">(
@@ -12,12 +13,20 @@ export default function PlayOptionsPage() {
     goalIds: string[];
     subscriptionStatus: string | null;
     subscriptionTier: string | null;
+    playsPerNight: number;
   } | null>(null);
   const [schedule, setSchedule] = useState<
-    { night: number; tracks: { id: string; title: string }[]; note?: string }[]
+    { night: number; tracks: { id: string; title: string; audioUrl: string }[]; note?: string }[]
   >([]);
+  const [prepAudio, setPrepAudio] = useState<{ title: string; url: string } | null>(
+    null
+  );
+  const [gapHours, setGapHours] = useState(2.5);
+  const [autoStart, setAutoStart] = useState(false);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setAutoStart(params.get("autoplay") === "1");
     fetch("/api/user/me")
       .then((res) => {
         if (!res.ok) {
@@ -33,7 +42,11 @@ export default function PlayOptionsPage() {
         if (subscriptionStatus === "active") {
           fetch("/api/user/schedule?nights=7")
             .then((res) => (res.ok ? res.json() : null))
-            .then((data) => setSchedule(data?.schedule || []))
+            .then((data) => {
+              setSchedule(data?.schedule || []);
+              setPrepAudio(data?.prepAudio || null);
+              setGapHours(data?.gapHours || 2.5);
+            })
             .catch(() => setSchedule([]));
         }
       })
@@ -132,16 +145,27 @@ export default function PlayOptionsPage() {
         <div className="card" id="meditation-session">
           <h3>Meditation Session</h3>
           <p>
-            Start a guided session tailored to your goals. This section mirrors
-            the existing anchor.
+            Start a guided session tailored to your goals. Each session plays your
+            preparation audio, then your first goal recording. A second recording
+            is scheduled {gapHours} hours later if the admin has enabled 2 sessions
+            per night for your account.
           </p>
           {schedule.length > 0 && (
             <div style={{ marginTop: 12 }}>
               <strong>Tonight's lineup</strong>
               <div className="stack" style={{ marginTop: 8 }}>
-                {schedule[0].tracks.map((track) => (
-                  <a key={track.id} className="button button-secondary" href={`/library/${track.id}`}>
-                    Play {track.title}
+                {prepAudio && (
+                  <span>
+                    Preparation audio: {prepAudio.title}
+                  </span>
+                )}
+                {schedule[0].tracks.map((track, index) => (
+                  <a
+                    key={track.id}
+                    className="button button-secondary"
+                    href={`/library/${track.id}`}
+                  >
+                    Play {index === 1 ? "Second" : "First"}: {track.title}
                   </a>
                 ))}
               </div>
@@ -149,11 +173,29 @@ export default function PlayOptionsPage() {
           )}
         </div>
         {schedule.length > 0 && (
+          <SessionPlayer
+            prepAudio={prepAudio}
+            firstTrack={
+              schedule[0].tracks[0]
+                ? { title: schedule[0].tracks[0].title, url: schedule[0].tracks[0].audioUrl }
+                : null
+            }
+            secondTrack={
+              schedule[0].tracks[1]
+                ? { title: schedule[0].tracks[1].title, url: schedule[0].tracks[1].audioUrl }
+                : null
+            }
+            gapHours={gapHours}
+            autoStart={autoStart}
+          />
+        )}
+        {schedule.length > 0 && (
           <div className="card">
             <h3>Session Cycle</h3>
             <p>
               Your sessions rotate through the goals you selected. Each night lists the
-              two recordings scheduled to play.
+              recordings scheduled to play based on the admin-controlled 1 or 2
+              sessions per night setting.
             </p>
             <div className="grid" style={{ marginTop: 12 }}>
               {schedule.map((night) => (
