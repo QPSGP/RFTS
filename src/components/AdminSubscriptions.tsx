@@ -40,7 +40,8 @@ export default function AdminSubscriptions() {
     if (response.ok) {
       setStatus("Plans saved.");
     } else {
-      setStatus("Unable to save plans. Admin login required.");
+      const data = await response.json().catch(() => ({}));
+      setStatus(data?.error || "Unable to save plans. Admin login required.");
     }
   };
 
