@@ -12,12 +12,12 @@ export default function AdminContentPage() {
         <h1>Admin Content Console</h1>
         <p>Manage interests, audio library items, and ordering.</p>
       </section>
-      <AdminContent />
+      <AdminUsers />
+      <AdminModerators />
+      <ModerationQueue />
       <AdminPlaybackSettings />
       <AdminSubscriptions />
-      <AdminModerators />
-      <AdminUsers />
-      <ModerationQueue />
+      <AdminContent />
     </main>
   );
 }

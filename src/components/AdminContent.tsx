@@ -263,7 +263,7 @@ export default function AdminContent() {
         </form>
         <div className="grid" style={{ marginTop: 16 }}>
           {library.map((item) => (
-            <div key={item.id} className="card">
+            <div key={item.id} id={`audio-${item.id}`} className="card">
               {editingId === item.id && editDraft ? (
                 <form onSubmit={saveEdit} className="grid">
                   <input
@@ -394,6 +394,18 @@ export default function AdminContent() {
             </div>
           ))}
         </div>
+        {library.length > 0 && (
+          <div className="card" style={{ marginTop: 16 }}>
+            <h3>Audio Title List (Jump Links)</h3>
+            <div className="stack">
+              {library.map((item) => (
+                <a key={item.id} href={`#audio-${item.id}`}>
+                  {item.title}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

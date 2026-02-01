@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { sql } from "@vercel/postgres";
 import { isAdminSession } from "@/lib/auth";
 import {
   createUser,
@@ -25,7 +26,8 @@ const updateSchema = z.object({
   tier: z.enum(["bronze", "gold", "platinum"]).optional(),
   status: z.enum(["inactive", "active", "past_due", "canceled"]).optional(),
   goalIds: z.array(z.string()).max(10).optional(),
-  playsPerNight: z.number().int().min(1).max(2).optional()
+  playsPerNight: z.number().int().min(1).max(2).optional(),
+  resetPassword: z.string().min(6).optional()
 });
 
 export async function GET() {
@@ -80,6 +82,14 @@ export async function PATCH(request: Request) {
   }
   if (parsed.data.playsPerNight) {
     await setUserPlaysPerNight(user.id, parsed.data.playsPerNight);
+  }
+  if (parsed.data.resetPassword) {
+    const passwordHash = await bcrypt.hash(parsed.data.resetPassword, 10);
+    await sql`
+      UPDATE users
+      SET password_hash = ${passwordHash}
+      WHERE id = ${user.id}
+    `;
   }
   return NextResponse.json({ ok: true });
 }

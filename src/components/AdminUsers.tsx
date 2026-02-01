@@ -34,6 +34,7 @@ export default function AdminUsers() {
     useState<UserRow["subscriptionStatus"]>("inactive");
   const [createPlaysPerNight, setCreatePlaysPerNight] = useState<1 | 2>(2);
   const [updates, setUpdates] = useState<Record<string, Partial<UserRow>>>({});
+  const [resetPasswords, setResetPasswords] = useState<Record<string, string>>({});
 
 
   const load = async () => {
@@ -96,11 +97,13 @@ export default function AdminUsers() {
         tier: update.subscriptionTier,
         status: update.subscriptionStatus,
         goalIds: update.goalIds,
-        playsPerNight: update.playsPerNight
+        playsPerNight: update.playsPerNight,
+        resetPassword: resetPasswords[email]
       })
     });
     if (response.ok) {
       setStatus("User updated.");
+      setResetPasswords((prev) => ({ ...prev, [email]: "" }));
       await load();
       return;
     }
@@ -244,6 +247,18 @@ export default function AdminUsers() {
                     <option value={2}>2 sessions per night</option>
                     <option value={1}>1 session per night</option>
                   </select>
+                  <input
+                    style={inputStyle}
+                    placeholder="Reset password (optional)"
+                    type="password"
+                    value={resetPasswords[user.email] || ""}
+                    onChange={(event) =>
+                      setResetPasswords({
+                        ...resetPasswords,
+                        [user.email]: event.target.value
+                      })
+                    }
+                  />
                   <label style={{ fontSize: 12 }}>Assigned goals (up to 10)</label>
                   <select
                     multiple
