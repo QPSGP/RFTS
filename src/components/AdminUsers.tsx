@@ -76,7 +76,11 @@ export default function AdminUsers() {
       await load();
       return;
     }
-    setStatus("Create failed. Email may already exist.");
+    const data = await response.json().catch(() => ({}));
+    setStatus(
+      data?.error ||
+        `Create failed. Email may already exist. (status ${response.status})`
+    );
   };
 
   const updateUser = async (email: string) => {
@@ -98,7 +102,10 @@ export default function AdminUsers() {
     if (response.ok) {
       setStatus("User updated.");
       await load();
+      return;
     }
+    const data = await response.json().catch(() => ({}));
+    setStatus(data?.error || `Update failed. (status ${response.status})`);
   };
 
   return (
