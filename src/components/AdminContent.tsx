@@ -209,13 +209,24 @@ export default function AdminContent() {
             Add Interest
           </button>
         </form>
-        <div className="grid" style={{ marginTop: 16 }}>
+        <div
+          className="grid"
+          style={{
+            marginTop: 16,
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))"
+          }}
+        >
           {interests.map((interest) => (
-            <div key={interest.id} className="card">
+            <div key={interest.id} className="card" style={{ padding: 12 }}>
               <strong>{interest.name}</strong>
-              <p>{interest.description}</p>
+              {interest.description && (
+                <p style={{ marginTop: 6, color: "#4b5563" }}>
+                  {interest.description}
+                </p>
+              )}
               <button
                 className="button button-secondary"
+                style={{ marginTop: 8 }}
                 onClick={() => deleteInterest(interest.id)}
               >
                 Remove
@@ -234,6 +245,24 @@ export default function AdminContent() {
           Sync Descriptions & Covers
         </button>
         {syncStatus && <p style={{ marginTop: 8 }}>{syncStatus}</p>}
+        {library.length > 0 && (
+          <div className="card" style={{ marginTop: 16 }}>
+            <h3>Audio Title List (Jump Links)</h3>
+            <div
+              style={{
+                display: "grid",
+                gap: 8,
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))"
+              }}
+            >
+              {library.map((item) => (
+                <a key={item.id} href={`#audio-${item.id}`}>
+                  {item.title}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
         <form onSubmit={addLibraryItem} className="grid">
           <input name="title" placeholder="Title" required style={inputStyle} />
           <input
@@ -394,18 +423,6 @@ export default function AdminContent() {
             </div>
           ))}
         </div>
-        {library.length > 0 && (
-          <div className="card" style={{ marginTop: 16 }}>
-            <h3>Audio Title List (Jump Links)</h3>
-            <div className="stack">
-              {library.map((item) => (
-                <a key={item.id} href={`#audio-${item.id}`}>
-                  {item.title}
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
