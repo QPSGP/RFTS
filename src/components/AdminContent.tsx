@@ -198,41 +198,49 @@ export default function AdminContent() {
       {status && <p>{status}</p>}
       <div className="card">
         <h2>Interests</h2>
-        <form onSubmit={addInterest} className="grid">
-          <input name="name" placeholder="Interest name" required style={inputStyle} />
-          <input
-            name="description"
-            placeholder="Short description"
-            style={inputStyle}
-          />
-          <button className="button" type="submit">
-            Add Interest
-          </button>
-        </form>
-        <div
-          className="grid"
-          style={{
-            marginTop: 16,
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))"
-          }}
-        >
-          {interests.map((interest) => (
-            <div key={interest.id} className="card" style={{ padding: 12 }}>
-              <strong>{interest.name}</strong>
-              {interest.description && (
-                <p style={{ marginTop: 6, color: "#4b5563" }}>
-                  {interest.description}
-                </p>
-              )}
-              <button
-                className="button button-secondary"
-                style={{ marginTop: 8 }}
-                onClick={() => deleteInterest(interest.id)}
+        <div className="grid grid-2" style={{ gap: 16 }}>
+          <form onSubmit={addInterest} className="grid">
+            <input name="name" placeholder="Interest name" required style={inputStyle} />
+            <input
+              name="description"
+              placeholder="Short description"
+              style={inputStyle}
+            />
+            <button className="button" type="submit">
+              Add Interest
+            </button>
+          </form>
+          <div
+            className="grid"
+            style={{
+              marginTop: 0,
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))"
+            }}
+          >
+            {interests.map((interest) => (
+              <div
+                key={interest.id}
+                className="card"
+                style={{ padding: 10, display: "grid", gap: 6 }}
               >
-                Remove
-              </button>
-            </div>
-          ))}
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                  <strong>{interest.name}</strong>
+                  <button
+                    className="button button-secondary"
+                    style={{ padding: "4px 8px", fontSize: 12, lineHeight: 1 }}
+                    onClick={() => deleteInterest(interest.id)}
+                  >
+                    Remove
+                  </button>
+                </div>
+                {interest.description && (
+                  <p style={{ marginTop: 0, color: "#4b5563" }}>
+                    {interest.description}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -389,6 +397,31 @@ export default function AdminContent() {
                 </form>
               ) : (
                 <>
+                  {item.coverUrl ? (
+                    <img
+                      src={item.coverUrl}
+                      alt={`${item.title} cover`}
+                      style={{
+                        width: "100%",
+                        maxWidth: 220,
+                        borderRadius: 10,
+                        border: "1px solid #e5e7eb",
+                        marginBottom: 8
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="card"
+                      style={{
+                        width: "100%",
+                        maxWidth: 220,
+                        marginBottom: 8,
+                        textAlign: "center"
+                      }}
+                    >
+                      Cover pending
+                    </div>
+                  )}
                   <strong>{item.title}</strong>
                   <p>{item.description || "Description pending."}</p>
                   <p>Cover: {item.coverUrl || "Pending"}</p>
