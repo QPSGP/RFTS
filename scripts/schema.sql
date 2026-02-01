@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   email text UNIQUE NOT NULL,
   password_hash text NOT NULL,
   goal_ids text[] DEFAULT ARRAY[]::text[],
+  goal_updated_at timestamptz,
   created_at timestamptz DEFAULT now()
 );
 

@@ -31,7 +31,7 @@ export default function UserAuth() {
       body: JSON.stringify(payload)
     });
     if (response.ok) {
-      window.location.href = "/play-options";
+      window.location.href = mode === "signup" ? "/goals" : "/play-options";
       return;
     }
     setStatus(mode === "signup" ? "Sign up failed." : "Login failed.");

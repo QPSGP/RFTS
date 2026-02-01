@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react";
 
+type Interest = {
+  id: string;
+  name: string;
+};
+
 type UserRow = {
   id: string;
   email: string;
@@ -19,6 +24,7 @@ const inputStyle = {
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<UserRow[]>([]);
+  const [interests, setInterests] = useState<Interest[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [createEmail, setCreateEmail] = useState("");
   const [createPassword, setCreatePassword] = useState("");
@@ -27,14 +33,20 @@ export default function AdminUsers() {
     useState<UserRow["subscriptionStatus"]>("inactive");
   const [updates, setUpdates] = useState<Record<string, Partial<UserRow>>>({});
 
+
   const load = async () => {
-    const response = await fetch("/api/admin/users");
-    if (!response.ok) {
+    const [usersRes, interestsRes] = await Promise.all([
+      fetch("/api/admin/users"),
+      fetch("/api/interests")
+    ]);
+    if (!usersRes.ok || !interestsRes.ok) {
       setStatus("Admin session required.");
       return;
     }
-    const data = await response.json();
-    setUsers(data.users || []);
+    const usersData = await usersRes.json();
+    const interestsData = await interestsRes.json();
+    setUsers(usersData.users || []);
+    setInterests(interestsData.interests || []);
   };
 
   useEffect(() => {
@@ -74,7 +86,8 @@ export default function AdminUsers() {
       body: JSON.stringify({
         email,
         tier: update.subscriptionTier,
-        status: update.subscriptionStatus
+        status: update.subscriptionStatus,
+        goalIds: update.goalIds
       })
     });
     if (response.ok) {
@@ -192,6 +205,30 @@ export default function AdminUsers() {
                     <option value="active">Active</option>
                     <option value="past_due">Past Due</option>
                     <option value="canceled">Canceled</option>
+                  </select>
+                  <label style={{ fontSize: 12 }}>Assigned goals (up to 10)</label>
+                  <select
+                    multiple
+                    style={inputStyle}
+                    value={updates[user.email]?.goalIds || user.goalIds || []}
+                    onChange={(event) =>
+                      setUpdates({
+                        ...updates,
+                        [user.email]: {
+                          ...updates[user.email],
+                          goalIds: Array.from(
+                            event.target.selectedOptions,
+                            (option) => option.value
+                          )
+                        }
+                      })
+                    }
+                  >
+                    {interests.map((interest) => (
+                      <option key={interest.id} value={interest.id}>
+                        {interest.name}
+                      </option>
+                    ))}
                   </select>
                   <button className="button" onClick={() => updateUser(user.email)}>
                     Save

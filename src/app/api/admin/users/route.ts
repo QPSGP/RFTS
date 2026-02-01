@@ -7,7 +7,8 @@ import {
   ensureSubscription,
   getUserByEmail,
   getUserProfile,
-  listUsers
+  listUsers,
+  setUserGoals
 } from "@/lib/db";
 
 const createSchema = z.object({
@@ -20,7 +21,8 @@ const createSchema = z.object({
 const updateSchema = z.object({
   email: z.string().email(),
   tier: z.enum(["bronze", "gold", "platinum"]).optional(),
-  status: z.enum(["inactive", "active", "past_due", "canceled"]).optional()
+  status: z.enum(["inactive", "active", "past_due", "canceled"]).optional(),
+  goalIds: z.array(z.string()).max(10).optional()
 });
 
 export async function GET() {
@@ -67,5 +69,8 @@ export async function PATCH(request: Request) {
   const tier = parsed.data.tier ?? profile?.subscriptionTier ?? "bronze";
   const status = parsed.data.status ?? profile?.subscriptionStatus ?? "inactive";
   await ensureSubscription(user.id, tier, status);
+  if (parsed.data.goalIds) {
+    await setUserGoals(user.id, parsed.data.goalIds);
+  }
   return NextResponse.json({ ok: true });
 }
