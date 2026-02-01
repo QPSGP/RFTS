@@ -34,6 +34,7 @@ export default function AdminSubscriptions() {
     setStatus(null);
     const response = await fetch("/api/subscriptions", {
       method: "PUT",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ plans })
     });
@@ -41,7 +42,10 @@ export default function AdminSubscriptions() {
       setStatus("Plans saved.");
     } else {
       const data = await response.json().catch(() => ({}));
-      setStatus(data?.error || "Unable to save plans. Admin login required.");
+      setStatus(
+        data?.error ||
+          `Unable to save plans. Admin login required. (status ${response.status})`
+      );
     }
   };
 
