@@ -60,7 +60,7 @@ export default function UserAuth() {
           <div className="cta-row" style={{ marginTop: 12 }}>
             <a
               className="button"
-              href="/play-options#meditation-session"
+              href="/play-options?autoplay=1#meditation-session"
               style={{ padding: "18px 24px", fontSize: 18, minHeight: 56 }}
             >
               START SESSION
