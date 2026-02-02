@@ -29,6 +29,22 @@ export default function SessionPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  const attemptPlay = (track?: SessionTrack | null) => {
+    const audio = audioRef.current;
+    if (!audio || !track) {
+      return;
+    }
+    if (audio.src !== track.url) {
+      audio.src = track.url;
+    }
+    const playPromise = audio.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {
+        setMessage("Tap play to start the session.");
+      });
+    }
+  };
+
   const startSession = () => {
     if (!firstTrack) {
       setMessage("Select goals to build your session lineup.");
@@ -40,6 +56,7 @@ export default function SessionPlayer({
     setQueue(nextQueue);
     setCurrent(nextQueue[0] || null);
     setMessage(null);
+    attemptPlay(nextQueue[0]);
   };
 
   const playSecond = () => {
@@ -50,6 +67,7 @@ export default function SessionPlayer({
     setQueue([secondTrack]);
     setCurrent(secondTrack);
     setMessage(null);
+    attemptPlay(secondTrack);
   };
 
   useEffect(() => {
@@ -57,7 +75,9 @@ export default function SessionPlayer({
     if (!audio || !current) {
       return;
     }
-    audio.load();
+    if (audio.src !== current.url) {
+      audio.src = current.url;
+    }
     const playPromise = audio.play();
     if (playPromise && typeof playPromise.catch === "function") {
       playPromise.catch(() => {
@@ -159,10 +179,7 @@ export default function SessionPlayer({
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
             style={{ width: "100%", marginTop: 8 }}
-          >
-            <source src={current.url} />
-            Your browser does not support the audio element.
-          </audio>
+          />
           {isMobile && (
             <div
               style={{
