@@ -27,6 +27,7 @@ export default function SessionPlayer({
   const [current, setCurrent] = useState<SessionTrack | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const startSession = () => {
     if (!firstTrack) {
@@ -71,6 +72,21 @@ export default function SessionPlayer({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart, firstTrack?.url]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const media = window.matchMedia("(max-width: 768px)");
+    const handleChange = () => setIsMobile(media.matches);
+    handleChange();
+    if (media.addEventListener) {
+      media.addEventListener("change", handleChange);
+      return () => media.removeEventListener("change", handleChange);
+    }
+    media.addListener(handleChange);
+    return () => media.removeListener(handleChange);
+  }, []);
 
   const handleEnded = () => {
     if (queue.length <= 1) {
@@ -117,7 +133,25 @@ export default function SessionPlayer({
       {current && (
         <div style={{ marginTop: 16 }}>
           <strong>Now Playing: {current.title}</strong>
-          <div style={{ height: 88 }} />
+          {!isMobile && (
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
+              <button className="button button-secondary" onClick={handlePause} type="button">
+                Pause
+              </button>
+              <button
+                className="button button-secondary"
+                onClick={handlePlay}
+                type="button"
+                disabled={isPlaying}
+              >
+                Play
+              </button>
+              <button className="button button-secondary" onClick={handleRestart} type="button">
+                Restart
+              </button>
+            </div>
+          )}
+          {isMobile && <div style={{ height: 88 }} />}
           <audio
             ref={audioRef}
             controls
@@ -129,48 +163,68 @@ export default function SessionPlayer({
             <source src={current.url} />
             Your browser does not support the audio element.
           </audio>
-          <div
-            style={{
-              position: "fixed",
-              left: 0,
-              right: 0,
-              bottom: 0,
-              padding: "12px 16px",
-              background: "#ffffff",
-              boxShadow: "0 -6px 18px rgba(15, 23, 42, 0.12)",
-              display: "flex",
-              gap: 12,
-              flexWrap: "wrap",
-              justifyContent: "center",
-              zIndex: 50
-            }}
-          >
-            <button
-              className="button button-secondary"
-              onClick={handlePause}
-              type="button"
-              style={{ padding: "18px 24px", fontSize: 18, minHeight: 56, flex: 1, minWidth: 120 }}
+          {isMobile && (
+            <div
+              style={{
+                position: "fixed",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                padding: "12px 16px",
+                background: "#ffffff",
+                boxShadow: "0 -6px 18px rgba(15, 23, 42, 0.12)",
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+                justifyContent: "center",
+                zIndex: 50
+              }}
             >
-              Pause
-            </button>
-            <button
-              className="button button-secondary"
-              onClick={handlePlay}
-              type="button"
-              disabled={isPlaying}
-              style={{ padding: "18px 24px", fontSize: 18, minHeight: 56, flex: 1, minWidth: 120 }}
-            >
-              Play
-            </button>
-            <button
-              className="button button-secondary"
-              onClick={handleRestart}
-              type="button"
-              style={{ padding: "18px 24px", fontSize: 18, minHeight: 56, flex: 1, minWidth: 120 }}
-            >
-              Restart
-            </button>
-          </div>
+              <button
+                className="button button-secondary"
+                onClick={handlePause}
+                type="button"
+                style={{
+                  padding: "18px 24px",
+                  fontSize: 18,
+                  minHeight: 56,
+                  flex: 1,
+                  minWidth: 120
+                }}
+              >
+                Pause
+              </button>
+              <button
+                className="button button-secondary"
+                onClick={handlePlay}
+                type="button"
+                disabled={isPlaying}
+                style={{
+                  padding: "18px 24px",
+                  fontSize: 18,
+                  minHeight: 56,
+                  flex: 1,
+                  minWidth: 120
+                }}
+              >
+                Play
+              </button>
+              <button
+                className="button button-secondary"
+                onClick={handleRestart}
+                type="button"
+                style={{
+                  padding: "18px 24px",
+                  fontSize: 18,
+                  minHeight: 56,
+                  flex: 1,
+                  minWidth: 120
+                }}
+              >
+                Restart
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
