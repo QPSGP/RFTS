@@ -117,22 +117,7 @@ export default function SessionPlayer({
       {current && (
         <div style={{ marginTop: 16 }}>
           <strong>Now Playing: {current.title}</strong>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
-            <button className="button button-secondary" onClick={handlePause} type="button">
-              Pause
-            </button>
-            <button
-              className="button button-secondary"
-              onClick={handlePlay}
-              type="button"
-              disabled={isPlaying}
-            >
-              Play
-            </button>
-            <button className="button button-secondary" onClick={handleRestart} type="button">
-              Restart
-            </button>
-          </div>
+          <div style={{ height: 88 }} />
           <audio
             ref={audioRef}
             controls
@@ -144,6 +129,48 @@ export default function SessionPlayer({
             <source src={current.url} />
             Your browser does not support the audio element.
           </audio>
+          <div
+            style={{
+              position: "fixed",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              padding: "12px 16px",
+              background: "#ffffff",
+              boxShadow: "0 -6px 18px rgba(15, 23, 42, 0.12)",
+              display: "flex",
+              gap: 12,
+              flexWrap: "wrap",
+              justifyContent: "center",
+              zIndex: 50
+            }}
+          >
+            <button
+              className="button button-secondary"
+              onClick={handlePause}
+              type="button"
+              style={{ padding: "18px 24px", fontSize: 18, minHeight: 56, flex: 1, minWidth: 120 }}
+            >
+              Pause
+            </button>
+            <button
+              className="button button-secondary"
+              onClick={handlePlay}
+              type="button"
+              disabled={isPlaying}
+              style={{ padding: "18px 24px", fontSize: 18, minHeight: 56, flex: 1, minWidth: 120 }}
+            >
+              Play
+            </button>
+            <button
+              className="button button-secondary"
+              onClick={handleRestart}
+              type="button"
+              style={{ padding: "18px 24px", fontSize: 18, minHeight: 56, flex: 1, minWidth: 120 }}
+            >
+              Restart
+            </button>
+          </div>
         </div>
       )}
     </div>
