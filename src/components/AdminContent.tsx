@@ -32,6 +32,9 @@ export default function AdminContent() {
   const [library, setLibrary] = useState<LibraryItem[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [selectedGoalId, setSelectedGoalId] = useState<string>("");
+  const [goalAssignments, setGoalAssignments] = useState<Record<string, boolean>>({});
+  const [goalSaveStatus, setGoalSaveStatus] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<LibraryItem | null>(null);
   const [editInterestIds, setEditInterestIds] = useState<string[]>([]);
@@ -193,6 +196,64 @@ export default function AdminContent() {
     }
   };
 
+  const handleGoalSelect = (goalId: string) => {
+    setSelectedGoalId(goalId);
+    if (!goalId) {
+      setGoalAssignments({});
+      return;
+    }
+    const nextAssignments: Record<string, boolean> = {};
+    library.forEach((item) => {
+      nextAssignments[item.id] = item.interestIds.includes(goalId);
+    });
+    setGoalAssignments(nextAssignments);
+  };
+
+  const toggleGoalAssignment = (itemId: string) => {
+    setGoalAssignments((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
+  };
+
+  const saveGoalAssignments = async () => {
+    if (!selectedGoalId) {
+      setGoalSaveStatus("Select a goal to edit.");
+      return;
+    }
+    setGoalSaveStatus(null);
+    const updates = library.filter((item) => {
+      const shouldHave = !!goalAssignments[item.id];
+      const hasGoal = item.interestIds.includes(selectedGoalId);
+      return shouldHave !== hasGoal;
+    });
+    if (updates.length === 0) {
+      setGoalSaveStatus("No changes to save.");
+      return;
+    }
+    await Promise.all(
+      updates.map((item) => {
+        const shouldHave = !!goalAssignments[item.id];
+        const interestIds = shouldHave
+          ? Array.from(new Set([...item.interestIds, selectedGoalId]))
+          : item.interestIds.filter((id) => id !== selectedGoalId);
+        return fetch("/api/library", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            coverUrl: item.coverUrl || "",
+            audioUrl: item.audioUrl || "",
+            interestIds,
+            allowedUserEmails: item.allowedUserEmails || [],
+            isAdult: item.isAdult || false
+          })
+        });
+      })
+    );
+    setGoalSaveStatus(`Saved ${updates.length} updates.`);
+    await load();
+  };
+
   return (
     <div className="grid" style={{ gap: 24 }}>
       {status && <p>{status}</p>}
@@ -253,6 +314,45 @@ export default function AdminContent() {
           Sync Descriptions & Covers
         </button>
         {syncStatus && <p style={{ marginTop: 8 }}>{syncStatus}</p>}
+        <div className="card" style={{ marginTop: 16 }}>
+          <h3>Assign Audios by Goal</h3>
+          <p style={{ color: "#4b5563" }}>
+            Pick a goal and attach the audios that belong to it.
+          </p>
+          <select
+            style={inputStyle}
+            value={selectedGoalId}
+            onChange={(event) => handleGoalSelect(event.target.value)}
+          >
+            <option value="">Select a goal</option>
+            {interestOptions.map((interest) => (
+              <option key={interest.value} value={interest.value}>
+                {interest.label}
+              </option>
+            ))}
+          </select>
+          {selectedGoalId && (
+            <div className="grid" style={{ marginTop: 12 }}>
+              {library.map((item) => (
+                <label key={item.id} className="card" style={{ cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={!!goalAssignments[item.id]}
+                    onChange={() => toggleGoalAssignment(item.id)}
+                    style={{ marginRight: 8 }}
+                  />
+                  {item.title}
+                </label>
+              ))}
+            </div>
+          )}
+          <div style={{ marginTop: 12, display: "flex", gap: 12 }}>
+            <button className="button button-secondary" onClick={saveGoalAssignments}>
+              Save Goal Assignments
+            </button>
+            {goalSaveStatus && <span style={{ alignSelf: "center" }}>{goalSaveStatus}</span>}
+          </div>
+        </div>
         {library.length > 0 && (
           <div className="card" style={{ marginTop: 16 }}>
             <h3>Audio Title List (Jump Links)</h3>
