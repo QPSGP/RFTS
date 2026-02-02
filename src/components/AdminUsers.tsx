@@ -400,53 +400,67 @@ export default function AdminUsers() {
                       })
                     }
                   />
-                  <label style={{ fontSize: 12 }}>Assigned goals (up to 10)</label>
-                  <div className="grid" style={{ gap: 8 }}>
-                    {interests.map((interest) => {
-                      const orderValue = getGoalOrder(
-                        user.email,
-                        interest.id,
-                        user.goalIds || []
-                      );
-                      return (
-                        <label
-                          key={interest.id}
-                          className="card"
-                          style={{ display: "flex", gap: 8, alignItems: "center" }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={orderValue !== ""}
-                            onChange={(event) =>
-                              updateOrderedGoals(
-                                user.email,
-                                interest.id,
-                                event.target.checked ? "1" : ""
-                              )
-                            }
-                          />
-                          <span style={{ flex: 1 }}>{interest.name}</span>
-                          <input
-                            value={orderValue}
-                            onChange={(event) =>
-                              updateOrderedGoals(user.email, interest.id, event.target.value)
-                            }
-                            placeholder="#"
-                            style={{
-                              width: 44,
-                              textAlign: "center",
-                              borderRadius: 6,
-                              border: "1px solid #d1d5db",
-                              padding: "4px 6px",
-                              background: orderValue ? "#16a34a" : "#ffffff",
-                              color: orderValue ? "#ffffff" : "#111827",
-                              fontWeight: 600
-                            }}
-                          />
-                        </label>
-                      );
-                    })}
-                  </div>
+                  {!profileOpen[user.email] && (
+                    <p style={{ fontSize: 12, color: "#6b7280" }}>
+                      Goals assigned: {user.goalIds?.length || 0}. Open View Member Profile to
+                      edit ordering.
+                    </p>
+                  )}
+                  {profileOpen[user.email] && (
+                    <>
+                      <label style={{ fontSize: 12 }}>Assigned goals (up to 10)</label>
+                      <div className="grid" style={{ gap: 8 }}>
+                        {interests.map((interest) => {
+                          const orderValue = getGoalOrder(
+                            user.email,
+                            interest.id,
+                            user.goalIds || []
+                          );
+                          return (
+                            <label
+                              key={interest.id}
+                              className="card"
+                              style={{ display: "flex", gap: 8, alignItems: "center" }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={orderValue !== ""}
+                                onChange={(event) =>
+                                  updateOrderedGoals(
+                                    user.email,
+                                    interest.id,
+                                    event.target.checked ? "1" : ""
+                                  )
+                                }
+                              />
+                              <span style={{ flex: 1 }}>{interest.name}</span>
+                              <input
+                                value={orderValue}
+                                onChange={(event) =>
+                                  updateOrderedGoals(
+                                    user.email,
+                                    interest.id,
+                                    event.target.value
+                                  )
+                                }
+                                placeholder="#"
+                                style={{
+                                  width: 44,
+                                  textAlign: "center",
+                                  borderRadius: 6,
+                                  border: "1px solid #d1d5db",
+                                  padding: "4px 6px",
+                                  background: orderValue ? "#16a34a" : "#ffffff",
+                                  color: orderValue ? "#ffffff" : "#111827",
+                                  fontWeight: 600
+                                }}
+                              />
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
                   <button
                     className="button button-secondary"
                     type="button"
