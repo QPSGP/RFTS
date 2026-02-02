@@ -28,7 +28,6 @@ export default function RootLayout({
               <a href="/science">Science</a>
               <a href="/faqs">FAQs</a>
               <a href="/play-options#meditation-library">Play Options</a>
-              <a href="/goals">Goals</a>
               <a href="/library">Library</a>
               <a href="/member/login">Member Login</a>
               <a href="/signup/step-1-subscription-selection">Sign Up</a>

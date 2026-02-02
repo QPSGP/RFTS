@@ -68,6 +68,12 @@ export default function AdminUsers() {
   const [profileOpen, setProfileOpen] = useState<Record<string, boolean>>({});
   const [profileDrafts, setProfileDrafts] = useState<Record<string, ProfileDraft>>({});
 
+  const resolveGoalNames = (goalIds: string[]) => {
+    return goalIds
+      .map((id) => interests.find((goal) => goal.id === id)?.name)
+      .filter((name): name is string => !!name);
+  };
+
 
   const load = async () => {
     const [usersRes, interestsRes] = await Promise.all([
@@ -401,10 +407,13 @@ export default function AdminUsers() {
                     }
                   />
                   {!profileOpen[user.email] && (
-                    <p style={{ fontSize: 12, color: "#6b7280" }}>
-                      Goals assigned: {user.goalIds?.length || 0}. Open View Member Profile to
-                      edit ordering.
-                    </p>
+                    <div style={{ fontSize: 12, color: "#6b7280" }}>
+                      <div>Goals assigned: {user.goalIds?.length || 0}</div>
+                      {user.goalIds?.length ? (
+                        <div>{resolveGoalNames(user.goalIds).join(", ")}</div>
+                      ) : null}
+                      <div>Open View Member Profile to edit ordering.</div>
+                    </div>
                   )}
                   {profileOpen[user.email] && (
                     <>

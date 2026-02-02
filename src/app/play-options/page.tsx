@@ -135,6 +135,13 @@ export default function PlayOptionsPage() {
       )}
       <ScreenWakeToggle />
       <section className="grid">
+        <div className="card">
+          <h3>Your Goals</h3>
+          <p>Manage the goals that drive your session lineup.</p>
+          <a className="button button-secondary" href="/goals">
+            Update Goals
+          </a>
+        </div>
         <div className="card" id="meditation-library">
           <h3>Meditation Library</h3>
           <p>
