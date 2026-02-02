@@ -28,6 +28,27 @@ export type DbUser = {
   created_at: string;
 };
 
+export type MemberProfile = {
+  userId: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  gender?: string | null;
+  yearBorn?: number | null;
+  contactNumber?: string | null;
+  bestContactTimes?: string | null;
+  timeZone?: string | null;
+  occupation?: string | null;
+  incomeGoal?: string | null;
+  incomeGoalYear?: number | null;
+  incomeGoalRelation?: string | null;
+  isFirstResponder?: boolean | null;
+  wantsPracticeGrowth?: boolean | null;
+  adultConsent?: boolean | null;
+  wantsPolyamory?: boolean | null;
+  hadLgdSession?: boolean | null;
+  referralSource?: string | null;
+};
+
 export type DbSubscription = {
   id: string;
   user_id: string;
@@ -101,6 +122,71 @@ export const setUserPlaysPerNight = async (userId: string, playsPerNight: number
     RETURNING id, email, password_hash, goal_ids, goal_updated_at, plays_per_night, created_at
   `;
   return rows[0];
+};
+
+export const upsertMemberProfile = async (profile: MemberProfile) => {
+  await sql`
+    INSERT INTO member_profiles (
+      user_id,
+      first_name,
+      last_name,
+      gender,
+      year_born,
+      contact_number,
+      best_contact_times,
+      time_zone,
+      occupation,
+      income_goal,
+      income_goal_year,
+      income_goal_relation,
+      is_first_responder,
+      wants_practice_growth,
+      adult_consent,
+      wants_polyamory,
+      had_lgd_session,
+      referral_source
+    )
+    VALUES (
+      ${profile.userId},
+      ${profile.firstName || null},
+      ${profile.lastName || null},
+      ${profile.gender || null},
+      ${profile.yearBorn || null},
+      ${profile.contactNumber || null},
+      ${profile.bestContactTimes || null},
+      ${profile.timeZone || null},
+      ${profile.occupation || null},
+      ${profile.incomeGoal || null},
+      ${profile.incomeGoalYear || null},
+      ${profile.incomeGoalRelation || null},
+      ${profile.isFirstResponder ?? false},
+      ${profile.wantsPracticeGrowth ?? false},
+      ${profile.adultConsent ?? false},
+      ${profile.wantsPolyamory ?? false},
+      ${profile.hadLgdSession ?? false},
+      ${profile.referralSource || null}
+    )
+    ON CONFLICT (user_id)
+    DO UPDATE SET
+      first_name = EXCLUDED.first_name,
+      last_name = EXCLUDED.last_name,
+      gender = EXCLUDED.gender,
+      year_born = EXCLUDED.year_born,
+      contact_number = EXCLUDED.contact_number,
+      best_contact_times = EXCLUDED.best_contact_times,
+      time_zone = EXCLUDED.time_zone,
+      occupation = EXCLUDED.occupation,
+      income_goal = EXCLUDED.income_goal,
+      income_goal_year = EXCLUDED.income_goal_year,
+      income_goal_relation = EXCLUDED.income_goal_relation,
+      is_first_responder = EXCLUDED.is_first_responder,
+      wants_practice_growth = EXCLUDED.wants_practice_growth,
+      adult_consent = EXCLUDED.adult_consent,
+      wants_polyamory = EXCLUDED.wants_polyamory,
+      had_lgd_session = EXCLUDED.had_lgd_session,
+      referral_source = EXCLUDED.referral_source,
+      updated_at = now()
+  `;
 };
 
 export const getUserProfile = async (email: string) => {

@@ -1,8 +1,11 @@
-import SubscriptionSelection from "@/components/SubscriptionSelection";
-import { listSubscriptionPlans } from "@/lib/db";
+import MemberOnboarding from "@/components/MemberOnboarding";
+import { listInterests, listSubscriptionPlans } from "@/lib/db";
 
 export default async function SubscriptionSelectionPage() {
-  const plans = await listSubscriptionPlans();
+  const [plans, goals] = await Promise.all([
+    listSubscriptionPlans(),
+    listInterests()
+  ]);
   return (
     <div className="signup-shell">
       <div className="signup-card">
@@ -10,7 +13,7 @@ export default async function SubscriptionSelectionPage() {
         <div className="signup-subtitle">
           Begin reaching your highest potential, all while you sleep.
         </div>
-        <SubscriptionSelection plans={plans} />
+        <MemberOnboarding plans={plans} goals={goals} />
       </div>
     </div>
   );

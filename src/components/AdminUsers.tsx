@@ -113,14 +113,14 @@ export default function AdminUsers() {
 
   return (
     <div className="card">
-      <h2>Subscriber Accounts</h2>
+      <h2>Member Accounts</h2>
       <p style={{ color: "#4b5563" }}>
-        Create the first subscriber account, assign tiers, and activate subscriptions.
+        Create member accounts, assign tiers, and activate subscriptions.
       </p>
       {status && <p>{status}</p>}
       <div className="grid" style={{ marginTop: 16 }}>
         <div className="card">
-          <h3>Create Subscriber</h3>
+          <h3>Create Member</h3>
           <div className="grid">
             <input
               style={inputStyle}
@@ -171,15 +171,15 @@ export default function AdminUsers() {
               <option value={1}>1 session per night</option>
             </select>
             <button className="button" onClick={createUser}>
-              Create Subscriber
+              Create Member
             </button>
           </div>
         </div>
 
         <div className="card">
-          <h3>Existing Subscribers</h3>
+          <h3>Existing Members</h3>
           {users.length === 0 ? (
-            <p>No subscriber accounts yet.</p>
+            <p>No member accounts yet.</p>
           ) : (
             <div className="grid">
               {users.map((user) => (

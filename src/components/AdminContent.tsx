@@ -197,17 +197,17 @@ export default function AdminContent() {
     <div className="grid" style={{ gap: 24 }}>
       {status && <p>{status}</p>}
       <div className="card">
-        <h2>Interests</h2>
+        <h2>Goals</h2>
         <div className="grid grid-2" style={{ gap: 16 }}>
           <form onSubmit={addInterest} className="grid">
-            <input name="name" placeholder="Interest name" required style={inputStyle} />
+            <input name="name" placeholder="Goal name" required style={inputStyle} />
             <input
               name="description"
               placeholder="Short description"
               style={inputStyle}
             />
             <button className="button" type="submit">
-              Add Interest
+              Add Goal
             </button>
           </form>
           <div
@@ -286,7 +286,7 @@ export default function AdminContent() {
             placeholder="Allowed user emails (comma-separated, optional)"
             style={inputStyle}
           />
-          <label style={{ fontSize: 13 }}>Attach interests</label>
+          <label style={{ fontSize: 13 }}>Attach goals</label>
           <select name="interestIds" multiple style={inputStyle}>
             {interestOptions.map((interest) => (
               <option key={interest.value} value={interest.value}>
@@ -354,7 +354,7 @@ export default function AdminContent() {
                     placeholder="Allowed user emails (comma-separated, optional)"
                     style={inputStyle}
                   />
-                  <label style={{ fontSize: 13 }}>Attach interests</label>
+                  <label style={{ fontSize: 13 }}>Attach goals</label>
                   <select
                     name="interestIds"
                     multiple

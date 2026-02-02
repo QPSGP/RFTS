@@ -1,0 +1,459 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import type { SubscriptionPlan } from "@/lib/types";
+
+type Interest = {
+  id: string;
+  name: string;
+  description?: string;
+};
+
+type MemberOnboardingProps = {
+  plans: SubscriptionPlan[];
+  goals: Interest[];
+};
+
+const mapStripClass = (id: string) => {
+  if (id === "platinum") return "platinum";
+  if (id === "gold") return "gold";
+  return "bronze";
+};
+
+const timeZones = [
+  "Pacific Time",
+  "Mountain Time",
+  "Central Time",
+  "Eastern Time",
+  "Alaska Time",
+  "Hawaii Time",
+  "Other"
+];
+
+export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps) {
+  const [step, setStep] = useState(1);
+  const [status, setStatus] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [goalIds, setGoalIds] = useState<string[]>([]);
+  const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
+  const [profile, setProfile] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    gender: "",
+    yearBorn: "",
+    contactNumber: "",
+    bestContactTimes: "",
+    timeZone: "Pacific Time",
+    occupation: "",
+    incomeGoal: "",
+    incomeGoalYear: "",
+    incomeGoalRelation: "",
+    isFirstResponder: false,
+    wantsPracticeGrowth: false,
+    adultConsent: false,
+    wantsPolyamory: false,
+    hadLgdSession: false,
+    referralSource: ""
+  });
+
+  const selectedPlan = useMemo(
+    () => plans.find((plan) => plan.id === selectedPlanId),
+    [plans, selectedPlanId]
+  );
+
+  const toggleGoal = (id: string) => {
+    setGoalIds((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((goal) => goal !== id);
+      }
+      if (prev.length >= 10) {
+        return prev;
+      }
+      return [...prev, id];
+    });
+  };
+
+  const nextStep = () => {
+    setStatus(null);
+    if (step === 1) {
+      if (!selectedPlanId) {
+        setStatus("Select a subscription package to continue.");
+        return;
+      }
+      if (goalIds.length === 0) {
+        setStatus("Select at least one goal to continue.");
+        return;
+      }
+    }
+    if (step === 2) {
+      if (!profile.firstName || !profile.lastName || !profile.email || !profile.password) {
+        setStatus("Complete the required personal details to continue.");
+        return;
+      }
+    }
+    setStep((prev) => Math.min(prev + 1, 3));
+  };
+
+  const previousStep = () => {
+    setStatus(null);
+    setStep((prev) => Math.max(prev - 1, 1));
+  };
+
+  const submit = async () => {
+    if (!selectedPlanId || !selectedPlan) {
+      setStatus("Select a subscription package to continue.");
+      return;
+    }
+    setStatus(null);
+    setIsSubmitting(true);
+    const response = await fetch("/api/member/onboarding", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        planId: selectedPlanId,
+        email: profile.email,
+        password: profile.password,
+        goalIds,
+        playsPerNight,
+        profile: {
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          gender: profile.gender,
+          yearBorn: profile.yearBorn ? Number(profile.yearBorn) : undefined,
+          contactNumber: profile.contactNumber,
+          bestContactTimes: profile.bestContactTimes,
+          timeZone: profile.timeZone,
+          occupation: profile.occupation,
+          incomeGoal: profile.incomeGoal,
+          incomeGoalYear: profile.incomeGoalYear ? Number(profile.incomeGoalYear) : undefined,
+          incomeGoalRelation: profile.incomeGoalRelation,
+          isFirstResponder: profile.isFirstResponder,
+          wantsPracticeGrowth: profile.wantsPracticeGrowth,
+          adultConsent: profile.adultConsent,
+          wantsPolyamory: profile.wantsPolyamory,
+          hadLgdSession: profile.hadLgdSession,
+          referralSource: profile.referralSource
+        }
+      })
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setStatus(data?.error || "Signup failed. Please try again.");
+      setIsSubmitting(false);
+      return;
+    }
+    const data = await response.json();
+    if (data.url) {
+      window.location.href = data.url;
+      return;
+    }
+    setStatus("Checkout session did not return a URL.");
+    setIsSubmitting(false);
+  };
+
+  return (
+    <div>
+      <div className="stepper">
+        {["Subscription & Goals", "Personal Details", "Payment"].map((label, index) => (
+          <div key={label} className="stepper-item">
+            <span className={`stepper-dot ${index + 1 === step ? "active" : ""}`} />
+            <span>{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {step === 1 && (
+        <>
+          <div className="section-heading">Select Your Subscription Package</div>
+          <div className="plan-grid">
+            {plans.map((plan) => (
+              <button
+                key={plan.id}
+                type="button"
+                className={`plan-card ${selectedPlanId === plan.id ? "selected" : ""}`}
+                onClick={() => setSelectedPlanId(plan.id)}
+                style={{ cursor: "pointer" }}
+              >
+                <div className={`plan-strip ${mapStripClass(plan.id)}`}>
+                  {selectedPlanId === plan.id ? "Selected Subscription" : plan.name}
+                </div>
+                <div className="plan-body">
+                  <div className="plan-title">{plan.name}</div>
+                  <div className="plan-price">{plan.trialDays} day trial</div>
+                  <div className="plan-trial">{plan.trialDays}-Day Free Trial</div>
+                  <p style={{ fontSize: 12, color: "#4b5563" }}>{plan.description}</p>
+                  <div className="plan-cta">
+                    <span className="badge">Select Plan</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="section-heading" style={{ marginTop: 24 }}>
+            Goal Selection (up to 10)
+          </div>
+          <div className="grid grid-2">
+            {goals.map((goal) => (
+              <label key={goal.id} className="card" style={{ cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={goalIds.includes(goal.id)}
+                  onChange={() => toggleGoal(goal.id)}
+                  disabled={!goalIds.includes(goal.id) && goalIds.length >= 10}
+                  style={{ marginRight: 8 }}
+                />
+                <strong>{goal.name}</strong>
+                {goal.description && <p>{goal.description}</p>}
+              </label>
+            ))}
+          </div>
+          <div className="card" style={{ marginTop: 16 }}>
+            <h3>Sessions per night</h3>
+            <p style={{ color: "#4b5563" }}>
+              Choose to play 1 or 2 recordings each night (default is 2).
+            </p>
+            <div style={{ display: "flex", gap: 12 }}>
+              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="radio"
+                  name="playsPerNight"
+                  checked={playsPerNight === 2}
+                  onChange={() => setPlaysPerNight(2)}
+                />
+                2 per night (recommended)
+              </label>
+              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="radio"
+                  name="playsPerNight"
+                  checked={playsPerNight === 1}
+                  onChange={() => setPlaysPerNight(1)}
+                />
+                1 per night
+              </label>
+            </div>
+          </div>
+        </>
+      )}
+
+      {step === 2 && (
+        <>
+          <div className="section-heading">Personal Details</div>
+          <p style={{ color: "#4b5563" }}>
+            Please fill out the following fields so we may serve you better.
+          </p>
+          <div className="grid grid-2">
+            <input
+              placeholder="First Name *"
+              value={profile.firstName}
+              onChange={(event) => setProfile({ ...profile, firstName: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <input
+              placeholder="Last Name *"
+              value={profile.lastName}
+              onChange={(event) => setProfile({ ...profile, lastName: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <input
+              placeholder="Email *"
+              type="email"
+              value={profile.email}
+              onChange={(event) => setProfile({ ...profile, email: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <input
+              placeholder="Password *"
+              type="password"
+              value={profile.password}
+              onChange={(event) => setProfile({ ...profile, password: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <input
+              placeholder="Gender"
+              value={profile.gender}
+              onChange={(event) => setProfile({ ...profile, gender: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <input
+              placeholder="Year born"
+              value={profile.yearBorn}
+              onChange={(event) => setProfile({ ...profile, yearBorn: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <input
+              placeholder="Best Contact Number"
+              value={profile.contactNumber}
+              onChange={(event) =>
+                setProfile({ ...profile, contactNumber: event.target.value })
+              }
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <input
+              placeholder="Best Time(s) Reached"
+              value={profile.bestContactTimes}
+              onChange={(event) =>
+                setProfile({ ...profile, bestContactTimes: event.target.value })
+              }
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <select
+              value={profile.timeZone}
+              onChange={(event) => setProfile({ ...profile, timeZone: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            >
+              {timeZones.map((zone) => (
+                <option key={zone} value={zone}>
+                  {zone}
+                </option>
+              ))}
+            </select>
+            <input
+              placeholder="Occupation"
+              value={profile.occupation}
+              onChange={(event) => setProfile({ ...profile, occupation: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <input
+              placeholder="Your annual income goal is..."
+              value={profile.incomeGoal}
+              onChange={(event) => setProfile({ ...profile, incomeGoal: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <input
+              placeholder="Year you intend to reach that goal"
+              value={profile.incomeGoalYear}
+              onChange={(event) =>
+                setProfile({ ...profile, incomeGoalYear: event.target.value })
+              }
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <input
+              placeholder="This goal is ____ your current income"
+              value={profile.incomeGoalRelation}
+              onChange={(event) =>
+                setProfile({ ...profile, incomeGoalRelation: event.target.value })
+              }
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+          </div>
+          <div className="grid" style={{ marginTop: 16 }}>
+            <label className="card" style={{ cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={profile.isFirstResponder}
+                onChange={(event) =>
+                  setProfile({ ...profile, isFirstResponder: event.target.checked })
+                }
+                style={{ marginRight: 8 }}
+              />
+              I am a first responder or in the healthcare industry.
+            </label>
+            <label className="card" style={{ cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={profile.wantsPracticeGrowth}
+                onChange={(event) =>
+                  setProfile({ ...profile, wantsPracticeGrowth: event.target.checked })
+                }
+                style={{ marginRight: 8 }}
+              />
+              I am interested in building my private hypnotherapy, coaching, or healing
+              practice.
+            </label>
+            <label className="card" style={{ cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={profile.adultConsent}
+                onChange={(event) =>
+                  setProfile({ ...profile, adultConsent: event.target.checked })
+                }
+                style={{ marginRight: 8 }}
+              />
+              I am an adult and am willing to hear audios with mature content.
+            </label>
+            <label className="card" style={{ cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={profile.wantsPolyamory}
+                onChange={(event) =>
+                  setProfile({ ...profile, wantsPolyamory: event.target.checked })
+                }
+                style={{ marginRight: 8 }}
+              />
+              I would like to hear audios related to polyamory.
+            </label>
+            <label className="card" style={{ cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={profile.hadLgdSession}
+                onChange={(event) =>
+                  setProfile({ ...profile, hadLgdSession: event.target.checked })
+                }
+                style={{ marginRight: 8 }}
+              />
+              Have you had a Life Guidance Discovery Session?
+            </label>
+            <input
+              placeholder="How did you find us? If someone referred you, who?"
+              value={profile.referralSource}
+              onChange={(event) =>
+                setProfile({ ...profile, referralSource: event.target.value })
+              }
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+          </div>
+        </>
+      )}
+
+      {step === 3 && (
+        <>
+          <div className="section-heading">Review & Payment</div>
+          <div className="card">
+            <p>
+              <strong>Plan:</strong> {selectedPlan?.name}
+            </p>
+            <p>
+              <strong>Goals:</strong> {goalIds.length} selected
+            </p>
+            <p>
+              <strong>Sessions per night:</strong> {playsPerNight}
+            </p>
+            <p>
+              <strong>Member:</strong> {profile.firstName} {profile.lastName}
+            </p>
+            <p>
+              <strong>Email:</strong> {profile.email}
+            </p>
+          </div>
+          <p style={{ color: "#64748b" }}>
+            You will be redirected to secure Stripe checkout.
+          </p>
+        </>
+      )}
+
+      <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
+        {step > 1 && (
+          <button className="button button-secondary" type="button" onClick={previousStep}>
+            Back
+          </button>
+        )}
+        {step < 3 && (
+          <button className="button" type="button" onClick={nextStep}>
+            Continue
+          </button>
+        )}
+        {step === 3 && (
+          <button className="button" type="button" onClick={submit} disabled={isSubmitting}>
+            {isSubmitting ? "Redirecting..." : "Continue to Payment"}
+          </button>
+        )}
+      </div>
+
+      {status && <p style={{ marginTop: 12 }}>{status}</p>}
+    </div>
+  );
+}

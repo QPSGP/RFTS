@@ -10,6 +10,29 @@ CREATE TABLE IF NOT EXISTS users (
   created_at timestamptz DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS member_profiles (
+  user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  first_name text,
+  last_name text,
+  gender text,
+  year_born integer,
+  contact_number text,
+  best_contact_times text,
+  time_zone text,
+  occupation text,
+  income_goal text,
+  income_goal_year integer,
+  income_goal_relation text,
+  is_first_responder boolean DEFAULT false,
+  wants_practice_growth boolean DEFAULT false,
+  adult_consent boolean DEFAULT false,
+  wants_polyamory boolean DEFAULT false,
+  had_lgd_session boolean DEFAULT false,
+  referral_source text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS subscriptions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid UNIQUE REFERENCES users(id) ON DELETE CASCADE,
