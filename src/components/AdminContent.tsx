@@ -37,6 +37,8 @@ export default function AdminContent() {
   const [selectedGoalId, setSelectedGoalId] = useState<string>("");
   const [goalAssignments, setGoalAssignments] = useState<Record<string, boolean>>({});
   const [goalSaveStatus, setGoalSaveStatus] = useState<string | null>(null);
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
+  const [goalDraft, setGoalDraft] = useState<Interest | null>(null);
   const [librarySort, setLibrarySort] = useState<"title" | "sku">("title");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<LibraryItem | null>(null);
@@ -118,6 +120,33 @@ export default function AdminContent() {
       body: JSON.stringify({ id })
     });
     await load();
+  };
+
+  const startGoalEdit = (interest: Interest) => {
+    setEditingGoalId(interest.id);
+    setGoalDraft({ ...interest });
+  };
+
+  const cancelGoalEdit = () => {
+    setEditingGoalId(null);
+    setGoalDraft(null);
+  };
+
+  const saveGoalEdit = async () => {
+    if (!goalDraft) return;
+    const response = await fetch("/api/interests", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: goalDraft.id,
+        name: goalDraft.name,
+        description: goalDraft.description || ""
+      })
+    });
+    if (response.ok) {
+      cancelGoalEdit();
+      await load();
+    }
   };
 
   const addLibraryItem = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -314,29 +343,75 @@ export default function AdminContent() {
               gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))"
             }}
           >
-            {interests.map((interest) => (
+          {interests
+            .slice()
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((interest) => (
               <div
                 key={interest.id}
                 className="card"
                 style={{ padding: 10, display: "grid", gap: 6 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                  <strong>{interest.name}</strong>
-                  <button
-                    className="button button-secondary"
-                    style={{ padding: "4px 8px", fontSize: 12, lineHeight: 1 }}
-                    onClick={() => deleteInterest(interest.id)}
-                  >
-                    Remove
-                  </button>
-                </div>
-                {interest.description && (
-                  <p style={{ marginTop: 0, color: "#4b5563" }}>
-                    {interest.description}
-                  </p>
+                {editingGoalId === interest.id && goalDraft ? (
+                  <>
+                    <input
+                      style={inputStyle}
+                      value={goalDraft.name}
+                      onChange={(event) =>
+                        setGoalDraft({ ...goalDraft, name: event.target.value })
+                      }
+                    />
+                    <input
+                      style={inputStyle}
+                      value={goalDraft.description || ""}
+                      onChange={(event) =>
+                        setGoalDraft({ ...goalDraft, description: event.target.value })
+                      }
+                      placeholder="Description"
+                    />
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button className="button" onClick={saveGoalEdit} type="button">
+                        Save
+                      </button>
+                      <button
+                        className="button button-secondary"
+                        onClick={cancelGoalEdit}
+                        type="button"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                      <strong>{interest.name}</strong>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button
+                          className="button button-secondary"
+                          style={{ padding: "4px 8px", fontSize: 12, lineHeight: 1 }}
+                          onClick={() => startGoalEdit(interest)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="button button-secondary"
+                          style={{ padding: "4px 8px", fontSize: 12, lineHeight: 1 }}
+                          onClick={() => deleteInterest(interest.id)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                    {interest.description && (
+                      <p style={{ marginTop: 0, color: "#4b5563" }}>
+                        {interest.description}
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
-            ))}
+          ))}
           </div>
         </div>
       </div>
