@@ -53,9 +53,16 @@ export default function ScreenWakeToggle({
         requestWakeLock();
       }
     };
+    const handleSessionStart = () => {
+      if (!wakeLockActive) {
+        requestWakeLock();
+      }
+    };
     document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("rfts-session-start", handleSessionStart);
     return () => {
       document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("rfts-session-start", handleSessionStart);
       releaseWakeLock();
     };
   }, [wakeLockActive, wakeLockRef]);

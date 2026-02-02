@@ -50,6 +50,9 @@ export default function SessionPlayer({
       setMessage("Select goals to build your session lineup.");
       return;
     }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("rfts-session-start"));
+    }
     const nextQueue = [prepAudio, firstTrack].filter(
       (track): track is SessionTrack => !!track
     );
@@ -174,11 +177,12 @@ export default function SessionPlayer({
           {isMobile && <div style={{ height: 88 }} />}
           <audio
             ref={audioRef}
-            controls
+            controls={!!current}
             onEnded={handleEnded}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
-            style={{ width: "100%", marginTop: 8 }}
+            style={{ width: "100%", marginTop: 8, display: current ? "block" : "none" }}
+            src={current?.url || undefined}
           />
           {isMobile && (
             <div

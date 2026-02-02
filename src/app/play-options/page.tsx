@@ -24,6 +24,11 @@ export default function PlayOptionsPage() {
   const [gapHours, setGapHours] = useState(2.5);
   const [autoStart, setAutoStart] = useState(false);
 
+  const logout = async () => {
+    await fetch("/api/user/logout", { method: "POST" });
+    window.location.href = "/member/login";
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setAutoStart(params.get("autoplay") === "1");
@@ -120,6 +125,9 @@ export default function PlayOptionsPage() {
           <a className="button button-secondary" href="/library">
             Open Library
           </a>
+          <button className="button button-secondary" type="button" onClick={logout}>
+            Log Out
+          </button>
         </div>
       </section>
       {profile && profile.goalIds?.length === 0 && (
