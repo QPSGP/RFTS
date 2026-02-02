@@ -37,6 +37,7 @@ export default function AdminContent() {
   const [selectedGoalId, setSelectedGoalId] = useState<string>("");
   const [goalAssignments, setGoalAssignments] = useState<Record<string, boolean>>({});
   const [goalSaveStatus, setGoalSaveStatus] = useState<string | null>(null);
+  const [librarySort, setLibrarySort] = useState<"title" | "sku">("title");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<LibraryItem | null>(null);
   const [editInterestIds, setEditInterestIds] = useState<string[]>([]);
@@ -70,6 +71,14 @@ export default function AdminContent() {
       label: interest.name
     }));
   }, [interests]);
+
+  const sortedLibrary = useMemo(() => {
+    const copy = [...library];
+    if (librarySort === "sku") {
+      return copy.sort((a, b) => (a.skuCode || "").localeCompare(b.skuCode || ""));
+    }
+    return copy.sort((a, b) => a.title.localeCompare(b.title));
+  }, [library, librarySort]);
 
   const addInterest = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -377,14 +386,29 @@ export default function AdminContent() {
                 gridTemplateColumns: "repeat(2, minmax(0, 1fr))"
               }}
             >
-              {library.map((item) => (
+              {sortedLibrary.map((item) => (
                 <a key={item.id} href={`#audio-${item.id}`}>
-                  {item.title}
+                  {(item.skuCode || "SKU?") + " - " + item.title}
                 </a>
               ))}
             </div>
           </div>
         )}
+        <div style={{ marginTop: 12, display: "flex", gap: 12 }}>
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            Sort by
+            <select
+              style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #d1d5db" }}
+              value={librarySort}
+              onChange={(event) =>
+                setLibrarySort(event.target.value as "title" | "sku")
+              }
+            >
+              <option value="title">Title (default)</option>
+              <option value="sku">SKU</option>
+            </select>
+          </label>
+        </div>
         <form onSubmit={addLibraryItem} className="grid">
           <input name="title" placeholder="Title" required style={inputStyle} />
           <input
@@ -419,7 +443,7 @@ export default function AdminContent() {
           </button>
         </form>
         <div className="grid" style={{ marginTop: 16 }}>
-          {library.map((item) => (
+          {sortedLibrary.map((item) => (
             <div key={item.id} id={`audio-${item.id}`} className="card">
               {editingId === item.id && editDraft ? (
                 <form onSubmit={saveEdit} className="grid">
@@ -566,7 +590,7 @@ export default function AdminContent() {
                       Cover pending
                     </div>
                   )}
-                  <strong>{item.title}</strong>
+                  <strong>{item.skuCode || "SKU?"} - {item.title}</strong>
                   <p>{item.description || "Description pending."}</p>
                   <p>SKU: {item.skuCode || "Pending"}</p>
                   <p>
