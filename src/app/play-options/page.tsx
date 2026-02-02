@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
-import SessionPlayer from "@/components/SessionPlayer";
+import SessionPlayer, { SessionPlayerHandle } from "@/components/SessionPlayer";
 
 export default function PlayOptionsPage() {
   const [status, setStatus] = useState<"loading" | "loggedOut" | "inactive" | "active">(
@@ -23,6 +23,7 @@ export default function PlayOptionsPage() {
   );
   const [gapHours, setGapHours] = useState(2.5);
   const [autoStart, setAutoStart] = useState(false);
+  const sessionRef = useRef<SessionPlayerHandle | null>(null);
 
   const logout = async () => {
     await fetch("/api/user/logout", { method: "POST" });
@@ -115,13 +116,18 @@ export default function PlayOptionsPage() {
           Tap to start your session and keep exploring your personalized tools below.
         </p>
         <div className="cta-row" style={{ marginTop: 16 }}>
-          <a
+          <button
             className="button"
-            href="/play-options?autoplay=1#meditation-session"
+            type="button"
             style={{ padding: "14px 22px", fontSize: 16 }}
+            onClick={() => {
+              sessionRef.current?.startSession();
+              const sessionEl = document.getElementById("meditation-session");
+              sessionEl?.scrollIntoView({ behavior: "smooth" });
+            }}
           >
             Start Session
-          </a>
+          </button>
           <a className="button button-secondary" href="/library">
             Open Library
           </a>
@@ -189,6 +195,7 @@ export default function PlayOptionsPage() {
         </div>
         {schedule.length > 0 && (
           <SessionPlayer
+            ref={sessionRef}
             prepAudio={prepAudio}
             firstTrack={
               schedule[0].tracks[0]

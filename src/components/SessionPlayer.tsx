@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 type SessionTrack = {
   title: string;
@@ -15,13 +15,14 @@ type SessionPlayerProps = {
   autoStart?: boolean;
 };
 
-export default function SessionPlayer({
-  prepAudio,
-  firstTrack,
-  secondTrack,
-  gapHours,
-  autoStart = false
-}: SessionPlayerProps) {
+export type SessionPlayerHandle = {
+  startSession: () => void;
+};
+
+const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(function SessionPlayer(
+  { prepAudio, firstTrack, secondTrack, gapHours, autoStart = false },
+  ref
+) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [queue, setQueue] = useState<SessionTrack[]>([]);
   const [current, setCurrent] = useState<SessionTrack | null>(null);
@@ -45,7 +46,7 @@ export default function SessionPlayer({
     }
   };
 
-  const startSession = () => {
+  const startSession = useCallback(() => {
     if (!firstTrack) {
       setMessage("Select goals to build your session lineup.");
       return;
@@ -60,9 +61,9 @@ export default function SessionPlayer({
     setCurrent(nextQueue[0] || null);
     setMessage(null);
     attemptPlay(nextQueue[0]);
-  };
+  }, [firstTrack, prepAudio]);
 
-  const playSecond = () => {
+  const playSecond = useCallback(() => {
     if (!secondTrack) {
       setMessage("No second recording scheduled tonight.");
       return;
@@ -71,7 +72,9 @@ export default function SessionPlayer({
     setCurrent(secondTrack);
     setMessage(null);
     attemptPlay(secondTrack);
-  };
+  }, [secondTrack]);
+
+  useImperativeHandle(ref, () => ({ startSession }), [startSession]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -250,4 +253,8 @@ export default function SessionPlayer({
       )}
     </div>
   );
-}
+});
+
+SessionPlayer.displayName = "SessionPlayer";
+
+export default SessionPlayer;
