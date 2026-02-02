@@ -63,6 +63,10 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     () => plans.find((plan) => plan.id === selectedPlanId),
     [plans, selectedPlanId]
   );
+  const sortedGoals = useMemo(
+    () => goals.slice().sort((a, b) => a.name.localeCompare(b.name)),
+    [goals]
+  );
 
   const toggleGoal = (id: string) => {
     setGoalIds((prev) => {
@@ -196,7 +200,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
             Goal Selection (up to 10)
           </div>
           <div className="grid grid-2">
-            {goals.map((goal) => (
+            {sortedGoals.map((goal) => (
               <label key={goal.id} className="card" style={{ cursor: "pointer" }}>
                 <input
                   type="checkbox"

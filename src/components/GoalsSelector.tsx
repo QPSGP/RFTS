@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Interest } from "@/lib/types";
 
 type GoalsSelectorProps = {
@@ -15,6 +15,25 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
   const [canEdit, setCanEdit] = useState(true);
   const [nextAllowedAt, setNextAllowedAt] = useState<string | null>(null);
   const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
+  const goalNameById = useMemo(() => {
+    const map = new Map<string, Interest>();
+    interests.forEach((interest) => {
+      map.set(interest.id, interest);
+    });
+    return map;
+  }, [interests]);
+  const sortedInterests = useMemo(
+    () => interests.slice().sort((a, b) => a.name.localeCompare(b.name)),
+    [interests]
+  );
+  const orderedGoals = useMemo(
+    () =>
+      goalIds.map((id) => ({
+        id,
+        name: goalNameById.get(id)?.name || "Unknown goal"
+      })),
+    [goalIds, goalNameById]
+  );
 
   useEffect(() => {
     fetch("/api/user/goals")
@@ -44,6 +63,18 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
         return prev;
       }
       return [...prev, id];
+    });
+  };
+
+  const moveGoal = (fromIndex: number, toIndex: number) => {
+    setGoalIds((prev) => {
+      if (toIndex < 0 || toIndex >= prev.length) {
+        return prev;
+      }
+      const next = [...prev];
+      const [item] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, item);
+      return next;
     });
   };
 
@@ -85,13 +116,54 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
       <p style={{ color: "#4b5563" }}>
         Choose up to {limit} priorities you want your sessions to focus on.
       </p>
+      <p style={{ color: "#4b5563" }}>
+        You can reorder goals before your next session starts. Changes save when you click
+        "Save Goals".
+      </p>
       {!canEdit && nextAllowedAt && (
         <p style={{ color: "#b91c1c" }}>
           Goal changes are locked until {new Date(nextAllowedAt).toLocaleDateString()}.
         </p>
       )}
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3>Your selected goals (saved order)</h3>
+        {orderedGoals.length === 0 ? (
+          <p style={{ color: "#6b7280" }}>No goals selected yet.</p>
+        ) : (
+          <div className="stack">
+            {orderedGoals.map((goal, index) => (
+              <div
+                key={goal.id}
+                className="card"
+                style={{ display: "flex", alignItems: "center", gap: 10 }}
+              >
+                <strong style={{ minWidth: 24 }}>{index + 1}.</strong>
+                <span style={{ flex: 1 }}>{goal.name}</span>
+                <button
+                  className="button button-secondary"
+                  type="button"
+                  onClick={() => moveGoal(index, index - 1)}
+                  disabled={!canEdit || index === 0}
+                  style={{ padding: "6px 10px", fontSize: 12 }}
+                >
+                  Up
+                </button>
+                <button
+                  className="button button-secondary"
+                  type="button"
+                  onClick={() => moveGoal(index, index + 1)}
+                  disabled={!canEdit || index === orderedGoals.length - 1}
+                  style={{ padding: "6px 10px", fontSize: 12 }}
+                >
+                  Down
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
       <div className="grid grid-2" style={{ marginTop: 16 }}>
-        {interests.map((interest) => (
+        {sortedInterests.map((interest) => (
           <label key={interest.id} className="card" style={{ cursor: "pointer" }}>
             <input
               type="checkbox"

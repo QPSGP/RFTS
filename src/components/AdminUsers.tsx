@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Interest = {
   id: string;
@@ -67,6 +67,11 @@ export default function AdminUsers() {
   const [resetPasswords, setResetPasswords] = useState<Record<string, string>>({});
   const [profileOpen, setProfileOpen] = useState<Record<string, boolean>>({});
   const [profileDrafts, setProfileDrafts] = useState<Record<string, ProfileDraft>>({});
+
+  const sortedInterests = useMemo(
+    () => interests.slice().sort((a, b) => a.name.localeCompare(b.name)),
+    [interests]
+  );
 
   const resolveGoalNames = (goalIds: string[]) => {
     return goalIds
@@ -410,7 +415,7 @@ export default function AdminUsers() {
                     <div style={{ fontSize: 12, color: "#6b7280" }}>
                       <div>Goals assigned: {user.goalIds?.length || 0}</div>
                       {user.goalIds?.length ? (
-                        <div>{resolveGoalNames(user.goalIds).join(", ")}</div>
+                        <div>{resolveGoalNames(user.goalIds).sort().join(", ")}</div>
                       ) : null}
                       <div>Open View Member Profile to edit ordering.</div>
                     </div>
@@ -419,7 +424,7 @@ export default function AdminUsers() {
                     <>
                       <label style={{ fontSize: 12 }}>Assigned goals (up to 10)</label>
                       <div className="grid" style={{ gap: 8 }}>
-                        {interests.map((interest) => {
+                        {sortedInterests.map((interest) => {
                           const orderValue = getGoalOrder(
                             user.email,
                             interest.id,

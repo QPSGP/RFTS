@@ -115,10 +115,10 @@ export default function PlayOptionsPage() {
             href="/play-options#meditation-session"
             style={{ padding: "14px 22px", fontSize: 16 }}
           >
-            Start Session
+            START SESSION
           </a>
-          <a className="button button-secondary" href="/library">
-            Open Library
+          <a className="button button-secondary" href="/goals">
+            ACCOUNT
           </a>
         </div>
       </section>
