@@ -12,6 +12,8 @@ type LibraryItem = {
   id: string;
   title: string;
   description: string;
+  skuCode?: string;
+  categories?: string[];
   coverUrl: string;
   audioUrl: string;
   interestIds: string[];
@@ -104,9 +106,15 @@ export default function AdminContent() {
     const allowedUserEmails = allowedUsersRaw
       ? allowedUsersRaw.split(",").map((email) => email.trim()).filter(Boolean)
       : [];
+    const categoriesRaw = String(formData.get("categories") || "").trim();
+    const categories = categoriesRaw
+      ? categoriesRaw.split(",").map((category) => category.trim()).filter(Boolean)
+      : [];
     const payload = {
       title: formData.get("title"),
       description: formData.get("description"),
+      skuCode: formData.get("skuCode") || "",
+      categories,
       coverUrl: formData.get("coverUrl") || "",
       audioUrl: formData.get("audioUrl") || "",
       interestIds,
@@ -179,6 +187,8 @@ export default function AdminContent() {
       id: editDraft.id,
       title: editDraft.title,
       description: editDraft.description,
+      skuCode: editDraft.skuCode || "",
+      categories: editDraft.categories || [],
       coverUrl: editDraft.coverUrl || "",
       audioUrl: editDraft.audioUrl || "",
       interestIds: editInterestIds,
@@ -241,6 +251,8 @@ export default function AdminContent() {
             id: item.id,
             title: item.title,
             description: item.description,
+            skuCode: item.skuCode || "",
+            categories: item.categories || [],
             coverUrl: item.coverUrl || "",
             audioUrl: item.audioUrl || "",
             interestIds,
@@ -251,6 +263,8 @@ export default function AdminContent() {
       })
     );
     setGoalSaveStatus(`Saved ${updates.length} updates.`);
+    setSelectedGoalId("");
+    setGoalAssignments({});
     await load();
   };
 
@@ -379,6 +393,12 @@ export default function AdminContent() {
             required
             style={inputStyle}
           />
+          <input name="skuCode" placeholder="SKU (e.g., T-01)" style={inputStyle} />
+          <input
+            name="categories"
+            placeholder="Categories (comma-separated)"
+            style={inputStyle}
+          />
           <input name="coverUrl" placeholder="Cover URL (optional)" style={inputStyle} />
           <input name="audioUrl" placeholder="Audio URL (optional)" style={inputStyle} />
           <input
@@ -419,6 +439,30 @@ export default function AdminContent() {
                       setEditDraft({ ...editDraft, description: event.target.value })
                     }
                     required
+                    style={inputStyle}
+                  />
+                  <input
+                    name="skuCode"
+                    value={editDraft.skuCode || ""}
+                    onChange={(event) =>
+                      setEditDraft({ ...editDraft, skuCode: event.target.value })
+                    }
+                    placeholder="SKU (e.g., T-01)"
+                    style={inputStyle}
+                  />
+                  <input
+                    name="categories"
+                    value={(editDraft.categories || []).join(", ")}
+                    onChange={(event) =>
+                      setEditDraft({
+                        ...editDraft,
+                        categories: event.target.value
+                          .split(",")
+                          .map((category) => category.trim())
+                          .filter(Boolean)
+                      })
+                    }
+                    placeholder="Categories (comma-separated)"
                     style={inputStyle}
                   />
                   <input
@@ -524,6 +568,13 @@ export default function AdminContent() {
                   )}
                   <strong>{item.title}</strong>
                   <p>{item.description || "Description pending."}</p>
+                  <p>SKU: {item.skuCode || "Pending"}</p>
+                  <p>
+                    Categories:{" "}
+                    {item.categories && item.categories.length > 0
+                      ? item.categories.join(", ")
+                      : "None"}
+                  </p>
                   <p>Cover: {item.coverUrl || "Pending"}</p>
                   <p>Audio: {item.audioUrl || "Pending"}</p>
                   <p>Interests: {item.interestIds.join(", ") || "None"}</p>

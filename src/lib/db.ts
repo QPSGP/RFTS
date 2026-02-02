@@ -367,9 +367,10 @@ const ensureLibrarySeeded = async () => {
     seedItems.map((item) =>
       sql`
         INSERT INTO library_items
-          (title, description, cover_url, audio_url, interest_ids, allowed_user_emails, order_index, is_adult)
+          (title, description, sku_code, categories, cover_url, audio_url, interest_ids, allowed_user_emails, order_index, is_adult)
         VALUES
-          (${item.title}, ${item.description}, ${item.coverUrl}, ${item.audioUrl},
+          (${item.title}, ${item.description}, ${item.skuCode || ""}, ${toPgArray(item.categories || [])}::text[],
+           ${item.coverUrl}, ${item.audioUrl},
            ${toPgArray(item.interestIds)}::text[], ${toPgArray(item.allowedUserEmails)}::text[],
            ${item.order}, ${item.isAdult})
       `
@@ -418,6 +419,8 @@ export const listLibrary = async () => {
       id,
       title,
       description,
+      sku_code as "skuCode",
+      COALESCE(categories, ARRAY[]::text[]) as "categories",
       cover_url as "coverUrl",
       audio_url as "audioUrl",
       COALESCE(interest_ids, ARRAY[]::text[]) as "interestIds",
@@ -438,6 +441,8 @@ export const getLibraryItem = async (id: string) => {
       id,
       title,
       description,
+      sku_code as "skuCode",
+      COALESCE(categories, ARRAY[]::text[]) as "categories",
       cover_url as "coverUrl",
       audio_url as "audioUrl",
       COALESCE(interest_ids, ARRAY[]::text[]) as "interestIds",
@@ -455,6 +460,8 @@ export const getLibraryItem = async (id: string) => {
 export const createLibraryItem = async (payload: {
   title: string;
   description: string;
+  skuCode: string;
+  categories: string[];
   coverUrl: string;
   audioUrl: string;
   interestIds: string[];
@@ -466,15 +473,18 @@ export const createLibraryItem = async (payload: {
   const order = (orderRows[0]?.max || 0) + 1;
   const { rows } = await sql<LibraryItem>`
     INSERT INTO library_items
-      (title, description, cover_url, audio_url, interest_ids, allowed_user_emails, order_index, is_adult)
+      (title, description, sku_code, categories, cover_url, audio_url, interest_ids, allowed_user_emails, order_index, is_adult)
     VALUES
-      (${payload.title}, ${payload.description}, ${payload.coverUrl}, ${payload.audioUrl},
+      (${payload.title}, ${payload.description}, ${payload.skuCode}, ${toPgArray(payload.categories)}::text[],
+       ${payload.coverUrl}, ${payload.audioUrl},
        ${toPgArray(payload.interestIds)}::text[], ${toPgArray(payload.allowedUserEmails)}::text[],
        ${order}, false)
     RETURNING
       id,
       title,
       description,
+      sku_code as "skuCode",
+      COALESCE(categories, ARRAY[]::text[]) as "categories",
       cover_url as "coverUrl",
       audio_url as "audioUrl",
       COALESCE(interest_ids, ARRAY[]::text[]) as "interestIds",
@@ -490,6 +500,8 @@ export const updateLibraryItem = async (payload: {
   id: string;
   title: string;
   description: string;
+  skuCode: string;
+  categories: string[];
   coverUrl: string;
   audioUrl: string;
   interestIds: string[];
@@ -502,6 +514,8 @@ export const updateLibraryItem = async (payload: {
     SET
       title = ${payload.title},
       description = ${payload.description},
+      sku_code = ${payload.skuCode},
+      categories = ${toPgArray(payload.categories)}::text[],
       cover_url = ${payload.coverUrl},
       audio_url = ${payload.audioUrl},
       interest_ids = ${toPgArray(payload.interestIds)}::text[],
@@ -513,6 +527,8 @@ export const updateLibraryItem = async (payload: {
       id,
       title,
       description,
+      sku_code as "skuCode",
+      COALESCE(categories, ARRAY[]::text[]) as "categories",
       cover_url as "coverUrl",
       audio_url as "audioUrl",
       COALESCE(interest_ids, ARRAY[]::text[]) as "interestIds",

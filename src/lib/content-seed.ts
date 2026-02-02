@@ -78,6 +78,8 @@ type BlobAssets = {
 type LibrarySeedItem = {
   title: string;
   description: string;
+  skuCode?: string;
+  categories?: string[];
   coverUrl: string;
   audioUrl: string;
   interestIds: string[];
@@ -154,6 +156,8 @@ export const buildLibrarySeedFromAssets = (): LibrarySeedItem[] => {
     return {
       title: cleanTitle(file),
       description,
+      skuCode: code || "",
+      categories: [],
       coverUrl,
       audioUrl,
       interestIds: [],
