@@ -112,7 +112,7 @@ export default function PlayOptionsPage() {
         <div className="cta-row" style={{ marginTop: 16 }}>
           <a
             className="button"
-            href="/play-options#meditation-session"
+            href="/play-options?autoplay=1#meditation-session"
             style={{ padding: "14px 22px", fontSize: 16 }}
           >
             Start Session

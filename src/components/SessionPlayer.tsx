@@ -26,6 +26,7 @@ export default function SessionPlayer({
   const [queue, setQueue] = useState<SessionTrack[]>([]);
   const [current, setCurrent] = useState<SessionTrack | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const startSession = () => {
     if (!firstTrack) {
@@ -80,6 +81,21 @@ export default function SessionPlayer({
     setCurrent(rest[0] || null);
   };
 
+  const handlePause = () => {
+    audioRef.current?.pause();
+  };
+
+  const handlePlay = () => {
+    audioRef.current?.play();
+  };
+
+  const handleRestart = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.currentTime = 0;
+    audio.play();
+  };
+
   return (
     <div className="card">
       <h3>Tonight's session</h3>
@@ -101,10 +117,28 @@ export default function SessionPlayer({
       {current && (
         <div style={{ marginTop: 16 }}>
           <strong>Now Playing: {current.title}</strong>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
+            <button className="button button-secondary" onClick={handlePause} type="button">
+              Pause
+            </button>
+            <button
+              className="button button-secondary"
+              onClick={handlePlay}
+              type="button"
+              disabled={isPlaying}
+            >
+              Play
+            </button>
+            <button className="button button-secondary" onClick={handleRestart} type="button">
+              Restart
+            </button>
+          </div>
           <audio
             ref={audioRef}
             controls
             onEnded={handleEnded}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
             style={{ width: "100%", marginTop: 8 }}
           >
             <source src={current.url} />
