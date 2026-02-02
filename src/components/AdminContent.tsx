@@ -66,11 +66,24 @@ export default function AdminContent() {
   }, []);
 
   const interestOptions = useMemo(() => {
-    return interests.map((interest) => ({
-      value: interest.id,
-      label: interest.name
-    }));
+    return interests
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((interest) => ({
+        value: interest.id,
+        label: interest.name
+      }));
   }, [interests]);
+
+  const goalCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    library.forEach((item) => {
+      item.interestIds.forEach((goalId) => {
+        counts.set(goalId, (counts.get(goalId) || 0) + 1);
+      });
+    });
+    return counts;
+  }, [library]);
 
   const sortedLibrary = useMemo(() => {
     const copy = [...library];
@@ -350,7 +363,7 @@ export default function AdminContent() {
             <option value="">Select a goal</option>
             {interestOptions.map((interest) => (
               <option key={interest.value} value={interest.value}>
-                {interest.label}
+                {interest.label} ({goalCounts.get(interest.value) || 0})
               </option>
             ))}
           </select>
@@ -624,6 +637,19 @@ export default function AdminContent() {
                     </button>
                     <button className="button" onClick={() => startEdit(item)}>
                       Edit
+                    </button>
+                    <button
+                      className="button button-secondary"
+                      onClick={async () => {
+                        await fetch("/api/library", {
+                          method: "DELETE",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ id: item.id })
+                        });
+                        await load();
+                      }}
+                    >
+                      Delete
                     </button>
                   </div>
                 </>
