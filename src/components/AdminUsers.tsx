@@ -209,6 +209,7 @@ export default function AdminUsers() {
     });
     if (response.ok) {
       setStatus("Member profile saved.");
+      setProfileOpen((prev) => ({ ...prev, [email]: false }));
       return;
     }
     const data = await response.json().catch(() => ({}));
