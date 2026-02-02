@@ -29,6 +29,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const [message, setMessage] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [needsUserPlay, setNeedsUserPlay] = useState(false);
 
   const attemptPlay = (track?: SessionTrack | null) => {
     const audio = audioRef.current;
@@ -42,6 +43,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     if (playPromise && typeof playPromise.catch === "function") {
       playPromise.catch(() => {
         setMessage("Tap play to start the session.");
+        setNeedsUserPlay(true);
       });
     }
   };
@@ -60,6 +62,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     setQueue(nextQueue);
     setCurrent(nextQueue[0] || null);
     setMessage(null);
+    setNeedsUserPlay(false);
     attemptPlay(nextQueue[0]);
   }, [firstTrack, prepAudio]);
 
@@ -71,6 +74,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     setQueue([secondTrack]);
     setCurrent(secondTrack);
     setMessage(null);
+    setNeedsUserPlay(false);
     attemptPlay(secondTrack);
   }, [secondTrack]);
 
@@ -128,7 +132,12 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   };
 
   const handlePlay = () => {
-    audioRef.current?.play();
+    const playPromise = audioRef.current?.play();
+    if (playPromise && typeof playPromise.then === "function") {
+      playPromise
+        .then(() => setNeedsUserPlay(false))
+        .catch(() => setNeedsUserPlay(true));
+    }
   };
 
   const handleRestart = () => {
@@ -187,6 +196,21 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
             style={{ width: "100%", marginTop: 8, display: current ? "block" : "none" }}
             src={current?.url || undefined}
           />
+          {needsUserPlay && (
+            <div className="card" style={{ marginTop: 12 }}>
+              <p style={{ color: "#b91c1c", marginTop: 0 }}>
+                Tap below to start playback on iPhone.
+              </p>
+              <button
+                className="button"
+                type="button"
+                onClick={handlePlay}
+                style={{ padding: "18px 24px", fontSize: 18, minHeight: 56, width: "100%" }}
+              >
+                Play Session
+              </button>
+            </div>
+          )}
           {isMobile && (
             <div
               style={{
