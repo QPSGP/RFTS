@@ -197,19 +197,62 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
             src={current?.url || undefined}
           />
           {needsUserPlay && (
-            <div className="card" style={{ marginTop: 12 }}>
-              <p style={{ color: "#b91c1c", marginTop: 0 }}>
-                Tap below to start playback on iPhone.
-              </p>
-              <button
-                className="button"
-                type="button"
-                onClick={handlePlay}
-                style={{ padding: "18px 24px", fontSize: 18, minHeight: 56, width: "100%" }}
-              >
-                Play Session
-              </button>
-            </div>
+            <>
+              <div className="card" style={{ marginTop: 12 }}>
+                <p style={{ color: "#b91c1c", marginTop: 0 }}>
+                  Tap below to start playback on iPhone.
+                </p>
+                <button
+                  className="button"
+                  type="button"
+                  onClick={handlePlay}
+                  style={{ padding: "18px 24px", fontSize: 18, minHeight: 56, width: "100%" }}
+                >
+                  Play Session
+                </button>
+              </div>
+              {isMobile && (
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={handlePlay}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      handlePlay();
+                    }
+                  }}
+                  style={{
+                    position: "fixed",
+                    inset: 0,
+                    background: "rgba(15, 23, 42, 0.7)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    zIndex: 100
+                  }}
+                >
+                  <div className="card" style={{ maxWidth: 420, textAlign: "center" }}>
+                    <h3 style={{ marginTop: 0 }}>Tap to Start Audio</h3>
+                    <p style={{ color: "#4b5563" }}>
+                      iPhone requires a tap to begin playback.
+                    </p>
+                    <button
+                      className="button"
+                      type="button"
+                      onClick={handlePlay}
+                      style={{
+                        padding: "18px 24px",
+                        fontSize: 18,
+                        minHeight: 56,
+                        width: "100%"
+                      }}
+                    >
+                      Start Playback
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
           {isMobile && (
             <div
