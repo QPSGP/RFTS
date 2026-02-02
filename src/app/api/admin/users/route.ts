@@ -39,25 +39,34 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (!(await isAdminSession())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  try {
+    if (!(await isAdminSession())) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+    const body = await request.json();
+    const parsed = createSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+    }
+    const existing = await getUserByEmail(parsed.data.email);
+    if (existing) {
+      return NextResponse.json({ error: "User already exists." }, { status: 409 });
+    }
+    const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+    const user = await createUser(parsed.data.email, passwordHash);
+    await ensureSubscription(user.id, parsed.data.tier, parsed.data.status);
+    if (parsed.data.playsPerNight) {
+      await setUserPlaysPerNight(user.id, parsed.data.playsPerNight);
+    }
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Member create failed."
+      },
+      { status: 500 }
+    );
   }
-  const body = await request.json();
-  const parsed = createSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid input." }, { status: 400 });
-  }
-  const existing = await getUserByEmail(parsed.data.email);
-  if (existing) {
-    return NextResponse.json({ error: "User already exists." }, { status: 409 });
-  }
-  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
-  const user = await createUser(parsed.data.email, passwordHash);
-  await ensureSubscription(user.id, parsed.data.tier, parsed.data.status);
-  if (parsed.data.playsPerNight) {
-    await setUserPlaysPerNight(user.id, parsed.data.playsPerNight);
-  }
-  return NextResponse.json({ ok: true });
 }
 
 export async function PATCH(request: Request) {

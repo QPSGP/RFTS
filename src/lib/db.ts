@@ -189,6 +189,34 @@ export const upsertMemberProfile = async (profile: MemberProfile) => {
   `;
 };
 
+export const getMemberProfileByUserId = async (userId: string) => {
+  const { rows } = await sql<MemberProfile>`
+    SELECT
+      user_id as "userId",
+      first_name as "firstName",
+      last_name as "lastName",
+      gender,
+      year_born as "yearBorn",
+      contact_number as "contactNumber",
+      best_contact_times as "bestContactTimes",
+      time_zone as "timeZone",
+      occupation,
+      income_goal as "incomeGoal",
+      income_goal_year as "incomeGoalYear",
+      income_goal_relation as "incomeGoalRelation",
+      is_first_responder as "isFirstResponder",
+      wants_practice_growth as "wantsPracticeGrowth",
+      adult_consent as "adultConsent",
+      wants_polyamory as "wantsPolyamory",
+      had_lgd_session as "hadLgdSession",
+      referral_source as "referralSource"
+    FROM member_profiles
+    WHERE user_id = ${userId}
+    LIMIT 1
+  `;
+  return rows[0] || null;
+};
+
 export const getUserProfile = async (email: string) => {
   const { rows } = await sql<UserProfile>`
     SELECT

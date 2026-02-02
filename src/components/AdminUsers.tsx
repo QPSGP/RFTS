@@ -23,6 +23,36 @@ const inputStyle = {
   width: "100%"
 };
 
+const timeZones = [
+  "Pacific Time",
+  "Mountain Time",
+  "Central Time",
+  "Eastern Time",
+  "Alaska Time",
+  "Hawaii Time",
+  "Other"
+];
+
+type ProfileDraft = {
+  firstName: string;
+  lastName: string;
+  gender: string;
+  yearBorn: string;
+  contactNumber: string;
+  bestContactTimes: string;
+  timeZone: string;
+  occupation: string;
+  incomeGoal: string;
+  incomeGoalYear: string;
+  incomeGoalRelation: string;
+  isFirstResponder: boolean;
+  wantsPracticeGrowth: boolean;
+  adultConsent: boolean;
+  wantsPolyamory: boolean;
+  hadLgdSession: boolean;
+  referralSource: string;
+};
+
 export default function AdminUsers() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [interests, setInterests] = useState<Interest[]>([]);
@@ -35,6 +65,8 @@ export default function AdminUsers() {
   const [createPlaysPerNight, setCreatePlaysPerNight] = useState<1 | 2>(2);
   const [updates, setUpdates] = useState<Record<string, Partial<UserRow>>>({});
   const [resetPasswords, setResetPasswords] = useState<Record<string, string>>({});
+  const [profileOpen, setProfileOpen] = useState<Record<string, boolean>>({});
+  const [profileDrafts, setProfileDrafts] = useState<Record<string, ProfileDraft>>({});
 
 
   const load = async () => {
@@ -109,6 +141,78 @@ export default function AdminUsers() {
     }
     const data = await response.json().catch(() => ({}));
     setStatus(data?.error || `Update failed. (status ${response.status})`);
+  };
+
+  const loadProfile = async (email: string) => {
+    const response = await fetch(`/api/admin/member-profile?email=${encodeURIComponent(email)}`);
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setStatus(data?.error || `Unable to load profile. (status ${response.status})`);
+      return;
+    }
+    const data = await response.json();
+    const profile = data.profile || {};
+    setProfileDrafts((prev) => ({
+      ...prev,
+      [email]: {
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
+        gender: profile.gender || "",
+        yearBorn: profile.yearBorn ? String(profile.yearBorn) : "",
+        contactNumber: profile.contactNumber || "",
+        bestContactTimes: profile.bestContactTimes || "",
+        timeZone: profile.timeZone || "Pacific Time",
+        occupation: profile.occupation || "",
+        incomeGoal: profile.incomeGoal || "",
+        incomeGoalYear: profile.incomeGoalYear ? String(profile.incomeGoalYear) : "",
+        incomeGoalRelation: profile.incomeGoalRelation || "",
+        isFirstResponder: !!profile.isFirstResponder,
+        wantsPracticeGrowth: !!profile.wantsPracticeGrowth,
+        adultConsent: !!profile.adultConsent,
+        wantsPolyamory: !!profile.wantsPolyamory,
+        hadLgdSession: !!profile.hadLgdSession,
+        referralSource: profile.referralSource || ""
+      }
+    }));
+  };
+
+  const saveProfile = async (email: string) => {
+    const draft = profileDrafts[email];
+    if (!draft) {
+      return;
+    }
+    const response = await fetch("/api/admin/member-profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        profile: {
+          firstName: draft.firstName,
+          lastName: draft.lastName,
+          gender: draft.gender,
+          yearBorn: draft.yearBorn ? Number(draft.yearBorn) : undefined,
+          contactNumber: draft.contactNumber,
+          bestContactTimes: draft.bestContactTimes,
+          timeZone: draft.timeZone,
+          occupation: draft.occupation,
+          incomeGoal: draft.incomeGoal,
+          incomeGoalYear: draft.incomeGoalYear ? Number(draft.incomeGoalYear) : undefined,
+          incomeGoalRelation: draft.incomeGoalRelation,
+          isFirstResponder: draft.isFirstResponder,
+          wantsPracticeGrowth: draft.wantsPracticeGrowth,
+          adultConsent: draft.adultConsent,
+          wantsPolyamory: draft.wantsPolyamory,
+          hadLgdSession: draft.hadLgdSession,
+          referralSource: draft.referralSource
+        }
+      })
+    });
+    if (response.ok) {
+      setStatus("Member profile saved.");
+      return;
+    }
+    const data = await response.json().catch(() => ({}));
+    setStatus(data?.error || `Profile save failed. (status ${response.status})`);
   };
 
   return (
@@ -283,6 +387,292 @@ export default function AdminUsers() {
                       </option>
                     ))}
                   </select>
+                  <button
+                    className="button button-secondary"
+                    type="button"
+                    onClick={async () => {
+                      const next = !profileOpen[user.email];
+                      setProfileOpen({ ...profileOpen, [user.email]: next });
+                      if (next && !profileDrafts[user.email]) {
+                        await loadProfile(user.email);
+                      }
+                    }}
+                  >
+                    {profileOpen[user.email] ? "Hide Member Profile" : "View Member Profile"}
+                  </button>
+                  {profileOpen[user.email] && profileDrafts[user.email] && (
+                    <div className="card" style={{ marginTop: 12 }}>
+                      <h4>Member Profile</h4>
+                      <div className="grid grid-2">
+                        <input
+                          style={inputStyle}
+                          placeholder="First Name"
+                          value={profileDrafts[user.email].firstName}
+                          onChange={(event) =>
+                            setProfileDrafts({
+                              ...profileDrafts,
+                              [user.email]: {
+                                ...profileDrafts[user.email],
+                                firstName: event.target.value
+                              }
+                            })
+                          }
+                        />
+                        <input
+                          style={inputStyle}
+                          placeholder="Last Name"
+                          value={profileDrafts[user.email].lastName}
+                          onChange={(event) =>
+                            setProfileDrafts({
+                              ...profileDrafts,
+                              [user.email]: {
+                                ...profileDrafts[user.email],
+                                lastName: event.target.value
+                              }
+                            })
+                          }
+                        />
+                        <input
+                          style={inputStyle}
+                          placeholder="Gender"
+                          value={profileDrafts[user.email].gender}
+                          onChange={(event) =>
+                            setProfileDrafts({
+                              ...profileDrafts,
+                              [user.email]: {
+                                ...profileDrafts[user.email],
+                                gender: event.target.value
+                              }
+                            })
+                          }
+                        />
+                        <input
+                          style={inputStyle}
+                          placeholder="Year born"
+                          value={profileDrafts[user.email].yearBorn}
+                          onChange={(event) =>
+                            setProfileDrafts({
+                              ...profileDrafts,
+                              [user.email]: {
+                                ...profileDrafts[user.email],
+                                yearBorn: event.target.value
+                              }
+                            })
+                          }
+                        />
+                        <input
+                          style={inputStyle}
+                          placeholder="Best Contact Number"
+                          value={profileDrafts[user.email].contactNumber}
+                          onChange={(event) =>
+                            setProfileDrafts({
+                              ...profileDrafts,
+                              [user.email]: {
+                                ...profileDrafts[user.email],
+                                contactNumber: event.target.value
+                              }
+                            })
+                          }
+                        />
+                        <input
+                          style={inputStyle}
+                          placeholder="Best Time(s) Reached"
+                          value={profileDrafts[user.email].bestContactTimes}
+                          onChange={(event) =>
+                            setProfileDrafts({
+                              ...profileDrafts,
+                              [user.email]: {
+                                ...profileDrafts[user.email],
+                                bestContactTimes: event.target.value
+                              }
+                            })
+                          }
+                        />
+                        <select
+                          style={inputStyle}
+                          value={profileDrafts[user.email].timeZone}
+                          onChange={(event) =>
+                            setProfileDrafts({
+                              ...profileDrafts,
+                              [user.email]: {
+                                ...profileDrafts[user.email],
+                                timeZone: event.target.value
+                              }
+                            })
+                          }
+                        >
+                          {timeZones.map((zone) => (
+                            <option key={zone} value={zone}>
+                              {zone}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          style={inputStyle}
+                          placeholder="Occupation"
+                          value={profileDrafts[user.email].occupation}
+                          onChange={(event) =>
+                            setProfileDrafts({
+                              ...profileDrafts,
+                              [user.email]: {
+                                ...profileDrafts[user.email],
+                                occupation: event.target.value
+                              }
+                            })
+                          }
+                        />
+                        <input
+                          style={inputStyle}
+                          placeholder="Annual income goal"
+                          value={profileDrafts[user.email].incomeGoal}
+                          onChange={(event) =>
+                            setProfileDrafts({
+                              ...profileDrafts,
+                              [user.email]: {
+                                ...profileDrafts[user.email],
+                                incomeGoal: event.target.value
+                              }
+                            })
+                          }
+                        />
+                        <input
+                          style={inputStyle}
+                          placeholder="Goal year"
+                          value={profileDrafts[user.email].incomeGoalYear}
+                          onChange={(event) =>
+                            setProfileDrafts({
+                              ...profileDrafts,
+                              [user.email]: {
+                                ...profileDrafts[user.email],
+                                incomeGoalYear: event.target.value
+                              }
+                            })
+                          }
+                        />
+                        <input
+                          style={inputStyle}
+                          placeholder="Goal vs current income"
+                          value={profileDrafts[user.email].incomeGoalRelation}
+                          onChange={(event) =>
+                            setProfileDrafts({
+                              ...profileDrafts,
+                              [user.email]: {
+                                ...profileDrafts[user.email],
+                                incomeGoalRelation: event.target.value
+                              }
+                            })
+                          }
+                        />
+                        <label className="card" style={{ cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={profileDrafts[user.email].isFirstResponder}
+                            onChange={(event) =>
+                              setProfileDrafts({
+                                ...profileDrafts,
+                                [user.email]: {
+                                  ...profileDrafts[user.email],
+                                  isFirstResponder: event.target.checked
+                                }
+                              })
+                            }
+                            style={{ marginRight: 8 }}
+                          />
+                          First responder / healthcare
+                        </label>
+                        <label className="card" style={{ cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={profileDrafts[user.email].wantsPracticeGrowth}
+                            onChange={(event) =>
+                              setProfileDrafts({
+                                ...profileDrafts,
+                                [user.email]: {
+                                  ...profileDrafts[user.email],
+                                  wantsPracticeGrowth: event.target.checked
+                                }
+                              })
+                            }
+                            style={{ marginRight: 8 }}
+                          />
+                          Build private practice
+                        </label>
+                        <label className="card" style={{ cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={profileDrafts[user.email].adultConsent}
+                            onChange={(event) =>
+                              setProfileDrafts({
+                                ...profileDrafts,
+                                [user.email]: {
+                                  ...profileDrafts[user.email],
+                                  adultConsent: event.target.checked
+                                }
+                              })
+                            }
+                            style={{ marginRight: 8 }}
+                          />
+                          Adult content consent
+                        </label>
+                        <label className="card" style={{ cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={profileDrafts[user.email].wantsPolyamory}
+                            onChange={(event) =>
+                              setProfileDrafts({
+                                ...profileDrafts,
+                                [user.email]: {
+                                  ...profileDrafts[user.email],
+                                  wantsPolyamory: event.target.checked
+                                }
+                              })
+                            }
+                            style={{ marginRight: 8 }}
+                          />
+                          Interested in polyamory audios
+                        </label>
+                        <label className="card" style={{ cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={profileDrafts[user.email].hadLgdSession}
+                            onChange={(event) =>
+                              setProfileDrafts({
+                                ...profileDrafts,
+                                [user.email]: {
+                                  ...profileDrafts[user.email],
+                                  hadLgdSession: event.target.checked
+                                }
+                              })
+                            }
+                            style={{ marginRight: 8 }}
+                          />
+                          Life Guidance Discovery Session
+                        </label>
+                        <input
+                          style={inputStyle}
+                          placeholder="Referral source"
+                          value={profileDrafts[user.email].referralSource}
+                          onChange={(event) =>
+                            setProfileDrafts({
+                              ...profileDrafts,
+                              [user.email]: {
+                                ...profileDrafts[user.email],
+                                referralSource: event.target.value
+                              }
+                            })
+                          }
+                        />
+                      </div>
+                      <button
+                        className="button"
+                        type="button"
+                        style={{ marginTop: 12 }}
+                        onClick={() => saveProfile(user.email)}
+                      >
+                        Save Profile
+                      </button>
+                    </div>
+                  )}
                   <button className="button" onClick={() => updateUser(user.email)}>
                     Save
                   </button>
