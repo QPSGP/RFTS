@@ -58,10 +58,18 @@ export default function UserAuth() {
           <h2>Quick Start</h2>
           <p>Start your session now or manage your options.</p>
           <div className="cta-row" style={{ marginTop: 12 }}>
-            <a className="button" href="/play-options#meditation-session">
+            <a
+              className="button"
+              href="/play-options#meditation-session"
+              style={{ padding: "18px 24px", fontSize: 18, minHeight: 56 }}
+            >
               START SESSION
             </a>
-            <a className="button button-secondary" href="/play-options">
+            <a
+              className="button button-secondary"
+              href="/play-options"
+              style={{ padding: "18px 24px", fontSize: 18, minHeight: 56 }}
+            >
               OPTIONS
             </a>
           </div>
