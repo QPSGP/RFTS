@@ -139,6 +139,8 @@ export async function POST() {
       id: item.id,
       title: item.title,
       description: nextDescription,
+      skuCode: item.skuCode || "",
+      categories: item.categories || [],
       coverUrl: nextCoverUrl,
       audioUrl: nextAudioUrl,
       interestIds: item.interestIds,
