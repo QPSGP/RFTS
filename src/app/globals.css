@@ -6,7 +6,7 @@ body {
   margin: 0;
   font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   color: #0f172a;
-  background: #f4f6fb;
+  background: #f5f7fb;
 }
 
 a {
@@ -34,7 +34,7 @@ main {
 .site-header {
   padding: 18px 20px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-  background: linear-gradient(120deg, #0b1220 0%, #121b2f 60%, #16243d 100%);
+  background: linear-gradient(120deg, #0f172a 0%, #0b3f3a 60%, #0f766e 100%);
   color: #f8fafc;
 }
 
@@ -94,7 +94,7 @@ main {
   padding: 10px;
   border-radius: 12px;
   background: #0f172a;
-  border: 1px solid #1e293b;
+  border: 1px solid #0b3f3a;
   box-shadow: 0 16px 32px rgba(15, 23, 42, 0.35);
   display: grid;
   gap: 6px;
@@ -154,15 +154,15 @@ main {
   width: 14px;
   height: 14px;
   border-radius: 999px;
-  background: radial-gradient(circle at 30% 30%, #6ee7b7, #14b8a6 60%);
-  box-shadow: 0 0 12px rgba(20, 184, 166, 0.6);
+  background: radial-gradient(circle at 30% 30%, #22d3ee, #0f766e 60%);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.6);
 }
 
 .button {
   padding: 10px 16px;
   border-radius: 8px;
-  border: 1px solid #0f172a;
-  background: #0f172a;
+  border: 1px solid #0f766e;
+  background: #0f766e;
   color: #fff;
   font-weight: 600;
   cursor: pointer;
@@ -171,13 +171,13 @@ main {
 .button-secondary {
   background: #ffffff;
   color: #0f172a;
-  border-color: #cbd5f5;
+  border-color: #cbd5e1;
 }
 
 .site-header .button-secondary {
   background: transparent;
   color: #e2e8f0;
-  border-color: #334155;
+  border-color: #22d3ee;
 }
 
 .card {
@@ -189,10 +189,10 @@ main {
 }
 
 .card.glow {
-  border: 1px solid rgba(94, 234, 212, 0.45);
+  border: 1px solid rgba(34, 211, 238, 0.45);
   box-shadow:
-    0 14px 40px rgba(20, 184, 166, 0.2),
-    0 0 0 1px rgba(14, 165, 164, 0.18) inset;
+    0 14px 40px rgba(15, 118, 110, 0.2),
+    0 0 0 1px rgba(34, 211, 238, 0.18) inset;
 }
 
 .section {
@@ -222,7 +222,7 @@ button.section-title {
 
 .section-subtitle {
   margin: 0;
-  color: #475569;
+  color: #64748b;
   font-size: 14px;
 }
 
@@ -231,7 +231,7 @@ button.section-title {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #14b8a6;
+  color: #22d3ee;
 }
 
 .signup-shell {
@@ -240,7 +240,7 @@ button.section-title {
   align-items: flex-start;
   justify-content: center;
   padding: 40px 20px 80px;
-  background: linear-gradient(135deg, #0ea5a4 0%, #5eead4 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #0f766e 100%);
 }
 
 .signup-card {
@@ -383,7 +383,7 @@ button.section-title {
   display: inline-flex;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(20, 184, 166, 0.12);
+  background: rgba(34, 211, 238, 0.12);
   color: #0f766e;
   font-size: 12px;
   font-weight: 600;
@@ -392,7 +392,7 @@ button.section-title {
 .hero {
   border-radius: 18px;
   padding: 32px;
-  background: linear-gradient(120deg, #0f172a 0%, #1f2937 60%, #111827 100%);
+  background: linear-gradient(120deg, #0f172a 0%, #0b3f3a 60%, #0f766e 100%);
   color: #f8fafc;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.3);
 }
@@ -411,8 +411,8 @@ button.section-title {
   display: inline-flex;
   padding: 6px 12px;
   border-radius: 999px;
-  background: rgba(14, 165, 164, 0.2);
-  color: #5eead4;
+  background: rgba(34, 211, 238, 0.2);
+  color: #22d3ee;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -446,7 +446,7 @@ button.section-title {
 }
 
 .list li span {
-  color: #14b8a6;
+  color: #0f766e;
   font-weight: 700;
 }
 
