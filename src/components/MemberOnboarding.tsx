@@ -34,12 +34,17 @@ const categoryMatchers = [
   {
     name: "Physical Health",
     keywords: [
+      "allergy",
+      "asthma",
+      "athletic",
+      "eye",
       "sleep",
       "pain",
       "weight",
       "fitness",
       "health",
       "body",
+      "balance",
       "energy",
       "healing",
       "immune",
@@ -51,6 +56,9 @@ const categoryMatchers = [
   {
     name: "Mental Health",
     keywords: [
+      "anger",
+      "phobia",
+      "drinking",
       "stress",
       "anxiety",
       "calm",
@@ -65,15 +73,49 @@ const categoryMatchers = [
   },
   {
     name: "Relationships",
-    keywords: ["relationship", "marriage", "love", "partner", "dating", "family", "parent"]
+    keywords: [
+      "relationship",
+      "marriage",
+      "love",
+      "partner",
+      "dating",
+      "family",
+      "parent",
+      "jealousy",
+      "monogamous"
+    ]
   },
   {
     name: "Spiritual",
-    keywords: ["spiritual", "meditation", "mindfulness", "gratitude", "intuition", "psychic"]
+    keywords: [
+      "spiritual",
+      "meditation",
+      "mindfulness",
+      "gratitude",
+      "intuition",
+      "psychic",
+      "life mission",
+      "past life"
+    ]
   },
   {
     name: "Wealth & Career",
-    keywords: ["money", "wealth", "abundance", "success", "sales", "business", "career", "income"]
+    keywords: [
+      "money",
+      "wealth",
+      "abundance",
+      "success",
+      "sales",
+      "business",
+      "career",
+      "income",
+      "practice",
+      "creativity",
+      "marketing",
+      "public speaking",
+      "speed reading",
+      "goal manifestation"
+    ]
   },
   {
     name: "Habits & Lifestyle",
@@ -135,6 +177,21 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     if (!term) return sortedGoals;
     return sortedGoals.filter((goal) => goal.name.toLowerCase().includes(term));
   }, [searchTerm, sortedGoals]);
+  const goalNameById = useMemo(() => {
+    const map = new Map<string, Interest>();
+    goals.forEach((goal) => {
+      map.set(goal.id, goal);
+    });
+    return map;
+  }, [goals]);
+  const orderedGoals = useMemo(
+    () =>
+      goalIds.map((id) => ({
+        id,
+        name: goalNameById.get(id)?.name || "Unknown goal"
+      })),
+    [goalIds, goalNameById]
+  );
   const groupedGoals = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (term) {
@@ -172,6 +229,18 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
         return prev;
       }
       return [...prev, id];
+    });
+  };
+
+  const moveGoal = (fromIndex: number, toIndex: number) => {
+    setGoalIds((prev) => {
+      if (toIndex < 0 || toIndex >= prev.length) {
+        return prev;
+      }
+      const next = [...prev];
+      const [item] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, item);
+      return next;
     });
   };
 
@@ -293,6 +362,43 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
           </div>
           <div className="section-heading" style={{ marginTop: 24 }}>
             Goal Selection (up to 10)
+          </div>
+          <div className="card" style={{ marginTop: 12 }}>
+            <h3>Your selected goals (saved order)</h3>
+            {orderedGoals.length === 0 ? (
+              <p style={{ color: "#6b7280" }}>No goals selected yet.</p>
+            ) : (
+              <div className="stack">
+                {orderedGoals.map((goal, index) => (
+                  <div
+                    key={goal.id}
+                    className="card"
+                    style={{ display: "flex", alignItems: "center", gap: 10 }}
+                  >
+                    <strong style={{ minWidth: 24 }}>{index + 1}.</strong>
+                    <span style={{ flex: 1 }}>{goal.name}</span>
+                    <button
+                      className="button button-secondary"
+                      type="button"
+                      onClick={() => moveGoal(index, index - 1)}
+                      disabled={index === 0}
+                      style={{ padding: "6px 10px", fontSize: 12 }}
+                    >
+                      Up
+                    </button>
+                    <button
+                      className="button button-secondary"
+                      type="button"
+                      onClick={() => moveGoal(index, index + 1)}
+                      disabled={index === orderedGoals.length - 1}
+                      style={{ padding: "6px 10px", fontSize: 12 }}
+                    >
+                      Down
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div className="card" style={{ marginTop: 12 }}>
             <h3>Find your goals</h3>

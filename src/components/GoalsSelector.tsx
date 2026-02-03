@@ -11,12 +11,17 @@ const categoryMatchers = [
   {
     name: "Physical Health",
     keywords: [
+      "allergy",
+      "asthma",
+      "athletic",
+      "eye",
       "sleep",
       "pain",
       "weight",
       "fitness",
       "health",
       "body",
+      "balance",
       "energy",
       "healing",
       "immune",
@@ -28,6 +33,9 @@ const categoryMatchers = [
   {
     name: "Mental Health",
     keywords: [
+      "anger",
+      "phobia",
+      "drinking",
       "stress",
       "anxiety",
       "calm",
@@ -42,15 +50,49 @@ const categoryMatchers = [
   },
   {
     name: "Relationships",
-    keywords: ["relationship", "marriage", "love", "partner", "dating", "family", "parent"]
+    keywords: [
+      "relationship",
+      "marriage",
+      "love",
+      "partner",
+      "dating",
+      "family",
+      "parent",
+      "jealousy",
+      "monogamous"
+    ]
   },
   {
     name: "Spiritual",
-    keywords: ["spiritual", "meditation", "mindfulness", "gratitude", "intuition", "psychic"]
+    keywords: [
+      "spiritual",
+      "meditation",
+      "mindfulness",
+      "gratitude",
+      "intuition",
+      "psychic",
+      "life mission",
+      "past life"
+    ]
   },
   {
     name: "Wealth & Career",
-    keywords: ["money", "wealth", "abundance", "success", "sales", "business", "career", "income"]
+    keywords: [
+      "money",
+      "wealth",
+      "abundance",
+      "success",
+      "sales",
+      "business",
+      "career",
+      "income",
+      "practice",
+      "creativity",
+      "marketing",
+      "public speaking",
+      "speed reading",
+      "goal manifestation"
+    ]
   },
   {
     name: "Habits & Lifestyle",
