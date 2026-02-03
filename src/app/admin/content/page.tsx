@@ -4,6 +4,7 @@ import AdminPlaybackSettings from "@/components/AdminPlaybackSettings";
 import AdminModerators from "@/components/AdminModerators";
 import ModerationQueue from "@/components/ModerationQueue";
 import AdminUsers from "@/components/AdminUsers";
+import AffiliateAdmin from "@/components/AffiliateAdmin";
 
 export default function AdminContentPage() {
   return (
@@ -15,6 +16,7 @@ export default function AdminContentPage() {
       <AdminUsers />
       <AdminModerators />
       <ModerationQueue />
+      <AffiliateAdmin />
       <AdminPlaybackSettings />
       <AdminSubscriptions />
       <AdminContent />

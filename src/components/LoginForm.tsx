@@ -22,11 +22,12 @@ export default function LoginForm() {
     });
     if (response.ok) {
       const data = await response.json();
-      setStatus(
-        data.role === "moderator"
-          ? "Logged in. You can now access moderator tools."
-          : "Logged in. You can now access admin tools."
-      );
+      if (data.role === "moderator") {
+        window.location.href = "/moderator/console";
+      } else {
+        window.location.href = "/admin/content";
+      }
+      return;
     } else {
       setStatus("Login failed.");
     }
