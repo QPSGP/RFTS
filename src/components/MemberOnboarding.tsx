@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SubscriptionPlan } from "@/lib/types";
 
 type Interest = {
@@ -30,6 +30,67 @@ const timeZones = [
   "Other"
 ];
 
+const categoryMatchers = [
+  {
+    name: "Physical Health",
+    keywords: [
+      "sleep",
+      "pain",
+      "weight",
+      "fitness",
+      "health",
+      "body",
+      "energy",
+      "healing",
+      "immune",
+      "nutrition",
+      "smoking",
+      "addiction"
+    ]
+  },
+  {
+    name: "Mental Health",
+    keywords: [
+      "stress",
+      "anxiety",
+      "calm",
+      "confidence",
+      "focus",
+      "concentration",
+      "memory",
+      "depression",
+      "trauma",
+      "motivation"
+    ]
+  },
+  {
+    name: "Relationships",
+    keywords: ["relationship", "marriage", "love", "partner", "dating", "family", "parent"]
+  },
+  {
+    name: "Spiritual",
+    keywords: ["spiritual", "meditation", "mindfulness", "gratitude", "intuition", "psychic"]
+  },
+  {
+    name: "Wealth & Career",
+    keywords: ["money", "wealth", "abundance", "success", "sales", "business", "career", "income"]
+  },
+  {
+    name: "Habits & Lifestyle",
+    keywords: ["time", "procrastination", "habit", "productivity", "organization", "discipline"]
+  }
+];
+
+const categoryOrder = categoryMatchers.map((category) => category.name).concat("Other");
+
+const getCategoryForGoal = (name: string) => {
+  const value = name.toLowerCase();
+  const match = categoryMatchers.find((category) =>
+    category.keywords.some((keyword) => value.includes(keyword))
+  );
+  return match?.name || "Other";
+};
+
 export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps) {
   const [step, setStep] = useState(1);
   const [status, setStatus] = useState<string | null>(null);
@@ -37,6 +98,8 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [goalIds, setGoalIds] = useState<string[]>([]);
   const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [openCategory, setOpenCategory] = useState<string>(categoryOrder[0]);
   const [profile, setProfile] = useState({
     firstName: "",
     lastName: "",
@@ -67,6 +130,38 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     () => goals.slice().sort((a, b) => a.name.localeCompare(b.name)),
     [goals]
   );
+  const filteredGoals = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return sortedGoals;
+    return sortedGoals.filter((goal) => goal.name.toLowerCase().includes(term));
+  }, [searchTerm, sortedGoals]);
+  const groupedGoals = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (term) {
+      return { "Search Results": filteredGoals };
+    }
+    const groups: Record<string, Interest[]> = {};
+    filteredGoals.forEach((goal) => {
+      const category = getCategoryForGoal(goal.name);
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(goal);
+    });
+    return groups;
+  }, [filteredGoals, searchTerm]);
+  const categoryKeys = useMemo(() => {
+    if (searchTerm.trim()) {
+      return ["Search Results"];
+    }
+    return categoryOrder.filter((category) => groupedGoals[category]?.length);
+  }, [groupedGoals, searchTerm]);
+
+  useEffect(() => {
+    if (!searchTerm.trim() && categoryKeys.length && !categoryKeys.includes(openCategory)) {
+      setOpenCategory(categoryKeys[0]);
+    }
+  }, [searchTerm, categoryKeys, openCategory]);
 
   const toggleGoal = (id: string) => {
     setGoalIds((prev) => {
@@ -199,19 +294,60 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
           <div className="section-heading" style={{ marginTop: 24 }}>
             Goal Selection (up to 10)
           </div>
-          <div className="grid grid-2">
-            {sortedGoals.map((goal) => (
-              <label key={goal.id} className="card" style={{ cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  checked={goalIds.includes(goal.id)}
-                  onChange={() => toggleGoal(goal.id)}
-                  disabled={!goalIds.includes(goal.id) && goalIds.length >= 10}
-                  style={{ marginRight: 8 }}
-                />
-                <strong>{goal.name}</strong>
-                {goal.description && <p>{goal.description}</p>}
-              </label>
+          <div className="card" style={{ marginTop: 12 }}>
+            <h3>Find your goals</h3>
+            <input
+              style={{
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #d1d5db",
+                width: "100%",
+                marginTop: 8
+              }}
+              placeholder="Search goals"
+              value={searchTerm}
+              onChange={(event) => {
+                setSearchTerm(event.target.value);
+                if (event.target.value.trim()) {
+                  setOpenCategory("Search Results");
+                }
+              }}
+            />
+          </div>
+          <div className="grid" style={{ marginTop: 16, gap: 16 }}>
+            {categoryKeys.map((category) => (
+              <div key={category} className="card">
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <button
+                    className="button button-secondary"
+                    type="button"
+                    onClick={() => setOpenCategory(category)}
+                    style={{ flex: 1, textAlign: "left" }}
+                  >
+                    {category}
+                  </button>
+                  <span style={{ fontSize: 12, color: "#64748b", alignSelf: "center" }}>
+                    {groupedGoals[category]?.length || 0}
+                  </span>
+                </div>
+                {openCategory === category && (
+                  <div className="grid grid-2" style={{ marginTop: 12 }}>
+                    {(groupedGoals[category] || []).map((goal) => (
+                      <label key={goal.id} className="card" style={{ cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={goalIds.includes(goal.id)}
+                          onChange={() => toggleGoal(goal.id)}
+                          disabled={!goalIds.includes(goal.id) && goalIds.length >= 10}
+                          style={{ marginRight: 8 }}
+                        />
+                        <strong>{goal.name}</strong>
+                        {goal.description && <p>{goal.description}</p>}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
           <div className="card" style={{ marginTop: 16 }}>
