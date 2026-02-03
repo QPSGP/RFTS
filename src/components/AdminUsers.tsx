@@ -73,6 +73,19 @@ export default function AdminUsers() {
     Record<string, Record<string, boolean>>
   >({});
   const [audioSaveStatus, setAudioSaveStatus] = useState<Record<string, string>>({});
+  const [newAudioDrafts, setNewAudioDrafts] = useState<
+    Record<
+      string,
+      {
+        title: string;
+        description: string;
+        audioUrl: string;
+        coverUrl: string;
+        skuCode: string;
+        categories: string;
+      }
+    >
+  >({});
 
   const sortedInterests = useMemo(
     () => interests.slice().sort((a, b) => a.name.localeCompare(b.name)),
@@ -258,6 +271,78 @@ export default function AdminUsers() {
     setAudioSaveStatus((prev) => ({
       ...prev,
       [email]: `Saved ${updates.length} personalized audio update(s).`
+    }));
+    await load();
+  };
+
+  const getAudioDraft = (email: string) =>
+    newAudioDrafts[email] || {
+      title: "",
+      description: "",
+      audioUrl: "",
+      coverUrl: "",
+      skuCode: "",
+      categories: "CGMR"
+    };
+
+  const updateAudioDraft = (email: string, patch: Partial<(typeof newAudioDrafts)[string]>) => {
+    setNewAudioDrafts((prev) => ({
+      ...prev,
+      [email]: {
+        ...getAudioDraft(email),
+        ...patch
+      }
+    }));
+  };
+
+  const addPersonalizedAudio = async (email: string) => {
+    const draft = getAudioDraft(email);
+    if (!draft.title.trim() || !draft.description.trim() || !draft.audioUrl.trim()) {
+      setAudioSaveStatus((prev) => ({
+        ...prev,
+        [email]: "Add a title, description, and audio URL."
+      }));
+      return;
+    }
+    const categories = draft.categories
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+    const response = await fetch("/api/library", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: draft.title,
+        description: draft.description,
+        skuCode: draft.skuCode,
+        categories,
+        coverUrl: draft.coverUrl,
+        audioUrl: draft.audioUrl,
+        interestIds: [],
+        allowedUserEmails: [email]
+      })
+    });
+    if (!response.ok) {
+      setAudioSaveStatus((prev) => ({
+        ...prev,
+        [email]: "Unable to add audio. Check the fields and try again."
+      }));
+      return;
+    }
+    setAudioSaveStatus((prev) => ({
+      ...prev,
+      [email]: "Personalized audio added."
+    }));
+    setNewAudioDrafts((prev) => ({
+      ...prev,
+      [email]: {
+        title: "",
+        description: "",
+        audioUrl: "",
+        coverUrl: "",
+        skuCode: "",
+        categories: "CGMR"
+      }
     }));
     await load();
   };
@@ -554,6 +639,63 @@ export default function AdminUsers() {
                           Assign custom audios for this member. These audios will only be
                           available to the selected user.
                         </p>
+                        <div className="grid" style={{ gap: 8, marginBottom: 12 }}>
+                          <input
+                            style={inputStyle}
+                            placeholder="CGMR title"
+                            value={getAudioDraft(user.email).title}
+                            onChange={(event) =>
+                              updateAudioDraft(user.email, { title: event.target.value })
+                            }
+                          />
+                          <input
+                            style={inputStyle}
+                            placeholder="CGMR description"
+                            value={getAudioDraft(user.email).description}
+                            onChange={(event) =>
+                              updateAudioDraft(user.email, { description: event.target.value })
+                            }
+                          />
+                          <input
+                            style={inputStyle}
+                            placeholder="Audio URL (required)"
+                            value={getAudioDraft(user.email).audioUrl}
+                            onChange={(event) =>
+                              updateAudioDraft(user.email, { audioUrl: event.target.value })
+                            }
+                          />
+                          <input
+                            style={inputStyle}
+                            placeholder="Cover URL (optional)"
+                            value={getAudioDraft(user.email).coverUrl}
+                            onChange={(event) =>
+                              updateAudioDraft(user.email, { coverUrl: event.target.value })
+                            }
+                          />
+                          <input
+                            style={inputStyle}
+                            placeholder="SKU (optional)"
+                            value={getAudioDraft(user.email).skuCode}
+                            onChange={(event) =>
+                              updateAudioDraft(user.email, { skuCode: event.target.value })
+                            }
+                          />
+                          <input
+                            style={inputStyle}
+                            placeholder="Categories (comma-separated)"
+                            value={getAudioDraft(user.email).categories}
+                            onChange={(event) =>
+                              updateAudioDraft(user.email, { categories: event.target.value })
+                            }
+                          />
+                          <button
+                            className="button button-secondary"
+                            type="button"
+                            onClick={() => addPersonalizedAudio(user.email)}
+                          >
+                            Add Personalized Audio
+                          </button>
+                        </div>
                         <div className="goal-list">
                           {library.map((item) => (
                             <label
