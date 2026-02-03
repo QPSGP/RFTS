@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { LibraryItem } from "@/lib/types";
 
 type Interest = {
   id: string;
@@ -56,6 +57,7 @@ type ProfileDraft = {
 export default function AdminUsers() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [interests, setInterests] = useState<Interest[]>([]);
+  const [library, setLibrary] = useState<LibraryItem[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [createEmail, setCreateEmail] = useState("");
   const [createPassword, setCreatePassword] = useState("");
@@ -67,6 +69,10 @@ export default function AdminUsers() {
   const [resetPasswords, setResetPasswords] = useState<Record<string, string>>({});
   const [profileOpen, setProfileOpen] = useState<Record<string, boolean>>({});
   const [profileDrafts, setProfileDrafts] = useState<Record<string, ProfileDraft>>({});
+  const [audioAssignments, setAudioAssignments] = useState<
+    Record<string, Record<string, boolean>>
+  >({});
+  const [audioSaveStatus, setAudioSaveStatus] = useState<Record<string, string>>({});
 
   const sortedInterests = useMemo(
     () => interests.slice().sort((a, b) => a.name.localeCompare(b.name)),
@@ -81,18 +87,21 @@ export default function AdminUsers() {
 
 
   const load = async () => {
-    const [usersRes, interestsRes] = await Promise.all([
+    const [usersRes, interestsRes, libraryRes] = await Promise.all([
       fetch("/api/admin/users"),
-      fetch("/api/interests")
+      fetch("/api/interests"),
+      fetch("/api/library")
     ]);
-    if (!usersRes.ok || !interestsRes.ok) {
+    if (!usersRes.ok || !interestsRes.ok || !libraryRes.ok) {
       setStatus("Admin session required.");
       return;
     }
     const usersData = await usersRes.json();
     const interestsData = await interestsRes.json();
+    const libraryData = await libraryRes.json();
     setUsers(usersData.users || []);
     setInterests(interestsData.interests || []);
+    setLibrary(libraryData.library || []);
   };
 
   useEffect(() => {
@@ -185,6 +194,72 @@ export default function AdminUsers() {
         referralSource: profile.referralSource || ""
       }
     }));
+  };
+
+  const buildAudioAssignment = (email: string) => {
+    const emailLower = email.toLowerCase();
+    return library.reduce<Record<string, boolean>>((acc, item) => {
+      acc[item.id] =
+        item.allowedUserEmails?.some((allowed) => allowed.toLowerCase() === emailLower) ||
+        false;
+      return acc;
+    }, {});
+  };
+
+  const toggleAudioAssignment = (email: string, itemId: string) => {
+    setAudioAssignments((prev) => ({
+      ...prev,
+      [email]: {
+        ...(prev[email] || {}),
+        [itemId]: !(prev[email]?.[itemId] ?? false)
+      }
+    }));
+  };
+
+  const saveAudioAssignments = async (email: string) => {
+    const current = audioAssignments[email] || buildAudioAssignment(email);
+    const emailLower = email.toLowerCase();
+    const updates = library.filter((item) => {
+      const shouldHave = !!current[item.id];
+      const hasEmail =
+        item.allowedUserEmails?.some((allowed) => allowed.toLowerCase() === emailLower) ||
+        false;
+      return shouldHave !== hasEmail;
+    });
+    if (updates.length === 0) {
+      setAudioSaveStatus((prev) => ({ ...prev, [email]: "No changes to save." }));
+      return;
+    }
+    await Promise.all(
+      updates.map((item) => {
+        const allowed = item.allowedUserEmails || [];
+        const shouldHave = !!current[item.id];
+        const nextAllowed = shouldHave
+          ? Array.from(new Set([...allowed, email]))
+          : allowed.filter((allowedEmail) => allowedEmail.toLowerCase() !== emailLower);
+        return fetch("/api/library", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            skuCode: item.skuCode || "",
+            categories: item.categories || [],
+            coverUrl: item.coverUrl || "",
+            audioUrl: item.audioUrl || "",
+            interestIds: item.interestIds || [],
+            allowedUserEmails: nextAllowed,
+            isAdult: item.isAdult || false
+          })
+        });
+      })
+    );
+    setAudioSaveStatus((prev) => ({
+      ...prev,
+      [email]: `Saved ${updates.length} personalized audio update(s).`
+    }));
+    await load();
   };
 
   const saveProfile = async (email: string) => {
@@ -472,6 +547,53 @@ export default function AdminUsers() {
                             </label>
                           );
                         })}
+                      </div>
+                      <div style={{ marginTop: 12 }}>
+                        <label style={{ fontSize: 12 }}>Personalized audio (CGMR)</label>
+                        <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
+                          Assign custom audios for this member. These audios will only be
+                          available to the selected user.
+                        </p>
+                        <div className="goal-list">
+                          {library.map((item) => (
+                            <label
+                              key={item.id}
+                              className="goal-item"
+                              style={{ display: "flex", gap: 8, alignItems: "center" }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={
+                                  audioAssignments[user.email]?.[item.id] ??
+                                  item.allowedUserEmails?.some(
+                                    (allowed) =>
+                                      allowed.toLowerCase() === user.email.toLowerCase()
+                                  ) ??
+                                  false
+                                }
+                                onChange={() => toggleAudioAssignment(user.email, item.id)}
+                              />
+                              <span style={{ flex: 1 }}>
+                                {item.skuCode ? `${item.skuCode} - ` : ""}
+                                {item.title}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                        <div style={{ marginTop: 8, display: "flex", gap: 12 }}>
+                          <button
+                            className="button button-secondary"
+                            type="button"
+                            onClick={() => saveAudioAssignments(user.email)}
+                          >
+                            Save Personalized Audios
+                          </button>
+                          {audioSaveStatus[user.email] && (
+                            <span style={{ alignSelf: "center" }}>
+                              {audioSaveStatus[user.email]}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </>
                   )}
