@@ -24,9 +24,8 @@ export default function AdminContentPage() {
         <h1>Admin Content Console</h1>
         <p>Manage goals, audio library items, and ordering.</p>
       </section>
-      <section className="card" style={{ marginBottom: 24 }}>
-        <h2>Admin Sections</h2>
-        <div className="grid grid-2" style={{ gap: 12, marginTop: 12 }}>
+      <section style={{ marginBottom: 24 }}>
+        <div className="grid grid-2" style={{ gap: 12 }}>
           <a className="button button-secondary" href="#admin-members">
             Members Section
           </a>
