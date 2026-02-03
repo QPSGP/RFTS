@@ -455,6 +455,27 @@ button.section-title {
   gap: 20px;
 }
 
+.goal-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.goal-list {
+  display: grid;
+  gap: 12px;
+}
+
+.goal-item {
+  padding: 12px;
+  font-size: 14px;
+}
+
+.goal-item p {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
 .input {
   padding: 12px;
   border-radius: 8px;
@@ -536,6 +557,15 @@ button.section-title {
 
   .button {
     width: 100%;
+  }
+
+  .goal-item {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .goal-item strong {
+    font-size: 13px;
   }
 
   .plan-card {

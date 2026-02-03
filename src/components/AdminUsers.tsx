@@ -423,7 +423,7 @@ export default function AdminUsers() {
                   {profileOpen[user.email] && (
                     <>
                       <label style={{ fontSize: 12 }}>Assigned goals (up to 10)</label>
-                      <div className="grid" style={{ gap: 8 }}>
+                      <div className="goal-list">
                         {sortedInterests.map((interest) => {
                           const orderValue = getGoalOrder(
                             user.email,
@@ -433,7 +433,7 @@ export default function AdminUsers() {
                           return (
                             <label
                               key={interest.id}
-                              className="card"
+                              className="card goal-item"
                               style={{ display: "flex", gap: 8, alignItems: "center" }}
                             >
                               <input

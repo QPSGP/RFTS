@@ -267,11 +267,11 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
         {orderedGoals.length === 0 ? (
           <p style={{ color: "#6b7280" }}>No goals selected yet.</p>
         ) : (
-          <div className="stack">
+          <div className="goal-stack">
             {orderedGoals.map((goal, index) => (
               <div
                 key={goal.id}
-                className="card"
+                className="card goal-item"
                 style={{ display: "flex", alignItems: "center", gap: 10 }}
               >
                 <strong style={{ minWidth: 24 }}>{index + 1}.</strong>
@@ -319,7 +319,7 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
           }}
         />
       </div>
-      <div className="grid" style={{ marginTop: 16, gap: 16 }}>
+      <div className="goal-list" style={{ marginTop: 16 }}>
         {categoryKeys.map((category) => (
           <div key={category} className="card">
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
@@ -338,7 +338,11 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
             {openCategory === category && (
               <div className="grid grid-2" style={{ marginTop: 12 }}>
                 {(groupedGoals[category] || []).map((interest) => (
-                  <label key={interest.id} className="card" style={{ cursor: "pointer" }}>
+                  <label
+                    key={interest.id}
+                    className="card goal-item"
+                    style={{ cursor: "pointer" }}
+                  >
                     <input
                       type="checkbox"
                       checked={goalIds.includes(interest.id)}

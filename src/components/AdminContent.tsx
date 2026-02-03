@@ -349,8 +349,8 @@ export default function AdminContent() {
             .map((interest) => (
               <div
                 key={interest.id}
-                className="card"
-                style={{ padding: 10, display: "grid", gap: 6 }}
+                className="card goal-item"
+                style={{ display: "grid", gap: 6 }}
               >
                 {editingGoalId === interest.id && goalDraft ? (
                   <>
