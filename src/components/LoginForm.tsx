@@ -41,7 +41,15 @@ export default function LoginForm() {
 
   return (
     <div className="card">
-      <h2>Admin / Collaborator Login</h2>
+      <h2>Admin / Co-Creator Login</h2>
+      <div className="card" style={{ marginBottom: 12 }}>
+        <h3 style={{ marginTop: 0 }}>What Co-Creators do</h3>
+        <div className="stack">
+          <p>Contribute new recordings and ideas.</p>
+          <p>Refine descriptions and goal mappings.</p>
+          <p>Collaborate on member growth experiences.</p>
+        </div>
+      </div>
       <form onSubmit={onSubmit} className="grid">
         <input
           name="email"

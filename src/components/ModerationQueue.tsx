@@ -46,7 +46,7 @@ export default function ModerationQueue() {
 
   return (
     <div className="card">
-      <h3>Collaboration Queue</h3>
+      <h3>Co-Creation Queue</h3>
       {queue.length === 0 ? (
         <p>No submissions waiting.</p>
       ) : (

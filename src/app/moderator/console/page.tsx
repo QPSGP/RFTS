@@ -22,14 +22,14 @@ export default function ModeratorConsolePage() {
         return res.json();
       })
       .then((data) => setProfile(data.moderator))
-      .catch(() => setError("Collaborator access required."));
+      .catch(() => setError("Co-Creator access required."));
   }, []);
 
   if (error) {
     return (
       <main>
         <section className="card">
-          <h1>Collaborator Console</h1>
+          <h1>Co-Creator Console</h1>
           <p>{error}</p>
         </section>
       </main>
@@ -40,7 +40,7 @@ export default function ModeratorConsolePage() {
     return (
       <main>
         <section className="card">
-          <h1>Collaborator Console</h1>
+          <h1>Co-Creator Console</h1>
           <p>Loading your assignments...</p>
         </section>
       </main>
@@ -50,7 +50,7 @@ export default function ModeratorConsolePage() {
   return (
     <main>
       <section className="hero" style={{ marginBottom: 24 }}>
-        <span className="pill">Collaborator Console</span>
+        <span className="pill">Co-Creator Console</span>
         <h1>Welcome, {profile.name}</h1>
         <p>
           You can only access the subscribers assigned to you. If you need a change,

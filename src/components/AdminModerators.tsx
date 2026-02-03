@@ -121,15 +121,15 @@ export default function AdminModerators() {
 
   return (
     <div className="card">
-      <h2>Collaborator Admin</h2>
+      <h2>Co-Creator Admin</h2>
       <p style={{ color: "#4b5563" }}>
-        Collaborators can only access their assigned subscribers. They cannot add
-        admins or other collaborators.
+        Co-Creators can only access their assigned subscribers. They cannot add
+        admins or other co-creators.
       </p>
       {status && <p>{status}</p>}
       <div className="grid" style={{ marginTop: 16 }}>
         <div className="card">
-          <h3>Collaborator Applications</h3>
+          <h3>Co-Creator Applications</h3>
           {applications.filter((app) => app.status === "pending").length === 0 ? (
             <p>No pending applications.</p>
           ) : (
@@ -177,9 +177,9 @@ export default function AdminModerators() {
         </div>
 
         <div className="card">
-          <h3>Active Collaborators</h3>
+          <h3>Active Co-Creators</h3>
           {moderators.length === 0 ? (
-            <p>No collaborators yet.</p>
+            <p>No co-creators yet.</p>
           ) : (
             <div className="grid">
               {moderators.map((moderator) => (
