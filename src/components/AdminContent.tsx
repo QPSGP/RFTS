@@ -347,11 +347,7 @@ export default function AdminContent() {
             .slice()
             .sort((a, b) => a.name.localeCompare(b.name))
             .map((interest) => (
-              <div
-                key={interest.id}
-                className="card goal-item"
-                style={{ display: "grid", gap: 6 }}
-              >
+              <div key={interest.id} className="goal-item" style={{ display: "grid", gap: 6 }}>
                 {editingGoalId === interest.id && goalDraft ? (
                   <>
                     <input

@@ -271,7 +271,7 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
             {orderedGoals.map((goal, index) => (
               <div
                 key={goal.id}
-                className="card goal-item"
+                className="goal-item"
                 style={{ display: "flex", alignItems: "center", gap: 10 }}
               >
                 <strong style={{ minWidth: 24 }}>{index + 1}.</strong>
@@ -340,7 +340,7 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
                 {(groupedGoals[category] || []).map((interest) => (
                   <label
                     key={interest.id}
-                    className="card goal-item"
+                    className="goal-item"
                     style={{ cursor: "pointer" }}
                   >
                     <input

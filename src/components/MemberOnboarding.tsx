@@ -372,7 +372,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 {orderedGoals.map((goal, index) => (
                   <div
                     key={goal.id}
-                    className="card goal-item"
+                    className="goal-item"
                     style={{ display: "flex", alignItems: "center", gap: 10 }}
                   >
                     <strong style={{ minWidth: 24 }}>{index + 1}.</strong>
@@ -441,7 +441,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                     {(groupedGoals[category] || []).map((goal) => (
                       <label
                         key={goal.id}
-                        className="card goal-item"
+                        className="goal-item"
                         style={{ cursor: "pointer" }}
                       >
                         <input

@@ -433,7 +433,7 @@ export default function AdminUsers() {
                           return (
                             <label
                               key={interest.id}
-                              className="card goal-item"
+                              className="goal-item"
                               style={{ display: "flex", gap: 8, alignItems: "center" }}
                             >
                               <input
