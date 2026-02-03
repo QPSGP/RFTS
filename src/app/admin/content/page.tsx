@@ -15,8 +15,23 @@ export default function AdminContentPage() {
     moderators: false,
     affiliates: false,
     playback: false,
-    subscriptions: false
+    subscriptions: false,
+    goals: false,
+    library: false
   });
+
+  const toggleSection = (key: keyof typeof openSections, id: string) => {
+    setOpenSections((prev) => {
+      const nextOpen = !prev[key];
+      if (nextOpen) {
+        requestAnimationFrame(() => {
+          const el = document.getElementById(id);
+          el?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      }
+      return { ...prev, [key]: nextOpen };
+    });
+  };
 
   return (
     <main>
@@ -26,91 +41,87 @@ export default function AdminContentPage() {
       </section>
       <section style={{ marginBottom: 24 }}>
         <div className="grid grid-2" style={{ gap: 12 }}>
-          <a className="button button-secondary" href="#admin-members">
+          <button
+            className="button button-secondary"
+            type="button"
+            onClick={() => toggleSection("members", "admin-members")}
+          >
             Members Section
-          </a>
-          <a className="button button-secondary" href="#admin-moderators">
+          </button>
+          <button
+            className="button button-secondary"
+            type="button"
+            onClick={() => toggleSection("moderators", "admin-moderators")}
+          >
             Moderators Section
-          </a>
-          <a className="button button-secondary" href="#admin-affiliates">
+          </button>
+          <button
+            className="button button-secondary"
+            type="button"
+            onClick={() => toggleSection("affiliates", "admin-affiliates")}
+          >
             Affiliate Section
-          </a>
-          <a className="button button-secondary" href="#admin-playback">
+          </button>
+          <button
+            className="button button-secondary"
+            type="button"
+            onClick={() => toggleSection("playback", "admin-playback")}
+          >
             Playback Schedule Section
-          </a>
-          <a className="button button-secondary" href="#admin-subscriptions">
+          </button>
+          <button
+            className="button button-secondary"
+            type="button"
+            onClick={() => toggleSection("subscriptions", "admin-subscriptions")}
+          >
             Subscription Plans Section
-          </a>
-          <a className="button button-secondary" href="#admin-goals">
+          </button>
+          <button
+            className="button button-secondary"
+            type="button"
+            onClick={() => toggleSection("goals", "admin-goals")}
+          >
             Goals Section
-          </a>
-          <a className="button button-secondary" href="#admin-audio-library">
+          </button>
+          <button
+            className="button button-secondary"
+            type="button"
+            onClick={() => toggleSection("library", "admin-audio-library")}
+          >
             Audio Library Section
-          </a>
+          </button>
         </div>
       </section>
-      <section id="admin-members" style={{ marginBottom: 20 }}>
-        <details
-          open={openSections.members}
-          onToggle={(event) => {
-            const isOpen = (event.currentTarget as HTMLDetailsElement).open;
-            setOpenSections((prev) => ({ ...prev, members: isOpen }));
-          }}
-        >
-          <summary className="section-title">Members Section</summary>
+      {openSections.members && (
+        <section id="admin-members" style={{ marginBottom: 20 }}>
           <AdminUsers />
-        </details>
-      </section>
-      <section id="admin-moderators" style={{ marginBottom: 20 }}>
-        <details
-          open={openSections.moderators}
-          onToggle={(event) => {
-            const isOpen = (event.currentTarget as HTMLDetailsElement).open;
-            setOpenSections((prev) => ({ ...prev, moderators: isOpen }));
-          }}
-        >
-          <summary className="section-title">Moderators Section</summary>
+        </section>
+      )}
+      {openSections.moderators && (
+        <section id="admin-moderators" style={{ marginBottom: 20 }}>
           <AdminModerators />
           <ModerationQueue />
-        </details>
-      </section>
-      <section id="admin-affiliates" style={{ marginBottom: 20 }}>
-        <details
-          open={openSections.affiliates}
-          onToggle={(event) => {
-            const isOpen = (event.currentTarget as HTMLDetailsElement).open;
-            setOpenSections((prev) => ({ ...prev, affiliates: isOpen }));
-          }}
-        >
-          <summary className="section-title">Affiliate Section</summary>
+        </section>
+      )}
+      {openSections.affiliates && (
+        <section id="admin-affiliates" style={{ marginBottom: 20 }}>
           <AffiliateAdmin />
-        </details>
-      </section>
-      <section id="admin-playback" style={{ marginBottom: 20 }}>
-        <details
-          open={openSections.playback}
-          onToggle={(event) => {
-            const isOpen = (event.currentTarget as HTMLDetailsElement).open;
-            setOpenSections((prev) => ({ ...prev, playback: isOpen }));
-          }}
-        >
-          <summary className="section-title">Playback Schedule Section</summary>
+        </section>
+      )}
+      {openSections.playback && (
+        <section id="admin-playback" style={{ marginBottom: 20 }}>
           <AdminPlaybackSettings />
-        </details>
-      </section>
-      <section id="admin-subscriptions" style={{ marginBottom: 20 }}>
-        <details
-          open={openSections.subscriptions}
-          onToggle={(event) => {
-            const isOpen = (event.currentTarget as HTMLDetailsElement).open;
-            setOpenSections((prev) => ({ ...prev, subscriptions: isOpen }));
-          }}
-        >
-          <summary className="section-title">Subscription Plans Section</summary>
+        </section>
+      )}
+      {openSections.subscriptions && (
+        <section id="admin-subscriptions" style={{ marginBottom: 20 }}>
           <AdminSubscriptions />
-        </details>
-      </section>
-      <AdminContent />
+        </section>
+      )}
+      <AdminContent
+        openGoals={openSections.goals}
+        openLibrary={openSections.library}
+      />
     </main>
   );
 }
