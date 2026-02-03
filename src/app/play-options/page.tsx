@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import SessionPlayer, { SessionPlayerHandle } from "@/components/SessionPlayer";
 
@@ -24,6 +24,18 @@ export default function PlayOptionsPage() {
   const [gapHours, setGapHours] = useState(2.5);
   const [autoStart, setAutoStart] = useState(false);
   const sessionRef = useRef<SessionPlayerHandle | null>(null);
+
+  const derivedTracks = useMemo(() => {
+    const map = new Map<string, { id: string; title: string }>();
+    schedule.forEach((night) => {
+      night.tracks.forEach((track) => {
+        if (!map.has(track.id)) {
+          map.set(track.id, { id: track.id, title: track.title });
+        }
+      });
+    });
+    return Array.from(map.values());
+  }, [schedule]);
 
   const logout = async () => {
     await fetch("/api/user/logout", { method: "POST" });
@@ -155,6 +167,21 @@ export default function PlayOptionsPage() {
           <a className="button button-secondary" href="/goals">
             Update Goals
           </a>
+        </div>
+        <div className="card">
+          <h3>Audios from your goals</h3>
+          <p>These audios are automatically included based on your goal selections.</p>
+          {derivedTracks.length === 0 ? (
+            <p style={{ color: "#6b7280" }}>No goal-based audios listed yet.</p>
+          ) : (
+            <div className="goal-list" style={{ marginTop: 8 }}>
+              {derivedTracks.map((track) => (
+                <div key={track.id} className="goal-item">
+                  {track.title}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="card" id="meditation-library">
           <h3>Meditation Library</h3>

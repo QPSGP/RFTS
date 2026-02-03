@@ -387,6 +387,13 @@ export default function AdminUsers() {
     setStatus(data?.error || `Profile save failed. (status ${response.status})`);
   };
 
+  const getDerivedAudios = (goalIds: string[]) => {
+    if (!goalIds || goalIds.length === 0) {
+      return [];
+    }
+    return library.filter((item) => item.interestIds?.some((id) => goalIds.includes(id)));
+  };
+
   const updateOrderedGoals = (email: string, goalId: string, orderValue: string) => {
     const parsed = Number(orderValue);
     if (!orderValue || Number.isNaN(parsed) || parsed <= 0) {
@@ -632,6 +639,33 @@ export default function AdminUsers() {
                             </label>
                           );
                         })}
+                      </div>
+                      <div style={{ marginTop: 12 }}>
+                        <label style={{ fontSize: 12 }}>Audios from goals (read-only)</label>
+                        <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
+                          These are automatically included based on the member's goal
+                          selections.
+                        </p>
+                        <div className="goal-list">
+                          {getDerivedAudios(user.goalIds || []).length === 0 ? (
+                            <span style={{ color: "#6b7280", fontSize: 12 }}>
+                              No goal-based audios assigned yet.
+                            </span>
+                          ) : (
+                            getDerivedAudios(user.goalIds || []).map((item) => (
+                              <div
+                                key={item.id}
+                                className="goal-item"
+                                style={{ display: "flex", gap: 8, alignItems: "center" }}
+                              >
+                                <span style={{ flex: 1 }}>
+                                  {item.skuCode ? `${item.skuCode} - ` : ""}
+                                  {item.title}
+                                </span>
+                              </div>
+                            ))
+                          )}
+                        </div>
                       </div>
                       <div style={{ marginTop: 12 }}>
                         <label style={{ fontSize: 12 }}>Personalized audio (CGMR)</label>
