@@ -17,10 +17,25 @@ export default function FaqsPage() {
         </div>
         <div className="grid">
           <div className="card">
+            <h3>Why you will use it?</h3>
+            <p>
+              The subconscious mind influences about <strong>95%</strong> of our thoughts,
+              emotions, and behaviors, often operating without our conscious awareness.
+              While we may not have direct control over it, we can influence our
+              subconscious through conscious beliefs and habits.
+            </p>
+            <p>
+              If you are not programming your subconsciousness than who is? Customize
+              yours by you for you.
+            </p>
+          </div>
+
+          <div className="card">
             <h3>Who is Reach For The Stars for?</h3>
             <p>
-              For people who want guided, goal-based sleep sessions to build new habits,
-              improve focus, and reinforce personal priorities while they rest.
+              For people who want customized guided, goal-based sleep sessions to build
+              new habits, improve focus, and reinforce personal priorities while
+              sleeping.
             </p>
           </div>
         </div>
@@ -77,19 +92,7 @@ export default function FaqsPage() {
             </p>
           </div>
 
-          <div className="card">
-            <h3>What is its value?</h3>
-            <p>
-              The subconscious mind influences about 95% of our thoughts, emotions, and
-              behaviors, often operating without our conscious awareness. While we may
-              not have direct control over it, we can influence our subconscious through
-              conscious beliefs and habits.
-            </p>
-            <p>
-              If you are not programming your subconsciousness than who is? Customized by
-              you! Thats value!
-            </p>
-          </div>
+          
         </div>
       </section>
 
