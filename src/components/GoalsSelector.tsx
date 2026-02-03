@@ -332,7 +332,9 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
               <button
                 className="button button-secondary"
                 type="button"
-                onClick={() => setOpenCategory(category)}
+                onClick={() =>
+                  setOpenCategory((prev) => (prev === category ? null : category))
+                }
                 style={{ flex: 1, textAlign: "left" }}
               >
                 {category}
