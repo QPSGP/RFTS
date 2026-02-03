@@ -1,3 +1,6 @@
+ "use client";
+
+import { useState } from "react";
 import AdminContent from "@/components/AdminContent";
 import AdminSubscriptions from "@/components/AdminSubscriptions";
 import AdminPlaybackSettings from "@/components/AdminPlaybackSettings";
@@ -7,6 +10,14 @@ import AdminUsers from "@/components/AdminUsers";
 import AffiliateAdmin from "@/components/AffiliateAdmin";
 
 export default function AdminContentPage() {
+  const [openSections, setOpenSections] = useState({
+    members: false,
+    moderators: false,
+    affiliates: false,
+    playback: false,
+    subscriptions: false
+  });
+
   return (
     <main>
       <section style={{ marginBottom: 24 }}>
@@ -40,32 +51,62 @@ export default function AdminContentPage() {
         </div>
       </section>
       <section id="admin-members" style={{ marginBottom: 20 }}>
-        <details>
+        <details
+          open={openSections.members}
+          onToggle={(event) => {
+            const isOpen = (event.currentTarget as HTMLDetailsElement).open;
+            setOpenSections((prev) => ({ ...prev, members: isOpen }));
+          }}
+        >
           <summary className="section-title">Members Section</summary>
           <AdminUsers />
         </details>
       </section>
       <section id="admin-moderators" style={{ marginBottom: 20 }}>
-        <details>
+        <details
+          open={openSections.moderators}
+          onToggle={(event) => {
+            const isOpen = (event.currentTarget as HTMLDetailsElement).open;
+            setOpenSections((prev) => ({ ...prev, moderators: isOpen }));
+          }}
+        >
           <summary className="section-title">Moderators Section</summary>
           <AdminModerators />
           <ModerationQueue />
         </details>
       </section>
       <section id="admin-affiliates" style={{ marginBottom: 20 }}>
-        <details>
+        <details
+          open={openSections.affiliates}
+          onToggle={(event) => {
+            const isOpen = (event.currentTarget as HTMLDetailsElement).open;
+            setOpenSections((prev) => ({ ...prev, affiliates: isOpen }));
+          }}
+        >
           <summary className="section-title">Affiliate Section</summary>
           <AffiliateAdmin />
         </details>
       </section>
       <section id="admin-playback" style={{ marginBottom: 20 }}>
-        <details>
+        <details
+          open={openSections.playback}
+          onToggle={(event) => {
+            const isOpen = (event.currentTarget as HTMLDetailsElement).open;
+            setOpenSections((prev) => ({ ...prev, playback: isOpen }));
+          }}
+        >
           <summary className="section-title">Playback Schedule Section</summary>
           <AdminPlaybackSettings />
         </details>
       </section>
       <section id="admin-subscriptions" style={{ marginBottom: 20 }}>
-        <details>
+        <details
+          open={openSections.subscriptions}
+          onToggle={(event) => {
+            const isOpen = (event.currentTarget as HTMLDetailsElement).open;
+            setOpenSections((prev) => ({ ...prev, subscriptions: isOpen }));
+          }}
+        >
           <summary className="section-title">Subscription Plans Section</summary>
           <AdminSubscriptions />
         </details>

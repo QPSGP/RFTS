@@ -43,6 +43,10 @@ export default function AdminContent() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<LibraryItem | null>(null);
   const [editInterestIds, setEditInterestIds] = useState<string[]>([]);
+  const [openSections, setOpenSections] = useState({
+    goals: false,
+    library: false
+  });
 
   const load = async () => {
     const [interestRes, libraryRes] = await Promise.all([
@@ -322,7 +326,15 @@ export default function AdminContent() {
   return (
     <div className="grid" style={{ gap: 24 }}>
       {status && <p>{status}</p>}
-      <details id="admin-goals" className="card">
+      <details
+        id="admin-goals"
+        className="card"
+        open={openSections.goals}
+        onToggle={(event) => {
+          const isOpen = (event.currentTarget as HTMLDetailsElement).open;
+          setOpenSections((prev) => ({ ...prev, goals: isOpen }));
+        }}
+      >
         <summary className="section-title">Goals Section</summary>
         <div className="grid" style={{ gap: 12, marginTop: 12 }}>
           <div
@@ -412,7 +424,15 @@ export default function AdminContent() {
         </div>
       </details>
 
-      <details id="admin-audio-library" className="card">
+      <details
+        id="admin-audio-library"
+        className="card"
+        open={openSections.library}
+        onToggle={(event) => {
+          const isOpen = (event.currentTarget as HTMLDetailsElement).open;
+          setOpenSections((prev) => ({ ...prev, library: isOpen }));
+        }}
+      >
         <summary className="section-title">Audio Library Section</summary>
         <p style={{ color: "#4b5563", marginTop: 8 }}>
           Use sync to pull descriptions and covers from the assets list.
