@@ -1,4 +1,11 @@
+"use client";
+
+import { useState } from "react";
+
+type SectionKey = "who" | "what" | "where" | "why" | "help";
+
 export default function FaqsPage() {
+  const [openSection, setOpenSection] = useState<SectionKey>("who");
   return (
     <main>
       <section className="hero section">
@@ -13,9 +20,16 @@ export default function FaqsPage() {
       <section className="section">
         <div className="section-head">
           <span className="eyebrow">Who</span>
-          <h2 className="section-title">Who this is for</h2>
+          <button
+            className="section-title"
+            type="button"
+            onClick={() => setOpenSection("who")}
+          >
+            Who this is for
+          </button>
         </div>
-        <div className="grid">
+        {openSection === "who" && (
+          <div className="grid">
           <div className="card">
             <h3>Why you will use it?</h3>
             <p>
@@ -39,14 +53,22 @@ export default function FaqsPage() {
             </p>
           </div>
         </div>
+        )}
       </section>
 
       <section className="section">
         <div className="section-head">
           <span className="eyebrow">What</span>
-          <h2 className="section-title">What to expect</h2>
+          <button
+            className="section-title"
+            type="button"
+            onClick={() => setOpenSection("what")}
+          >
+            What to expect
+          </button>
         </div>
-        <div className="grid">
+        {openSection === "what" && (
+          <div className="grid">
           <div className="card">
             <h3>What is Reach For The Stars?</h3>
             <p>
@@ -91,17 +113,23 @@ export default function FaqsPage() {
               sleeping.
             </p>
           </div>
-
-          
         </div>
+        )}
       </section>
 
       <section className="section">
         <div className="section-head">
           <span className="eyebrow">Where</span>
-          <h2 className="section-title">Where to begin and manage</h2>
+          <button
+            className="section-title"
+            type="button"
+            onClick={() => setOpenSection("where")}
+          >
+            Where to begin and manage
+          </button>
         </div>
-        <div className="grid">
+        {openSection === "where" && (
+          <div className="grid">
           <div className="card">
             <h3>Where do I start?</h3>
             <ol>
@@ -127,14 +155,22 @@ export default function FaqsPage() {
             </p>
           </div>
         </div>
+        )}
       </section>
 
       <section className="section">
         <div className="section-head">
           <span className="eyebrow">Why</span>
-          <h2 className="section-title">Why the structure matters</h2>
+          <button
+            className="section-title"
+            type="button"
+            onClick={() => setOpenSection("why")}
+          >
+            Why the structure matters
+          </button>
         </div>
-        <div className="grid">
+        {openSection === "why" && (
+          <div className="grid">
           <div className="card">
             <h3>Why are my goals limited to 10?</h3>
             <p>
@@ -151,22 +187,37 @@ export default function FaqsPage() {
             </p>
           </div>
         </div>
+        )}
       </section>
 
-      <section className="grid" style={{ marginTop: 24 }}>
-        <div className="card">
-          <h3>Need help?</h3>
-          <p>Email: customerservice@reachforthestars.today</p>
-          <p>Phone: 800-GOAL-NOW (462-5669)</p>
+      <section className="section">
+        <div className="section-head">
+          <span className="eyebrow">Help</span>
+          <button
+            className="section-title"
+            type="button"
+            onClick={() => setOpenSection("help")}
+          >
+            Help and tips
+          </button>
         </div>
-        <div className="card">
-          <h3>Quick tips for best results</h3>
-          <ul>
-            <li>Keep your phone on a charger near your bed.</li>
-            <li>Use the Pause/Play/Restart controls if you wake up.</li>
-            <li>Stick with your goals long enough to complete a full cycle.</li>
-          </ul>
-        </div>
+        {openSection === "help" && (
+          <div className="grid">
+            <div className="card">
+              <h3>Need help?</h3>
+              <p>Email: customerservice@reachforthestars.today</p>
+              <p>Phone: 800-GOAL-NOW (462-5669)</p>
+            </div>
+            <div className="card">
+              <h3>Quick tips for best results</h3>
+              <ul>
+                <li>Keep your phone on a charger near your bed.</li>
+                <li>Use the Pause/Play/Restart controls if you wake up.</li>
+                <li>Stick with your goals long enough to complete a full cycle.</li>
+              </ul>
+            </div>
+          </div>
+        )}
       </section>
     </main>
   );
