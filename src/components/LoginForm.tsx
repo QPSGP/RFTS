@@ -41,7 +41,7 @@ export default function LoginForm() {
 
   return (
     <div className="card">
-      <h2>Admin / Moderator Login</h2>
+      <h2>Admin / Collaborator Login</h2>
       <form onSubmit={onSubmit} className="grid">
         <input
           name="email"

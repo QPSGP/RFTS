@@ -39,11 +39,11 @@ export default function ModerationPage() {
   return (
     <main>
       <section className="hero section">
-        <span className="pill">Moderation Council</span>
+        <span className="pill">Collaboration Council</span>
         <h1>Guiding Consciousness Through Sound</h1>
         <p>
-          We are building a moderation community devoted to uplifting personal growth,
-          emotional resilience, and expanded awareness. Help us curate and review
+          We are building a collaborator community devoted to uplifting personal growth,
+          emotional resilience, and expanded awareness. Help us add and guide
           audio content that supports transformation in a safe, focused environment.
         </p>
       </section>
@@ -57,10 +57,10 @@ export default function ModerationPage() {
           </p>
         </div>
         <div className="card">
-          <h3>What Moderators Do</h3>
+          <h3>What Collaborators Do</h3>
           <p>
-            Review new recordings, verify descriptions, flag sensitive content,
-            and ensure each session aligns with member goals and ethics.
+            Contribute new recordings, refine descriptions, and ensure each session
+            aligns with member goals and ethics.
           </p>
         </div>
         <div className="card">
@@ -74,7 +74,7 @@ export default function ModerationPage() {
 
       <section className="grid grid-2 section">
         <div className="card">
-          <h3>Moderation Standards</h3>
+          <h3>Collaboration Standards</h3>
           <div className="stack">
             <p>Clear, calming, and non-manipulative language.</p>
             <p>Respectful handling of sensitive or adult content.</p>
@@ -94,7 +94,7 @@ export default function ModerationPage() {
       </section>
 
       <section className="card section">
-        <h2>Apply to Become a Moderator</h2>
+        <h2>Apply to Become a Collaborator</h2>
         <p style={{ color: "#475569" }}>
           Tell us about your background and the type of consciousness-focused work
           you want to help cultivate. Applications are reviewed by the Success Center
