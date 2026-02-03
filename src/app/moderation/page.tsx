@@ -94,6 +94,17 @@ export default function ModerationPage() {
       </section>
 
       <section className="card section">
+        <h2>Featured Co-Creator</h2>
+        <p style={{ color: "#475569" }}>
+          Learn more about our first Co-Creator and her contribution to the
+          Reach For The Stars experience.
+        </p>
+        <a className="button button-secondary" href="/co-creators/terry-brussel-rogers">
+          View Terry Brussel-Rogers, CCHt
+        </a>
+      </section>
+
+      <section className="card section">
         <h2>Apply to Become a Co-Creator</h2>
         <p style={{ color: "#475569" }}>
           Tell us about your background and the type of consciousness-focused work
