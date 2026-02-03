@@ -35,14 +35,18 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
       .catch(() => setStatus("loggedOut"));
   }, []);
 
+  const isCgmr = (item: LibraryItem) =>
+    (item.categories || []).some((category) => category.toLowerCase() === "cgmr");
+
   const grouped = useMemo(() => {
     const byInterest = new Map<string, LibraryItem[]>();
     interests.forEach((interest) => {
       byInterest.set(interest.id, []);
     });
     const unassigned: LibraryItem[] = [];
+    const visibleLibrary = library.filter((item) => !isCgmr(item));
 
-    library.forEach((item) => {
+    visibleLibrary.forEach((item) => {
       if (!item.interestIds.length) {
         unassigned.push(item);
         return;

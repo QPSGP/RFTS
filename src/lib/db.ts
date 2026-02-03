@@ -434,6 +434,34 @@ export const listLibrary = async () => {
   return rows;
 };
 
+export const listPersonalizedLibraryForUser = async (email: string) => {
+  await ensureLibrarySeeded();
+  const { rows } = await sql<LibraryItem>`
+    SELECT
+      id,
+      title,
+      description,
+      sku_code as "skuCode",
+      COALESCE(categories, ARRAY[]::text[]) as "categories",
+      cover_url as "coverUrl",
+      audio_url as "audioUrl",
+      COALESCE(interest_ids, ARRAY[]::text[]) as "interestIds",
+      COALESCE(allowed_user_emails, ARRAY[]::text[]) as "allowedUserEmails",
+      created_at as "createdAt",
+      order_index as "order",
+      is_adult as "isAdult"
+    FROM library_items
+    WHERE allowed_user_emails IS NOT NULL
+      AND EXISTS (
+        SELECT 1
+        FROM unnest(allowed_user_emails) AS allowed
+        WHERE LOWER(allowed) = LOWER(${email})
+      )
+    ORDER BY order_index ASC
+  `;
+  return rows;
+};
+
 export const getLibraryItem = async (id: string) => {
   await ensureLibrarySeeded();
   const { rows } = await sql<LibraryItem>`

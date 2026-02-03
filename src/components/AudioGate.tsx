@@ -45,6 +45,8 @@ export default function AudioGate({ item }: AudioGateProps) {
       : item.allowedUserEmails.some(
           (email) => email.toLowerCase() === userEmail.toLowerCase()
         );
+  const isCgmr =
+    item.categories?.some((category) => category.toLowerCase() === "cgmr") ?? false;
 
   if (status === "loading") {
     return null;
@@ -74,6 +76,18 @@ export default function AudioGate({ item }: AudioGateProps) {
         <a className="button" href="/signup/step-1-subscription-selection">
           Choose Subscription
         </a>
+      </div>
+    );
+  }
+
+  if (isCgmr) {
+    return (
+      <div className="card">
+        <h2>Personalized Audio</h2>
+        <p>
+          This recording is a custom CGMR track assigned by your admin. Playback is
+          unavailable in the member library.
+        </p>
       </div>
     );
   }

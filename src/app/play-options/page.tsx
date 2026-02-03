@@ -23,6 +23,9 @@ export default function PlayOptionsPage() {
   );
   const [gapHours, setGapHours] = useState(2.5);
   const [autoStart, setAutoStart] = useState(false);
+  const [personalizedAudios, setPersonalizedAudios] = useState<
+    { id: string; title: string }[]
+  >([]);
   const sessionRef = useRef<SessionPlayerHandle | null>(null);
 
   const derivedTracks = useMemo(() => {
@@ -66,6 +69,10 @@ export default function PlayOptionsPage() {
               setGapHours(data?.gapHours || 2.5);
             })
             .catch(() => setSchedule([]));
+          fetch("/api/user/personalized-audios")
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => setPersonalizedAudios(data?.items || []))
+            .catch(() => setPersonalizedAudios([]));
         }
       })
       .catch(() => setStatus("loggedOut"));
@@ -217,6 +224,18 @@ export default function PlayOptionsPage() {
                   </a>
                 ))}
               </div>
+              {personalizedAudios.length > 0 && (
+                <div style={{ marginTop: 12 }}>
+                  <strong>Personalized audio (view only)</strong>
+                  <div className="goal-list" style={{ marginTop: 6 }}>
+                    {personalizedAudios.map((item) => (
+                      <div key={item.id} className="goal-item">
+                        {item.title}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

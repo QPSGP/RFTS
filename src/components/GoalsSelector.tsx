@@ -9,7 +9,7 @@ type GoalsSelectorProps = {
 
 const categoryMatchers = [
   {
-    name: "Physical Health",
+    name: "Health",
     keywords: [
       "allergy",
       "asthma",
@@ -21,7 +21,6 @@ const categoryMatchers = [
       "fitness",
       "health",
       "body",
-      "balance",
       "energy",
       "healing",
       "immune",
@@ -31,52 +30,7 @@ const categoryMatchers = [
     ]
   },
   {
-    name: "Mental Health",
-    keywords: [
-      "anger",
-      "phobia",
-      "drinking",
-      "stress",
-      "anxiety",
-      "calm",
-      "confidence",
-      "focus",
-      "concentration",
-      "memory",
-      "depression",
-      "trauma",
-      "motivation"
-    ]
-  },
-  {
-    name: "Relationships",
-    keywords: [
-      "relationship",
-      "marriage",
-      "love",
-      "partner",
-      "dating",
-      "family",
-      "parent",
-      "jealousy",
-      "monogamous"
-    ]
-  },
-  {
-    name: "Spiritual",
-    keywords: [
-      "spiritual",
-      "meditation",
-      "mindfulness",
-      "gratitude",
-      "intuition",
-      "psychic",
-      "life mission",
-      "past life"
-    ]
-  },
-  {
-    name: "Wealth & Career",
+    name: "Wealth",
     keywords: [
       "money",
       "wealth",
@@ -87,16 +41,68 @@ const categoryMatchers = [
       "career",
       "income",
       "practice",
-      "creativity",
       "marketing",
       "public speaking",
-      "speed reading",
       "goal manifestation"
     ]
   },
   {
-    name: "Habits & Lifestyle",
-    keywords: ["time", "procrastination", "habit", "productivity", "organization", "discipline"]
+    name: "Relationship",
+    keywords: [
+      "relationship",
+      "marriage",
+      "love",
+      "partner",
+      "dating",
+      "family",
+      "parent",
+      "jealousy",
+      "monogamous",
+      "polyamory"
+    ]
+  },
+  {
+    name: "Memory",
+    keywords: [
+      "memory",
+      "focus",
+      "concentration",
+      "speed reading"
+    ]
+  },
+  {
+    name: "Inspiration",
+    keywords: [
+      "creativity",
+      "confidence",
+      "motivation",
+      "life mission",
+      "gratitude"
+    ]
+  },
+  {
+    name: "Spirituality",
+    keywords: ["spiritual", "meditation", "mindfulness", "intuition", "psychic", "past life"]
+  },
+  {
+    name: "Balance Life",
+    keywords: [
+      "balance",
+      "calm",
+      "stress",
+      "anxiety",
+      "depression",
+      "trauma",
+      "anger",
+      "phobia",
+      "drinking",
+      "time",
+      "procrastination",
+      "habit",
+      "productivity",
+      "organization",
+      "discipline"
+    ]
   }
 ];
 

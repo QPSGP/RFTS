@@ -322,9 +322,9 @@ export default function AdminContent() {
   return (
     <div className="grid" style={{ gap: 24 }}>
       {status && <p>{status}</p>}
-      <div className="card">
-        <h2>Goals</h2>
-        <div className="grid" style={{ gap: 12 }}>
+      <details id="admin-goals" className="card" open>
+        <summary className="section-title">Goals Section</summary>
+        <div className="grid" style={{ gap: 12, marginTop: 12 }}>
           <div
             className="grid"
             style={{
@@ -410,11 +410,11 @@ export default function AdminContent() {
             </button>
           </form>
         </div>
-      </div>
+      </details>
 
-      <div className="card">
-        <h2>Audio Library</h2>
-        <p style={{ color: "#4b5563" }}>
+      <details id="admin-audio-library" className="card">
+        <summary className="section-title">Audio Library Section</summary>
+        <p style={{ color: "#4b5563", marginTop: 8 }}>
           Use sync to pull descriptions and covers from the assets list.
         </p>
         <button className="button button-secondary" onClick={syncLibraryMetadata}>
@@ -728,7 +728,7 @@ export default function AdminContent() {
             </div>
           ))}
         </div>
-      </div>
+      </details>
     </div>
   );
 }
