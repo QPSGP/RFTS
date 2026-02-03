@@ -141,7 +141,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
   const [goalIds, setGoalIds] = useState<string[]>([]);
   const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
   const [searchTerm, setSearchTerm] = useState("");
-  const [openCategory, setOpenCategory] = useState<string>(categoryOrder[0]);
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [profile, setProfile] = useState({
     firstName: "",
     lastName: "",
@@ -215,10 +215,10 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
   }, [groupedGoals, searchTerm]);
 
   useEffect(() => {
-    if (!searchTerm.trim() && categoryKeys.length && !categoryKeys.includes(openCategory)) {
-      setOpenCategory(categoryKeys[0]);
+    if (openCategory && !categoryKeys.includes(openCategory)) {
+      setOpenCategory(null);
     }
-  }, [searchTerm, categoryKeys, openCategory]);
+  }, [categoryKeys, openCategory]);
 
   const toggleGoal = (id: string) => {
     setGoalIds((prev) => {

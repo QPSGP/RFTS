@@ -119,7 +119,7 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
   const [nextAllowedAt, setNextAllowedAt] = useState<string | null>(null);
   const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
   const [searchTerm, setSearchTerm] = useState("");
-  const [openCategory, setOpenCategory] = useState<string>(categoryOrder[0]);
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
   const goalNameById = useMemo(() => {
     const map = new Map<string, Interest>();
     interests.forEach((interest) => {
@@ -186,10 +186,10 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
   }, []);
 
   useEffect(() => {
-    if (!searchTerm.trim() && categoryKeys.length && !categoryKeys.includes(openCategory)) {
-      setOpenCategory(categoryKeys[0]);
+    if (openCategory && !categoryKeys.includes(openCategory)) {
+      setOpenCategory(null);
     }
-  }, [searchTerm, categoryKeys, openCategory]);
+  }, [categoryKeys, openCategory]);
 
   const toggleGoal = (id: string) => {
     setGoalIds((prev) => {

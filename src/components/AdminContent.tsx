@@ -324,18 +324,7 @@ export default function AdminContent() {
       {status && <p>{status}</p>}
       <div className="card">
         <h2>Goals</h2>
-        <div className="grid grid-2" style={{ gap: 16 }}>
-          <form onSubmit={addInterest} className="grid">
-            <input name="name" placeholder="Goal name" required style={inputStyle} />
-            <input
-              name="description"
-              placeholder="Short description"
-              style={inputStyle}
-            />
-            <button className="button" type="submit">
-              Add Goal
-            </button>
-          </form>
+        <div className="grid" style={{ gap: 12 }}>
           <div
             className="grid"
             style={{
@@ -409,6 +398,17 @@ export default function AdminContent() {
               </div>
           ))}
           </div>
+          <form onSubmit={addInterest} className="grid">
+            <input name="name" placeholder="Goal name" required style={inputStyle} />
+            <input
+              name="description"
+              placeholder="Short description"
+              style={inputStyle}
+            />
+            <button className="button" type="submit">
+              Add Goal
+            </button>
+          </form>
         </div>
       </div>
 
