@@ -6,7 +6,7 @@ body {
   margin: 0;
   font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   color: #0f172a;
-  background: #f5f7fb;
+  background: #f9fbff;
 }
 
 a {
@@ -34,8 +34,8 @@ main {
 .site-header {
   padding: 18px 20px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-  background: linear-gradient(120deg, #0f172a 0%, #0b3f3a 60%, #0f766e 100%);
-  color: #f8fafc;
+  background: linear-gradient(120deg, #f8fbff 0%, #eef9f7 60%, #e6fffa 100%);
+  color: #0f172a;
 }
 
 .site-header-inner {
@@ -93,9 +93,9 @@ main {
   min-width: 220px;
   padding: 10px;
   border-radius: 12px;
-  background: #0f172a;
-  border: 1px solid #0b3f3a;
-  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.35);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
   display: grid;
   gap: 6px;
   z-index: 60;
@@ -104,7 +104,7 @@ main {
 .menu-panel a {
   padding: 8px 10px;
   border-radius: 8px;
-  color: #e2e8f0;
+  color: #0f172a;
   font-weight: 600;
   font-size: 13px;
   text-transform: uppercase;
@@ -112,8 +112,8 @@ main {
 }
 
 .menu-panel a:hover {
-  background: rgba(148, 163, 184, 0.2);
-  color: #ffffff;
+  background: rgba(15, 118, 110, 0.12);
+  color: #0f766e;
 }
 
 .login-toggle .menu-panel {
@@ -130,7 +130,7 @@ main {
 }
 
 .site-nav a {
-  color: #e2e8f0;
+  color: #0f172a;
   font-weight: 600;
   font-size: 13px;
   text-transform: uppercase;
@@ -138,7 +138,7 @@ main {
 }
 
 .site-nav a:hover {
-  color: #ffffff;
+  color: #0f766e;
 }
 
 .brand {
@@ -171,13 +171,13 @@ main {
 .button-secondary {
   background: #ffffff;
   color: #0f172a;
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
 }
 
 .site-header .button-secondary {
   background: transparent;
-  color: #e2e8f0;
-  border-color: #22d3ee;
+  color: #0f172a;
+  border-color: #0f766e;
 }
 
 .card {
@@ -189,10 +189,10 @@ main {
 }
 
 .card.glow {
-  border: 1px solid rgba(34, 211, 238, 0.45);
+  border: 1px solid rgba(15, 118, 110, 0.3);
   box-shadow:
-    0 14px 40px rgba(15, 118, 110, 0.2),
-    0 0 0 1px rgba(34, 211, 238, 0.18) inset;
+    0 14px 40px rgba(15, 118, 110, 0.12),
+    0 0 0 1px rgba(15, 118, 110, 0.12) inset;
 }
 
 .section {
@@ -231,7 +231,7 @@ button.section-title {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #22d3ee;
+  color: #0f766e;
 }
 
 .signup-shell {
@@ -240,7 +240,7 @@ button.section-title {
   align-items: flex-start;
   justify-content: center;
   padding: 40px 20px 80px;
-  background: linear-gradient(135deg, #0f172a 0%, #0f766e 100%);
+  background: linear-gradient(135deg, #f8fbff 0%, #e6fffa 100%);
 }
 
 .signup-card {
@@ -383,7 +383,7 @@ button.section-title {
   display: inline-flex;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(34, 211, 238, 0.12);
+  background: rgba(15, 118, 110, 0.12);
   color: #0f766e;
   font-size: 12px;
   font-weight: 600;
@@ -392,9 +392,9 @@ button.section-title {
 .hero {
   border-radius: 18px;
   padding: 32px;
-  background: linear-gradient(120deg, #0f172a 0%, #0b3f3a 60%, #0f766e 100%);
-  color: #f8fafc;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.3);
+  background: linear-gradient(120deg, #f8fbff 0%, #eef9f7 60%, #e6fffa 100%);
+  color: #0f172a;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.12);
 }
 
 .hero h1 {
@@ -403,7 +403,7 @@ button.section-title {
 }
 
 .hero p {
-  color: #cbd5f5;
+  color: #475569;
   font-size: 15px;
 }
 
@@ -411,8 +411,8 @@ button.section-title {
   display: inline-flex;
   padding: 6px 12px;
   border-radius: 999px;
-  background: rgba(34, 211, 238, 0.2);
-  color: #22d3ee;
+  background: rgba(15, 118, 110, 0.12);
+  color: #0f766e;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.04em;

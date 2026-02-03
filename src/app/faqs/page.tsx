@@ -10,7 +10,7 @@ export default function FaqsPage() {
     <main>
       <section className="hero section">
         <span className="pill">Member FAQs</span>
-        <h1>Questions from future members</h1>
+        <h1>Questions for future members</h1>
         <p>
           Clear answers about how Reach For The Stars works, what to expect, and how to
           get the most from your sessions.
