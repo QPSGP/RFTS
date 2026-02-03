@@ -322,7 +322,7 @@ export default function AdminContent() {
   return (
     <div className="grid" style={{ gap: 24 }}>
       {status && <p>{status}</p>}
-      <details id="admin-goals" className="card" open>
+      <details id="admin-goals" className="card">
         <summary className="section-title">Goals Section</summary>
         <div className="grid" style={{ gap: 12, marginTop: 12 }}>
           <div

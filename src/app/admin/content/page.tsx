@@ -40,7 +40,7 @@ export default function AdminContentPage() {
         </div>
       </section>
       <section id="admin-members" style={{ marginBottom: 20 }}>
-        <details open>
+        <details>
           <summary className="section-title">Members Section</summary>
           <AdminUsers />
         </details>
