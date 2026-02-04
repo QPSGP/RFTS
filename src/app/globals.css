@@ -342,6 +342,7 @@ button.section-title {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
   color: #111827;
 }
 
