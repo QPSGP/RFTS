@@ -596,4 +596,9 @@ button.section-title {
   .plan-body {
     text-align: left;
   }
+
+  .plan-strip {
+    text-align: center;
+    justify-content: center;
+  }
 }
