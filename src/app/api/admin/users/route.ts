@@ -16,7 +16,7 @@ import {
 const createSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
-  tier: z.enum(["bronze", "gold", "platinum"]).default("bronze"),
+  tier: z.enum(["bronze", "gold", "platinum"]).default("platinum"),
   status: z.enum(["inactive", "active", "past_due", "canceled"]).default("inactive"),
   playsPerNight: z.number().int().min(1).max(2).optional()
 });
@@ -83,7 +83,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
   const profile = await getUserProfile(parsed.data.email);
-  const tier = parsed.data.tier ?? profile?.subscriptionTier ?? "bronze";
+  const tier = parsed.data.tier ?? profile?.subscriptionTier ?? "platinum";
   const status = parsed.data.status ?? profile?.subscriptionStatus ?? "inactive";
   await ensureSubscription(user.id, tier, status);
   if (parsed.data.goalIds) {

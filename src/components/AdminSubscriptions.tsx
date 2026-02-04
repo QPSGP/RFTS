@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SubscriptionPlan } from "@/lib/types";
 
 const inputStyle = {
@@ -24,9 +24,19 @@ export default function AdminSubscriptions() {
     load();
   }, []);
 
-  const updatePlan = (index: number, field: keyof SubscriptionPlan, value: string | number) => {
-    const updated = [...plans];
-    updated[index] = { ...updated[index], [field]: value };
+  const visiblePlans = useMemo(() => {
+    const membershipOnly = plans.filter((plan) => plan.id === "platinum");
+    return membershipOnly.length > 0 ? membershipOnly : plans;
+  }, [plans]);
+
+  const updatePlan = (
+    planId: string,
+    field: keyof SubscriptionPlan,
+    value: string | number
+  ) => {
+    const updated = plans.map((plan) =>
+      plan.id === planId ? { ...plan, [field]: value } : plan
+    );
     setPlans(updated);
   };
 
@@ -36,7 +46,7 @@ export default function AdminSubscriptions() {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plans })
+      body: JSON.stringify({ plans: visiblePlans })
     });
     if (response.ok) {
       setStatus("Plans saved.");
@@ -54,19 +64,21 @@ export default function AdminSubscriptions() {
       <h2>Subscription Plans</h2>
       <p>Manage plan names, descriptions, trial days, and Stripe price IDs.</p>
       <div className="grid">
-        {plans.map((plan, index) => (
+        {visiblePlans.map((plan) => (
           <div key={plan.id} className="card">
             <label style={{ fontSize: 12 }}>Plan Name</label>
             <input
               style={inputStyle}
               value={plan.name}
-              onChange={(event) => updatePlan(index, "name", event.target.value)}
+              onChange={(event) => updatePlan(plan.id, "name", event.target.value)}
             />
             <label style={{ fontSize: 12 }}>Description</label>
             <input
               style={inputStyle}
               value={plan.description}
-              onChange={(event) => updatePlan(index, "description", event.target.value)}
+              onChange={(event) =>
+                updatePlan(plan.id, "description", event.target.value)
+              }
             />
             <label style={{ fontSize: 12 }}>Trial Days</label>
             <input
@@ -75,13 +87,15 @@ export default function AdminSubscriptions() {
               min={0}
               max={365}
               value={plan.trialDays}
-              onChange={(event) => updatePlan(index, "trialDays", Number(event.target.value))}
+              onChange={(event) =>
+                updatePlan(plan.id, "trialDays", Number(event.target.value))
+              }
             />
             <label style={{ fontSize: 12 }}>Stripe Price ID</label>
             <input
               style={inputStyle}
               value={plan.priceId}
-              onChange={(event) => updatePlan(index, "priceId", event.target.value)}
+              onChange={(event) => updatePlan(plan.id, "priceId", event.target.value)}
             />
           </div>
         ))}

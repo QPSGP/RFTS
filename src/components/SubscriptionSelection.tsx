@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SubscriptionPlan } from "@/lib/types";
 
 type SubscriptionSelectionProps = {
@@ -18,7 +18,18 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
   const [isLoading, setIsLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const selectedPlan = plans.find((plan) => plan.id === selectedId);
+  const visiblePlans = useMemo(() => {
+    const membershipOnly = plans.filter((plan) => plan.id === "platinum");
+    return membershipOnly.length > 0 ? membershipOnly : plans;
+  }, [plans]);
+
+  useEffect(() => {
+    if (!selectedId && visiblePlans.length > 0) {
+      setSelectedId(visiblePlans[0].id);
+    }
+  }, [selectedId, visiblePlans]);
+
+  const selectedPlan = visiblePlans.find((plan) => plan.id === selectedId);
 
   const startCheckout = async () => {
     if (!selectedPlan) {
@@ -66,9 +77,12 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
           </div>
         ))}
       </div>
-      <div className="section-heading">Select Your Subscription Package</div>
+      <div className="section-heading">Select Your Membership Package</div>
       <div className="plan-grid">
-        {plans.map((plan) => (
+        {visiblePlans.map((plan) => {
+          const displayName =
+            plan.id === "platinum" ? "Membership Package" : plan.name;
+          return (
           <button
             key={plan.id}
             type="button"
@@ -77,10 +91,10 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
             style={{ cursor: "pointer" }}
           >
             <div className={`plan-strip ${mapStripClass(plan.id)}`}>
-              {selectedId === plan.id ? "Selected Subscription" : plan.name}
+              {selectedId === plan.id ? "Selected Subscription" : displayName}
             </div>
             <div className="plan-body">
-              <div className="plan-title">{plan.name}</div>
+              <div className="plan-title">{displayName}</div>
               <div className="plan-price">{plan.trialDays} day trial</div>
               <div className="plan-trial">{plan.trialDays}-Day Free Trial</div>
               <p style={{ fontSize: 12, color: "#4b5563" }}>{plan.description}</p>
@@ -89,7 +103,8 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
               </div>
             </div>
           </button>
-        ))}
+          );
+        })}
       </div>
       <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
         <button className="button" onClick={startCheckout} disabled={isLoading}>

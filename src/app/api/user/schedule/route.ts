@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     interests: profile.goalIds || [],
     library,
     settings,
-    tier: profile.subscriptionTier || "bronze",
+    tier: profile.subscriptionTier || "platinum",
     nights,
     playsPerNight: profile.playsPerNight === 1 ? 1 : 2
   });

@@ -170,9 +170,20 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     referralSource: ""
   });
 
+  const visiblePlans = useMemo(() => {
+    const membershipOnly = plans.filter((plan) => plan.id === "platinum");
+    return membershipOnly.length > 0 ? membershipOnly : plans;
+  }, [plans]);
+
+  useEffect(() => {
+    if (!selectedPlanId && visiblePlans.length > 0) {
+      setSelectedPlanId(visiblePlans[0].id);
+    }
+  }, [selectedPlanId, visiblePlans]);
+
   const selectedPlan = useMemo(
-    () => plans.find((plan) => plan.id === selectedPlanId),
-    [plans, selectedPlanId]
+    () => visiblePlans.find((plan) => plan.id === selectedPlanId),
+    [visiblePlans, selectedPlanId]
   );
   const sortedGoals = useMemo(
     () => goals.slice().sort((a, b) => a.name.localeCompare(b.name)),
@@ -341,9 +352,12 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
 
       {step === 1 && (
         <>
-          <div className="section-heading">Select Your Subscription Package</div>
+          <div className="section-heading">Select Your Membership Package</div>
           <div className="plan-grid">
-            {plans.map((plan) => (
+            {visiblePlans.map((plan) => {
+              const displayName =
+                plan.id === "platinum" ? "Membership Package" : plan.name;
+              return (
               <button
                 key={plan.id}
                 type="button"
@@ -352,10 +366,10 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 style={{ cursor: "pointer" }}
               >
                 <div className={`plan-strip ${mapStripClass(plan.id)}`}>
-                  {selectedPlanId === plan.id ? "Selected Subscription" : plan.name}
+                  {selectedPlanId === plan.id ? "Selected Subscription" : displayName}
                 </div>
                 <div className="plan-body">
-                  <div className="plan-title">{plan.name}</div>
+                  <div className="plan-title">{displayName}</div>
                   <div className="plan-price">{plan.trialDays} day trial</div>
                   <div className="plan-trial">{plan.trialDays}-Day Free Trial</div>
                   <p style={{ fontSize: 12, color: "#4b5563" }}>{plan.description}</p>
@@ -364,7 +378,8 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                   </div>
                 </div>
               </button>
-            ))}
+              );
+            })}
           </div>
           <div className="section-heading" style={{ marginTop: 24 }}>
             Goal Selection (up to 10)

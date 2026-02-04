@@ -39,25 +39,11 @@ export const defaultInterests: Interest[] = [
 
 export const defaultSubscriptionPlans: SubscriptionPlan[] = [
   {
-    id: "bronze",
-    name: "Bronze Package",
-    priceId: "",
-    trialDays: 14,
-    description: "Core access with goal-based scheduling."
-  },
-  {
-    id: "gold",
-    name: "Gold Package",
-    priceId: "",
-    trialDays: 14,
-    description: "Includes playlist access out of sequence."
-  },
-  {
     id: "platinum",
-    name: "Platinum Package",
+    name: "Membership Package",
     priceId: "",
     trialDays: 14,
-    description: "Full library access and concierge support."
+    description: "Full library access with goal-based scheduling."
   }
 ];
 

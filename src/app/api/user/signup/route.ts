@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   }
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
   const user = await createUser(parsed.data.email, passwordHash);
-  await ensureSubscription(user.id, "bronze", "inactive");
+  await ensureSubscription(user.id, "platinum", "inactive");
   const token = createUserSessionToken(user.email);
   setUserSession(token);
   return NextResponse.json({ ok: true });

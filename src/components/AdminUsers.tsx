@@ -61,7 +61,7 @@ export default function AdminUsers() {
   const [status, setStatus] = useState<string | null>(null);
   const [createEmail, setCreateEmail] = useState("");
   const [createPassword, setCreatePassword] = useState("");
-  const [createTier, setCreateTier] = useState<UserRow["subscriptionTier"]>("bronze");
+  const [createTier, setCreateTier] = useState<UserRow["subscriptionTier"]>("platinum");
   const [createStatus, setCreateStatus] =
     useState<UserRow["subscriptionStatus"]>("inactive");
   const [createPlaysPerNight, setCreatePlaysPerNight] = useState<1 | 2>(2);
@@ -456,14 +456,12 @@ export default function AdminUsers() {
             />
             <select
               style={inputStyle}
-              value={createTier || "bronze"}
+              value={createTier || "platinum"}
               onChange={(event) =>
                 setCreateTier(event.target.value as UserRow["subscriptionTier"])
               }
             >
-              <option value="bronze">Bronze</option>
-              <option value="gold">Gold</option>
-              <option value="platinum">Platinum</option>
+              <option value="platinum">Membership Package</option>
             </select>
             <select
               style={inputStyle}
@@ -510,7 +508,7 @@ export default function AdminUsers() {
                     value={
                       updates[user.email]?.subscriptionTier ||
                       user.subscriptionTier ||
-                      "bronze"
+                      "platinum"
                     }
                     onChange={(event) =>
                       setUpdates({
@@ -523,9 +521,7 @@ export default function AdminUsers() {
                       })
                     }
                   >
-                    <option value="bronze">Bronze</option>
-                    <option value="gold">Gold</option>
-                    <option value="platinum">Platinum</option>
+                    <option value="platinum">Membership Package</option>
                   </select>
                   <select
                     style={inputStyle}

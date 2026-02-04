@@ -6,7 +6,7 @@ import { buildSchedulePreview } from "@/lib/scheduler";
 
 const schema = z.object({
   interests: z.array(z.string()).min(1),
-  tier: z.enum(["bronze", "gold", "platinum"]).default("bronze"),
+  tier: z.enum(["bronze", "gold", "platinum"]).default("platinum"),
   nights: z.number().int().min(1).max(30).default(14)
 });
 
