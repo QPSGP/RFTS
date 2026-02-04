@@ -220,6 +220,9 @@ export default function AdminModerators() {
     }
   };
 
+  const findApplicationForEmail = (email: string) =>
+    applications.find((app) => app.email.toLowerCase() === email.toLowerCase());
+
   return (
     <div className="card">
       <h2>Co-Creator Admin</h2>
@@ -418,6 +421,116 @@ export default function AdminModerators() {
                       setResets({ ...resets, [moderator.id]: event.target.value })
                     }
                   />
+                  <div className="card" style={{ marginTop: 12 }}>
+                    <h4 style={{ marginTop: 0 }}>Profile Details</h4>
+                    {findApplicationForEmail(moderator.email) ? (
+                      <div className="grid">
+                        {(() => {
+                          const app = findApplicationForEmail(moderator.email);
+                          if (!app) return null;
+                          const draft = getApplicationDraft(app);
+                          return (
+                            <>
+                              <input
+                                style={inputStyle}
+                                value={draft.focusAreas}
+                                onChange={(event) =>
+                                  updateApplicationDraft(app.id, {
+                                    focusAreas: event.target.value
+                                  })
+                                }
+                                placeholder="Focus areas"
+                              />
+                              <textarea
+                                style={{ ...inputStyle, resize: "vertical" }}
+                                value={draft.experience}
+                                onChange={(event) =>
+                                  updateApplicationDraft(app.id, {
+                                    experience: event.target.value
+                                  })
+                                }
+                                placeholder="Experience"
+                                rows={4}
+                              />
+                              <input
+                                style={inputStyle}
+                                value={draft.links}
+                                onChange={(event) =>
+                                  updateApplicationDraft(app.id, {
+                                    links: event.target.value
+                                  })
+                                }
+                                placeholder="Portfolio / website"
+                              />
+                              <input
+                                style={inputStyle}
+                                value={draft.phone}
+                                onChange={(event) =>
+                                  updateApplicationDraft(app.id, {
+                                    phone: event.target.value
+                                  })
+                                }
+                                placeholder="Phone"
+                              />
+                              <input
+                                style={inputStyle}
+                                value={draft.website}
+                                onChange={(event) =>
+                                  updateApplicationDraft(app.id, {
+                                    website: event.target.value
+                                  })
+                                }
+                                placeholder="Website"
+                              />
+                              <input
+                                style={inputStyle}
+                                value={draft.socialLinks}
+                                onChange={(event) =>
+                                  updateApplicationDraft(app.id, {
+                                    socialLinks: event.target.value
+                                  })
+                                }
+                                placeholder="Social links (comma-separated)"
+                              />
+                              <input
+                                style={inputStyle}
+                                value={draft.photoUrl}
+                                onChange={(event) =>
+                                  updateApplicationDraft(app.id, {
+                                    photoUrl: event.target.value
+                                  })
+                                }
+                                placeholder="Photo URL"
+                              />
+                              <input
+                                style={inputStyle}
+                                value={draft.profileSlug}
+                                onChange={(event) =>
+                                  updateApplicationDraft(app.id, {
+                                    profileSlug: event.target.value
+                                  })
+                                }
+                                placeholder="Profile slug (e.g. terry-brussel-rogers)"
+                              />
+                              <button
+                                className="button button-secondary"
+                                type="button"
+                                onClick={() => saveApplication(app.id)}
+                              >
+                                Save Profile
+                              </button>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    ) : (
+                      <p style={{ color: "#6b7280" }}>
+                        No application profile found for this co-creator yet.
+                        Create one in the Co-Creator Applications section to enable
+                        profile editing.
+                      </p>
+                    )}
+                  </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button className="button" onClick={() => updateModerator(moderator.id)}>
                       Save
