@@ -105,10 +105,9 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
             </div>
             <div className="plan-body">
               <div className="plan-title">{displayName}</div>
-              <div className="plan-price">{plan.trialDays} day trial</div>
               <div className="plan-trial">{plan.trialDays}-Day Free Trial</div>
               <div style={{ marginTop: 8, fontSize: 12, color: "#4b5563" }}>
-                <div style={{ fontWeight: 600, color: "#0f172a" }}>
+                <div style={{ fontWeight: 600, color: "#0f172a", textAlign: "center" }}>
                   $39.95/mo. + tax and fees
                 </div>
                 <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>

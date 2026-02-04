@@ -312,6 +312,9 @@ button.section-title {
 .plan-grid {
   display: grid;
   gap: 18px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
 }
 
 .plan-card {
@@ -386,6 +389,7 @@ button.section-title {
 
 .plan-cta {
   margin-top: 14px;
+  text-align: center;
 }
 
 .badge {
