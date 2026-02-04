@@ -252,6 +252,10 @@ export default function AdminModerators() {
       <div className="grid" style={{ marginTop: 16 }}>
         <div className="card">
           <h3>Co-Creator Applications</h3>
+          <p style={{ color: "#6b7280" }}>
+            Applications appear here after someone submits the Co-Creator form.
+            Approve buttons show only while the status is pending.
+          </p>
           {applications.length === 0 ? (
             <p>No applications yet.</p>
           ) : (
