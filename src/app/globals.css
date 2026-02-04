@@ -334,6 +334,9 @@ button.section-title {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #111827;
 }
 

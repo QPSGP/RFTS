@@ -26,7 +26,7 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
     "Includes a 15-minute Private Goal Setting Consultation every 90 days with a Success Center hypnotherapist/coach ($444 value annual benefit). Call 800-GOAL-NOW to set your appointment today."
   ];
   const membershipNote =
-    "Recommend a private Life Guidance Discovery Session for full access to Platinum benefits.";
+    "Recommend a private Life Guidance Discovery Session for full access to Member benefits.";
 
   const visiblePlans = useMemo(() => {
     const membershipOnly = plans.filter((plan) => plan.id === "platinum");

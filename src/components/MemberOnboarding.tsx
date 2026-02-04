@@ -153,7 +153,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     "Includes a 15-minute Private Goal Setting Consultation every 90 days with a Success Center hypnotherapist/coach ($444 value annual benefit). Call 800-GOAL-NOW to set your appointment today."
   ];
   const membershipNote =
-    "Recommend a private Life Guidance Discovery Session for full access to Platinum benefits.";
+    "Recommend a private Life Guidance Discovery Session for full access to Member benefits.";
   const [goalIds, setGoalIds] = useState<string[]>([]);
   const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
   const [searchTerm, setSearchTerm] = useState("");
