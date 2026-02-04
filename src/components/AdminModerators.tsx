@@ -112,6 +112,40 @@ export default function AdminModerators() {
     load();
   }, []);
 
+  const resetDemoData = async () => {
+    const confirmed = window.confirm(
+      "Clear all co-creator applications and accounts?"
+    );
+    if (!confirmed) {
+      return;
+    }
+    const response = await fetch("/api/moderator-admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "reset-demo" })
+    });
+    if (response.ok) {
+      setStatus("Co-Creator data cleared.");
+      await load();
+      return;
+    }
+    setStatus("Reset failed. Try again.");
+  };
+
+  const seedDemoApplication = async () => {
+    const response = await fetch("/api/moderator-admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "seed-demo" })
+    });
+    if (response.ok) {
+      setStatus("Demo application created. You can approve it now.");
+      await load();
+      return;
+    }
+    setStatus("Seed failed. Try again.");
+  };
+
   const approve = async (applicationId: string) => {
     const rawEmails = assignments[applicationId] || "";
     const assignedUserEmails = rawEmails
@@ -248,6 +282,14 @@ export default function AdminModerators() {
         Co-Creators can only access their assigned subscribers. They cannot add
         admins or other co-creators.
       </p>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+        <button className="button button-secondary" onClick={resetDemoData}>
+          Clear Co-Creator Data
+        </button>
+        <button className="button" onClick={seedDemoApplication}>
+          Create Demo Application
+        </button>
+      </div>
       <div className="card" style={{ marginTop: 12 }}>
         <h3>Featured Co-Creator Profiles</h3>
         <p style={{ color: "#4b5563" }}>

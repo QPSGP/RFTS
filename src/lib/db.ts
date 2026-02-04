@@ -702,6 +702,11 @@ export const listModeratorApplications = async () => {
   return rows;
 };
 
+export const clearModeratorData = async () => {
+  await sql`DELETE FROM moderators`;
+  await sql`DELETE FROM moderator_applications`;
+};
+
 export const createModeratorApplication = async (payload: {
   name: string;
   email: string;

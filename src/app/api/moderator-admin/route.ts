@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import { isAdminSession } from "@/lib/auth";
 import {
   createModeratorAccount,
+  createModeratorApplication,
+  clearModeratorData,
   getModeratorByEmail,
   listModeratorApplications,
   listModerators,
@@ -44,6 +46,14 @@ const updateApplicationSchema = z.object({
   profileSlug: z.string().optional().default("")
 });
 
+const resetDemoSchema = z.object({
+  action: z.literal("reset-demo")
+});
+
+const seedDemoSchema = z.object({
+  action: z.literal("seed-demo")
+});
+
 export async function GET() {
   if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
@@ -59,6 +69,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
+  if (body?.action === "reset-demo") {
+    const parsed = resetDemoSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+    }
+    await clearModeratorData();
+    return NextResponse.json({ ok: true });
+  }
+  if (body?.action === "seed-demo") {
+    const parsed = seedDemoSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+    }
+    const application = await createModeratorApplication({
+      name: "Demo Co-Creator",
+      email: "demo.cocreator@rfts.test",
+      focusAreas: "Sleep optimization, motivation, habit change",
+      experience: "Demo application used to validate the approval flow.",
+      links: "https://rfts.test",
+      phone: "555-0100",
+      website: "https://rfts.test",
+      socialLinks: "https://facebook.com/rfts",
+      photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
+      profileSlug: "demo-co-creator"
+    });
+    return NextResponse.json({ ok: true, application });
+  }
   if (body?.action === "decline") {
     const parsed = declineSchema.safeParse(body);
     if (!parsed.success) {
