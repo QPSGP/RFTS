@@ -98,6 +98,11 @@ CREATE TABLE IF NOT EXISTS moderator_applications (
   focus_areas text NOT NULL,
   experience text NOT NULL,
   links text,
+  phone text,
+  website text,
+  social_links text,
+  photo_url text,
+  profile_slug text,
   submitted_at timestamptz DEFAULT now(),
   status text NOT NULL DEFAULT 'pending'
 );

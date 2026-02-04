@@ -689,6 +689,11 @@ export const listModeratorApplications = async () => {
       focus_areas as "focusAreas",
       experience,
       links,
+      phone,
+      website,
+      social_links as "socialLinks",
+      photo_url as "photoUrl",
+      profile_slug as "profileSlug",
       submitted_at as "submittedAt",
       status
     FROM moderator_applications
@@ -703,14 +708,21 @@ export const createModeratorApplication = async (payload: {
   focusAreas: string;
   experience: string;
   links?: string;
+  phone?: string;
+  website?: string;
+  socialLinks?: string;
+  photoUrl?: string;
+  profileSlug?: string;
+  status?: ModeratorApplication["status"];
 }) => {
   const { rows } = await sql<ModeratorApplication>`
     INSERT INTO moderator_applications
-      (name, email, focus_areas, experience, links, status)
+      (name, email, focus_areas, experience, links, phone, website, social_links, photo_url, profile_slug, status)
     VALUES
-      (${payload.name}, ${payload.email}, ${payload.focusAreas}, ${payload.experience}, ${
-    payload.links || ""
-  }, 'pending')
+      (${payload.name}, ${payload.email}, ${payload.focusAreas}, ${payload.experience},
+       ${payload.links || ""}, ${payload.phone || ""}, ${payload.website || ""},
+       ${payload.socialLinks || ""}, ${payload.photoUrl || ""}, ${payload.profileSlug || ""},
+       ${payload.status || "pending"})
     RETURNING
       id,
       name,
@@ -718,6 +730,11 @@ export const createModeratorApplication = async (payload: {
       focus_areas as "focusAreas",
       experience,
       links,
+      phone,
+      website,
+      social_links as "socialLinks",
+      photo_url as "photoUrl",
+      profile_slug as "profileSlug",
       submitted_at as "submittedAt",
       status
   `;
@@ -739,8 +756,81 @@ export const updateModeratorApplicationStatus = async (
       focus_areas as "focusAreas",
       experience,
       links,
+      phone,
+      website,
+      social_links as "socialLinks",
+      photo_url as "photoUrl",
+      profile_slug as "profileSlug",
       submitted_at as "submittedAt",
       status
+  `;
+  return rows[0] || null;
+};
+
+export const updateModeratorApplication = async (payload: {
+  id: string;
+  name?: string;
+  email?: string;
+  focusAreas?: string;
+  experience?: string;
+  links?: string;
+  phone?: string;
+  website?: string;
+  socialLinks?: string;
+  photoUrl?: string;
+  profileSlug?: string;
+}) => {
+  const { rows } = await sql<ModeratorApplication>`
+    UPDATE moderator_applications
+    SET
+      name = COALESCE(${payload.name ?? null}, name),
+      email = COALESCE(${payload.email ?? null}, email),
+      focus_areas = COALESCE(${payload.focusAreas ?? null}, focus_areas),
+      experience = COALESCE(${payload.experience ?? null}, experience),
+      links = COALESCE(${payload.links ?? null}, links),
+      phone = COALESCE(${payload.phone ?? null}, phone),
+      website = COALESCE(${payload.website ?? null}, website),
+      social_links = COALESCE(${payload.socialLinks ?? null}, social_links),
+      photo_url = COALESCE(${payload.photoUrl ?? null}, photo_url),
+      profile_slug = COALESCE(${payload.profileSlug ?? null}, profile_slug)
+    WHERE id = ${payload.id}
+    RETURNING
+      id,
+      name,
+      email,
+      focus_areas as "focusAreas",
+      experience,
+      links,
+      phone,
+      website,
+      social_links as "socialLinks",
+      photo_url as "photoUrl",
+      profile_slug as "profileSlug",
+      submitted_at as "submittedAt",
+      status
+  `;
+  return rows[0] || null;
+};
+
+export const getModeratorApplicationBySlug = async (slug: string) => {
+  const { rows } = await sql<ModeratorApplication>`
+    SELECT
+      id,
+      name,
+      email,
+      focus_areas as "focusAreas",
+      experience,
+      links,
+      phone,
+      website,
+      social_links as "socialLinks",
+      photo_url as "photoUrl",
+      profile_slug as "profileSlug",
+      submitted_at as "submittedAt",
+      status
+    FROM moderator_applications
+    WHERE LOWER(profile_slug) = LOWER(${slug})
+    LIMIT 1
   `;
   return rows[0] || null;
 };

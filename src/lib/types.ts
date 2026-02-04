@@ -31,6 +31,11 @@ export type ModeratorApplication = {
   focusAreas: string;
   experience: string;
   links?: string;
+  phone?: string;
+  website?: string;
+  socialLinks?: string;
+  photoUrl?: string;
+  profileSlug?: string;
   submittedAt: string;
   status: "pending" | "approved" | "declined";
 };

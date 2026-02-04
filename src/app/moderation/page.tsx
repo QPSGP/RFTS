@@ -21,7 +21,11 @@ export default function ModerationPage() {
       email: formData.get("email"),
       focusAreas: formData.get("focusAreas"),
       experience: formData.get("experience"),
-      links: formData.get("links")
+      links: formData.get("links"),
+      phone: formData.get("phone"),
+      website: formData.get("website"),
+      socialLinks: formData.get("socialLinks"),
+      photoUrl: formData.get("photoUrl")
     };
     const response = await fetch("/api/moderators", {
       method: "POST",
@@ -136,6 +140,26 @@ export default function ModerationPage() {
           <input
             name="links"
             placeholder="Portfolio or website (optional)"
+            style={inputStyle}
+          />
+          <input
+            name="phone"
+            placeholder="Phone (optional)"
+            style={inputStyle}
+          />
+          <input
+            name="website"
+            placeholder="Website (optional)"
+            style={inputStyle}
+          />
+          <input
+            name="socialLinks"
+            placeholder="Social links (comma-separated, optional)"
+            style={inputStyle}
+          />
+          <input
+            name="photoUrl"
+            placeholder="Profile photo URL (optional)"
             style={inputStyle}
           />
           <button className="button" type="submit">

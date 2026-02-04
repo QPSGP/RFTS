@@ -1,9 +1,20 @@
-export default function TerryBrusselRogersPage() {
+import { getModeratorApplicationBySlug } from "@/lib/db";
+
+export default async function TerryBrusselRogersPage() {
+  const profile = await getModeratorApplicationBySlug("terry-brussel-rogers");
+  const contactEmail = profile?.email || "";
+  const contactPhone = profile?.phone || "";
+  const contactWebsite = profile?.website || "https://www.acesuccess.com";
+  const contactSocial = profile?.socialLinks || "";
+  const photoUrl = profile?.photoUrl || "";
+  const focusAreas = profile?.focusAreas || "";
+  const experience = profile?.experience || "";
+
   return (
     <main>
       <section className="hero section">
         <span className="pill">Co-Creator Spotlight</span>
-        <h1>Terry Brussel-Rogers, CCHt</h1>
+        <h1>{profile?.name || "Terry Brussel-Rogers, CCHt"}</h1>
         <p>
           Certified Clinical Hypnotherapist registered with the National Guild of
           Hypnotists.
@@ -34,32 +45,55 @@ export default function TerryBrusselRogersPage() {
             with such issues as stress management, habit control, success/sales
             motivation, and learning/memory enhancement.
           </p>
+          {experience && (
+            <p>
+              {experience}
+            </p>
+          )}
         </div>
         <div className="card">
           <h2>Co-Creator Profile</h2>
-          <div className="card" style={{ marginBottom: 12, textAlign: "center" }}>
-            Photo coming soon.
-          </div>
+          {photoUrl ? (
+            <img
+              src={photoUrl}
+              alt={`${profile?.name || "Terry Brussel-Rogers"} profile`}
+              style={{ width: "100%", borderRadius: 12, marginBottom: 12 }}
+            />
+          ) : (
+            <div className="card" style={{ marginBottom: 12, textAlign: "center" }}>
+              Photo coming soon.
+            </div>
+          )}
           <p>
-            <strong>Specialty:</strong> Self-hypnosis, stress management, habit
-            change, success motivation, and learning/memory enhancement.
+            <strong>Specialty:</strong>{" "}
+            {focusAreas ||
+              "Self-hypnosis, stress management, habit change, success motivation, and learning/memory enhancement."}
           </p>
           <div className="card" style={{ marginTop: 12 }}>
             <h3 style={{ marginTop: 0 }}>Contact</h3>
             <p>
               <strong>Website:</strong>{" "}
-              <a href="https://www.acesuccess.com" target="_blank" rel="noreferrer">
-                www.acesuccess.com
-              </a>
+              {contactWebsite ? (
+                <a href={contactWebsite} target="_blank" rel="noreferrer">
+                  {contactWebsite.replace(/^https?:\/\//, "")}
+                </a>
+              ) : (
+                "Available on request"
+              )}
             </p>
             <p>
-              <strong>Email:</strong> Available on request
+              <strong>Email:</strong>{" "}
+              {contactEmail ? (
+                <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+              ) : (
+                "Available on request"
+              )}
             </p>
             <p>
-              <strong>Phone:</strong> Available on request
+              <strong>Phone:</strong> {contactPhone || "Available on request"}
             </p>
             <p>
-              <strong>Social:</strong> Facebook • YouTube (available on request)
+              <strong>Social:</strong> {contactSocial || "Available on request"}
             </p>
           </div>
         </div>

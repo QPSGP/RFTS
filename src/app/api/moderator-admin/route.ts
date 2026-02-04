@@ -7,6 +7,7 @@ import {
   getModeratorByEmail,
   listModeratorApplications,
   listModerators,
+  updateModeratorApplication,
   updateModeratorAccount,
   updateModeratorApplicationStatus
 } from "@/lib/db";
@@ -26,6 +27,21 @@ const updateSchema = z.object({
   assignedUserEmails: z.array(z.string().email()).optional(),
   status: z.enum(["active", "paused"]).optional(),
   resetAccessCode: z.string().min(6).optional()
+});
+
+const updateApplicationSchema = z.object({
+  action: z.literal("update-application"),
+  applicationId: z.string(),
+  name: z.string().min(2),
+  email: z.string().email(),
+  focusAreas: z.string().min(3),
+  experience: z.string().min(10),
+  links: z.string().optional().default(""),
+  phone: z.string().optional().default(""),
+  website: z.string().optional().default(""),
+  socialLinks: z.string().optional().default(""),
+  photoUrl: z.string().optional().default(""),
+  profileSlug: z.string().optional().default("")
 });
 
 export async function GET() {
@@ -89,6 +105,29 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
+  if (body?.action === "update-application") {
+    const parsed = updateApplicationSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+    }
+    const updated = await updateModeratorApplication({
+      id: parsed.data.applicationId,
+      name: parsed.data.name,
+      email: parsed.data.email,
+      focusAreas: parsed.data.focusAreas,
+      experience: parsed.data.experience,
+      links: parsed.data.links,
+      phone: parsed.data.phone,
+      website: parsed.data.website,
+      socialLinks: parsed.data.socialLinks,
+      photoUrl: parsed.data.photoUrl,
+      profileSlug: parsed.data.profileSlug
+    });
+    if (!updated) {
+      return NextResponse.json({ error: "Not found." }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true });
+  }
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });

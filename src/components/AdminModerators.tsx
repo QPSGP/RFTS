@@ -9,6 +9,11 @@ type ModeratorApplication = {
   focusAreas: string;
   experience: string;
   links?: string;
+  phone?: string;
+  website?: string;
+  socialLinks?: string;
+  photoUrl?: string;
+  profileSlug?: string;
   submittedAt: string;
   status: "pending" | "approved" | "declined";
 };
@@ -36,6 +41,23 @@ export default function AdminModerators() {
   const [accessCodes, setAccessCodes] = useState<Record<string, string>>({});
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [resets, setResets] = useState<Record<string, string>>({});
+  const [applicationDrafts, setApplicationDrafts] = useState<
+    Record<
+      string,
+      {
+        name: string;
+        email: string;
+        focusAreas: string;
+        experience: string;
+        links: string;
+        phone: string;
+        website: string;
+        socialLinks: string;
+        photoUrl: string;
+        profileSlug: string;
+      }
+    >
+  >({});
 
   const load = async () => {
     const response = await fetch("/api/moderator-admin");
@@ -46,6 +68,26 @@ export default function AdminModerators() {
     const data = await response.json();
     setApplications(data.applications || []);
     setModerators(data.moderators || []);
+    setApplicationDrafts((prev) => {
+      const next = { ...prev };
+      (data.applications || []).forEach((app: ModeratorApplication) => {
+        if (!next[app.id]) {
+          next[app.id] = {
+            name: app.name,
+            email: app.email,
+            focusAreas: app.focusAreas,
+            experience: app.experience,
+            links: app.links || "",
+            phone: app.phone || "",
+            website: app.website || "",
+            socialLinks: app.socialLinks || "",
+            photoUrl: app.photoUrl || "",
+            profileSlug: app.profileSlug || ""
+          };
+        }
+      });
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -73,6 +115,65 @@ export default function AdminModerators() {
       return;
     }
     setStatus("Approval failed. Add a 6+ character access code.");
+  };
+
+  const getApplicationDraft = (app: ModeratorApplication) =>
+    applicationDrafts[app.id] || {
+      name: app.name,
+      email: app.email,
+      focusAreas: app.focusAreas,
+      experience: app.experience,
+      links: app.links || "",
+      phone: app.phone || "",
+      website: app.website || "",
+      socialLinks: app.socialLinks || "",
+      photoUrl: app.photoUrl || "",
+      profileSlug: app.profileSlug || ""
+    };
+
+  const updateApplicationDraft = (
+    appId: string,
+    patch: Partial<(typeof applicationDrafts)[string]>
+  ) => {
+    setApplicationDrafts((prev) => ({
+      ...prev,
+      [appId]: {
+        ...prev[appId],
+        ...patch
+      }
+    }));
+  };
+
+  const saveApplication = async (appId: string) => {
+    const app = applications.find((item) => item.id === appId);
+    if (!app) {
+      return;
+    }
+    const draft = getApplicationDraft(app);
+    const response = await fetch("/api/moderator-admin", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "update-application",
+        applicationId: appId,
+        name: draft.name,
+        email: draft.email,
+        focusAreas: draft.focusAreas,
+        experience: draft.experience,
+        links: draft.links,
+        phone: draft.phone,
+        website: draft.website,
+        socialLinks: draft.socialLinks,
+        photoUrl: draft.photoUrl,
+        profileSlug: draft.profileSlug
+      })
+    });
+    if (response.ok) {
+      setStatus("Co-Creator application updated.");
+      await load();
+    } else {
+      setStatus("Update failed. Check the fields and try again.");
+    }
   };
 
   const decline = async (applicationId: string) => {
@@ -148,45 +249,138 @@ export default function AdminModerators() {
       <div className="grid" style={{ marginTop: 16 }}>
         <div className="card">
           <h3>Co-Creator Applications</h3>
-          {applications.filter((app) => app.status === "pending").length === 0 ? (
-            <p>No pending applications.</p>
+          {applications.length === 0 ? (
+            <p>No applications yet.</p>
           ) : (
             <div className="grid">
-              {applications
-                .filter((app) => app.status === "pending")
-                .map((app) => (
+              {applications.map((app) => (
                   <div key={app.id} className="card">
                     <strong>{app.name}</strong>
-                    <p>{app.email}</p>
-                    <p>Focus: {app.focusAreas}</p>
-                    <p>Experience: {app.experience}</p>
-                    {app.links && <p>Links: {app.links}</p>}
-                    <input
-                      style={inputStyle}
-                      placeholder="Temporary access code (6+ chars)"
-                      value={accessCodes[app.id] || ""}
-                      onChange={(event) =>
-                        setAccessCodes({ ...accessCodes, [app.id]: event.target.value })
-                      }
-                    />
-                    <input
-                      style={inputStyle}
-                      placeholder="Assigned subscriber emails (comma-separated)"
-                      value={assignments[app.id] || ""}
-                      onChange={(event) =>
-                        setAssignments({ ...assignments, [app.id]: event.target.value })
-                      }
-                    />
+                    <p>Status: {app.status}</p>
+                    <div className="grid" style={{ marginTop: 8 }}>
+                      <input
+                        style={inputStyle}
+                        value={getApplicationDraft(app).name}
+                        onChange={(event) =>
+                          updateApplicationDraft(app.id, { name: event.target.value })
+                        }
+                        placeholder="Full name"
+                      />
+                      <input
+                        style={inputStyle}
+                        value={getApplicationDraft(app).email}
+                        onChange={(event) =>
+                          updateApplicationDraft(app.id, { email: event.target.value })
+                        }
+                        placeholder="Email"
+                      />
+                      <input
+                        style={inputStyle}
+                        value={getApplicationDraft(app).focusAreas}
+                        onChange={(event) =>
+                          updateApplicationDraft(app.id, { focusAreas: event.target.value })
+                        }
+                        placeholder="Focus areas"
+                      />
+                      <textarea
+                        style={{ ...inputStyle, resize: "vertical" }}
+                        value={getApplicationDraft(app).experience}
+                        onChange={(event) =>
+                          updateApplicationDraft(app.id, { experience: event.target.value })
+                        }
+                        placeholder="Experience"
+                        rows={4}
+                      />
+                      <input
+                        style={inputStyle}
+                        value={getApplicationDraft(app).links}
+                        onChange={(event) =>
+                          updateApplicationDraft(app.id, { links: event.target.value })
+                        }
+                        placeholder="Portfolio / website"
+                      />
+                      <input
+                        style={inputStyle}
+                        value={getApplicationDraft(app).phone}
+                        onChange={(event) =>
+                          updateApplicationDraft(app.id, { phone: event.target.value })
+                        }
+                        placeholder="Phone"
+                      />
+                      <input
+                        style={inputStyle}
+                        value={getApplicationDraft(app).website}
+                        onChange={(event) =>
+                          updateApplicationDraft(app.id, { website: event.target.value })
+                        }
+                        placeholder="Website"
+                      />
+                      <input
+                        style={inputStyle}
+                        value={getApplicationDraft(app).socialLinks}
+                        onChange={(event) =>
+                          updateApplicationDraft(app.id, { socialLinks: event.target.value })
+                        }
+                        placeholder="Social links (comma-separated)"
+                      />
+                      <input
+                        style={inputStyle}
+                        value={getApplicationDraft(app).photoUrl}
+                        onChange={(event) =>
+                          updateApplicationDraft(app.id, { photoUrl: event.target.value })
+                        }
+                        placeholder="Photo URL"
+                      />
+                      <input
+                        style={inputStyle}
+                        value={getApplicationDraft(app).profileSlug}
+                        onChange={(event) =>
+                          updateApplicationDraft(app.id, { profileSlug: event.target.value })
+                        }
+                        placeholder="Profile slug (e.g. terry-brussel-rogers)"
+                      />
+                    </div>
+                    {app.status === "pending" && (
+                      <>
+                        <input
+                          style={inputStyle}
+                          placeholder="Temporary access code (6+ chars)"
+                          value={accessCodes[app.id] || ""}
+                          onChange={(event) =>
+                            setAccessCodes({ ...accessCodes, [app.id]: event.target.value })
+                          }
+                        />
+                        <input
+                          style={inputStyle}
+                          placeholder="Assigned subscriber emails (comma-separated)"
+                          value={assignments[app.id] || ""}
+                          onChange={(event) =>
+                            setAssignments({ ...assignments, [app.id]: event.target.value })
+                          }
+                        />
+                      </>
+                    )}
                     <div style={{ display: "flex", gap: 8 }}>
-                      <button className="button" onClick={() => approve(app.id)}>
-                        Approve
-                      </button>
                       <button
                         className="button button-secondary"
-                        onClick={() => decline(app.id)}
+                        type="button"
+                        onClick={() => saveApplication(app.id)}
                       >
-                        Decline
+                        Save Profile
                       </button>
+                      {app.status === "pending" && (
+                        <>
+                          <button className="button" onClick={() => approve(app.id)}>
+                            Approve
+                          </button>
+                          <button
+                            className="button button-secondary"
+                            onClick={() => decline(app.id)}
+                          >
+                            Decline
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
