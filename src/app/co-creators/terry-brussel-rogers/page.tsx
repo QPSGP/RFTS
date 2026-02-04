@@ -44,12 +44,24 @@ export default function TerryBrusselRogersPage() {
             <strong>Specialty:</strong> Self-hypnosis, stress management, habit
             change, success motivation, and learning/memory enhancement.
           </p>
-          <p>
-            <strong>Website:</strong>{" "}
-            <a href="https://www.acesuccess.com" target="_blank" rel="noreferrer">
-              www.acesuccess.com
-            </a>
-          </p>
+          <div className="card" style={{ marginTop: 12 }}>
+            <h3 style={{ marginTop: 0 }}>Contact</h3>
+            <p>
+              <strong>Website:</strong>{" "}
+              <a href="https://www.acesuccess.com" target="_blank" rel="noreferrer">
+                www.acesuccess.com
+              </a>
+            </p>
+            <p>
+              <strong>Email:</strong> Available on request
+            </p>
+            <p>
+              <strong>Phone:</strong> Available on request
+            </p>
+            <p>
+              <strong>Social:</strong> Facebook • YouTube (available on request)
+            </p>
+          </div>
         </div>
       </section>
 

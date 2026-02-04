@@ -126,6 +126,24 @@ export default function AdminModerators() {
         Co-Creators can only access their assigned subscribers. They cannot add
         admins or other co-creators.
       </p>
+      <div className="card" style={{ marginTop: 12 }}>
+        <h3>Featured Co-Creator Profiles</h3>
+        <p style={{ color: "#4b5563" }}>
+          Manage spotlight pages for your co-creators.
+        </p>
+        <div className="grid">
+          <div className="card">
+            <strong>Terry Brussel-Rogers, CCHt</strong>
+            <p>Co-Creator profile page</p>
+            <a
+              className="button button-secondary"
+              href="/co-creators/terry-brussel-rogers"
+            >
+              View Profile
+            </a>
+          </div>
+        </div>
+      </div>
       {status && <p>{status}</p>}
       <div className="grid" style={{ marginTop: 16 }}>
         <div className="card">
