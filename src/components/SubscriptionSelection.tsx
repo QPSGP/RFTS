@@ -17,6 +17,16 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
   const [status, setStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const membershipDetails = [
+    "Tailored Recordings Are Scheduled Based on Your Priorities.",
+    "Push A Button And Listen While You Sleep!",
+    "Listen to Tailored Recordings out of Sequence as Needed",
+    "Unlimited Access to All Recordings in the Success Center Library!",
+    "You May Update Goals Anytime!",
+    "Includes a 15-minute Private Goal Setting Consultation every 90 days with a Success Center hypnotherapist/coach ($444 value annual benefit). Call 800-GOAL-NOW to set your appointment today."
+  ];
+  const membershipNote =
+    "Recommend a private Life Guidance Discovery Session for full access to Platinum benefits.";
 
   const visiblePlans = useMemo(() => {
     const membershipOnly = plans.filter((plan) => plan.id === "platinum");
@@ -97,7 +107,21 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
               <div className="plan-title">{displayName}</div>
               <div className="plan-price">{plan.trialDays} day trial</div>
               <div className="plan-trial">{plan.trialDays}-Day Free Trial</div>
-              <p style={{ fontSize: 12, color: "#4b5563" }}>{plan.description}</p>
+              <div style={{ marginTop: 8, fontSize: 12, color: "#4b5563" }}>
+                <div style={{ fontWeight: 600, color: "#0f172a" }}>
+                  $39.95/mo. + tax and fees
+                </div>
+                <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>
+                  {membershipDetails.map((line) => (
+                    <li key={line} style={{ marginTop: 6 }}>
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+                <div style={{ marginTop: 8, fontStyle: "italic" }}>
+                  {membershipNote}
+                </div>
+              </div>
               <div className="plan-cta">
                 <span className="badge">Select Plan</span>
               </div>

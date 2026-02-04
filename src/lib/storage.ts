@@ -364,7 +364,7 @@ export const getSubscriptionPlans = () =>
       name: "Membership Package",
       priceId: "",
       trialDays: 14,
-      description: "Full library access with goal-based scheduling."
+      description: "Tailored Recordings Are Scheduled Based on Your Priorities."
     }
   ]);
 
