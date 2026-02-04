@@ -313,8 +313,9 @@ button.section-title {
   display: grid;
   gap: 18px;
   width: 100%;
-  max-width: 520px;
+  max-width: 960px;
   margin: 0 auto;
+  justify-items: center;
 }
 
 .plan-card {
@@ -323,6 +324,7 @@ button.section-title {
   padding: 0;
   overflow: hidden;
   background: #fff;
+  width: min(720px, 100%);
 }
 
 .plan-card.selected {
