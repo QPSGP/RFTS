@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import SiteFooter from "@/components/SiteFooter";
 
 const inputStyle = {
   padding: 12,
@@ -168,6 +169,7 @@ export default function ModerationPage() {
         </form>
         {status && <p style={{ marginTop: 12 }}>{status}</p>}
       </section>
+      <SiteFooter />
     </main>
   );
 }

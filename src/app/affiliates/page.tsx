@@ -1,5 +1,6 @@
 import AffiliateAdmin from "@/components/AffiliateAdmin";
 import AffiliateForm from "@/components/AffiliateForm";
+import SiteFooter from "@/components/SiteFooter";
 
 export default function AffiliatesPage() {
   return (
@@ -39,6 +40,7 @@ export default function AffiliatesPage() {
         <AffiliateForm />
         <AffiliateAdmin />
       </section>
+      <SiteFooter />
     </main>
   );
 }

@@ -1,6 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 import SubscriptionPlans from "@/components/SubscriptionPlans";
 import WalletPanel from "@/components/WalletPanel";
+import SiteFooter from "@/components/SiteFooter";
 
 export default function HomePage() {
   return (
@@ -415,20 +416,6 @@ export default function HomePage() {
             </p>
             <p>K. M., CEO of Digital Marketing Agency. Temecula, California</p>
           </div>
-          <div className="card">
-            <h3>Contact Us</h3>
-            <p>Email: customerservice@reachforthestars.today</p>
-            <p>Phone: 800-GOAL-NOW (462-5669)</p>
-          </div>
-          <div className="card">
-            <h3>Legal Information</h3>
-            <p>Privacy Policy</p>
-            <p>Terms and Conditions</p>
-            <p>Success Center</p>
-          </div>
-          <div className="card">
-            <p>Copyright © 2026. All rights reserved. Success Center, Inc.</p>
-          </div>
         </section>
       </section>
 
@@ -436,6 +423,7 @@ export default function HomePage() {
         <SubscriptionPlans />
         <WalletPanel />
       </section>
+      <SiteFooter />
     </main>
   );
 }

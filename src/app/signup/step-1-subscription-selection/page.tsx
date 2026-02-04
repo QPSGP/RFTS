@@ -1,5 +1,6 @@
 import MemberOnboarding from "@/components/MemberOnboarding";
 import { listInterests, listSubscriptionPlans } from "@/lib/db";
+import SiteFooter from "@/components/SiteFooter";
 
 export default async function SubscriptionSelectionPage() {
   const [plans, goals] = await Promise.all([
@@ -15,6 +16,7 @@ export default async function SubscriptionSelectionPage() {
         </div>
         <MemberOnboarding plans={plans} goals={goals} />
       </div>
+      <SiteFooter />
     </div>
   );
 }

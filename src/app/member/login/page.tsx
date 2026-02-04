@@ -1,4 +1,5 @@
 import UserAuth from "@/components/UserAuth";
+import SiteFooter from "@/components/SiteFooter";
 
 export default function MemberLoginPage() {
   return (
@@ -12,6 +13,7 @@ export default function MemberLoginPage() {
         </p>
       </section>
       <UserAuth />
+      <SiteFooter />
     </main>
   );
 }

@@ -1,5 +1,6 @@
 import LoginForm from "@/components/LoginForm";
 import AdminSetupHint from "@/components/AdminSetupHint";
+import SiteFooter from "@/components/SiteFooter";
 
 export default function LoginPage() {
   return (
@@ -10,6 +11,7 @@ export default function LoginPage() {
       </section>
       <AdminSetupHint />
       <LoginForm />
+      <SiteFooter />
     </main>
   );
 }
