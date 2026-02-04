@@ -11,7 +11,7 @@ export default function SiteHeader() {
                 <a href="/how-it-works">How It Works</a>
                 <a href="/science">Science</a>
                 <a href="/faqs">FAQs</a>
-                <a href="/moderation">Co-Creators</a>
+                <a href="/co-creator">Co-Creators</a>
                 <a href="/affiliates">Affiliates</a>
               </div>
             </details>
@@ -40,7 +40,7 @@ export default function SiteHeader() {
           <a href="/how-it-works">How It Works</a>
           <a href="/science">Science</a>
           <a href="/faqs">FAQs</a>
-          <a href="/moderation">Co-Creators</a>
+          <a href="/co-creator">Co-Creators</a>
           <a href="/affiliates">Affiliates</a>
         </nav>
       </div>
