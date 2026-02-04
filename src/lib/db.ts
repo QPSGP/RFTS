@@ -723,6 +723,19 @@ export const createModeratorApplication = async (payload: {
        ${payload.links || ""}, ${payload.phone || ""}, ${payload.website || ""},
        ${payload.socialLinks || ""}, ${payload.photoUrl || ""}, ${payload.profileSlug || ""},
        ${payload.status || "pending"})
+    ON CONFLICT (email)
+    DO UPDATE SET
+      name = EXCLUDED.name,
+      focus_areas = EXCLUDED.focus_areas,
+      experience = EXCLUDED.experience,
+      links = EXCLUDED.links,
+      phone = EXCLUDED.phone,
+      website = EXCLUDED.website,
+      social_links = EXCLUDED.social_links,
+      photo_url = EXCLUDED.photo_url,
+      profile_slug = EXCLUDED.profile_slug,
+      status = EXCLUDED.status,
+      submitted_at = now()
     RETURNING
       id,
       name,

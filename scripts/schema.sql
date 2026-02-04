@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS moderation_queue (
 CREATE TABLE IF NOT EXISTS moderator_applications (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
-  email text NOT NULL,
+  email text UNIQUE NOT NULL,
   focus_areas text NOT NULL,
   experience text NOT NULL,
   links text,

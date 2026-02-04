@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type ModeratorApplication = {
   id: string;
@@ -58,6 +58,24 @@ export default function AdminModerators() {
       }
     >
   >({});
+
+  const uniqueApplications = useMemo(() => {
+    const map = new Map<string, ModeratorApplication>();
+    applications.forEach((app) => {
+      const key = app.email.toLowerCase();
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, app);
+        return;
+      }
+      const currentTime = new Date(app.submittedAt).getTime();
+      const existingTime = new Date(existing.submittedAt).getTime();
+      if (currentTime > existingTime) {
+        map.set(key, app);
+      }
+    });
+    return Array.from(map.values());
+  }, [applications]);
 
   const load = async () => {
     const response = await fetch("/api/moderator-admin");
@@ -221,7 +239,7 @@ export default function AdminModerators() {
   };
 
   const findApplicationForEmail = (email: string) =>
-    applications.find((app) => app.email.toLowerCase() === email.toLowerCase());
+    uniqueApplications.find((app) => app.email.toLowerCase() === email.toLowerCase());
 
   return (
     <div className="card">
@@ -248,6 +266,20 @@ export default function AdminModerators() {
           </div>
         </div>
       </div>
+      <div className="card" style={{ marginTop: 12 }}>
+        <h3>Active Co-Creators (Summary)</h3>
+        {moderators.length === 0 ? (
+          <p>No co-creators yet. Approve a pending application to activate.</p>
+        ) : (
+          <div className="stack">
+            {moderators.map((moderator) => (
+              <p key={moderator.id}>
+                {moderator.name} — {moderator.email}
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
       {status && <p>{status}</p>}
       <div className="grid" style={{ marginTop: 16 }}>
         <div className="card">
@@ -256,11 +288,11 @@ export default function AdminModerators() {
             Applications appear here after someone submits the Co-Creator form.
             Approve buttons show only while the status is pending.
           </p>
-          {applications.length === 0 ? (
+          {uniqueApplications.length === 0 ? (
             <p>No applications yet.</p>
           ) : (
             <div className="grid">
-              {applications.map((app) => (
+              {uniqueApplications.map((app) => (
                   <div key={app.id} className="card">
                     <strong>{app.name}</strong>
                     <p>Status: {app.status}</p>
@@ -280,6 +312,14 @@ export default function AdminModerators() {
                           updateApplicationDraft(app.id, { email: event.target.value })
                         }
                         placeholder="Email"
+                      />
+                      <input
+                        style={inputStyle}
+                        value={getApplicationDraft(app).profileSlug}
+                        onChange={(event) =>
+                          updateApplicationDraft(app.id, { profileSlug: event.target.value })
+                        }
+                        placeholder="Profile slug (e.g. terry-brussel-rogers)"
                       />
                       <input
                         style={inputStyle}
@@ -337,14 +377,6 @@ export default function AdminModerators() {
                           updateApplicationDraft(app.id, { photoUrl: event.target.value })
                         }
                         placeholder="Photo URL"
-                      />
-                      <input
-                        style={inputStyle}
-                        value={getApplicationDraft(app).profileSlug}
-                        onChange={(event) =>
-                          updateApplicationDraft(app.id, { profileSlug: event.target.value })
-                        }
-                        placeholder="Profile slug (e.g. terry-brussel-rogers)"
                       />
                     </div>
                     {app.status === "pending" && (
