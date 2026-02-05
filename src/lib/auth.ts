@@ -117,3 +117,12 @@ export const isModeratorSession = async () => {
   const role = await getSessionRole();
   return role === "moderator" || role === "admin";
 };
+
+export const getSessionConsoleType = async (): Promise<"admin" | "moderator" | "member" | null> => {
+  const role = await getSessionRole();
+  if (role === "admin") return "admin";
+  if (role === "moderator") return "moderator";
+  const { getUserSessionEmail } = await import("./user-auth");
+  if (getUserSessionEmail()) return "member";
+  return null;
+};

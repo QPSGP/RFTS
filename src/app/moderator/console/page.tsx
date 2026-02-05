@@ -47,15 +47,25 @@ export default function ModeratorConsolePage() {
     );
   }
 
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/";
+  };
+
   return (
     <main>
-      <section className="hero" style={{ marginBottom: 24 }}>
-        <span className="pill">Co-Creator Console</span>
-        <h1>Welcome, {profile.name}</h1>
-        <p>
-          You can only access the subscribers assigned to you. If you need a change,
-          contact the admin team.
-        </p>
+      <section className="hero" style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <span className="pill">Co-Creator Console</span>
+          <h1>Welcome, {profile.name}</h1>
+          <p>
+            You can only access the subscribers assigned to you. If you need a change,
+            contact the admin team.
+          </p>
+        </div>
+        <button className="button button-secondary" type="button" onClick={logout}>
+          Log Out
+        </button>
       </section>
 
       <section className="card">

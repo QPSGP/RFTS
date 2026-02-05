@@ -1,8 +1,15 @@
-import { isAdminSession } from "@/lib/auth";
-import AdminLogoutButton from "./AdminLogoutButton";
+import { getSessionConsoleType } from "@/lib/auth";
 
 export default async function SiteHeader() {
-  const isAdmin = await isAdminSession();
+  const consoleType = await getSessionConsoleType();
+  const consoleLink =
+    consoleType === "admin"
+      ? { label: "Admin Console", href: "/admin/content" }
+      : consoleType === "moderator"
+        ? { label: "Co-Creators Console", href: "/moderator/console" }
+        : consoleType === "member"
+          ? { label: "Members Console", href: "/play-options" }
+          : null;
   return (
     <header className="site-header">
       <div className="site-header-inner">
@@ -17,7 +24,7 @@ export default async function SiteHeader() {
                 <a href="/faqs">FAQs</a>
                 <a href="/co-creator">Co-Creators</a>
                 <a href="/affiliates">Affiliates</a>
-                {isAdmin && <a href="/admin/content">Admin Console</a>}
+                {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
               </div>
             </details>
             <div className="brand">
@@ -26,7 +33,6 @@ export default async function SiteHeader() {
             </div>
           </div>
           <div className="header-actions">
-            {isAdmin && <AdminLogoutButton />}
             <a className="button button-secondary" href="/signup/step-1-subscription-selection">
               Sign Up
             </a>
@@ -37,7 +43,7 @@ export default async function SiteHeader() {
                 <a href="/moderator/console">Co-Creators</a>
                 <a href="/affiliates">Affiliates</a>
                 <a href="/login">Administrator</a>
-                {isAdmin && <a href="/admin/content">Admin Console</a>}
+                {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
               </div>
             </details>
           </div>
@@ -49,7 +55,7 @@ export default async function SiteHeader() {
           <a href="/faqs">FAQs</a>
           <a href="/co-creator">Co-Creators</a>
           <a href="/affiliates">Affiliates</a>
-          {isAdmin && <a href="/admin/content">Admin Console</a>}
+          {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
         </nav>
       </div>
     </header>

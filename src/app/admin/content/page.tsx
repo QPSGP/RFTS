@@ -8,6 +8,7 @@ import AdminModerators from "@/components/AdminModerators";
 import ModerationQueue from "@/components/ModerationQueue";
 import AdminUsers from "@/components/AdminUsers";
 import AdminAdmins from "@/components/AdminAdmins";
+import AdminLogoutButton from "@/components/AdminLogoutButton";
 import AffiliateAdmin from "@/components/AffiliateAdmin";
 
 export default function AdminContentPage() {
@@ -45,9 +46,12 @@ export default function AdminContentPage() {
 
   return (
     <main>
-      <section style={{ marginBottom: 24 }}>
-        <h1>Admin Content Console</h1>
-        <p>Manage goals, audio library items, and ordering.</p>
+      <section style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h1>Admin Content Console</h1>
+          <p>Manage goals, audio library items, and ordering.</p>
+        </div>
+        <AdminLogoutButton />
       </section>
       <section style={{ marginBottom: 24 }}>
         <div className="grid grid-2" style={{ gap: 12 }}>
