@@ -87,8 +87,9 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
           </div>
         ))}
       </div>
-      <div className="section-heading">Select Your Membership Package</div>
-      <div className="plan-grid">
+      <div className="membership-package-section">
+        <div className="section-heading">Select Your Membership Package</div>
+        <div className="plan-grid">
         {visiblePlans.map((plan) => {
           const displayName =
             plan.id === "platinum" ? "Membership Package" : plan.name;
@@ -128,6 +129,7 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
           </button>
           );
         })}
+        </div>
       </div>
       <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
         <button className="button" onClick={startCheckout} disabled={isLoading}>

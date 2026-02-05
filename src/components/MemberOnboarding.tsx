@@ -362,8 +362,9 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
 
       {step === 1 && (
         <>
-          <div className="section-heading">Select Your Membership Package</div>
-          <div className="plan-grid">
+          <div className="membership-package-section">
+            <div className="section-heading">Select Your Membership Package</div>
+            <div className="plan-grid">
             {visiblePlans.map((plan) => {
               const displayName =
                 plan.id === "platinum" ? "Membership Package" : plan.name;
@@ -403,6 +404,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
               </button>
               );
             })}
+            </div>
           </div>
           <div className="section-heading" style={{ marginTop: 24 }}>
             Goal Selection (up to 10)
