@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-
-type Interest = {
-  id: string;
-  name: string;
-  description?: string;
-};
+import type { Interest } from "@/lib/types";
 
 type LibraryItem = {
   id: string;
