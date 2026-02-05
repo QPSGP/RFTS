@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
-import { isAdminSession } from "@/lib/auth";
-import { listLibrary, updateLibraryItem } from "@/lib/db";
+import { getSessionEmail, isAdminSession } from "@/lib/auth";
+import { getFirstAdminEmail, listLibrary, updateLibraryItem } from "@/lib/db";
 
 type BlobAssets = {
   audios?: Record<string, string>;
@@ -85,6 +85,11 @@ const buildCoverMap = (blobAssets: BlobAssets) => {
 export async function POST() {
   if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+  const email = getSessionEmail();
+  const firstAdminEmail = await getFirstAdminEmail();
+  if (!email || !firstAdminEmail || email.toLowerCase() !== firstAdminEmail.toLowerCase()) {
+    return NextResponse.json({ error: "Forbidden. First admin only." }, { status: 403 });
   }
 
   const blobAssets = readJson<BlobAssets>("blob-assets.json", {});

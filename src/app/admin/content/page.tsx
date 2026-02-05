@@ -145,6 +145,7 @@ export default function AdminContentPage() {
       <AdminContent
         openGoals={openSections.goals}
         openLibrary={openSections.library}
+        isFirstAdmin={isFirstAdmin}
       />
     </main>
   );

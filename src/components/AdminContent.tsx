@@ -27,9 +27,10 @@ const inputStyle = {
 type AdminContentProps = {
   openGoals: boolean;
   openLibrary: boolean;
+  isFirstAdmin?: boolean | null;
 };
 
-export default function AdminContent({ openGoals, openLibrary }: AdminContentProps) {
+export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: AdminContentProps) {
   const [interests, setInterests] = useState<Interest[]>([]);
   const [library, setLibrary] = useState<LibraryItem[]>([]);
   const [status, setStatus] = useState<string | null>(null);
@@ -474,13 +475,17 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
 
       {openLibrary && (
         <section id="admin-audio-library" className="card">
-        <p style={{ color: "#4b5563" }}>
-          Use sync to pull descriptions and covers from the assets list.
-        </p>
-        <button className="button button-secondary" onClick={syncLibraryMetadata}>
-          Sync Descriptions & Covers
-        </button>
-        {syncStatus && <p style={{ marginTop: 8 }}>{syncStatus}</p>}
+        {isFirstAdmin && (
+          <>
+            <p style={{ color: "#4b5563" }}>
+              Use sync to pull descriptions and covers from the assets list.
+            </p>
+            <button className="button button-secondary" onClick={syncLibraryMetadata}>
+              Sync Descriptions & Covers
+            </button>
+            {syncStatus && <p style={{ marginTop: 8 }}>{syncStatus}</p>}
+          </>
+        )}
         <div className="card" style={{ marginTop: 16 }}>
           <h3>Assign Audios by Goal (A → B → C play order)</h3>
           <p style={{ color: "#4b5563" }}>
