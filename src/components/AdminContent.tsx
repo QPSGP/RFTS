@@ -373,10 +373,10 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
                       placeholder="Description"
                     />
                     <div className="admin-goal-audio-slots">
-                      <label>Audio files (order A → B → C is used for playback)</label>
+                      <label>Audio files — play order follows A → B → C in the nightly cycle</label>
                       <div className="grid grid-3" style={{ gap: 12 }}>
                         <div>
-                          <label style={{ fontSize: 12, fontWeight: 600 }}>A</label>
+                          <label style={{ fontSize: 12, fontWeight: 600 }}>A (1st in play cycle)</label>
                           <select
                             value={goalAudioA}
                             onChange={(e) => setGoalAudioA(e.target.value)}
@@ -391,7 +391,7 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
                           </select>
                         </div>
                         <div>
-                          <label style={{ fontSize: 12, fontWeight: 600 }}>B</label>
+                          <label style={{ fontSize: 12, fontWeight: 600 }}>B (2nd in play cycle)</label>
                           <select
                             value={goalAudioB}
                             onChange={(e) => setGoalAudioB(e.target.value)}
@@ -406,7 +406,7 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
                           </select>
                         </div>
                         <div>
-                          <label style={{ fontSize: 12, fontWeight: 600 }}>C</label>
+                          <label style={{ fontSize: 12, fontWeight: 600 }}>C (3rd in play cycle)</label>
                           <select
                             value={goalAudioC}
                             onChange={(e) => setGoalAudioC(e.target.value)}
@@ -438,17 +438,14 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
                 ) : (
                   <>
                     <span className="admin-goal-name">{interest.name}</span>
-                    <div className="admin-goal-meta">
+                    <div className="admin-goal-meta" title="Play order: A → B → C">
                       {[interest.audioIdA, interest.audioIdB, interest.audioIdC]
                         .filter(Boolean)
-                        .map((id, i) => {
-                          const item = library.find((l) => l.id === id);
-                          return (
-                            <span key={id} className="admin-goal-slot-badge">
-                              {["A", "B", "C"][i]}
-                            </span>
-                          );
-                        })}
+                        .map((id, i) => (
+                          <span key={id} className="admin-goal-slot-badge" title={`${["1st", "2nd", "3rd"][i]} in play cycle`}>
+                            {["A", "B", "C"][i]}
+                          </span>
+                        ))}
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
                       <button
