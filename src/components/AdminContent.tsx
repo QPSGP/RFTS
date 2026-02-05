@@ -288,9 +288,18 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
       return;
     }
     const goal = interests.find((i) => i.id === goalId);
-    setAssignAudioA(goal?.audioIdA || "");
-    setAssignAudioB(goal?.audioIdB || "");
-    setAssignAudioC(goal?.audioIdC || "");
+    if (goal?.audioIdA || goal?.audioIdB || goal?.audioIdC) {
+      setAssignAudioA(goal.audioIdA || "");
+      setAssignAudioB(goal.audioIdB || "");
+      setAssignAudioC(goal.audioIdC || "");
+    } else {
+      const attached = library
+        .filter((item) => item.interestIds.includes(goalId))
+        .sort((a, b) => a.title.localeCompare(b.title));
+      setAssignAudioA(attached[0]?.id || "");
+      setAssignAudioB(attached[1]?.id || "");
+      setAssignAudioC(attached[2]?.id || "");
+    }
   };
 
   const saveGoalAudioOrder = async () => {
