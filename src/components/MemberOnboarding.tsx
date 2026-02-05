@@ -157,6 +157,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
   const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
   const [searchTerm, setSearchTerm] = useState("");
   const [openCategory, setOpenCategory] = useState<string | null>(null);
+  const [showSeeAllList, setShowSeeAllList] = useState(false);
   const [profile, setProfile] = useState({
     firstName: "",
     lastName: "",
@@ -458,9 +459,11 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
             <button
               type="button"
               className="button button-secondary"
-              onClick={() =>
-                setOpenCategory((prev) => (prev === "See All" ? null : "See All"))
-              }
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowSeeAllList((prev) => !prev);
+              }}
               style={{
                 marginTop: 12,
                 width: "100%",
@@ -468,10 +471,10 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 fontWeight: 600
               }}
             >
-              {openCategory === "See All" ? "▲ Hide full list" : "▼ See all goals (A–Z)"}
+              {showSeeAllList ? "▲ Hide full list" : "▼ See all goals (A–Z)"}
             </button>
           </div>
-          {openCategory === "See All" && (
+          {showSeeAllList && (
             <div className="card goal-see-all-list" style={{ marginTop: 12 }}>
               <div className="goal-all-scroll">
                 {filteredGoals.map((goal) => (

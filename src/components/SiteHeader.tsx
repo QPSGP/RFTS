@@ -1,4 +1,5 @@
 import { isAdminSession } from "@/lib/auth";
+import AdminLogoutButton from "./AdminLogoutButton";
 
 export default async function SiteHeader() {
   const isAdmin = await isAdminSession();
@@ -25,6 +26,7 @@ export default async function SiteHeader() {
             </div>
           </div>
           <div className="header-actions">
+            {isAdmin && <AdminLogoutButton />}
             <a className="button button-secondary" href="/signup/step-1-subscription-selection">
               Sign Up
             </a>
