@@ -735,7 +735,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                     />
                     Adult content (18+)
                   </label>
-                  <div style={{ display: "flex", gap: 8 }}>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button className="button" type="submit">
                       Save
                     </button>
@@ -745,6 +745,16 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                       onClick={cancelEdit}
                     >
                       Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={() => {
+                        cancelEdit();
+                        document.getElementById("admin-audio-library")?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                    >
+                      Back to list
                     </button>
                   </div>
                 </form>
@@ -795,6 +805,14 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                   </p>
                   {item.isAdult && <p>Adult content</p>}
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button
+                      className="button button-secondary"
+                      onClick={() =>
+                        document.getElementById("admin-audio-library")?.scrollIntoView({ behavior: "smooth" })
+                      }
+                    >
+                      Back to list
+                    </button>
                     <button
                       className="button button-secondary"
                       onClick={() => moveItem(item.id, "up")}
