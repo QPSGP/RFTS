@@ -35,7 +35,6 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
   const [status, setStatus] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [selectedGoalId, setSelectedGoalId] = useState<string>("");
-  const [goalAssignments, setGoalAssignments] = useState<Record<string, boolean>>({});
   const [goalSaveStatus, setGoalSaveStatus] = useState<string | null>(null);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [goalDraft, setGoalDraft] = useState<Interest | null>(null);
@@ -47,6 +46,9 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
   const [goalAudioA, setGoalAudioA] = useState<string>("");
   const [goalAudioB, setGoalAudioB] = useState<string>("");
   const [goalAudioC, setGoalAudioC] = useState<string>("");
+  const [assignAudioA, setAssignAudioA] = useState<string>("");
+  const [assignAudioB, setAssignAudioB] = useState<string>("");
+  const [assignAudioC, setAssignAudioC] = useState<string>("");
 
   const load = async () => {
     const [interestRes, libraryRes] = await Promise.all([
@@ -280,63 +282,46 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
   const handleGoalSelect = (goalId: string) => {
     setSelectedGoalId(goalId);
     if (!goalId) {
-      setGoalAssignments({});
+      setAssignAudioA("");
+      setAssignAudioB("");
+      setAssignAudioC("");
       return;
     }
-    const nextAssignments: Record<string, boolean> = {};
-    library.forEach((item) => {
-      nextAssignments[item.id] = item.interestIds.includes(goalId);
-    });
-    setGoalAssignments(nextAssignments);
+    const goal = interests.find((i) => i.id === goalId);
+    setAssignAudioA(goal?.audioIdA || "");
+    setAssignAudioB(goal?.audioIdB || "");
+    setAssignAudioC(goal?.audioIdC || "");
   };
 
-  const toggleGoalAssignment = (itemId: string) => {
-    setGoalAssignments((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
-  };
-
-  const saveGoalAssignments = async () => {
+  const saveGoalAudioOrder = async () => {
     if (!selectedGoalId) {
-      setGoalSaveStatus("Select a goal to edit.");
+      setGoalSaveStatus("Select a goal first.");
+      return;
+    }
+    const goal = interests.find((i) => i.id === selectedGoalId);
+    if (!goal) {
+      setGoalSaveStatus("Goal not found.");
       return;
     }
     setGoalSaveStatus(null);
-    const updates = library.filter((item) => {
-      const shouldHave = !!goalAssignments[item.id];
-      const hasGoal = item.interestIds.includes(selectedGoalId);
-      return shouldHave !== hasGoal;
-    });
-    if (updates.length === 0) {
-      setGoalSaveStatus("No changes to save.");
-      return;
-    }
-    await Promise.all(
-      updates.map((item) => {
-        const shouldHave = !!goalAssignments[item.id];
-        const interestIds = shouldHave
-          ? Array.from(new Set([...item.interestIds, selectedGoalId]))
-          : item.interestIds.filter((id) => id !== selectedGoalId);
-        return fetch("/api/library", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: item.id,
-            title: item.title,
-            description: item.description,
-            skuCode: item.skuCode || "",
-            categories: item.categories || [],
-            coverUrl: item.coverUrl || "",
-            audioUrl: item.audioUrl || "",
-            interestIds,
-            allowedUserEmails: item.allowedUserEmails || [],
-            isAdult: item.isAdult || false
-          })
-        });
+    const response = await fetch("/api/interests", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: goal.id,
+        name: goal.name,
+        description: goal.description || "",
+        audioIdA: assignAudioA || null,
+        audioIdB: assignAudioB || null,
+        audioIdC: assignAudioC || null
       })
-    );
-    setGoalSaveStatus(`Saved ${updates.length} updates.`);
-    setSelectedGoalId("");
-    setGoalAssignments({});
-    await load();
+    });
+    if (response.ok) {
+      setGoalSaveStatus("Saved play order (A → B → C).");
+      await load();
+    } else {
+      setGoalSaveStatus("Failed to save.");
+    }
   };
 
   return (
@@ -488,9 +473,9 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
         </button>
         {syncStatus && <p style={{ marginTop: 8 }}>{syncStatus}</p>}
         <div className="card" style={{ marginTop: 16 }}>
-          <h3>Assign Audios by Goal</h3>
+          <h3>Assign Audios by Goal (A → B → C play order)</h3>
           <p style={{ color: "#4b5563" }}>
-            Pick a goal and attach the audios that belong to it.
+            Pick a goal and assign audios in play order. First = A, second = B, third = C. Members&apos; playlists load in this order.
           </p>
           <select
             style={inputStyle}
@@ -505,23 +490,59 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
             ))}
           </select>
           {selectedGoalId && (
-            <div className="grid" style={{ marginTop: 12 }}>
-              {library.map((item) => (
-                <label key={item.id} className="card" style={{ cursor: "pointer" }}>
-                  <input
-                    type="checkbox"
-                    checked={!!goalAssignments[item.id]}
-                    onChange={() => toggleGoalAssignment(item.id)}
-                    style={{ marginRight: 8 }}
-                  />
-                  {item.title}
-                </label>
-              ))}
+            <div className="admin-goal-audio-slots" style={{ marginTop: 16 }}>
+              <div className="grid grid-3" style={{ gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600 }}>A (1st in play cycle)</label>
+                  <select
+                    value={assignAudioA}
+                    onChange={(e) => setAssignAudioA(e.target.value)}
+                    style={inputStyle}
+                  >
+                    <option value="">— None —</option>
+                    {sortedLibrary.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.skuCode || "—"} {item.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600 }}>B (2nd in play cycle)</label>
+                  <select
+                    value={assignAudioB}
+                    onChange={(e) => setAssignAudioB(e.target.value)}
+                    style={inputStyle}
+                  >
+                    <option value="">— None —</option>
+                    {sortedLibrary.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.skuCode || "—"} {item.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600 }}>C (3rd in play cycle)</label>
+                  <select
+                    value={assignAudioC}
+                    onChange={(e) => setAssignAudioC(e.target.value)}
+                    style={inputStyle}
+                  >
+                    <option value="">— None —</option>
+                    {sortedLibrary.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.skuCode || "—"} {item.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
           )}
           <div style={{ marginTop: 12, display: "flex", gap: 12 }}>
-            <button className="button button-secondary" onClick={saveGoalAssignments}>
-              Save Goal Assignments
+            <button className="button button-secondary" onClick={saveGoalAudioOrder}>
+              Save Play Order (A → B → C)
             </button>
             {goalSaveStatus && <span style={{ alignSelf: "center" }}>{goalSaveStatus}</span>}
           </div>
