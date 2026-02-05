@@ -455,7 +455,42 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 }
               }}
             />
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={() =>
+                setOpenCategory((prev) => (prev === "See All" ? null : "See All"))
+              }
+              style={{
+                marginTop: 12,
+                width: "100%",
+                padding: "10px 16px",
+                fontWeight: 600
+              }}
+            >
+              {openCategory === "See All" ? "▲ Hide full list" : "▼ See all goals (A–Z)"}
+            </button>
           </div>
+          {openCategory === "See All" && (
+            <div className="card goal-see-all-list" style={{ marginTop: 12 }}>
+              <div className="goal-all-scroll">
+                {filteredGoals.map((goal) => (
+                  <label
+                    key={goal.id}
+                    className="goal-all-row"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={goalIds.includes(goal.id)}
+                      onChange={() => toggleGoal(goal.id)}
+                      disabled={!goalIds.includes(goal.id) && goalIds.length >= 10}
+                    />
+                    <span className="goal-all-name">{goal.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="goal-list" style={{ marginTop: 16 }}>
             {categoryKeys.map((category) => (
               <div key={category} className="card">

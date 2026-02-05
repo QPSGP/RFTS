@@ -1,4 +1,7 @@
-export default function SiteHeader() {
+import { isAdminSession } from "@/lib/auth";
+
+export default async function SiteHeader() {
+  const isAdmin = await isAdminSession();
   return (
     <header className="site-header">
       <div className="site-header-inner">
@@ -13,6 +16,7 @@ export default function SiteHeader() {
                 <a href="/faqs">FAQs</a>
                 <a href="/co-creator">Co-Creators</a>
                 <a href="/affiliates">Affiliates</a>
+                {isAdmin && <a href="/admin/content">Admin Console</a>}
               </div>
             </details>
             <div className="brand">
@@ -31,6 +35,7 @@ export default function SiteHeader() {
                 <a href="/moderator/console">Co-Creators</a>
                 <a href="/affiliates">Affiliates</a>
                 <a href="/login">Administrator</a>
+                {isAdmin && <a href="/admin/content">Admin Console</a>}
               </div>
             </details>
           </div>
@@ -42,6 +47,7 @@ export default function SiteHeader() {
           <a href="/faqs">FAQs</a>
           <a href="/co-creator">Co-Creators</a>
           <a href="/affiliates">Affiliates</a>
+          {isAdmin && <a href="/admin/content">Admin Console</a>}
         </nav>
       </div>
     </header>

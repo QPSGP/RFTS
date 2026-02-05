@@ -634,6 +634,43 @@ button.section-title {
   color: #64748b;
 }
 
+/* Sign-up: See All goals list - compact, mobile-friendly */
+.goal-see-all-list {
+  padding: 8px;
+}
+
+.goal-all-scroll {
+  max-height: 280px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.goal-all-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 6px;
+  min-height: 44px;
+}
+
+.goal-all-row:hover {
+  background: #f8fbff;
+}
+
+.goal-all-row input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.goal-all-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #0f172a;
+}
+
 @media (max-width: 900px) {
   main {
     padding: 24px 16px 48px;
