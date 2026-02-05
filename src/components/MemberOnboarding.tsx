@@ -30,115 +30,6 @@ const timeZones = [
   "Other"
 ];
 
-const categoryMatchers = [
-  {
-    name: "Health",
-    keywords: [
-      "allergy",
-      "asthma",
-      "athletic",
-      "eye",
-      "sleep",
-      "pain",
-      "weight",
-      "fitness",
-      "health",
-      "body",
-      "energy",
-      "healing",
-      "immune",
-      "nutrition",
-      "smoking",
-      "addiction"
-    ]
-  },
-  {
-    name: "Wealth",
-    keywords: [
-      "money",
-      "wealth",
-      "abundance",
-      "success",
-      "sales",
-      "business",
-      "career",
-      "income",
-      "practice",
-      "marketing",
-      "public speaking",
-      "goal manifestation"
-    ]
-  },
-  {
-    name: "Relationship",
-    keywords: [
-      "relationship",
-      "marriage",
-      "love",
-      "partner",
-      "dating",
-      "family",
-      "parent",
-      "jealousy",
-      "monogamous",
-      "polyamory"
-    ]
-  },
-  {
-    name: "Memory",
-    keywords: [
-      "memory",
-      "focus",
-      "concentration",
-      "speed reading"
-    ]
-  },
-  {
-    name: "Inspiration",
-    keywords: [
-      "creativity",
-      "confidence",
-      "motivation",
-      "life mission",
-      "gratitude"
-    ]
-  },
-  {
-    name: "Spirituality",
-    keywords: ["spiritual", "meditation", "mindfulness", "intuition", "psychic", "past life"]
-  },
-  {
-    name: "Balance Life",
-    keywords: [
-      "balance",
-      "calm",
-      "stress",
-      "anxiety",
-      "depression",
-      "trauma",
-      "anger",
-      "phobia",
-      "drinking",
-      "time",
-      "procrastination",
-      "habit",
-      "productivity",
-      "organization",
-      "discipline"
-    ]
-  }
-];
-
-const categoryOrder = categoryMatchers.map((category) => category.name).concat("Other");
-
-const getCategoryForGoal = (name: string) => {
-  const value = name.toLowerCase();
-  const match = categoryMatchers.find((category) =>
-    category.keywords.some((keyword) => value.includes(keyword))
-  );
-  return match?.name || "Other";
-};
-
 export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps) {
   const [step, setStep] = useState(1);
   const [status, setStatus] = useState<string | null>(null);
@@ -156,8 +47,6 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
   const [goalIds, setGoalIds] = useState<string[]>([]);
   const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
   const [searchTerm, setSearchTerm] = useState("");
-  const [openCategory, setOpenCategory] = useState<string | null>(null);
-  const [showSeeAllList, setShowSeeAllList] = useState(false);
   const [profile, setProfile] = useState({
     firstName: "",
     lastName: "",
@@ -219,34 +108,6 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
       })),
     [goalIds, goalNameById]
   );
-  const groupedGoals = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    if (term) {
-      return { "Search Results": filteredGoals };
-    }
-    const groups: Record<string, Interest[]> = {};
-    filteredGoals.forEach((goal) => {
-      const category = getCategoryForGoal(goal.name);
-      if (!groups[category]) {
-        groups[category] = [];
-      }
-      groups[category].push(goal);
-    });
-    return groups;
-  }, [filteredGoals, searchTerm]);
-  const categoryKeys = useMemo(() => {
-    if (searchTerm.trim()) {
-      return ["Search Results"];
-    }
-    return categoryOrder.filter((category) => groupedGoals[category]?.length);
-  }, [groupedGoals, searchTerm]);
-
-  useEffect(() => {
-    if (openCategory && !categoryKeys.includes(openCategory)) {
-      setOpenCategory(null);
-    }
-  }, [categoryKeys, openCategory]);
-
   const toggleGoal = (id: string) => {
     setGoalIds((prev) => {
       if (prev.includes(id)) {
@@ -438,7 +299,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
             )}
           </div>
           <div className="card" style={{ marginTop: 12 }}>
-            <h3>Find your goals</h3>
+            <h3>Select your goals (up to 10)</h3>
             <input
               style={{
                 padding: 12,
@@ -449,39 +310,12 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
               }}
               placeholder="Search goals"
               value={searchTerm}
-              onChange={(event) => {
-                setSearchTerm(event.target.value);
-                if (event.target.value.trim()) {
-                  setOpenCategory("Search Results");
-                }
-              }}
+              onChange={(event) => setSearchTerm(event.target.value)}
             />
-            <button
-              type="button"
-              className="button button-secondary"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setShowSeeAllList((prev) => !prev);
-              }}
-              style={{
-                marginTop: 12,
-                width: "100%",
-                padding: "10px 16px",
-                fontWeight: 600
-              }}
-            >
-              {showSeeAllList ? "▲ Hide full list" : "▼ See all goals (A–Z)"}
-            </button>
-          </div>
-          {showSeeAllList && (
             <div className="card goal-see-all-list" style={{ marginTop: 12 }}>
               <div className="goal-all-scroll">
                 {filteredGoals.map((goal) => (
-                  <label
-                    key={goal.id}
-                    className="goal-all-row"
-                  >
+                  <label key={goal.id} className="goal-all-row">
                     <input
                       type="checkbox"
                       checked={goalIds.includes(goal.id)}
@@ -493,48 +327,6 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 ))}
               </div>
             </div>
-          )}
-          <div className="goal-list" style={{ marginTop: 16 }}>
-            {categoryKeys.map((category) => (
-              <div key={category} className="card">
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                  <button
-                    className="button button-secondary"
-                    type="button"
-                  onClick={() =>
-                    setOpenCategory((prev) => (prev === category ? null : category))
-                  }
-                    style={{ flex: 1, textAlign: "left" }}
-                  >
-                    {category}
-                  </button>
-                  <span style={{ fontSize: 12, color: "#64748b", alignSelf: "center" }}>
-                    {groupedGoals[category]?.length || 0}
-                  </span>
-                </div>
-                {openCategory === category && (
-                  <div className="grid grid-2" style={{ marginTop: 12 }}>
-                    {(groupedGoals[category] || []).map((goal) => (
-                      <label
-                        key={goal.id}
-                        className="goal-item"
-                        style={{ cursor: "pointer" }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={goalIds.includes(goal.id)}
-                          onChange={() => toggleGoal(goal.id)}
-                          disabled={!goalIds.includes(goal.id) && goalIds.length >= 10}
-                          style={{ marginRight: 8 }}
-                        />
-                        <strong>{goal.name}</strong>
-                        {goal.description && <p>{goal.description}</p>}
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
           <div className="card" style={{ marginTop: 16 }}>
             <h3>Sessions per night</h3>
