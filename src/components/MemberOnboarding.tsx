@@ -149,11 +149,10 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     "Push A Button And Listen While You Sleep!",
     "Listen to Tailored Recordings out of Sequence as Needed",
     "Unlimited Access to All Recordings in the Success Center Library!",
-    "You May Update Goals Anytime!",
     "Includes a 15-minute Private Goal Setting Consultation every 90 days with a Success Center hypnotherapist/coach ($444 value annual benefit). Call 800-GOAL-NOW to set your appointment today."
   ];
   const membershipNote =
-    "Recommend a private Life Guidance Discovery Session for full access to Member benefits.";
+    'To get the most value we recommend a private "Life Guidance Discovery Session" allowing you to really discover where you are where you want to go and how to get there. We then design a customized audio specifically designed by you for you!';
   const [goalIds, setGoalIds] = useState<string[]>([]);
   const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
   const [searchTerm, setSearchTerm] = useState("");
@@ -363,25 +362,20 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
       {step === 1 && (
         <>
           <div className="membership-package-section">
-            <div className="section-heading">Select Your Membership Package</div>
             <div className="plan-grid">
-            {visiblePlans.map((plan) => {
-              const displayName =
-                plan.id === "platinum" ? "Membership Package" : plan.name;
-              return (
+            {visiblePlans.map((plan) => (
               <button
                 key={plan.id}
                 type="button"
-                className={`plan-card ${selectedPlanId === plan.id ? "selected" : ""}`}
+                className={`plan-card plan-card-signup ${selectedPlanId === plan.id ? "selected" : ""}`}
                 onClick={() => setSelectedPlanId(plan.id)}
                 style={{ cursor: "pointer" }}
               >
                 <div className={`plan-strip ${mapStripClass(plan.id)}`}>
-                  {selectedPlanId === plan.id ? "Selected Subscription" : displayName}
+                  MEMBERSHIP PACKAGE
                 </div>
                 <div className="plan-body">
-                  <div className="plan-title">{displayName}</div>
-                  <div className="plan-trial">{plan.trialDays}-Day Free Trial</div>
+                  <div className="plan-trial plan-trial-emphasis">{plan.trialDays}-Day Free Trial</div>
                   <div style={{ marginTop: 8, fontSize: 12, color: "#4b5563" }}>
                     <div style={{ fontWeight: 600, color: "#0f172a", textAlign: "center" }}>
                       $39.95/mo. + tax and fees
@@ -397,13 +391,9 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                       {membershipNote}
                     </div>
                   </div>
-                  <div className="plan-cta">
-                    <span className="badge">Select Plan</span>
-                  </div>
                 </div>
               </button>
-              );
-            })}
+            ))}
             </div>
           </div>
           <div className="section-heading" style={{ marginTop: 24 }}>

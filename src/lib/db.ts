@@ -259,6 +259,25 @@ export const getAdminCount = async () => {
   return rows[0]?.count || 0;
 };
 
+export const getFirstAdminEmail = async (): Promise<string | null> => {
+  const { rows } = await sql<{ email: string }>`
+    SELECT email FROM admins
+    ORDER BY created_at ASC
+    LIMIT 1
+  `;
+  if (rows[0]) return rows[0].email;
+  return process.env.ADMIN_EMAIL || null;
+};
+
+export const listAdmins = async () => {
+  const { rows } = await sql<AdminAccount>`
+    SELECT id, email, password_hash as "passwordHash", status, created_at as "createdAt"
+    FROM admins
+    ORDER BY created_at ASC
+  `;
+  return rows;
+};
+
 export const getAdminByEmail = async (email: string) => {
   const { rows } = await sql<AdminAccount>`
     SELECT

@@ -1,15 +1,17 @@
  "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AdminContent from "@/components/AdminContent";
 import AdminSubscriptions from "@/components/AdminSubscriptions";
 import AdminPlaybackSettings from "@/components/AdminPlaybackSettings";
 import AdminModerators from "@/components/AdminModerators";
 import ModerationQueue from "@/components/ModerationQueue";
 import AdminUsers from "@/components/AdminUsers";
+import AdminAdmins from "@/components/AdminAdmins";
 import AffiliateAdmin from "@/components/AffiliateAdmin";
 
 export default function AdminContentPage() {
+  const [isFirstAdmin, setIsFirstAdmin] = useState<boolean | null>(null);
   const [openSections, setOpenSections] = useState({
     members: false,
     moderators: false,
@@ -17,8 +19,16 @@ export default function AdminContentPage() {
     playback: false,
     subscriptions: false,
     goals: false,
-    library: false
+    library: false,
+    admins: false
   });
+
+  useEffect(() => {
+    fetch("/api/admin/is-first-admin")
+      .then((res) => res.json())
+      .then((data) => setIsFirstAdmin(Boolean(data.isFirstAdmin)))
+      .catch(() => setIsFirstAdmin(false));
+  }, []);
 
   const toggleSection = (key: keyof typeof openSections, id: string) => {
     setOpenSections((prev) => {
@@ -90,6 +100,15 @@ export default function AdminContentPage() {
           >
             Audio Library Section
           </button>
+          {isFirstAdmin && (
+            <button
+              className="button button-secondary"
+              type="button"
+              onClick={() => toggleSection("admins", "admin-admins")}
+            >
+              Administrators Section
+            </button>
+          )}
         </div>
       </section>
       {openSections.members && (
@@ -116,6 +135,11 @@ export default function AdminContentPage() {
       {openSections.subscriptions && (
         <section id="admin-subscriptions" style={{ marginBottom: 20 }}>
           <AdminSubscriptions />
+        </section>
+      )}
+      {isFirstAdmin && openSections.admins && (
+        <section style={{ marginBottom: 20 }}>
+          <AdminAdmins />
         </section>
       )}
       <AdminContent
