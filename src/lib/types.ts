@@ -54,6 +54,9 @@ export type Interest = {
   id: string;
   name: string;
   description?: string;
+  audioIdA?: string | null;
+  audioIdB?: string | null;
+  audioIdC?: string | null;
   createdAt: string;
 };
 

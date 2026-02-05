@@ -48,6 +48,10 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<LibraryItem | null>(null);
   const [editInterestIds, setEditInterestIds] = useState<string[]>([]);
+  const [goalSearch, setGoalSearch] = useState("");
+  const [goalAudioA, setGoalAudioA] = useState<string>("");
+  const [goalAudioB, setGoalAudioB] = useState<string>("");
+  const [goalAudioC, setGoalAudioC] = useState<string>("");
 
   const load = async () => {
     const [interestRes, libraryRes] = await Promise.all([
@@ -92,6 +96,13 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
     return counts;
   }, [library]);
 
+  const filteredGoals = useMemo(() => {
+    const term = goalSearch.trim().toLowerCase();
+    const sorted = interests.slice().sort((a, b) => a.name.localeCompare(b.name));
+    if (!term) return sorted;
+    return sorted.filter((g) => g.name.toLowerCase().includes(term));
+  }, [interests, goalSearch]);
+
   const sortedLibrary = useMemo(() => {
     const copy = [...library];
     if (librarySort === "sku") {
@@ -130,14 +141,20 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
   const startGoalEdit = (interest: Interest) => {
     setEditingGoalId(interest.id);
     setGoalDraft({ ...interest });
+    setGoalAudioA(interest.audioIdA || "");
+    setGoalAudioB(interest.audioIdB || "");
+    setGoalAudioC(interest.audioIdC || "");
   };
 
   const cancelGoalEdit = () => {
     setEditingGoalId(null);
     setGoalDraft(null);
+    setGoalAudioA("");
+    setGoalAudioB("");
+    setGoalAudioC("");
   };
 
-  const saveGoalEdit = async () => {
+  const saveGoalEditWithAudio = async () => {
     if (!goalDraft) return;
     const response = await fetch("/api/interests", {
       method: "PATCH",
@@ -145,7 +162,10 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
       body: JSON.stringify({
         id: goalDraft.id,
         name: goalDraft.name,
-        description: goalDraft.description || ""
+        description: goalDraft.description || "",
+        audioIdA: goalAudioA || null,
+        audioIdB: goalAudioB || null,
+        audioIdC: goalAudioC || null
       })
     });
     if (response.ok) {
@@ -329,38 +349,86 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
       {status && <p>{status}</p>}
       {openGoals && (
         <section id="admin-goals" className="card">
-        <div className="grid" style={{ gap: 12, marginTop: 12 }}>
-          <div
-            className="grid"
-            style={{
-              marginTop: 0,
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))"
-            }}
-          >
-          {interests
-            .slice()
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map((interest) => (
-              <div key={interest.id} className="goal-item" style={{ display: "grid", gap: 6 }}>
+          <h3 style={{ marginTop: 0 }}>Goals</h3>
+          <input
+            placeholder="Search goals..."
+            value={goalSearch}
+            onChange={(e) => setGoalSearch(e.target.value)}
+            style={{ ...inputStyle, maxWidth: 320, marginBottom: 16 }}
+          />
+          <div className="admin-goals-list">
+            {filteredGoals.map((interest) => (
+              <div key={interest.id} className="admin-goal-row">
                 {editingGoalId === interest.id && goalDraft ? (
-                  <>
+                  <div className="admin-goal-edit">
                     <input
                       style={inputStyle}
                       value={goalDraft.name}
-                      onChange={(event) =>
-                        setGoalDraft({ ...goalDraft, name: event.target.value })
+                      onChange={(e) =>
+                        setGoalDraft({ ...goalDraft, name: e.target.value })
                       }
+                      placeholder="Goal name"
                     />
                     <input
                       style={inputStyle}
                       value={goalDraft.description || ""}
-                      onChange={(event) =>
-                        setGoalDraft({ ...goalDraft, description: event.target.value })
+                      onChange={(e) =>
+                        setGoalDraft({ ...goalDraft, description: e.target.value })
                       }
                       placeholder="Description"
                     />
+                    <div className="admin-goal-audio-slots">
+                      <label>Audio files (order A → B → C is used for playback)</label>
+                      <div className="grid grid-3" style={{ gap: 12 }}>
+                        <div>
+                          <label style={{ fontSize: 12, fontWeight: 600 }}>A</label>
+                          <select
+                            value={goalAudioA}
+                            onChange={(e) => setGoalAudioA(e.target.value)}
+                            style={inputStyle}
+                          >
+                            <option value="">— None —</option>
+                            {sortedLibrary.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.skuCode || "—"} {item.title}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 12, fontWeight: 600 }}>B</label>
+                          <select
+                            value={goalAudioB}
+                            onChange={(e) => setGoalAudioB(e.target.value)}
+                            style={inputStyle}
+                          >
+                            <option value="">— None —</option>
+                            {sortedLibrary.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.skuCode || "—"} {item.title}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 12, fontWeight: 600 }}>C</label>
+                          <select
+                            value={goalAudioC}
+                            onChange={(e) => setGoalAudioC(e.target.value)}
+                            style={inputStyle}
+                          >
+                            <option value="">— None —</option>
+                            {sortedLibrary.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.skuCode || "—"} {item.title}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
                     <div style={{ display: "flex", gap: 8 }}>
-                      <button className="button" onClick={saveGoalEdit} type="button">
+                      <button className="button" onClick={saveGoalEditWithAudio} type="button">
                         Save
                       </button>
                       <button
@@ -371,51 +439,51 @@ export default function AdminContent({ openGoals, openLibrary }: AdminContentPro
                         Cancel
                       </button>
                     </div>
-                  </>
+                  </div>
                 ) : (
                   <>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                      <strong>{interest.name}</strong>
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <button
-                          className="button button-secondary"
-                          style={{ padding: "4px 8px", fontSize: 12, lineHeight: 1 }}
-                          onClick={() => startGoalEdit(interest)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="button button-secondary"
-                          style={{ padding: "4px 8px", fontSize: 12, lineHeight: 1 }}
-                          onClick={() => deleteInterest(interest.id)}
-                        >
-                          Remove
-                        </button>
-                      </div>
+                    <span className="admin-goal-name">{interest.name}</span>
+                    <div className="admin-goal-meta">
+                      {[interest.audioIdA, interest.audioIdB, interest.audioIdC]
+                        .filter(Boolean)
+                        .map((id, i) => {
+                          const item = library.find((l) => l.id === id);
+                          return (
+                            <span key={id} className="admin-goal-slot-badge">
+                              {["A", "B", "C"][i]}
+                            </span>
+                          );
+                        })}
                     </div>
-                    {interest.description && (
-                      <p style={{ marginTop: 0, color: "#4b5563" }}>
-                        {interest.description}
-                      </p>
-                    )}
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button
+                        className="button button-secondary"
+                        style={{ padding: "4px 10px", fontSize: 12 }}
+                        onClick={() => startGoalEdit(interest)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="button button-secondary"
+                        style={{ padding: "4px 10px", fontSize: 12 }}
+                        onClick={() => deleteInterest(interest.id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </>
                 )}
               </div>
-          ))}
+            ))}
           </div>
-          <form onSubmit={addInterest} className="grid">
-            <input name="name" placeholder="Goal name" required style={inputStyle} />
-            <input
-              name="description"
-              placeholder="Short description"
-              style={inputStyle}
-            />
+          <form onSubmit={addInterest} className="grid" style={{ marginTop: 16, maxWidth: 400 }}>
+            <input name="name" placeholder="New goal name" required style={inputStyle} />
+            <input name="description" placeholder="Description" style={inputStyle} />
             <button className="button" type="submit">
               Add Goal
             </button>
           </form>
-        </div>
-      </section>
+        </section>
       )}
 
       {openLibrary && (

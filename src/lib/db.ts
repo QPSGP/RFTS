@@ -397,14 +397,59 @@ const ensureLibrarySeeded = async () => {
   );
 };
 
-export const listInterests = async () => {
+export const listInterests = async (): Promise<Interest[]> => {
   await ensureInterestsSeeded();
+  try {
+    const { rows } = await sql<Interest>`
+      SELECT id, name, description,
+        audio_id_a as "audioIdA",
+        audio_id_b as "audioIdB",
+        audio_id_c as "audioIdC",
+        created_at as "createdAt"
+      FROM interests
+      ORDER BY name ASC
+    `;
+    return rows;
+  } catch {
+    const { rows } = await sql<Interest>`
+      SELECT id, name, description, created_at as "createdAt"
+      FROM interests
+      ORDER BY name ASC
+    `;
+    return rows.map((r) => ({ ...r, audioIdA: null, audioIdB: null, audioIdC: null }));
+  }
+};
+
+export const updateInterest = async (
+  id: string,
+  name: string,
+  description?: string,
+  audioIds?: { a?: string | null; b?: string | null; c?: string | null }
+) => {
+  if (audioIds !== undefined) {
+    try {
+      const { rows } = await sql<Interest>`
+        UPDATE interests
+        SET name = ${name},
+            description = ${description || ""},
+            audio_id_a = ${audioIds.a ?? null},
+            audio_id_b = ${audioIds.b ?? null},
+            audio_id_c = ${audioIds.c ?? null}
+        WHERE id = ${id}
+        RETURNING id, name, description, created_at as "createdAt"
+      `;
+      return rows[0] || null;
+    } catch {
+      // Columns may not exist yet (migration not run)
+    }
+  }
   const { rows } = await sql<Interest>`
-    SELECT id, name, description, created_at as "createdAt"
-    FROM interests
-    ORDER BY created_at DESC
+    UPDATE interests
+    SET name = ${name}, description = ${description || ""}
+    WHERE id = ${id}
+    RETURNING id, name, description, created_at as "createdAt"
   `;
-  return rows;
+  return rows[0] || null;
 };
 
 export const createInterest = async (name: string, description?: string) => {
@@ -415,16 +460,6 @@ export const createInterest = async (name: string, description?: string) => {
     RETURNING id, name, description, created_at as "createdAt"
   `;
   return rows[0];
-};
-
-export const updateInterest = async (id: string, name: string, description?: string) => {
-  const { rows } = await sql<Interest>`
-    UPDATE interests
-    SET name = ${name}, description = ${description || ""}
-    WHERE id = ${id}
-    RETURNING id, name, description, created_at as "createdAt"
-  `;
-  return rows[0] || null;
 };
 
 export const deleteInterest = async (id: string) => {

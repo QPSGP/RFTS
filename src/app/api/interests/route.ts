@@ -16,7 +16,10 @@ const createSchema = z.object({
 const updateSchema = z.object({
   id: z.string(),
   name: z.string().min(2),
-  description: z.string().optional()
+  description: z.string().optional(),
+  audioIdA: z.string().uuid().nullable().optional(),
+  audioIdB: z.string().uuid().nullable().optional(),
+  audioIdC: z.string().uuid().nullable().optional()
 });
 
 const deleteSchema = z.object({
@@ -55,7 +58,14 @@ export async function PATCH(request: Request) {
   const record = await updateInterest(
     parsed.data.id,
     parsed.data.name,
-    parsed.data.description
+    parsed.data.description,
+    parsed.data.audioIdA !== undefined || parsed.data.audioIdB !== undefined || parsed.data.audioIdC !== undefined
+      ? {
+          a: parsed.data.audioIdA ?? null,
+          b: parsed.data.audioIdB ?? null,
+          c: parsed.data.audioIdC ?? null
+        }
+      : undefined
   );
   if (!record) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });

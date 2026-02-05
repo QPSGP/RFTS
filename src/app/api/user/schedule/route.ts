@@ -3,7 +3,7 @@ import { z } from "zod";
 import fs from "fs";
 import path from "path";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getPlaybackSettings, getUserProfile, listLibrary } from "@/lib/db";
+import { getPlaybackSettings, getUserProfile, listInterests, listLibrary } from "@/lib/db";
 import { buildSchedulePreview } from "@/lib/scheduler";
 
 const schema = z.object({
@@ -46,13 +46,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
   const nights = parsed.data.nights ?? 7;
-  const [library, settings] = await Promise.all([
+  const [library, settings, interestRecords] = await Promise.all([
     listLibrary(),
-    getPlaybackSettings()
+    getPlaybackSettings(),
+    listInterests()
   ]);
   const schedule = buildSchedulePreview({
     interests: profile.goalIds || [],
     library,
+    interestRecords,
     settings,
     tier: profile.subscriptionTier || "platinum",
     nights,

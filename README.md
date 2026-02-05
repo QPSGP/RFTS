@@ -46,3 +46,4 @@ Creator submissions are accepted via `POST /api/moderators` with header
 
 - Admin content (library, interests, affiliates, moderation, moderators, plans, playback settings) now uses Postgres tables.
 - Run `scripts/schema.sql` against your Vercel Postgres instance before first use.
+- For goal A/B/C audio slots, run `scripts/migrate-interests-audio-slots.sql` on existing databases.

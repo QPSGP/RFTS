@@ -1,4 +1,4 @@
-import type { LibraryItem, PlaybackSettings } from "@/lib/types";
+import type { Interest, LibraryItem, PlaybackSettings } from "@/lib/types";
 
 export type ScheduleNight = {
   night: number;
@@ -9,27 +9,60 @@ export type ScheduleNight = {
 type ScheduleInput = {
   interests: string[];
   library: LibraryItem[];
+  interestRecords?: Interest[];
   settings: PlaybackSettings;
   tier: "bronze" | "gold" | "platinum";
   nights: number;
   playsPerNight?: 1 | 2;
 };
 
-const buildGoalTrackMap = (library: LibraryItem[]) => {
+const libraryById = (library: LibraryItem[]) => {
+  const m = new Map<string, LibraryItem>();
+  library.forEach((item) => m.set(item.id, item));
+  return m;
+};
+
+const buildGoalTrackMap = (
+  library: LibraryItem[],
+  interestRecords?: Interest[]
+): Map<string, LibraryItem[]> => {
   const map = new Map<string, LibraryItem[]>();
+  const byId = libraryById(library);
+
+  if (interestRecords?.length) {
+    interestRecords.forEach((interest) => {
+      const ordered: LibraryItem[] = [];
+      [interest.audioIdA, interest.audioIdB, interest.audioIdC]
+        .filter(Boolean)
+        .forEach((id) => {
+          const item = id ? byId.get(id) : null;
+          if (item) ordered.push(item);
+        });
+      if (ordered.length > 0) {
+        map.set(interest.id, ordered);
+      }
+    });
+  }
+
   library.forEach((item) => {
     item.interestIds.forEach((interestId) => {
+      if (map.has(interestId)) return;
       if (!map.has(interestId)) {
         map.set(interestId, []);
       }
-      map.get(interestId)?.push(item);
+      map.get(interestId)!.push(item);
     });
   });
   map.forEach((items, key) => {
-    map.set(
-      key,
-      items.slice().sort((a, b) => a.title.localeCompare(b.title))
+    const hasOrderedSlots = interestRecords?.some(
+      (i) => i.id === key && (i.audioIdA || i.audioIdB || i.audioIdC)
     );
+    if (!hasOrderedSlots) {
+      map.set(
+        key,
+        items.slice().sort((a, b) => a.title.localeCompare(b.title))
+      );
+    }
   });
   return map;
 };
@@ -44,12 +77,13 @@ const pickByCode = (library: LibraryItem[], code: string) => {
 export const buildSchedulePreview = ({
   interests,
   library,
+  interestRecords,
   settings,
   tier,
   nights,
   playsPerNight = 2
 }: ScheduleInput): ScheduleNight[] => {
-  const goalTrackMap = buildGoalTrackMap(library);
+  const goalTrackMap = buildGoalTrackMap(library, interestRecords);
   const orderedGoals = interests.filter((id) => goalTrackMap.has(id));
 
   const cgmr = settings.cgmrTrackId

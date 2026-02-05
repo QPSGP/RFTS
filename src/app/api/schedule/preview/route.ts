@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
-import { getPlaybackSettings, listLibrary } from "@/lib/db";
+import { getPlaybackSettings, listInterests, listLibrary } from "@/lib/db";
 import { buildSchedulePreview } from "@/lib/scheduler";
 
 const schema = z.object({
@@ -19,11 +19,15 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const library = await listLibrary();
-  const settings = await getPlaybackSettings();
+  const [library, settings, interestRecords] = await Promise.all([
+    listLibrary(),
+    getPlaybackSettings(),
+    listInterests()
+  ]);
   const schedule = buildSchedulePreview({
     interests: parsed.data.interests,
     library,
+    interestRecords,
     settings,
     tier: parsed.data.tier,
     nights: parsed.data.nights

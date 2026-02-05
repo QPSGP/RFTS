@@ -152,7 +152,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     "Includes a 15-minute Private Goal Setting Consultation every 90 days with a Success Center hypnotherapist/coach ($444 value annual benefit). Call 800-GOAL-NOW to set your appointment today."
   ];
   const membershipNote =
-    'To get the most value we recommend a private "Life Guidance Discovery Session" allowing you to really discover where you are where you want to go and how to get there. We then design a customized audio specifically designed by you for you!';
+    'For best results for reprogramming your subconscious with our system is to have a private "Life Guidance Discovery Session" allowing you to really discover where you are, where you want to go, and how to get there! We then design a customized audio specifically designed by you, for you!  (Membership is reduced to $29.95.)';
   const [goalIds, setGoalIds] = useState<string[]>([]);
   const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
   const [searchTerm, setSearchTerm] = useState("");
@@ -387,7 +387,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                         </li>
                       ))}
                     </ul>
-                    <div style={{ marginTop: 8, fontStyle: "italic" }}>
+                    <div style={{ marginTop: 8, fontStyle: "italic", fontWeight: 700 }}>
                       {membershipNote}
                     </div>
                   </div>
