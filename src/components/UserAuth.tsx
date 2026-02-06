@@ -13,6 +13,7 @@ export default function UserAuth() {
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const submit = async (
     event: React.FormEvent<HTMLFormElement>,
@@ -86,14 +87,43 @@ export default function UserAuth() {
       <div className="card">
         <h2>Member Login</h2>
         <form onSubmit={(event) => submit(event, "login")} className="grid">
-          <input name="email" placeholder="Email" type="email" required style={inputStyle} />
-          <input
-            name="password"
-            placeholder="Password"
-            type="password"
-            required
-            style={inputStyle}
-          />
+          <div>
+            <input name="email" placeholder="Email" type="email" required style={inputStyle} />
+            <p style={{ marginTop: 6, marginBottom: 0 }}>
+              <a href="/member/forgot-email" style={{ fontSize: 13, color: "#0f766e" }}>
+                Forgot email?
+              </a>
+            </p>
+          </div>
+          <div style={{ position: "relative" }}>
+            <input
+              name="password"
+              placeholder="Password"
+              type={showPassword ? "text" : "password"}
+              required
+              style={{ ...inputStyle, paddingRight: 56 }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              style={{
+                position: "absolute",
+                right: 12,
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                padding: 4,
+                fontSize: 13,
+                color: "#64748b",
+                cursor: "pointer",
+                textDecoration: "underline"
+              }}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
           <button className="button" disabled={loading} type="submit">
             {loading ? "Signing in..." : "Sign In"}
           </button>

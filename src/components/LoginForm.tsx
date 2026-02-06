@@ -5,6 +5,7 @@ import { useState } from "react";
 export default function LoginForm() {
   const [status, setStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -58,13 +59,41 @@ export default function LoginForm() {
           required
           style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
         />
-        <input
-          name="password"
-          placeholder="Password"
-          type="password"
-          required
-          style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-        />
+        <div style={{ position: "relative" }}>
+          <input
+            name="password"
+            placeholder="Password"
+            type={showPassword ? "text" : "password"}
+            required
+            style={{
+              padding: 12,
+              paddingRight: 56,
+              borderRadius: 8,
+              border: "1px solid #d1d5db",
+              width: "100%"
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            style={{
+              position: "absolute",
+              right: 12,
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "none",
+              border: "none",
+              padding: 4,
+              fontSize: 13,
+              color: "#64748b",
+              cursor: "pointer",
+              textDecoration: "underline"
+            }}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
         <button className="button" disabled={isSubmitting} type="submit">
           {isSubmitting ? "Signing in..." : "Sign In"}
         </button>
