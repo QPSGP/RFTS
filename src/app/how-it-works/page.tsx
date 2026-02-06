@@ -106,22 +106,6 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      <section className="section">
-        <div className="card glow">
-          <h2>Ready to start?</h2>
-          <p>
-            Choose your plan and build your first nightly session in minutes.
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-            <a className="button" href="/signup/step-1-subscription-selection">
-              Start Your Journey
-            </a>
-            <a className="button button-secondary" href="#page-top">
-              Go To Top
-            </a>
-          </div>
-        </div>
-      </section>
       <SiteFooter />
     </main>
   );

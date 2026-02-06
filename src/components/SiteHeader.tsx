@@ -16,7 +16,7 @@ export default async function SiteHeader() {
         <div className="site-header-row">
           <div className="header-left">
             <details className="menu-toggle mobile-only">
-              <summary className="button button-secondary">Menu</summary>
+              <summary className="button button-secondary header-cta">Menu</summary>
               <div className="menu-panel">
                 <a href="/">Home</a>
                 <a href="/how-it-works">How It Works</a>
@@ -33,11 +33,11 @@ export default async function SiteHeader() {
             </div>
           </div>
           <div className="header-actions">
-            <a className="button" href="#page-top">
-              Go To Top
+            <a className="button header-cta" href="/signup/step-1-subscription-selection">
+              Start Your Journey
             </a>
             <details className="login-toggle">
-              <summary className="button">Login</summary>
+              <summary className="button header-cta">Login</summary>
               <div className="menu-panel">
                 <a href="/member/login">Members</a>
                 <a href="/moderator/console">Co-Creators</a>

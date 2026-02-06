@@ -704,9 +704,18 @@ button.section-title {
   .desktop-only {
     display: none;
   }
+
+  .site-header .header-cta {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
 }
 
 @media (max-width: 600px) {
+  .site-header .header-actions .button {
+    width: auto;
+  }
+
   .nav {
     gap: 10px;
   }

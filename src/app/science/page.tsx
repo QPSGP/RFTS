@@ -84,22 +84,6 @@ export default function SciencePage() {
         </div>
       </section>
 
-      <section className="section">
-        <div className="card glow">
-          <h2>Put the science to work</h2>
-          <p>
-            Start your journey building your personalized nightly sessions.
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-            <a className="button" href="/signup/step-1-subscription-selection">
-              Start Your Journey
-            </a>
-            <a className="button button-secondary" href="#page-top">
-              Go To Top
-            </a>
-          </div>
-        </div>
-      </section>
       <SiteFooter />
     </main>
   );
