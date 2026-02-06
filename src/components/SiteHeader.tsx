@@ -11,7 +11,7 @@ export default async function SiteHeader() {
           ? { label: "Members Console", href: "/play-options" }
           : null;
   return (
-    <header className="site-header">
+    <header id="page-top" className="site-header">
       <div className="site-header-inner">
         <div className="site-header-row">
           <div className="header-left">

@@ -90,9 +90,14 @@ export default function SciencePage() {
           <p>
             Start your journey building your personalized nightly sessions.
           </p>
-          <a className="button" href="/signup/step-1-subscription-selection">
-            Start Your Journey
-          </a>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+            <a className="button" href="/signup/step-1-subscription-selection">
+              Start Your Journey
+            </a>
+            <a className="button button-secondary" href="#page-top">
+              Go To Top
+            </a>
+          </div>
         </div>
       </section>
       <SiteFooter />
