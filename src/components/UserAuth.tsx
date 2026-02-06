@@ -98,32 +98,11 @@ export default function UserAuth() {
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
+        <p style={{ marginTop: 12, color: "#64748b", fontSize: 13 }}>
+          New to RFTS? <a href="/signup/step-1-subscription-selection">Sign up here</a>.
+        </p>
       </div>
-      <div className="card">
-        <h2>Create Account</h2>
-        <form onSubmit={(event) => submit(event, "signup")} className="grid">
-          <input name="email" placeholder="Email" type="email" required style={inputStyle} />
-          <input
-            name="password"
-            placeholder="Password (6+ chars)"
-            type="password"
-            required
-            style={inputStyle}
-          />
-          <button className="button" disabled={loading} type="submit">
-            {loading ? "Creating..." : "Create Account"}
-          </button>
-        </form>
-      </div>
-      {!loggedIn && (
-        <div className="card">
-          <h2>Need to log out?</h2>
-          <button className="button button-secondary" onClick={logout}>
-            Log Out
-          </button>
-          {status && <p style={{ marginTop: 12 }}>{status}</p>}
-        </div>
-      )}
+      {!loggedIn && status && <p style={{ marginTop: 12 }}>{status}</p>}
     </div>
   );
 }

@@ -10,7 +10,7 @@ export default async function LibraryPage() {
 
   return (
     <main>
-      <section style={{ marginBottom: 24 }}>
+      <section id="library-top" style={{ marginBottom: 24 }}>
         <h1>Audio Library</h1>
         <p>Browse and stream the latest guided audio sessions.</p>
       </section>

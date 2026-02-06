@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getUserProfile } from "@/lib/db";
+import { getMemberProfileByUserId, getUserProfile } from "@/lib/db";
 
 export async function GET() {
   const email = getUserSessionEmail();
@@ -11,5 +11,9 @@ export async function GET() {
   if (!profile) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
-  return NextResponse.json({ profile });
+  const memberProfile = await getMemberProfileByUserId(profile.id);
+  const adultConsent = memberProfile?.adultConsent ?? false;
+  return NextResponse.json({
+    profile: { ...profile, adultConsent }
+  });
 }

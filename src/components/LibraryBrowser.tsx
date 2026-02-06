@@ -4,8 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Interest, LibraryItem } from "@/lib/types";
 
-const ADULT_KEY = "rfts_adult_consent";
-
 type LibraryBrowserProps = {
   interests: Interest[];
   library: LibraryItem[];
@@ -19,7 +17,6 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
   const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
-    setAdultConsent(localStorage.getItem(ADULT_KEY) === "true");
     fetch("/api/user/me")
       .then((res) => {
         if (!res.ok) {
@@ -29,6 +26,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
       })
       .then((data) => {
         setUserEmail(data.profile?.email || "");
+        setAdultConsent(!!data.profile?.adultConsent);
         const subscriptionStatus = data.profile?.subscriptionStatus;
         setStatus(subscriptionStatus === "active" ? "active" : "inactive");
       })
@@ -61,12 +59,6 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
 
     return { byInterest, unassigned };
   }, [interests, library]);
-
-  const toggleAdultConsent = () => {
-    const next = !adultConsent;
-    localStorage.setItem(ADULT_KEY, String(next));
-    setAdultConsent(next);
-  };
 
   const renderCard = (item: LibraryItem) => {
     const isLocked = status !== "active";
@@ -139,11 +131,82 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
       )}
       <div className="card">
         <h2>Adult Content Controls</h2>
-        <p>Enable adult content access if applicable.</p>
-        <button className="button button-secondary" onClick={toggleAdultConsent}>
+        <p>
+          Adult consent is set during registration. Only an administrator can change it.
+        </p>
+        <p style={{ fontWeight: 600 }}>
           Adult Consent: {adultConsent ? "Granted" : "Not Granted"}
-        </button>
+        </p>
       </div>
+
+      {library.length > 0 && (
+        <section>
+          <h3>All Audios</h3>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 12,
+              maxHeight: 320,
+              overflowY: "auto",
+              paddingRight: 8
+            }}
+            className="scroll-list"
+          >
+            {library
+              .filter((item) => !(item.categories || []).some((c) => c.toLowerCase() === "cgmr"))
+              .map((item) => {
+                const isLocked = status !== "active";
+                const isAdultLocked = item.isAdult && !adultConsent;
+                const isUserLocked =
+                  item.allowedUserEmails && item.allowedUserEmails.length > 0
+                    ? !item.allowedUserEmails.some(
+                        (e) => e.toLowerCase() === userEmail.toLowerCase()
+                      )
+                    : false;
+                const canPlay = !isLocked && !isAdultLocked && !isUserLocked && item.audioUrl;
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/library/${item.id}`}
+                    style={{
+                      display: "block",
+                      minWidth: 160,
+                      padding: 12,
+                      borderRadius: 8,
+                      background: "var(--card-bg, #f9fafb)",
+                      border: "1px solid var(--border, #e5e7eb)",
+                      textDecoration: "none",
+                      color: "inherit",
+                      opacity: canPlay ? 1 : 0.85
+                    }}
+                  >
+                    {item.coverUrl ? (
+                      <img
+                        src={item.coverUrl}
+                        alt=""
+                        style={{ width: "100%", height: 80, objectFit: "cover", borderRadius: 6 }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: "100%",
+                          height: 80,
+                          background: "#e5e7eb",
+                          borderRadius: 6
+                        }}
+                      />
+                    )}
+                    <strong style={{ display: "block", marginTop: 8, fontSize: 14 }}>
+                      {item.title}
+                    </strong>
+                    {item.isAdult && <span className="badge">Adult</span>}
+                  </Link>
+                );
+              })}
+          </div>
+        </section>
+      )}
 
       {interests.map((interest) => {
         const items = grouped.byInterest.get(interest.id) || [];
@@ -166,6 +229,15 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
           </div>
         </section>
       )}
+      <div style={{ marginTop: 24 }}>
+        <button
+          type="button"
+          className="button button-secondary"
+          onClick={() => document.getElementById("library-top")?.scrollIntoView({ behavior: "smooth" })}
+        >
+          ↑ Jump to top
+        </button>
+      </div>
     </div>
   );
 }

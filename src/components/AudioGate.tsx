@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import AudioPlayer from "@/components/AudioPlayer";
 import type { LibraryItem } from "@/lib/types";
 
-const ADULT_KEY = "rfts_adult_consent";
-
 type AudioGateProps = {
   item: LibraryItem;
 };
@@ -18,7 +16,6 @@ export default function AudioGate({ item }: AudioGateProps) {
   const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
-    setHasAdultConsent(localStorage.getItem(ADULT_KEY) === "true");
     fetch("/api/user/me")
       .then((res) => {
         if (!res.ok) {
@@ -28,16 +25,12 @@ export default function AudioGate({ item }: AudioGateProps) {
       })
       .then((data) => {
         setUserEmail(data.profile?.email || "");
+        setHasAdultConsent(!!data.profile?.adultConsent);
         const subscriptionStatus = data.profile?.subscriptionStatus;
         setStatus(subscriptionStatus === "active" ? "active" : "inactive");
       })
       .catch(() => setStatus("loggedOut"));
   }, []);
-
-  const grantAdultConsent = () => {
-    localStorage.setItem(ADULT_KEY, "true");
-    setHasAdultConsent(true);
-  };
 
   const isUserAllowed =
     !item.allowedUserEmails || item.allowedUserEmails.length === 0
@@ -97,12 +90,10 @@ export default function AudioGate({ item }: AudioGateProps) {
       <div className="card">
         <h2>Adult Content</h2>
         <p>
-          This recording is marked as adult content. Please confirm you are 18+
-          to continue.
+          This recording is marked as adult content. Adult consent is set during
+          registration. Only an administrator can change it. Contact your admin
+          if you believe this is an error.
         </p>
-        <button className="button" onClick={grantAdultConsent}>
-          I am 18+ and consent
-        </button>
       </div>
     );
   }
