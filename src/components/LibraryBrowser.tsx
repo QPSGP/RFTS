@@ -144,66 +144,37 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
           <h3>All Audios</h3>
           <div
             style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 12,
               maxHeight: 320,
               overflowY: "auto",
-              paddingRight: 8
+              paddingRight: 8,
+              border: "1px solid var(--border, #e5e7eb)",
+              borderRadius: 8
             }}
             className="scroll-list"
           >
             {library
               .filter((item) => !(item.categories || []).some((c) => c.toLowerCase() === "cgmr"))
-              .map((item) => {
-                const isLocked = status !== "active";
-                const isAdultLocked = item.isAdult && !adultConsent;
-                const isUserLocked =
-                  item.allowedUserEmails && item.allowedUserEmails.length > 0
-                    ? !item.allowedUserEmails.some(
-                        (e) => e.toLowerCase() === userEmail.toLowerCase()
-                      )
-                    : false;
-                const canPlay = !isLocked && !isAdultLocked && !isUserLocked && item.audioUrl;
-                return (
-                  <Link
-                    key={item.id}
-                    href={`/library/${item.id}`}
-                    style={{
-                      display: "block",
-                      minWidth: 160,
-                      padding: 12,
-                      borderRadius: 8,
-                      background: "var(--card-bg, #f9fafb)",
-                      border: "1px solid var(--border, #e5e7eb)",
-                      textDecoration: "none",
-                      color: "inherit",
-                      opacity: canPlay ? 1 : 0.85
-                    }}
-                  >
-                    {item.coverUrl ? (
-                      <img
-                        src={item.coverUrl}
-                        alt=""
-                        style={{ width: "100%", height: 80, objectFit: "cover", borderRadius: 6 }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          width: "100%",
-                          height: 80,
-                          background: "#e5e7eb",
-                          borderRadius: 6
-                        }}
-                      />
-                    )}
-                    <strong style={{ display: "block", marginTop: 8, fontSize: 14 }}>
-                      {item.title}
-                    </strong>
-                    {item.isAdult && <span className="badge">Adult</span>}
-                  </Link>
-                );
-              })}
+              .map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/library/${item.id}`}
+                  style={{
+                    display: "block",
+                    padding: "8px 12px",
+                    textDecoration: "none",
+                    color: "inherit",
+                    borderBottom: "1px solid var(--border, #e5e7eb)"
+                  }}
+                >
+                  {item.title}
+                  {item.isAdult && (
+                    <>
+                      {" "}
+                      <span className="badge">Adult</span>
+                    </>
+                  )}
+                </Link>
+              ))}
           </div>
         </section>
       )}
