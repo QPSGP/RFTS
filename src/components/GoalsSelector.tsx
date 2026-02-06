@@ -7,115 +7,6 @@ type GoalsSelectorProps = {
   interests: Interest[];
 };
 
-const categoryMatchers = [
-  {
-    name: "Health",
-    keywords: [
-      "allergy",
-      "asthma",
-      "athletic",
-      "eye",
-      "sleep",
-      "pain",
-      "weight",
-      "fitness",
-      "health",
-      "body",
-      "energy",
-      "healing",
-      "immune",
-      "nutrition",
-      "smoking",
-      "addiction"
-    ]
-  },
-  {
-    name: "Wealth",
-    keywords: [
-      "money",
-      "wealth",
-      "abundance",
-      "success",
-      "sales",
-      "business",
-      "career",
-      "income",
-      "practice",
-      "marketing",
-      "public speaking",
-      "goal manifestation"
-    ]
-  },
-  {
-    name: "Relationship",
-    keywords: [
-      "relationship",
-      "marriage",
-      "love",
-      "partner",
-      "dating",
-      "family",
-      "parent",
-      "jealousy",
-      "monogamous",
-      "polyamory"
-    ]
-  },
-  {
-    name: "Memory",
-    keywords: [
-      "memory",
-      "focus",
-      "concentration",
-      "speed reading"
-    ]
-  },
-  {
-    name: "Inspiration",
-    keywords: [
-      "creativity",
-      "confidence",
-      "motivation",
-      "life mission",
-      "gratitude"
-    ]
-  },
-  {
-    name: "Spirituality",
-    keywords: ["spiritual", "meditation", "mindfulness", "intuition", "psychic", "past life"]
-  },
-  {
-    name: "Balance Life",
-    keywords: [
-      "balance",
-      "calm",
-      "stress",
-      "anxiety",
-      "depression",
-      "trauma",
-      "anger",
-      "phobia",
-      "drinking",
-      "time",
-      "procrastination",
-      "habit",
-      "productivity",
-      "organization",
-      "discipline"
-    ]
-  }
-];
-
-const categoryOrder = categoryMatchers.map((category) => category.name).concat("Other");
-
-const getCategoryForGoal = (name: string) => {
-  const value = name.toLowerCase();
-  const match = categoryMatchers.find((category) =>
-    category.keywords.some((keyword) => value.includes(keyword))
-  );
-  return match?.name || "Other";
-};
-
 export default function GoalsSelector({ interests }: GoalsSelectorProps) {
   const [goalIds, setGoalIds] = useState<string[]>([]);
   const [status, setStatus] = useState<"loading" | "loggedOut" | "ready">("loading");
@@ -125,7 +16,6 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
   const [nextAllowedAt, setNextAllowedAt] = useState<string | null>(null);
   const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
   const [searchTerm, setSearchTerm] = useState("");
-  const [openCategory, setOpenCategory] = useState<string | null>(null);
   const goalNameById = useMemo(() => {
     const map = new Map<string, Interest>();
     interests.forEach((interest) => {
@@ -137,32 +27,11 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
     () => interests.slice().sort((a, b) => a.name.localeCompare(b.name)),
     [interests]
   );
-  const filteredInterests = useMemo(() => {
+  const filteredGoals = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return sortedInterests;
     return sortedInterests.filter((interest) => interest.name.toLowerCase().includes(term));
   }, [searchTerm, sortedInterests]);
-  const groupedGoals = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    if (term) {
-      return { "Search Results": filteredInterests };
-    }
-    const groups: Record<string, Interest[]> = {};
-    filteredInterests.forEach((interest) => {
-      const category = getCategoryForGoal(interest.name);
-      if (!groups[category]) {
-        groups[category] = [];
-      }
-      groups[category].push(interest);
-    });
-    return groups;
-  }, [filteredInterests, searchTerm]);
-  const categoryKeys = useMemo(() => {
-    if (searchTerm.trim()) {
-      return ["Search Results"];
-    }
-    return categoryOrder.filter((category) => groupedGoals[category]?.length);
-  }, [groupedGoals, searchTerm]);
   const orderedGoals = useMemo(
     () =>
       goalIds.map((id) => ({
@@ -190,12 +59,6 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
       })
       .catch(() => setStatus("loggedOut"));
   }, []);
-
-  useEffect(() => {
-    if (openCategory && !categoryKeys.includes(openCategory)) {
-      setOpenCategory(null);
-    }
-  }, [categoryKeys, openCategory]);
 
   const toggleGoal = (id: string) => {
     setGoalIds((prev) => {
@@ -317,58 +180,26 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
           }}
           placeholder="Search goals"
           value={searchTerm}
-          onChange={(event) => {
-            setSearchTerm(event.target.value);
-            if (event.target.value.trim()) {
-              setOpenCategory("Search Results");
-            }
-          }}
+          onChange={(event) => setSearchTerm(event.target.value)}
         />
-      </div>
-      <div className="goal-list" style={{ marginTop: 16 }}>
-        {categoryKeys.map((category) => (
-          <div key={category} className="card">
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-              <button
-                className="button button-secondary"
-                type="button"
-                onClick={() =>
-                  setOpenCategory((prev) => (prev === category ? null : category))
-                }
-                style={{ flex: 1, textAlign: "left" }}
-              >
-                {category}
-              </button>
-              <span style={{ fontSize: 12, color: "#64748b", alignSelf: "center" }}>
-                {groupedGoals[category]?.length || 0}
-              </span>
-            </div>
-            {openCategory === category && (
-              <div className="grid grid-2" style={{ marginTop: 12 }}>
-                {(groupedGoals[category] || []).map((interest) => (
-                  <label
-                    key={interest.id}
-                    className="goal-item"
-                    style={{ cursor: "pointer" }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={goalIds.includes(interest.id)}
-                      disabled={
-                        !canEdit ||
-                        (!goalIds.includes(interest.id) && goalIds.length >= limit)
-                      }
-                      onChange={() => toggleGoal(interest.id)}
-                      style={{ marginRight: 8 }}
-                    />
-                    <strong>{interest.name}</strong>
-                    {interest.description && <p>{interest.description}</p>}
-                  </label>
-                ))}
-              </div>
-            )}
+        <div className="card goal-see-all-list" style={{ marginTop: 12 }}>
+          <div className="goal-all-scroll">
+            {filteredGoals.map((interest) => (
+              <label key={interest.id} className="goal-all-row">
+                <input
+                  type="checkbox"
+                  checked={goalIds.includes(interest.id)}
+                  disabled={
+                    !canEdit ||
+                    (!goalIds.includes(interest.id) && goalIds.length >= limit)
+                  }
+                  onChange={() => toggleGoal(interest.id)}
+                />
+                <span className="goal-all-name">{interest.name}</span>
+              </label>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
       <div className="card" style={{ marginTop: 16 }}>
         <h3>Sessions per night</h3>
