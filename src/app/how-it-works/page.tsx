@@ -1,3 +1,5 @@
+import SiteFooter from "@/components/SiteFooter";
+
 export default function HowItWorksPage() {
   return (
     <main>
@@ -111,10 +113,11 @@ export default function HowItWorksPage() {
             Choose your plan and build your first nightly session in minutes.
           </p>
           <a className="button" href="/signup/step-1-subscription-selection">
-            Choose a Plan
+            Start Your Journey
           </a>
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }

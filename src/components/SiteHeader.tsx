@@ -33,8 +33,8 @@ export default async function SiteHeader() {
             </div>
           </div>
           <div className="header-actions">
-            <a className="button button-secondary" href="/signup/step-1-subscription-selection">
-              Sign Up
+            <a className="button" href="/signup/step-1-subscription-selection">
+              Start Your Journey
             </a>
             <details className="login-toggle">
               <summary className="button">Login</summary>

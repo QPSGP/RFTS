@@ -1,3 +1,5 @@
+import SiteFooter from "@/components/SiteFooter";
+
 export default function SciencePage() {
   return (
     <main>
@@ -86,13 +88,14 @@ export default function SciencePage() {
         <div className="card glow">
           <h2>Put the science to work</h2>
           <p>
-            Choose a plan and start building your personalized nightly sessions.
+            Start your journey building your personalized nightly sessions.
           </p>
           <a className="button" href="/signup/step-1-subscription-selection">
-            Choose a Plan
+            Start Your Journey
           </a>
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }

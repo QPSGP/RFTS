@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import SiteFooter from "@/components/SiteFooter";
 
 type SectionKey = "who" | "what" | "where" | "why" | "help";
 
@@ -219,6 +220,7 @@ export default function FaqsPage() {
           </div>
         )}
       </section>
+      <SiteFooter />
     </main>
   );
 }

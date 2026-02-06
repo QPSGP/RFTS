@@ -1,6 +1,11 @@
 export default function SiteFooter() {
   return (
     <footer className="section" style={{ marginTop: 40 }}>
+      <div className="card glow" style={{ marginBottom: 24, textAlign: "center", padding: 24 }}>
+        <a className="button" href="/signup/step-1-subscription-selection">
+          Start Your Journey
+        </a>
+      </div>
       <div className="card">
         <div className="grid grid-2" style={{ gap: 16 }}>
           <div>

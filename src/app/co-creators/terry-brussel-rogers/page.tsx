@@ -1,4 +1,5 @@
 import { getModeratorApplicationBySlug } from "@/lib/db";
+import SiteFooter from "@/components/SiteFooter";
 
 export default async function TerryBrusselRogersPage() {
   const profile = await getModeratorApplicationBySlug("terry-brussel-rogers");
@@ -123,6 +124,7 @@ export default async function TerryBrusselRogersPage() {
           <p>Memory and Mental Excellence Through Self Hypnosis</p>
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }
