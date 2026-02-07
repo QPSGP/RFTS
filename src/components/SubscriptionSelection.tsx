@@ -21,7 +21,7 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
     "Tailored Recordings Are Scheduled Based on Your Priorities.",
     "Push A Button And Listen While You Sleep!",
     "Listen to Tailored Recordings out of Sequence as Needed",
-    "Unlimited Access to All Recordings in the Success Center Library!",
+    "Access to all public recordings in the Success Center Library!",
     "You May Update Goals Anytime!",
     "Includes a 15-minute Private Goal Setting Consultation every 90 days with a Success Center hypnotherapist/coach ($444 value annual benefit). Call 800-GOAL-NOW to set your appointment today."
   ];

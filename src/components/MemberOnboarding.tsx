@@ -39,7 +39,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     "Tailored Recordings Are Scheduled Based on Your Priorities.",
     "Push A Button And Listen While You Sleep!",
     "Listen to Tailored Recordings out of Sequence as Needed",
-    "Unlimited Access to All Recordings in the Success Center Library!",
+    "Access to all public recordings in the Success Center Library!",
     "Includes a 15-minute Private Goal Setting Consultation every 90 days with a Success Center hypnotherapist/coach ($444 value annual benefit). Call 800-GOAL-NOW to set your appointment today."
   ];
   const membershipNote =
@@ -234,7 +234,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 style={{ cursor: "pointer" }}
               >
                 <div className={`plan-strip ${mapStripClass(plan.id)}`}>
-                  MEMBERSHIP PACKAGE
+                  MEMBERSHIP BENEFITS
                 </div>
                 <div className="plan-body">
                   <div className="plan-trial plan-trial-emphasis">{plan.trialDays}-Day Free Trial</div>
