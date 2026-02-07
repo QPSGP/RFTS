@@ -149,6 +149,24 @@ export default function AdminUsers() {
     );
   };
 
+  const deleteUser = async (email: string) => {
+    if (!window.confirm(`Delete member ${email}? This cannot be undone.`)) {
+      return;
+    }
+    const response = await fetch("/api/admin/users", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+    if (response.ok) {
+      setStatus("Member deleted.");
+      await load();
+      return;
+    }
+    const data = await response.json().catch(() => ({}));
+    setStatus(data?.error || `Delete failed.`);
+  };
+
   const updateUser = async (email: string) => {
     const update = updates[email];
     if (!update) {
@@ -1057,6 +1075,14 @@ export default function AdminUsers() {
                   )}
                   <button className="button" onClick={() => updateUser(user.email)}>
                     Save
+                  </button>
+                  <button
+                    className="button button-secondary"
+                    type="button"
+                    onClick={() => deleteUser(user.email)}
+                    style={{ color: "#b91c1c" }}
+                  >
+                    Delete Member
                   </button>
                 </div>
               ))}

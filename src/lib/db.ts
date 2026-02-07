@@ -88,6 +88,13 @@ export const createUser = async (email: string, passwordHash: string) => {
   return rows[0];
 };
 
+export const deleteUserByEmail = async (email: string) => {
+  await sql`
+    DELETE FROM users
+    WHERE LOWER(email) = LOWER(${email})
+  `;
+};
+
 export const ensureSubscription = async (
   userId: string,
   tier: DbSubscription["tier"],

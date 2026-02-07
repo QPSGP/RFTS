@@ -5,6 +5,7 @@ import { sql } from "@vercel/postgres";
 import { isAdminSession } from "@/lib/auth";
 import {
   createUser,
+  deleteUserByEmail,
   ensureSubscription,
   getUserByEmail,
   getUserProfile,
@@ -100,5 +101,26 @@ export async function PATCH(request: Request) {
       WHERE id = ${user.id}
     `;
   }
+  return NextResponse.json({ ok: true });
+}
+
+const deleteSchema = z.object({
+  email: z.string().email()
+});
+
+export async function DELETE(request: Request) {
+  if (!(await isAdminSession())) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+  const body = await request.json();
+  const parsed = deleteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+  }
+  const user = await getUserByEmail(parsed.data.email);
+  if (!user) {
+    return NextResponse.json({ error: "Member not found." }, { status: 404 });
+  }
+  await deleteUserByEmail(parsed.data.email);
   return NextResponse.json({ ok: true });
 }
