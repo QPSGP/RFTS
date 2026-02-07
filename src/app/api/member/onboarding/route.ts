@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { createUserSessionToken, setUserSession } from "@/lib/user-auth";
-import { getStripe } from "@/lib/stripe";
+import { getStripe, getStripeMode } from "@/lib/stripe";
 import {
   createUser,
   ensureSubscription,
@@ -15,6 +15,7 @@ import {
 
 const schema = z.object({
   planId: z.string(),
+  skipPayment: z.boolean().optional().default(false),
   email: z.string().email(),
   password: z.string().min(6),
   goalIds: z.array(z.string()).min(1).max(10),
@@ -54,13 +55,29 @@ export async function POST(request: Request) {
 
   const plans = await listSubscriptionPlans();
   const plan = plans.find((item) => item.id === parsed.data.planId);
-  if (!plan || !plan.priceId) {
+  if (!plan) {
     return NextResponse.json({ error: "Subscription plan is unavailable." }, { status: 400 });
+  }
+  let stripeIsDemo = false;
+  try {
+    stripeIsDemo = getStripeMode() === "demo";
+  } catch {
+    stripeIsDemo = false;
+  }
+  const isDemoSkip =
+    parsed.data.skipPayment &&
+    (stripeIsDemo || process.env.DEMO_SKIP_STRIPE === "true");
+  if (!isDemoSkip && !plan.priceId) {
+    return NextResponse.json(
+      { error: "Stripe Price ID not configured. Add it in Admin → Subscriptions, or use Skip Payment in demo mode." },
+      { status: 400 }
+    );
   }
 
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
   const user = await createUser(parsed.data.email, passwordHash);
-  await ensureSubscription(user.id, plan.id as "bronze" | "gold" | "platinum", "inactive");
+  const subscriptionStatus = isDemoSkip ? "active" : "inactive";
+  await ensureSubscription(user.id, plan.id as "bronze" | "gold" | "platinum", subscriptionStatus);
   await setUserGoals(user.id, parsed.data.goalIds);
   await setUserPlaysPerNight(user.id, parsed.data.playsPerNight);
   await upsertMemberProfile({
@@ -84,6 +101,13 @@ export async function POST(request: Request) {
     referralSource: parsed.data.profile.referralSource
   });
 
+  const token = createUserSessionToken(parsed.data.email);
+  setUserSession(token);
+
+  if (isDemoSkip) {
+    return NextResponse.json({ url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/play-options` });
+  }
+
   const stripe = getStripe();
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const session = await stripe.checkout.sessions.create({
@@ -98,7 +122,5 @@ export async function POST(request: Request) {
     allow_promotion_codes: true
   });
 
-  const token = createUserSessionToken(parsed.data.email);
-  setUserSession(token);
   return NextResponse.json({ url: session.url });
 }

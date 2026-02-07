@@ -158,7 +158,9 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     setStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const submit = async () => {
+  const isDemoMode = typeof window !== "undefined" && process.env.NEXT_PUBLIC_STRIPE_MODE === "demo";
+
+  const submit = async (skipPayment = false) => {
     if (!selectedPlanId || !selectedPlan) {
       setStatus("Select a subscription package to continue.");
       return;
@@ -170,6 +172,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         planId: selectedPlanId,
+        skipPayment: skipPayment && isDemoMode,
         email: profile.email,
         password: profile.password,
         goalIds,
@@ -552,9 +555,25 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
               <strong>Email:</strong> {profile.email}
             </p>
           </div>
-          <p style={{ color: "#64748b" }}>
-            You will be redirected to secure Stripe checkout.
-          </p>
+          {isDemoMode && (
+            <div className="card" style={{ background: "#f0fdf4", borderColor: "#86efac", marginTop: 12 }}>
+              <h4 style={{ marginTop: 0 }}>Demo mode</h4>
+              <p style={{ marginBottom: 8 }}>
+                <strong>Option 1 – Skip payment:</strong> Complete signup and go straight to your
+                Members Console. No card required.
+              </p>
+              <p style={{ marginBottom: 0 }}>
+                <strong>Option 2 – Test Stripe:</strong> Use test card{" "}
+                <strong>4242 4242 4242 4242</strong>, any future expiry, any 3-digit CVC. No real
+                charge.
+              </p>
+            </div>
+          )}
+          {!isDemoMode && (
+            <p style={{ color: "#64748b" }}>
+              You will be redirected to secure Stripe checkout.
+            </p>
+          )}
         </>
       )}
 
@@ -570,9 +589,26 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
           </button>
         )}
         {step === 3 && (
-          <button className="button" type="button" onClick={submit} disabled={isSubmitting}>
-            {isSubmitting ? "Redirecting..." : "Continue to Payment"}
-          </button>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+            {isDemoMode && (
+              <button
+                className="button"
+                type="button"
+                onClick={() => submit(true)}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Completing..." : "Skip Payment & Complete (Demo)"}
+              </button>
+            )}
+            <button
+              className="button"
+              type="button"
+              onClick={() => submit(false)}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Redirecting..." : "Continue to Stripe Payment"}
+            </button>
+          </div>
         )}
       </div>
 
