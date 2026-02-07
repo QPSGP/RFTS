@@ -58,10 +58,6 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     bestContactTimes: "",
     timeZone: "Pacific Time",
     occupation: "",
-    incomeGoal: "",
-    incomeGoalYear: "",
-    incomeGoalRelation: "",
-    isFirstResponder: false,
     wantsPracticeGrowth: false,
     adultConsent: false,
     wantsPolyamory: false,
@@ -188,10 +184,6 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
           bestContactTimes: profile.bestContactTimes,
           timeZone: profile.timeZone,
           occupation: profile.occupation,
-          incomeGoal: profile.incomeGoal,
-          incomeGoalYear: profile.incomeGoalYear ? Number(profile.incomeGoalYear) : undefined,
-          incomeGoalRelation: profile.incomeGoalRelation,
-          isFirstResponder: profile.isFirstResponder,
           wantsPracticeGrowth: profile.wantsPracticeGrowth,
           adultConsent: profile.adultConsent,
           wantsPolyamory: profile.wantsPolyamory,
@@ -454,41 +446,8 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
               onChange={(event) => setProfile({ ...profile, occupation: event.target.value })}
               style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
             />
-            <input
-              placeholder="Your annual income goal is..."
-              value={profile.incomeGoal}
-              onChange={(event) => setProfile({ ...profile, incomeGoal: event.target.value })}
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
-            <input
-              placeholder="Year you intend to reach that goal"
-              value={profile.incomeGoalYear}
-              onChange={(event) =>
-                setProfile({ ...profile, incomeGoalYear: event.target.value })
-              }
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
-            <input
-              placeholder="This goal is ____ your current income"
-              value={profile.incomeGoalRelation}
-              onChange={(event) =>
-                setProfile({ ...profile, incomeGoalRelation: event.target.value })
-              }
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
           </div>
           <div className="grid" style={{ marginTop: 16 }}>
-            <label className="card" style={{ cursor: "pointer" }}>
-              <input
-                type="checkbox"
-                checked={profile.isFirstResponder}
-                onChange={(event) =>
-                  setProfile({ ...profile, isFirstResponder: event.target.checked })
-                }
-                style={{ marginRight: 8 }}
-              />
-              I am a first responder or in the healthcare industry.
-            </label>
             <label className="card" style={{ cursor: "pointer" }}>
               <input
                 type="checkbox"
@@ -501,28 +460,33 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
               I am interested in building my private hypnotherapy, coaching, or healing
               practice.
             </label>
-            <label className="card" style={{ cursor: "pointer" }}>
-              <input
-                type="checkbox"
-                checked={profile.adultConsent}
-                onChange={(event) =>
-                  setProfile({ ...profile, adultConsent: event.target.checked })
-                }
-                style={{ marginRight: 8 }}
-              />
-              I am an adult and am willing to hear audios with mature content.
-            </label>
-            <label className="card" style={{ cursor: "pointer" }}>
-              <input
-                type="checkbox"
-                checked={profile.wantsPolyamory}
-                onChange={(event) =>
-                  setProfile({ ...profile, wantsPolyamory: event.target.checked })
-                }
-                style={{ marginRight: 8 }}
-              />
-              I would like to hear audios related to polyamory.
-            </label>
+            <div className="card">
+              <p style={{ marginTop: 0, marginBottom: 12, fontWeight: 600 }}>Adult content</p>
+              <label style={{ cursor: "pointer", display: "block", marginBottom: 12 }}>
+                <input
+                  type="checkbox"
+                  checked={profile.adultConsent}
+                  onChange={(event) =>
+                    setProfile({ ...profile, adultConsent: event.target.checked })
+                  }
+                  style={{ marginRight: 8 }}
+                />
+                I am an adult and am willing to hear audios with mature content.
+              </label>
+              <div style={{ marginLeft: 28, paddingLeft: 12, borderLeft: "2px solid #e5e7eb" }}>
+                <label style={{ cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={profile.wantsPolyamory}
+                    onChange={(event) =>
+                      setProfile({ ...profile, wantsPolyamory: event.target.checked })
+                    }
+                    style={{ marginRight: 8 }}
+                  />
+                  I would like to hear audios related to polyamory.
+                </label>
+              </div>
+            </div>
             <label className="card" style={{ cursor: "pointer" }}>
               <input
                 type="checkbox"
