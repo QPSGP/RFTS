@@ -132,7 +132,7 @@ export default function WalletPanel() {
 
   return (
     <div className="card">
-      <h3>Crypto Membership</h3>
+      <h3>RFTS Crypto Membership</h3>
       <p>
         Accept crypto payments securely using a wallet connection. Your
         transaction goes directly to your treasury address.

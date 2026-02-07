@@ -237,7 +237,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 style={{ cursor: "pointer" }}
               >
                 <div className={`plan-strip ${mapStripClass(plan.id)}`}>
-                  MEMBERSHIP BENEFITS
+                  RFTS MEMBERSHIP BENEFITS
                 </div>
                 <div className="plan-body">
                   <div className="plan-trial plan-trial-emphasis">{plan.trialDays}-Day Free Trial</div>

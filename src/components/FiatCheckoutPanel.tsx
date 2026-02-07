@@ -40,7 +40,7 @@ export default function FiatCheckoutPanel() {
 
   return (
     <div className="card">
-      <h3>Fiat Membership (Stripe)</h3>
+      <h3>RFTS Fiat Membership (Stripe)</h3>
       <p>
         Accept credit/debit cards via Stripe Checkout. This is ideal for users
         who prefer USD subscriptions.

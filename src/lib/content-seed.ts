@@ -40,7 +40,7 @@ export const defaultInterests: Interest[] = [
 export const defaultSubscriptionPlans: SubscriptionPlan[] = [
   {
     id: "platinum",
-    name: "Membership Package",
+    name: "RFTS Membership Package",
     priceId: "",
     trialDays: 14,
     description: "Tailored Recordings Are Scheduled Based on Your Priorities."

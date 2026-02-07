@@ -461,7 +461,7 @@ export default function AdminUsers() {
                 setCreateTier(event.target.value as UserRow["subscriptionTier"])
               }
             >
-              <option value="platinum">Membership Package</option>
+              <option value="platinum">RFTS Membership Package</option>
             </select>
             <select
               style={inputStyle}
@@ -521,7 +521,7 @@ export default function AdminUsers() {
                       })
                     }
                   >
-                    <option value="platinum">Membership Package</option>
+                    <option value="platinum">RFTS Membership Package</option>
                   </select>
                   <select
                     style={inputStyle}

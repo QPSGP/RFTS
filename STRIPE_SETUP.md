@@ -19,7 +19,7 @@ Plans are stored in the `subscription_plans` table. The **Stripe Price ID** link
 
 1. Log in as Admin.
 2. Go to **Admin Content** → **Subscription Plans**.
-3. For the plan (e.g. "Membership Package"), paste the Stripe Price ID into **Stripe Price ID**.
+3. For the plan (e.g. "RFTS Membership Package"), paste the Stripe Price ID into **Stripe Price ID**.
 4. Click **Save Plans**.
 
 ### 3. Test mode (demo)

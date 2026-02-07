@@ -74,7 +74,7 @@ export default function SubscriptionPlans() {
 
   return (
     <div className="card">
-      <h3>Fiat Membership (Stripe)</h3>
+      <h3>RFTS Fiat Membership (Stripe)</h3>
       <p>Select a plan to start a subscription with a free trial.</p>
       <div className="grid">
         {plans.map((plan) => (

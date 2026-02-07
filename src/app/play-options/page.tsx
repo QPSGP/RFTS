@@ -109,7 +109,7 @@ export default function PlayOptionsPage() {
       <main>
         <section className="hero section">
           <span className="pill">Subscription Required</span>
-          <h1>Activate your membership</h1>
+          <h1>Activate your RFTS membership</h1>
           <p>
             Your account is ready, but a subscription is required to start sessions.
           </p>

@@ -25,10 +25,11 @@ export default function RootLayout({
               color: "#92400e",
               padding: "10px 16px",
               textAlign: "center",
-              borderBottom: "1px solid #fde68a"
+              borderBottom: "1px solid #fde68a",
+              fontSize: 14
             }}
           >
-            Stripe is in demo mode. Use test cards only.
+            <strong>Stripe demo mode.</strong> Test card: <code style={{ background: "rgba(0,0,0,0.06)", padding: "2px 6px", borderRadius: 4 }}>4242 4242 4242 4242</code> — any future expiry, any 3-digit CVC.
           </div>
         )}
         {children}

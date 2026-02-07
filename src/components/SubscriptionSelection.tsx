@@ -88,11 +88,11 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
         ))}
       </div>
       <div className="membership-package-section">
-        <div className="section-heading">Select Your Membership Package</div>
+        <div className="section-heading">Select Your RFTS Membership Package</div>
         <div className="plan-grid">
         {visiblePlans.map((plan) => {
           const displayName =
-            plan.id === "platinum" ? "Membership Package" : plan.name;
+            plan.id === "platinum" ? "RFTS Membership Package" : plan.name;
           return (
           <button
             key={plan.id}
