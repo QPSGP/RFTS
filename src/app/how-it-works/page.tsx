@@ -18,22 +18,22 @@ export default function HowItWorksPage() {
           <span className="eyebrow">3 steps</span>
           <h2 className="section-title">Get started in minutes</h2>
           <p className="section-subtitle">
-            Choose a plan, select goals, and press Start Session.
+            Select your goals, register, and press Start Session.
           </p>
         </div>
         <div className="grid grid-3">
           <div className="card">
-            <h3>1. Pick a plan</h3>
+            <h3>1. Select your goals</h3>
             <p>
-              Choose the membership that fits your goals and the level of access you
-              want.
+              Choose up to 10 priorities and order them by importance. This guides your
+              nightly schedule.
             </p>
           </div>
           <div className="card">
-            <h3>2. Select your goals</h3>
+            <h3>2. Register</h3>
             <p>
-              Choose up to 10 priorities and order them by importance. This guides your
-              schedule.
+              Create your account with your email and complete registration to unlock
+              your membership.
             </p>
           </div>
           <div className="card">
