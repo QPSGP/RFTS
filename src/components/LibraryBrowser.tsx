@@ -43,8 +43,11 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
     });
     const unassigned: LibraryItem[] = [];
     const visibleLibrary = library.filter((item) => !isCgmr(item));
+    const libraryForUser = visibleLibrary.filter(
+      (item) => !item.isAdult || adultConsent
+    );
 
-    visibleLibrary.forEach((item) => {
+    libraryForUser.forEach((item) => {
       if (!item.interestIds.length) {
         unassigned.push(item);
         return;
@@ -58,11 +61,10 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
     });
 
     return { byInterest, unassigned };
-  }, [interests, library]);
+  }, [interests, library, adultConsent]);
 
   const renderCard = (item: LibraryItem) => {
     const isLocked = status !== "active";
-    const isAdultLocked = item.isAdult && !adultConsent;
     const isUserLocked =
       item.allowedUserEmails && item.allowedUserEmails.length > 0
         ? !item.allowedUserEmails.some(
@@ -93,12 +95,11 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
         </p>
         {item.isAdult && <span className="badge">Adult</span>}
         {isLocked && <p style={{ color: "#b91c1c" }}>Subscriber access required</p>}
-        {isAdultLocked && <p style={{ color: "#b91c1c" }}>Adult consent required</p>}
         {isUserLocked && <p style={{ color: "#b91c1c" }}>Assigned user only</p>}
       </div>
     );
 
-    if (isLocked || isAdultLocked || isUserLocked || !item.audioUrl) {
+    if (isLocked || isUserLocked || !item.audioUrl) {
       return <div key={item.id}>{content}</div>;
     }
 
@@ -130,12 +131,13 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
         </div>
       )}
       <div className="card">
-        <h2>Adult Content Controls</h2>
+        <h2>Adult Content</h2>
         <p>
-          Adult consent is set during registration. Only an administrator can change it.
+          Adult content is only viewable to members who are 18+ and have given consent
+          during registration. Only an administrator can change consent status.
         </p>
         <p style={{ fontWeight: 600 }}>
-          Adult Consent: {adultConsent ? "Granted" : "Not Granted"}
+          Adult Consent: {adultConsent ? "Granted – you can view adult content" : "Not Granted – adult content is hidden"}
         </p>
       </div>
 
@@ -154,6 +156,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
           >
             {library
               .filter((item) => !(item.categories || []).some((c) => c.toLowerCase() === "cgmr"))
+              .filter((item) => !item.isAdult || adultConsent)
               .map((item) => (
                 <Link
                   key={item.id}

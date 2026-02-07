@@ -90,9 +90,9 @@ export default function AudioGate({ item }: AudioGateProps) {
       <div className="card">
         <h2>Adult Content</h2>
         <p>
-          This recording is marked as adult content. Adult consent is set during
-          registration. Only an administrator can change it. Contact your admin
-          if you believe this is an error.
+          Adult content is only viewable to members who are 18+ and have given consent
+          during registration. Only an administrator can change consent status. Contact
+          your admin if you believe this is an error.
         </p>
       </div>
     );
