@@ -13,6 +13,7 @@ export default function AudioGate({ item }: AudioGateProps) {
     "loading"
   );
   const [hasAdultConsent, setHasAdultConsent] = useState(false);
+  const [hasVerifiedAge, setHasVerifiedAge] = useState(false);
   const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
@@ -26,6 +27,7 @@ export default function AudioGate({ item }: AudioGateProps) {
       .then((data) => {
         setUserEmail(data.profile?.email || "");
         setHasAdultConsent(!!data.profile?.adultConsent);
+        setHasVerifiedAge(!!data.profile?.hasVerifiedAge);
         const subscriptionStatus = data.profile?.subscriptionStatus;
         setStatus(subscriptionStatus === "active" ? "active" : "inactive");
       })
@@ -85,14 +87,15 @@ export default function AudioGate({ item }: AudioGateProps) {
     );
   }
 
-  if (item.isAdult && !hasAdultConsent) {
+  if (item.isAdult && (!hasAdultConsent || !hasVerifiedAge)) {
     return (
       <div className="card">
         <h2>Adult Content</h2>
         <p>
           Adult content is only viewable to members who are 18+ and have given consent
-          during registration. Only an administrator can change consent status. Contact
-          your admin if you believe this is an error.
+          during registration. A birthdate is required to verify age. Without a
+          birthdate, adult content is not available. Contact your admin to add or
+          update your profile.
         </p>
       </div>
     );

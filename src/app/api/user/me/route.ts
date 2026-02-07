@@ -13,7 +13,10 @@ export async function GET() {
   }
   const memberProfile = await getMemberProfileByUserId(profile.id);
   const adultConsent = memberProfile?.adultConsent ?? false;
+  const yearBorn = memberProfile?.yearBorn ?? null;
+  const currentYear = new Date().getFullYear();
+  const hasVerifiedAge = yearBorn != null && currentYear - yearBorn >= 18;
   return NextResponse.json({
-    profile: { ...profile, adultConsent }
+    profile: { ...profile, adultConsent, yearBorn, hasVerifiedAge }
   });
 }

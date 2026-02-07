@@ -14,6 +14,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
     "loading"
   );
   const [adultConsent, setAdultConsent] = useState(false);
+  const [hasVerifiedAge, setHasVerifiedAge] = useState(false);
   const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
@@ -27,6 +28,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
       .then((data) => {
         setUserEmail(data.profile?.email || "");
         setAdultConsent(!!data.profile?.adultConsent);
+        setHasVerifiedAge(!!data.profile?.hasVerifiedAge);
         const subscriptionStatus = data.profile?.subscriptionStatus;
         setStatus(subscriptionStatus === "active" ? "active" : "inactive");
       })
@@ -43,8 +45,9 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
     });
     const unassigned: LibraryItem[] = [];
     const visibleLibrary = library.filter((item) => !isCgmr(item));
+    const canAccessAdult = adultConsent && hasVerifiedAge;
     const libraryForUser = visibleLibrary.filter(
-      (item) => !item.isAdult || adultConsent
+      (item) => !item.isAdult || canAccessAdult
     );
 
     libraryForUser.forEach((item) => {
@@ -61,7 +64,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
     });
 
     return { byInterest, unassigned };
-  }, [interests, library, adultConsent]);
+  }, [interests, library, adultConsent, hasVerifiedAge]);
 
   const renderCard = (item: LibraryItem) => {
     const isLocked = status !== "active";
@@ -134,10 +137,14 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
         <h2>Adult Content</h2>
         <p>
           Adult content is only viewable to members who are 18+ and have given consent
-          during registration. Only an administrator can change consent status.
+          during registration. A birthdate is required to verify age. Without a
+          birthdate, adult content is not available.
         </p>
         <p style={{ fontWeight: 600 }}>
-          Adult Consent: {adultConsent ? "Granted – you can view adult content" : "Not Granted – adult content is hidden"}
+          Adult Consent: {adultConsent ? "Granted" : "Not Granted"}
+          {adultConsent && (
+            <> · Age verified: {hasVerifiedAge ? "Yes – you can view adult content" : "No – add birthdate in your profile"}</>
+          )}
         </p>
       </div>
 
@@ -156,7 +163,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
           >
             {library
               .filter((item) => !(item.categories || []).some((c) => c.toLowerCase() === "cgmr"))
-              .filter((item) => !item.isAdult || adultConsent)
+              .filter((item) => !item.isAdult || (adultConsent && hasVerifiedAge))
               .map((item) => (
                 <Link
                   key={item.id}

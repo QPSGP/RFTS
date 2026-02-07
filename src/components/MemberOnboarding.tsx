@@ -53,7 +53,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     email: "",
     password: "",
     gender: "",
-    yearBorn: "",
+    birthDate: "",
     contactNumber: "",
     bestContactTimes: "",
     timeZone: "Pacific Time",
@@ -181,7 +181,9 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
           firstName: profile.firstName,
           lastName: profile.lastName,
           gender: profile.gender,
-          yearBorn: profile.yearBorn ? Number(profile.yearBorn) : undefined,
+          yearBorn: profile.birthDate
+            ? new Date(profile.birthDate).getFullYear()
+            : undefined,
           contactNumber: profile.contactNumber,
           bestContactTimes: profile.bestContactTimes,
           timeZone: profile.timeZone,
@@ -398,18 +400,27 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
               onChange={(event) => setProfile({ ...profile, password: event.target.value })}
               style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
             />
-            <input
-              placeholder="Gender"
+            <select
               value={profile.gender}
               onChange={(event) => setProfile({ ...profile, gender: event.target.value })}
               style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
-            <input
-              placeholder="Year born"
-              value={profile.yearBorn}
-              onChange={(event) => setProfile({ ...profile, yearBorn: event.target.value })}
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
+            >
+              <option value="">Gender (optional)</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+            <div>
+              <input
+                type="date"
+                placeholder="Birthdate"
+                value={profile.birthDate}
+                onChange={(event) => setProfile({ ...profile, birthDate: event.target.value })}
+                style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db", width: "100%" }}
+              />
+              <p style={{ fontSize: 12, color: "#64748b", marginTop: 4, marginBottom: 0 }}>
+                For content purposes (optional). Required for adult content age verification.
+              </p>
+            </div>
             <input
               placeholder="Best Contact Number"
               value={profile.contactNumber}
