@@ -1,16 +1,22 @@
-export default function SiteFooter() {
+type SiteFooterProps = {
+  showCta?: boolean;
+};
+
+export default function SiteFooter({ showCta = true }: SiteFooterProps) {
   return (
     <footer className="section" style={{ marginTop: 40 }}>
-      <div className="card glow" style={{ marginBottom: 24, textAlign: "center", padding: 24 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
-          <a className="button" href="/signup/step-1-subscription-selection">
-            Start Your Journey
-          </a>
-          <a className="button button-secondary" href="#page-top">
-            Go To Top
-          </a>
+      {showCta && (
+        <div className="card glow" style={{ marginBottom: 24, textAlign: "center", padding: 24 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
+            <a className="button" href="/signup/step-1-subscription-selection">
+              Start Your Journey
+            </a>
+            <a className="button button-secondary" href="#page-top">
+              Go To Top
+            </a>
+          </div>
         </div>
-      </div>
+      )}
       <div className="card">
         <div className="grid grid-2" style={{ gap: 16 }}>
           <div>

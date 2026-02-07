@@ -123,9 +123,10 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
         Choose up to {limit} priorities you want your sessions to focus on.
       </p>
       <p style={{ color: "#4b5563" }}>
-        Goals can only be changed every 7 days. For best results, stick with your goals
-        until you complete the full 21-times cycle — changing them sooner can interrupt
-        the effectiveness of the subconscious reinforcement.
+        Once your first session starts, you cannot change your goals for 7 days unless an
+        administrator updates them. For best results, stick with your goals until you
+        complete the full 21-times cycle — changing them sooner can interrupt the
+        effectiveness of the subconscious reinforcement.
       </p>
       <p style={{ color: "#4b5563" }}>
         Changes save when you click &quot;Save Goals&quot;.

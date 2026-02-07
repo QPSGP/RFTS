@@ -13,7 +13,7 @@ export default function MemberLoginPage() {
         </p>
       </section>
       <UserAuth />
-      <SiteFooter />
+      <SiteFooter showCta={false} />
     </main>
   );
 }
