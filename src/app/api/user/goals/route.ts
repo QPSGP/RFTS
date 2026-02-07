@@ -9,12 +9,7 @@ const schema = z.object({
 });
 
 const GOAL_LIMIT = 10;
-
-const getTierChangeWindowDays = (tier: string | null) => {
-  if (tier === "platinum") return 0;
-  if (tier === "gold") return 30;
-  return 90;
-};
+const GOAL_CHANGE_WINDOW_DAYS = 7;
 
 const computeGoalEditState = (profile: Awaited<ReturnType<typeof getUserProfile>>) => {
   if (!profile) {
@@ -26,10 +21,6 @@ const computeGoalEditState = (profile: Awaited<ReturnType<typeof getUserProfile>
   if (profile.subscriptionStatus !== "active") {
     return { canEdit: false, nextAllowedAt: null };
   }
-  const windowDays = getTierChangeWindowDays(profile.subscriptionTier);
-  if (!windowDays) {
-    return { canEdit: true, nextAllowedAt: null };
-  }
   const lastUpdated = profile.goalUpdatedAt
     ? new Date(profile.goalUpdatedAt)
     : null;
@@ -37,7 +28,7 @@ const computeGoalEditState = (profile: Awaited<ReturnType<typeof getUserProfile>
     return { canEdit: true, nextAllowedAt: null };
   }
   const nextAllowed = new Date(lastUpdated.getTime());
-  nextAllowed.setDate(nextAllowed.getDate() + windowDays);
+  nextAllowed.setDate(nextAllowed.getDate() + GOAL_CHANGE_WINDOW_DAYS);
   const canEdit = Date.now() >= nextAllowed.getTime();
   return { canEdit, nextAllowedAt: canEdit ? null : nextAllowed.toISOString() };
 };
@@ -82,7 +73,7 @@ export async function PUT(request: Request) {
   if (nextGoals) {
     if (!editState.canEdit) {
       return NextResponse.json(
-        { error: "Goal changes are not available yet.", nextAllowedAt: editState.nextAllowedAt },
+        { error: "Goals can only be changed every 7 days. Please try again later.", nextAllowedAt: editState.nextAllowedAt },
         { status: 403 }
       );
     }

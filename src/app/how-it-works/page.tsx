@@ -99,8 +99,9 @@ export default function HowItWorksPage() {
           <div className="card">
             <h3>Update windows</h3>
             <p>
-              Goals can be updated based on your membership tier (every 30 or 90 days).
-              This keeps your plan focused and effective.
+              Goals can only be changed every 7 days. For best results, stick with your
+              goals until you complete the full 21-times cycle — changing them sooner
+              can interrupt effectiveness.
             </p>
           </div>
         </div>
