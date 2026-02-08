@@ -37,11 +37,11 @@ export default function HomePage() {
             <source src="/Images/Terry-Sizzle-Reel-Website.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
-          <div className="cta-row" style={{ gap: 16, alignItems: "center" }}>
+          <div className="cta-row hero-cta" style={{ gap: 16, alignItems: "center", justifyContent: "center" }}>
             <a className="button" href="/signup/step-1-subscription-selection">
               Start Your Journey
             </a>
-            <strong>Free 14 Day Trial!</strong>
+            <strong>14 Day Free Trial!</strong>
           </div>
         </div>
       </section>
