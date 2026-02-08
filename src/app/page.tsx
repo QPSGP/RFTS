@@ -39,7 +39,7 @@ export default function HomePage() {
 
       <section className="section">
         <div className="section-head">
-          <span className="eyebrow">How It Works</span>
+          <span className="eyebrow">How Reach For The Stars Meditation Application Works</span>
           <h2 className="section-title">Personalized sleep sessions, nightly.</h2>
           <p className="section-subtitle">
             Guided meditations cycle through your goals so your subconscious receives
