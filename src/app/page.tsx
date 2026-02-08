@@ -6,7 +6,10 @@ const GOAL_IMAGES: Record<string, string> = {
   Health: "/Images/Health.jpg",
   Wealth: "/Images/Wealth.jpeg",
   Relationship: "/Images/Relationship.jpeg",
-  Memory: "/Images/Memory.jpg"
+  Memory: "/Images/Memory.jpg",
+  Inspiration: "/Images/Inspiration.jpg",
+  Spirituality: "/Images/Spirtuality.jpg",
+  "Balanced Life": "/Images/BalancedLife.jpg"
 };
 
 export default function HomePage() {
@@ -137,14 +140,38 @@ export default function HomePage() {
             <p>The memory and mental focus you want now and lifelong</p>
           </div>
           <div className="card">
+            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={GOAL_IMAGES.Inspiration}
+                alt="Inspiration"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
             <h3>Inspiration</h3>
             <p>Inspiration at Will for creative and entrepreneurial endeavors</p>
           </div>
           <div className="card">
+            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={GOAL_IMAGES.Spirituality}
+                alt="Spirituality"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
             <h3>Spirituality</h3>
             <p>A greater connection with your spirituality</p>
           </div>
           <div className="card">
+            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={GOAL_IMAGES["Balanced Life"]}
+                alt="Balanced Life"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
             <h3>Balanced Life</h3>
             <p>A life free of smoking, overeating, and other bad habits</p>
           </div>

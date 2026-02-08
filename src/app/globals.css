@@ -52,19 +52,27 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 24px;
 }
 
 .header-left {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex-shrink: 0;
+}
+
+.site-header-row .site-nav {
+  flex: 1;
+  justify-content: center;
+  margin: 0 16px;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .menu-toggle,
@@ -144,18 +152,25 @@ main {
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   font-size: 16px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  color: #0f172a;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
 }
 
-.brand-mark {
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  background: radial-gradient(circle at 30% 30%, #22d3ee, #0f766e 60%);
-  box-shadow: 0 0 12px rgba(34, 211, 238, 0.6);
+.brand:hover {
+  color: #0f766e;
+}
+
+.brand-logo {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+  display: block;
 }
 
 .button {
@@ -708,6 +723,14 @@ button.section-title {
   .site-header .header-cta {
     padding: 8px 14px;
     font-size: 13px;
+  }
+
+  .brand-logo {
+    height: 36px;
+  }
+
+  .brand {
+    font-size: 14px;
   }
 }
 

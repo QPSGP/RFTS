@@ -27,11 +27,26 @@ export default async function SiteHeader() {
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
               </div>
             </details>
-            <div className="brand">
-              <span className="brand-mark" aria-hidden="true" />
-              <strong>Reach For The Stars</strong>
-            </div>
+            <a href="/" className="brand">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/Images/RFTSLogo.png"
+                alt=""
+                className="brand-logo"
+                aria-hidden="true"
+              />
+              <span className="brand-text">Reach For The Stars</span>
+            </a>
           </div>
+          <nav className="nav site-nav desktop-only">
+            <a href="/">Home</a>
+            <a href="/how-it-works">How It Works</a>
+            <a href="/science">Science</a>
+            <a href="/faqs">FAQs</a>
+            <a href="/co-creator">Co-Creators</a>
+            <a href="/affiliates">Affiliates</a>
+            {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
+          </nav>
           <div className="header-actions">
             <a className="button header-cta" href="/signup/step-1-subscription-selection">
               Start Your Journey
@@ -48,15 +63,6 @@ export default async function SiteHeader() {
             </details>
           </div>
         </div>
-        <nav className="nav site-nav desktop-only">
-          <a href="/">Home</a>
-          <a href="/how-it-works">How It Works</a>
-          <a href="/science">Science</a>
-          <a href="/faqs">FAQs</a>
-          <a href="/co-creator">Co-Creators</a>
-          <a href="/affiliates">Affiliates</a>
-          {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
-        </nav>
       </div>
     </header>
   );
