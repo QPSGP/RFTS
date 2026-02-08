@@ -24,18 +24,20 @@ export default function HomePage() {
           uses your specified, prioritized goals to provide targeted meditations
           each night you listen.
         </p>
-        <div className="cta-row" style={{ marginTop: 16, flexDirection: "column", alignItems: "center", gap: 12 }}>
-          <a className="button" href="/signup/step-1-subscription-selection">
-            Start Your Journey
-          </a>
-          <strong>Free 14 day Trial</strong>
+        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
           <video
             src="/Images/Terry%20-%20Sizzle%20Reel%20Website.mp4"
             controls
-            style={{ maxWidth: "100%", width: 640, borderRadius: 8, marginTop: 8 }}
+            style={{ maxWidth: "100%", width: 640, borderRadius: 8 }}
           >
             Your browser does not support the video tag.
           </video>
+          <div className="cta-row" style={{ gap: 16, alignItems: "center" }}>
+            <a className="button" href="/signup/step-1-subscription-selection">
+              Start Your Journey
+            </a>
+            <strong>Free 14 Day Trial!</strong>
+          </div>
         </div>
       </section>
 
