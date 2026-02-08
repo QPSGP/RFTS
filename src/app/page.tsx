@@ -26,10 +26,12 @@ export default function HomePage() {
         </p>
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
           <video
-            src="/Images/Terry%20-%20Sizzle%20Reel%20Website.mp4"
             controls
+            playsInline
+            preload="metadata"
             style={{ maxWidth: "100%", width: 640, borderRadius: 8 }}
           >
+            <source src="/Images/Terry-Sizzle-Reel-Website.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
           <div className="cta-row" style={{ gap: 16, alignItems: "center" }}>
