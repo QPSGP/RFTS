@@ -172,20 +172,34 @@ export default function HomePage() {
           <h3>Sources</h3>
           <ol>
             <li>
-              https://www.degruyter.com/document/doi/10.1515/hmbci-2013-0056/html
+              <a href="https://www.degruyter.com/document/doi/10.1515/hmbci-2013-0056/html" target="_blank" rel="noopener noreferrer">
+                https://www.degruyter.com/document/doi/10.1515/hmbci-2013-0056/html
+              </a>
             </li>
             <li>
-              https://www.health.harvard.edu/staying-healthy/what-meditation-can-do-for-your-mind-mood-and-health-
+              <a href="https://www.health.harvard.edu/staying-healthy/what-meditation-can-do-for-your-mind-mood-and-health-" target="_blank" rel="noopener noreferrer">
+                https://www.health.harvard.edu/staying-healthy/what-meditation-can-do-for-your-mind-mood-and-health-
+              </a>
             </li>
             <li>
-              https://health.ucdavis.edu/health-news/newsroom/10-health-benefits-of-meditation/2019/07
+              <a href="https://health.ucdavis.edu/health-news/newsroom/10-health-benefits-of-meditation/2019/07" target="_blank" rel="noopener noreferrer">
+                https://health.ucdavis.edu/health-news/newsroom/10-health-benefits-of-meditation/2019/07
+              </a>
             </li>
             <li>
-              https://www.mayoclinic.org/tests-procedures/meditation/about/pac-20385120
+              <a href="https://www.mayoclinic.org/tests-procedures/meditation/about/pac-20385120" target="_blank" rel="noopener noreferrer">
+                https://www.mayoclinic.org/tests-procedures/meditation/about/pac-20385120
+              </a>
             </li>
-            <li>https://sps.columbia.edu/news/how-meditation-can-help-you-focus</li>
             <li>
-              https://news.harvard.edu/gazette/story/2011/01/eight-weeks-to-a-better-brain/
+              <a href="https://sps.columbia.edu/news/how-meditation-can-help-you-focus" target="_blank" rel="noopener noreferrer">
+                https://sps.columbia.edu/news/how-meditation-can-help-you-focus
+              </a>
+            </li>
+            <li>
+              <a href="https://news.harvard.edu/gazette/story/2011/01/eight-weeks-to-a-better-brain/" target="_blank" rel="noopener noreferrer">
+                https://news.harvard.edu/gazette/story/2011/01/eight-weeks-to-a-better-brain/
+              </a>
             </li>
           </ol>
         </div>
