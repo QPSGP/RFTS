@@ -48,8 +48,9 @@ export default async function SiteHeader() {
             {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
           </nav>
           <div className="header-actions">
-            <a className="button header-cta" href="/signup/step-1-subscription-selection">
-              Start Your Journey
+            <a className="button header-cta header-start-btn" href="/signup/step-1-subscription-selection">
+              <span className="header-btn-long">Start Your Journey</span>
+              <span className="header-btn-short">Start</span>
             </a>
             <details className="login-toggle">
               <summary className="button header-cta">Login</summary>
