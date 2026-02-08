@@ -1,6 +1,17 @@
 /* eslint-disable react/no-unescaped-entities */
 import SiteFooter from "@/components/SiteFooter";
 
+// Images from https://www.reachforthestars.today – update paths if they don't load
+const GOAL_IMAGES: Record<string, string> = {
+  Health: "https://www.reachforthestars.today/images/goals/health.jpg",
+  Wealth: "https://www.reachforthestars.today/images/goals/wealth.jpg",
+  Relationship: "https://www.reachforthestars.today/images/goals/relationship.jpg",
+  Memory: "https://www.reachforthestars.today/images/goals/memory.jpg",
+  Inspiration: "https://www.reachforthestars.today/images/goals/inspiration.jpg",
+  Spirituality: "https://www.reachforthestars.today/images/goals/spirituality.jpg",
+  "Balanced Life": "https://www.reachforthestars.today/images/goals/balanced-life.jpg"
+};
+
 export default function HomePage() {
   return (
     <main>
@@ -53,13 +64,12 @@ export default function HomePage() {
           and scheduled according to priorities you select.
         </p>
         <p>
-          Three subscription tiers are available to meet your needs, ensuring
-          you can easily be on the road to achieving your goals.
+          Membership is designed to meet your needs, ensuring you can easily be
+          on the road to achieving your goals.
         </p>
         <p>
-          Recordings can be revised every 30 or 90 days depending on the
-          subscription chosen, so new recordings can be scheduled as your goals
-          change.
+          Recordings can be revised every 30 so new recordings can be scheduled
+          as your goals change.
         </p>
       </section>
 
@@ -73,30 +83,86 @@ export default function HomePage() {
         </div>
         <section className="grid grid-3" style={{ marginTop: 16 }}>
           <div className="card glow">
+            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={GOAL_IMAGES.Health}
+                alt="Health"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
             <h3>Health</h3>
             <p>Healthy longevity, vibrant energy, a body to delight in</p>
           </div>
           <div className="card glow">
+            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={GOAL_IMAGES.Wealth}
+                alt="Wealth"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
             <h3>Wealth</h3>
             <p>Financial Abundance</p>
           </div>
           <div className="card glow">
+            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={GOAL_IMAGES.Relationship}
+                alt="Relationship"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
             <h3>Relationship</h3>
             <p>A joyful new or enhanced present relationship</p>
           </div>
           <div className="card">
+            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={GOAL_IMAGES.Memory}
+                alt="Memory"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
             <h3>Memory</h3>
             <p>The memory and mental focus you want now and lifelong</p>
           </div>
           <div className="card">
+            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={GOAL_IMAGES.Inspiration}
+                alt="Inspiration"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
             <h3>Inspiration</h3>
             <p>Inspiration at Will for creative and entrepreneurial endeavors</p>
           </div>
           <div className="card">
+            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={GOAL_IMAGES.Spirituality}
+                alt="Spirituality"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
             <h3>Spirituality</h3>
             <p>A greater connection with your spirituality</p>
           </div>
           <div className="card">
+            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={GOAL_IMAGES["Balanced Life"]}
+                alt="Balanced Life"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
             <h3>Balanced Life</h3>
             <p>A life free of smoking, overeating, and other bad habits</p>
           </div>
