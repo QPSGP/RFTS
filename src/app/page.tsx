@@ -68,7 +68,7 @@ export default function HomePage() {
           on the road to achieving your goals.
         </p>
         <p>
-          Recordings can be revised every 30 so new recordings can be scheduled
+          Recordings can be revised every 30 days so new recordings can be scheduled
           as your goals change.
         </p>
       </section>

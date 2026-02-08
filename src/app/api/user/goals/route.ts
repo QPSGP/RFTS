@@ -9,7 +9,7 @@ const schema = z.object({
 });
 
 const GOAL_LIMIT = 10;
-const GOAL_CHANGE_WINDOW_DAYS = 7;
+const GOAL_CHANGE_WINDOW_DAYS = 30;
 
 const computeGoalEditState = (profile: Awaited<ReturnType<typeof getUserProfile>>) => {
   if (!profile) {
@@ -73,7 +73,7 @@ export async function PUT(request: Request) {
   if (nextGoals) {
     if (!editState.canEdit) {
       return NextResponse.json(
-        { error: "Goals can only be changed every 7 days. Please try again later.", nextAllowedAt: editState.nextAllowedAt },
+        { error: "Goals can only be changed every 30 days. Please try again later.", nextAllowedAt: editState.nextAllowedAt },
         { status: 403 }
       );
     }

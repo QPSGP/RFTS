@@ -183,8 +183,8 @@ export default function FaqsPage() {
           <div className="card">
             <h3>Why are goal changes limited?</h3>
             <p>
-              Goal changes are limited by your membership tier (for example, every 30 or
-              90 days). This keeps your session plan consistent and effective.
+              Goal changes are limited to every 30 days. This keeps your session plan
+              consistent and effective.
             </p>
           </div>
         </div>

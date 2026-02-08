@@ -99,7 +99,7 @@ export default function HowItWorksPage() {
           <div className="card">
             <h3>Update windows</h3>
             <p>
-              Goals can only be changed every 7 days. For best results, stick with your
+              Goals can only be changed every 30 days. For best results, stick with your
               goals until you complete the full 21-times cycle — changing them sooner
               can interrupt effectiveness.
             </p>
