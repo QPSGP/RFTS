@@ -1,15 +1,12 @@
 /* eslint-disable react/no-unescaped-entities */
 import SiteFooter from "@/components/SiteFooter";
 
-// Images from https://www.reachforthestars.today – update paths if they don't load
+// Local goal images from /Images
 const GOAL_IMAGES: Record<string, string> = {
-  Health: "https://www.reachforthestars.today/images/goals/health.jpg",
-  Wealth: "https://www.reachforthestars.today/images/goals/wealth.jpg",
-  Relationship: "https://www.reachforthestars.today/images/goals/relationship.jpg",
-  Memory: "https://www.reachforthestars.today/images/goals/memory.jpg",
-  Inspiration: "https://www.reachforthestars.today/images/goals/inspiration.jpg",
-  Spirituality: "https://www.reachforthestars.today/images/goals/spirituality.jpg",
-  "Balanced Life": "https://www.reachforthestars.today/images/goals/balanced-life.jpg"
+  Health: "/Images/Health.jpg",
+  Wealth: "/Images/Wealth.jpeg",
+  Relationship: "/Images/Relationship.jpeg",
+  Memory: "/Images/Memory.jpg"
 };
 
 export default function HomePage() {
@@ -27,13 +24,18 @@ export default function HomePage() {
           uses your specified, prioritized goals to provide targeted meditations
           each night you listen.
         </p>
-        <div className="cta-row" style={{ marginTop: 16 }}>
+        <div className="cta-row" style={{ marginTop: 16, flexDirection: "column", alignItems: "center", gap: 12 }}>
           <a className="button" href="/signup/step-1-subscription-selection">
             Start Your Journey
           </a>
-          <a className="button button-secondary" href="/play-options">
-            Explore Play Options
-          </a>
+          <strong>Free 14 day Trial</strong>
+          <video
+            src="/Images/Terry%20-%20Sizzle%20Reel%20Website.mp4"
+            controls
+            style={{ maxWidth: "100%", width: 640, borderRadius: 8, marginTop: 8 }}
+          >
+            Your browser does not support the video tag.
+          </video>
         </div>
       </section>
 
@@ -131,38 +133,14 @@ export default function HomePage() {
             <p>The memory and mental focus you want now and lifelong</p>
           </div>
           <div className="card">
-            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={GOAL_IMAGES.Inspiration}
-                alt="Inspiration"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </div>
             <h3>Inspiration</h3>
             <p>Inspiration at Will for creative and entrepreneurial endeavors</p>
           </div>
           <div className="card">
-            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={GOAL_IMAGES.Spirituality}
-                alt="Spirituality"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </div>
             <h3>Spirituality</h3>
             <p>A greater connection with your spirituality</p>
           </div>
           <div className="card">
-            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={GOAL_IMAGES["Balanced Life"]}
-                alt="Balanced Life"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </div>
             <h3>Balanced Life</h3>
             <p>A life free of smoking, overeating, and other bad habits</p>
           </div>
