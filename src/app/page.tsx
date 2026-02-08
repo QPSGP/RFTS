@@ -1,6 +1,4 @@
 /* eslint-disable react/no-unescaped-entities */
-import SubscriptionPlans from "@/components/SubscriptionPlans";
-import WalletPanel from "@/components/WalletPanel";
 import SiteFooter from "@/components/SiteFooter";
 
 export default function HomePage() {
@@ -419,10 +417,6 @@ export default function HomePage() {
         </section>
       </section>
 
-      <section className="grid grid-2 section">
-        <SubscriptionPlans />
-        <WalletPanel />
-      </section>
       <SiteFooter />
     </main>
   );

@@ -34,6 +34,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
   const [step, setStep] = useState(1);
   const [status, setStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const membershipDetails = [
     "Tailored Recordings Are Scheduled Based on Your Priorities.",
@@ -166,6 +167,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     const response = await fetch("/api/member/onboarding", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({
         planId: selectedPlanId,
         skipPayment: skipPayment && isDemoMode,
@@ -200,7 +202,10 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     }
     const data = await response.json();
     if (data.url) {
-      window.location.href = data.url;
+      setIsRedirecting(true);
+      requestAnimationFrame(() => {
+        window.location.replace(data.url);
+      });
       return;
     }
     setStatus("Checkout session did not return a URL.");
@@ -552,6 +557,26 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
         </>
       )}
 
+      {isRedirecting && (
+        <div
+          className="card"
+          style={{
+            marginTop: 16,
+            background: "#f0fdf4",
+            borderColor: "#22c55e",
+            textAlign: "center",
+            padding: 24
+          }}
+        >
+          <p style={{ margin: 0, fontWeight: 600 }}>
+            Redirecting you to your member portal…
+          </p>
+          <p style={{ margin: "8px 0 0", color: "#4b5563" }}>
+            If you are not redirected, <a href="/play-options">click here</a>.
+          </p>
+        </div>
+      )}
+
       <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
         {step > 1 && (
           <button className="button button-secondary" type="button" onClick={previousStep}>
@@ -570,18 +595,18 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 className="button"
                 type="button"
                 onClick={() => submit(true)}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Completing..." : "Skip Payment & Complete (Demo)"}
-              </button>
+              disabled={isSubmitting || isRedirecting}
+            >
+              {isSubmitting || isRedirecting ? "Completing..." : "Skip Payment & Complete (Demo)"}
+            </button>
             )}
             <button
               className="button"
               type="button"
               onClick={() => submit(false)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isRedirecting}
             >
-              {isSubmitting ? "Redirecting..." : "Continue to Stripe Payment"}
+              {isSubmitting || isRedirecting ? "Redirecting..." : "Continue to Stripe Payment"}
             </button>
           </div>
         )}

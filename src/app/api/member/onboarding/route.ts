@@ -105,22 +105,26 @@ export async function POST(request: Request) {
   setUserSession(token);
 
   if (isDemoSkip) {
-    return NextResponse.json({ url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/play-options` });
+    return NextResponse.json({ url: "/play-options" });
   }
 
-  const stripe = getStripe();
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  const session = await stripe.checkout.sessions.create({
-    mode: "subscription",
-    line_items: [{ price: plan.priceId, quantity: 1 }],
-    subscription_data:
-      plan.trialDays && plan.trialDays > 0
-        ? { trial_period_days: plan.trialDays }
-        : undefined,
-    success_url: `${baseUrl}/play-options`,
-    cancel_url: `${baseUrl}/signup/step-1-subscription-selection`,
-    allow_promotion_codes: true
-  });
-
-  return NextResponse.json({ url: session.url });
+  try {
+    const stripe = getStripe();
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      line_items: [{ price: plan.priceId, quantity: 1 }],
+      subscription_data:
+        plan.trialDays && plan.trialDays > 0
+          ? { trial_period_days: plan.trialDays }
+          : undefined,
+      success_url: `${baseUrl}/play-options`,
+      cancel_url: `${baseUrl}/signup/step-1-subscription-selection`,
+      allow_promotion_codes: true
+    });
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    // Member already saved; redirect to portal so they can complete payment later
+    return NextResponse.json({ url: "/play-options" });
+  }
 }
