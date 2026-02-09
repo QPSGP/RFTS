@@ -80,12 +80,17 @@ export async function POST(request: Request) {
   await ensureSubscription(user.id, plan.id as "bronze" | "gold" | "platinum", subscriptionStatus);
   await setUserGoals(user.id, parsed.data.goalIds);
   await setUserPlaysPerNight(user.id, parsed.data.playsPerNight);
+  const yearBorn = parsed.data.profile.yearBorn ?? null;
+  const currentYear = new Date().getFullYear();
+  const isAgeVerified = yearBorn != null && currentYear - yearBorn >= 18;
+  const adultConsent = parsed.data.profile.adultConsent && isAgeVerified;
+
   await upsertMemberProfile({
     userId: user.id,
     firstName: parsed.data.profile.firstName,
     lastName: parsed.data.profile.lastName,
     gender: parsed.data.profile.gender,
-    yearBorn: parsed.data.profile.yearBorn,
+    yearBorn,
     contactNumber: parsed.data.profile.contactNumber,
     bestContactTimes: parsed.data.profile.bestContactTimes,
     timeZone: parsed.data.profile.timeZone,
@@ -95,7 +100,7 @@ export async function POST(request: Request) {
     incomeGoalRelation: parsed.data.profile.incomeGoalRelation,
     isFirstResponder: parsed.data.profile.isFirstResponder,
     wantsPracticeGrowth: parsed.data.profile.wantsPracticeGrowth,
-    adultConsent: parsed.data.profile.adultConsent,
+    adultConsent,
     wantsPolyamory: parsed.data.profile.wantsPolyamory,
     hadLgdSession: parsed.data.profile.hadLgdSession,
     referralSource: parsed.data.profile.referralSource

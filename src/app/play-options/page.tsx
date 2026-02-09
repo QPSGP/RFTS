@@ -120,6 +120,9 @@ export default function PlayOptionsPage() {
             <a className="button button-secondary" href="/member/login">
               Switch Account
             </a>
+            <button className="button button-secondary" type="button" onClick={logout}>
+              Log Out
+            </button>
           </div>
         </section>
       </main>

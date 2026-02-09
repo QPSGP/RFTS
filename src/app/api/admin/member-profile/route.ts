@@ -61,12 +61,18 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
   const existing = await getMemberProfileByUserId(user.id);
+  const yearBorn = parsed.data.profile.yearBorn ?? existing?.yearBorn ?? null;
+  const currentYear = new Date().getFullYear();
+  const isAgeVerified = yearBorn != null && currentYear - yearBorn >= 18;
+  const rawAdultConsent = parsed.data.profile.adultConsent ?? existing?.adultConsent ?? false;
+  const adultConsent = rawAdultConsent && isAgeVerified;
+
   await upsertMemberProfile({
     userId: user.id,
     firstName: parsed.data.profile.firstName ?? existing?.firstName ?? null,
     lastName: parsed.data.profile.lastName ?? existing?.lastName ?? null,
     gender: parsed.data.profile.gender ?? existing?.gender ?? null,
-    yearBorn: parsed.data.profile.yearBorn ?? existing?.yearBorn ?? null,
+    yearBorn,
     contactNumber: parsed.data.profile.contactNumber ?? existing?.contactNumber ?? null,
     bestContactTimes:
       parsed.data.profile.bestContactTimes ?? existing?.bestContactTimes ?? null,
@@ -81,8 +87,7 @@ export async function PATCH(request: Request) {
       parsed.data.profile.isFirstResponder ?? existing?.isFirstResponder ?? false,
     wantsPracticeGrowth:
       parsed.data.profile.wantsPracticeGrowth ?? existing?.wantsPracticeGrowth ?? false,
-    adultConsent:
-      parsed.data.profile.adultConsent ?? existing?.adultConsent ?? false,
+    adultConsent,
     wantsPolyamory:
       parsed.data.profile.wantsPolyamory ?? existing?.wantsPolyamory ?? false,
     hadLgdSession:
