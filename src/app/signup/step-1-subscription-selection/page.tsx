@@ -16,7 +16,7 @@ export default async function SubscriptionSelectionPage() {
         </div>
         <MemberOnboarding plans={plans} goals={goals} />
       </div>
-      <SiteFooter />
+      <SiteFooter showStartJourney={false} />
     </div>
   );
 }

@@ -72,10 +72,12 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
   }, [plans]);
 
   useEffect(() => {
-    if (!selectedPlanId && visiblePlans.length > 0) {
+    if (visiblePlans.length === 1) {
+      setSelectedPlanId(visiblePlans[0].id);
+    } else if (visiblePlans.length > 0 && (!selectedPlanId || !visiblePlans.some((p) => p.id === selectedPlanId))) {
       setSelectedPlanId(visiblePlans[0].id);
     }
-  }, [selectedPlanId, visiblePlans]);
+  }, [visiblePlans, selectedPlanId]);
 
   const selectedPlan = useMemo(
     () => visiblePlans.find((plan) => plan.id === selectedPlanId),

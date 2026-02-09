@@ -38,10 +38,23 @@ If you created new products/prices or removed old ones:
 2. Update the plan’s **Stripe Price ID** in Admin → Subscription Plans.
 3. Save. Signup will now use the new price.
 
-### 5. Environment variables
+### 5. Webhook (activates subscription after payment)
+
+To activate a member's subscription when they complete Stripe checkout:
+
+1. In Stripe Dashboard → **Developers** → **Webhooks**, click **Add endpoint**.
+2. **Endpoint URL:** `https://your-domain.com/api/webhooks/stripe`
+3. **Events to send:** `checkout.session.completed`
+4. Copy the **Signing secret** (starts with `whsec_`).
+5. Add to your environment: `STRIPE_WEBHOOK_SECRET=whsec_...`
+
+Without the webhook, members who pay via Stripe will see "Subscription Required" until it is configured.
+
+### 6. Environment variables
 
 ```env
 STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...   # from Stripe webhook endpoint
 NEXT_PUBLIC_STRIPE_MODE=demo
 DEMO_SKIP_STRIPE=true   # optional: allow skip payment even when Stripe not fully configured
 ```

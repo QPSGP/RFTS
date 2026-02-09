@@ -113,6 +113,8 @@ export async function POST(request: Request) {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
+      client_reference_id: user.id,
+      metadata: { tier: plan.id },
       line_items: [{ price: plan.priceId, quantity: 1 }],
       subscription_data:
         plan.trialDays && plan.trialDays > 0

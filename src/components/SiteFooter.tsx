@@ -1,16 +1,19 @@
 type SiteFooterProps = {
   showCta?: boolean;
+  showStartJourney?: boolean;
 };
 
-export default function SiteFooter({ showCta = true }: SiteFooterProps) {
+export default function SiteFooter({ showCta = true, showStartJourney = true }: SiteFooterProps) {
   return (
     <footer className="section" style={{ marginTop: 40 }}>
       {showCta && (
         <div className="card glow" style={{ marginBottom: 24, textAlign: "center", padding: 24 }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
-            <a className="button" href="/signup/step-1-subscription-selection">
-              Start Your Journey
-            </a>
+            {showStartJourney && (
+              <a className="button" href="/signup/step-1-subscription-selection">
+                Start Your Journey
+              </a>
+            )}
             <a className="button button-secondary" href="#page-top">
               Go To Top
             </a>
