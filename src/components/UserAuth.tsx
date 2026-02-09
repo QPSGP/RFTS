@@ -30,6 +30,7 @@ export default function UserAuth() {
     const response = await fetch(`/api/user/${mode}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(payload)
     });
     if (response.ok) {
@@ -37,9 +38,7 @@ export default function UserAuth() {
         window.location.href = "/goals";
         return;
       }
-      setLoggedIn(true);
-      setLoading(false);
-      setStatus("Signed in.");
+      window.location.href = "/play-options";
       return;
     }
     setStatus(mode === "signup" ? "Sign up failed." : "Login failed.");

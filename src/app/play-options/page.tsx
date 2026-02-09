@@ -41,14 +41,14 @@ export default function PlayOptionsPage() {
   }, [schedule]);
 
   const logout = async () => {
-    await fetch("/api/user/logout", { method: "POST" });
+    await fetch("/api/user/logout", { method: "POST", credentials: "include" });
     window.location.href = "/member/login";
   };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setAutoStart(params.get("autoplay") === "1");
-    fetch("/api/user/me")
+    fetch("/api/user/me", { credentials: "include" })
       .then((res) => {
         if (!res.ok) {
           throw new Error("Unauthorized");
@@ -61,7 +61,7 @@ export default function PlayOptionsPage() {
         const subscriptionStatus = nextProfile?.subscriptionStatus;
         setStatus(subscriptionStatus === "active" ? "active" : "inactive");
         if (subscriptionStatus === "active") {
-          fetch("/api/user/schedule?nights=7")
+          fetch("/api/user/schedule?nights=7", { credentials: "include" })
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
               setSchedule(data?.schedule || []);
@@ -69,7 +69,7 @@ export default function PlayOptionsPage() {
               setGapHours(data?.gapHours || 2.5);
             })
             .catch(() => setSchedule([]));
-          fetch("/api/user/personalized-audios")
+          fetch("/api/user/personalized-audios", { credentials: "include" })
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => setPersonalizedAudios(data?.items || []))
             .catch(() => setPersonalizedAudios([]));
@@ -195,10 +195,10 @@ export default function PlayOptionsPage() {
         </div>
         <div className="card" id="meditation-library">
           <h3>Meditation Library</h3>
-          <p>
-            Browse the full audio library and play any track on demand. This
-            section mirrors the existing anchor.
-          </p>
+          <p>Browse the full audio library and play any track on demand. This will not affect your sessions!</p>
+          <a className="button" href="/library" style={{ marginTop: 12 }}>
+            Open Library
+          </a>
         </div>
         <div className="card" id="meditation-session">
           <h3>Meditation Session</h3>

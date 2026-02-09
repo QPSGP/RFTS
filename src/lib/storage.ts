@@ -361,7 +361,7 @@ export const getSubscriptionPlans = () =>
   readJson<SubscriptionPlan[]>("subscriptions.json", [
     {
       id: "platinum",
-      name: "RFTS Membership Package",
+      name: "Membership",
       priceId: "",
       trialDays: 14,
       description: "Tailored Recordings Are Scheduled Based on Your Priorities."

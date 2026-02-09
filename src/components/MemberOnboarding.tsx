@@ -244,11 +244,12 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 marginBottom: 16,
                 background: "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)",
                 borderColor: "#0f766e",
-                borderWidth: 2
+                borderWidth: 2,
+                textAlign: "center"
               }}
             >
               <p style={{ margin: 0, fontWeight: 600, color: "#0f766e" }}>
-                ✓ Selected plan: <strong>{selectedPlan.name}</strong>
+                ✓ Selected plan: <strong>{selectedPlan.id === "platinum" ? "Membership" : selectedPlan.name}</strong>
               </p>
               <p style={{ margin: "4px 0 0", fontSize: 14, color: "#4b5563" }}>
                 {selectedPlan.trialDays}-Day Free Trial · $39.95/mo.
@@ -550,7 +551,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
           <div className="section-heading">Review & Payment</div>
           <div className="card">
             <p>
-              <strong>Plan:</strong> {selectedPlan?.name}
+              <strong>Plan:</strong> {selectedPlan ? (selectedPlan.id === "platinum" ? "Membership" : selectedPlan.name) : ""}
             </p>
             <p>
               <strong>Goals:</strong> {goalIds.length} selected
@@ -567,15 +568,8 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
           </div>
           {isDemoMode && (
             <div className="card" style={{ background: "#f0fdf4", borderColor: "#86efac", marginTop: 12 }}>
-              <h4 style={{ marginTop: 0 }}>Demo mode</h4>
-              <p style={{ marginBottom: 8 }}>
-                <strong>Option 1 – Skip payment:</strong> Complete signup and go straight to your
-                Members Console. No card required.
-              </p>
-              <p style={{ marginBottom: 0 }}>
-                <strong>Option 2 – Test Stripe:</strong> Use test card{" "}
-                <strong>4242 4242 4242 4242</strong>, any future expiry, any 3-digit CVC. No real
-                charge.
+              <p style={{ margin: 0 }}>
+                Demo mode: Complete signup and go straight to your Members Console. No card required.
               </p>
             </div>
           )}
@@ -620,24 +614,25 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
         )}
         {step === 3 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-            {isDemoMode && (
+            {isDemoMode ? (
               <button
                 className="button"
                 type="button"
                 onClick={() => submit(true)}
-              disabled={isSubmitting || isRedirecting}
-            >
-              {isSubmitting || isRedirecting ? "Completing..." : "Skip Payment & Complete (Demo)"}
-            </button>
+                disabled={isSubmitting || isRedirecting}
+              >
+                {isSubmitting || isRedirecting ? "Completing..." : "Complete Signup"}
+              </button>
+            ) : (
+              <button
+                className="button"
+                type="button"
+                onClick={() => submit(false)}
+                disabled={isSubmitting || isRedirecting}
+              >
+                {isSubmitting || isRedirecting ? "Redirecting..." : "Continue to Stripe Payment"}
+              </button>
             )}
-            <button
-              className="button"
-              type="button"
-              onClick={() => submit(false)}
-              disabled={isSubmitting || isRedirecting}
-            >
-              {isSubmitting || isRedirecting ? "Redirecting..." : "Continue to Stripe Payment"}
-            </button>
           </div>
         )}
       </div>

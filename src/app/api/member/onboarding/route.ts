@@ -67,7 +67,8 @@ export async function POST(request: Request) {
   const demoSkipEnv = process.env.DEMO_SKIP_STRIPE === "true";
   const isDemoSkip =
     demoSkipEnv ||
-    (parsed.data.skipPayment && (stripeIsDemo || demoSkipEnv));
+    (parsed.data.skipPayment && (stripeIsDemo || demoSkipEnv)) ||
+    !plan.priceId;
   if (!isDemoSkip && !plan.priceId) {
     return NextResponse.json(
       { error: "Stripe Price ID not configured. Add it in Admin → Subscriptions, or use Skip Payment in demo mode." },

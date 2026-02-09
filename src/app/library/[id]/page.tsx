@@ -22,12 +22,25 @@ export default async function LibraryItemPage({ params }: PageProps) {
           <h1>Now Playing</h1>
           <p>Stream your selected audio session.</p>
         </div>
-        <Link className="button button-secondary" href="/library">
-          ← Back to library
-        </Link>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <Link className="button button-secondary" href="/library">
+            ← Back to Library
+          </Link>
+          <Link className="button button-secondary" href="/play-options">
+            ← Back to Console
+          </Link>
+        </div>
       </section>
       <ScreenWakeToggle />
       <AudioGate item={item} />
+      <section style={{ textAlign: "center", paddingTop: 24, marginTop: 24, borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
+        <Link className="button button-secondary" href="/library">
+          ← Back to Library
+        </Link>
+        <Link className="button button-secondary" href="/play-options">
+          ← Back to Console
+        </Link>
+      </section>
     </main>
   );
 }
