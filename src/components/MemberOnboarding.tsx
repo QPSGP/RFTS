@@ -76,12 +76,18 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
   }, [plans]);
 
   useEffect(() => {
-    if (visiblePlans.length === 1) {
-      setSelectedPlanId(visiblePlans[0].id);
-    } else if (visiblePlans.length > 0 && (!selectedPlanId || !visiblePlans.some((p) => p.id === selectedPlanId))) {
-      setSelectedPlanId(visiblePlans[0].id);
-    }
-  }, [visiblePlans, selectedPlanId]);
+    if (visiblePlans.length === 0) return;
+    const firstId = visiblePlans[0].id;
+    setSelectedPlanId((prev) => {
+      if (visiblePlans.length === 1) return firstId;
+      if (!prev || !visiblePlans.some((p) => p.id === prev)) return firstId;
+      return prev;
+    });
+  }, [visiblePlans]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
 
   const selectedPlan = useMemo(
     () => visiblePlans.find((plan) => plan.id === selectedPlanId),
@@ -231,6 +237,24 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
 
       {step === 1 && (
         <>
+          {selectedPlan && (
+            <div
+              className="card"
+              style={{
+                marginBottom: 16,
+                background: "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)",
+                borderColor: "#0f766e",
+                borderWidth: 2
+              }}
+            >
+              <p style={{ margin: 0, fontWeight: 600, color: "#0f766e" }}>
+                ✓ Selected plan: <strong>{selectedPlan.name}</strong>
+              </p>
+              <p style={{ margin: "4px 0 0", fontSize: 14, color: "#4b5563" }}>
+                {selectedPlan.trialDays}-Day Free Trial · $39.95/mo.
+              </p>
+            </div>
+          )}
           <div className="membership-package-section">
             <div className="plan-grid">
             {visiblePlans.map((plan) => (

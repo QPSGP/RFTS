@@ -375,7 +375,10 @@ button.section-title {
 
 .plan-card-signup.selected {
   border-color: #0f766e;
-  box-shadow: 0 10px 24px rgba(15, 118, 110, 0.2);
+  border-width: 2px;
+  box-shadow: 0 10px 24px rgba(15, 118, 110, 0.3);
+  outline: 2px solid #0f766e;
+  outline-offset: 2px;
 }
 
 .plan-strip {
