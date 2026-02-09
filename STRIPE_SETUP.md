@@ -56,5 +56,5 @@ Without the webhook, members who pay via Stripe will see "Subscription Required"
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...   # from Stripe webhook endpoint
 NEXT_PUBLIC_STRIPE_MODE=demo
-DEMO_SKIP_STRIPE=true   # optional: allow skip payment even when Stripe not fully configured
+DEMO_SKIP_STRIPE=true   # when true: all signups skip Stripe and go straight to Members Console (no payment)
 ```

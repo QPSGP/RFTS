@@ -35,7 +35,11 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
   const [status, setStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(() => {
+    const membershipOnly = plans.filter((p) => p.id === "platinum");
+    const vp = membershipOnly.length > 0 ? membershipOnly : plans;
+    return vp.length > 0 ? vp[0].id : null;
+  });
   const membershipDetails = [
     "Tailored Recordings Are Scheduled Based on Your Priorities.",
     "Push A Button And Listen While You Sleep!",

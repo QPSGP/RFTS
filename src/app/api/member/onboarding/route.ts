@@ -64,9 +64,10 @@ export async function POST(request: Request) {
   } catch {
     stripeIsDemo = false;
   }
+  const demoSkipEnv = process.env.DEMO_SKIP_STRIPE === "true";
   const isDemoSkip =
-    parsed.data.skipPayment &&
-    (stripeIsDemo || process.env.DEMO_SKIP_STRIPE === "true");
+    demoSkipEnv ||
+    (parsed.data.skipPayment && (stripeIsDemo || demoSkipEnv));
   if (!isDemoSkip && !plan.priceId) {
     return NextResponse.json(
       { error: "Stripe Price ID not configured. Add it in Admin → Subscriptions, or use Skip Payment in demo mode." },
