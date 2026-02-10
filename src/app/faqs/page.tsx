@@ -1,12 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SiteFooter from "@/components/SiteFooter";
 
 type SectionKey = "who" | "what" | "where" | "why" | "help";
 
 export default function FaqsPage() {
   const [openSection, setOpenSection] = useState<SectionKey>("who");
+  const sectionRefs = useRef<Partial<Record<SectionKey, HTMLElement>>>({});
+
+  const handleSectionClick = (key: SectionKey) => {
+    setOpenSection(key);
+  };
+
+  useEffect(() => {
+    const el = sectionRefs.current[openSection];
+    if (el) {
+      el.scrollIntoView({ block: "start", behavior: "smooth" });
+    }
+  }, [openSection]);
+
   return (
     <main>
       <section className="hero section">
@@ -18,13 +31,13 @@ export default function FaqsPage() {
         </p>
       </section>
 
-      <section className="section">
+      <section className="section" ref={(el) => { if (el) sectionRefs.current.who = el; }}>
         <div className="section-head">
           <span className="eyebrow">Who</span>
           <button
             className="section-title"
             type="button"
-            onClick={() => setOpenSection("who")}
+            onClick={() => handleSectionClick("who")}
           >
             Who this is for
           </button>
@@ -57,13 +70,13 @@ export default function FaqsPage() {
         )}
       </section>
 
-      <section className="section">
+      <section className="section" ref={(el) => { if (el) sectionRefs.current.what = el; }}>
         <div className="section-head">
           <span className="eyebrow">What</span>
           <button
             className="section-title"
             type="button"
-            onClick={() => setOpenSection("what")}
+            onClick={() => handleSectionClick("what")}
           >
             What to expect
           </button>
@@ -118,13 +131,13 @@ export default function FaqsPage() {
         )}
       </section>
 
-      <section className="section">
+      <section className="section" ref={(el) => { if (el) sectionRefs.current.where = el; }}>
         <div className="section-head">
           <span className="eyebrow">Where</span>
           <button
             className="section-title"
             type="button"
-            onClick={() => setOpenSection("where")}
+            onClick={() => handleSectionClick("where")}
           >
             Where to begin and manage
           </button>
@@ -162,13 +175,13 @@ export default function FaqsPage() {
         )}
       </section>
 
-      <section className="section">
+      <section className="section" ref={(el) => { if (el) sectionRefs.current.why = el; }}>
         <div className="section-head">
           <span className="eyebrow">Why</span>
           <button
             className="section-title"
             type="button"
-            onClick={() => setOpenSection("why")}
+            onClick={() => handleSectionClick("why")}
           >
             Why the structure matters
           </button>
@@ -194,13 +207,13 @@ export default function FaqsPage() {
         )}
       </section>
 
-      <section className="section">
+      <section className="section" ref={(el) => { if (el) sectionRefs.current.help = el; }}>
         <div className="section-head">
           <span className="eyebrow">Help</span>
           <button
             className="section-title"
             type="button"
-            onClick={() => setOpenSection("help")}
+            onClick={() => handleSectionClick("help")}
           >
             Help and tips
           </button>
