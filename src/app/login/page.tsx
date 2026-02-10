@@ -11,7 +11,7 @@ export default function LoginPage() {
       </section>
       <AdminSetupHint />
       <LoginForm />
-      <SiteFooter />
+      <SiteFooter showStartJourney={false} />
     </main>
   );
 }

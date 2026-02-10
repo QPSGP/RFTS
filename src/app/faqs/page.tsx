@@ -134,7 +134,10 @@ export default function FaqsPage() {
           <div className="card">
             <h3>Where do I start?</h3>
             <ol>
-              <li>Choose a subscription plan.</li>
+              <li>
+                Click on{" "}
+                <a href="/signup/step-1-subscription-selection">Start Your Journey</a>.
+              </li>
               <li>Select up to 10 goals (in priority order).</li>
               <li>Tap Start Session on your Play Options page.</li>
             </ol>
