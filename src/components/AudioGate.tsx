@@ -110,11 +110,12 @@ export default function AudioGate({ item }: AudioGateProps) {
     );
   }
 
+  const streamUrl = `/api/stream/audio?id=${item.id}`;
   return (
     <AudioPlayer
       title={item.title}
       description={item.description || "Description pending."}
-      audioUrl={item.audioUrl}
+      audioUrl={streamUrl}
       coverUrl={item.coverUrl || "/covers/placeholder.png"}
     />
   );

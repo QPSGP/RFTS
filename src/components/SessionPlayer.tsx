@@ -190,6 +190,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           <audio
             ref={audioRef}
             controls={!!current}
+            controlsList="nodownload"
             onEnded={handleEnded}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}

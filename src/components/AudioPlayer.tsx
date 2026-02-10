@@ -118,7 +118,7 @@ export default function AudioPlayer({
             </p>
           )}
         </div>
-        <audio ref={audioRef} controls style={{ width: "100%" }}>
+        <audio ref={audioRef} controls controlsList="nodownload" style={{ width: "100%" }}>
           <source src={audioUrl} />
           Your browser does not support the audio element.
         </audio>

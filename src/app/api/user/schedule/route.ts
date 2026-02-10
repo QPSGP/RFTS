@@ -64,14 +64,23 @@ export async function GET(request: Request) {
     "blob-assets.json",
     {}
   );
-  const prepAudioUrl = blobAssets.audios?.[PREP_AUDIO_NAME] || "";
+  const hasPrep = !!blobAssets.audios?.[PREP_AUDIO_NAME];
+  const prepAudio = hasPrep
+    ? { title: "Preparation Audio", url: "/api/stream/audio?prep=1" }
+    : null;
+  const scheduleWithStreamUrls = schedule.map((night) => ({
+    ...night,
+    tracks: night.tracks.map((track) => ({
+      id: track.id,
+      title: track.title,
+      audioUrl: `/api/stream/audio?id=${track.id}`
+    }))
+  }));
   return NextResponse.json({
-    schedule,
+    schedule: scheduleWithStreamUrls,
     nights,
     playsPerNight: profile.playsPerNight === 1 ? 1 : 2,
     gapHours: settings.nightlyGapHours,
-    prepAudio: prepAudioUrl
-      ? { title: "Preparation Audio", url: prepAudioUrl }
-      : null
+    prepAudio
   });
 }
