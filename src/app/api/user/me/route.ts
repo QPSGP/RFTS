@@ -12,10 +12,11 @@ export async function GET() {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
   const memberProfile = await getMemberProfileByUserId(profile.id);
-  const adultConsent = memberProfile?.adultConsent ?? false;
   const yearBorn = memberProfile?.yearBorn ?? null;
   const currentYear = new Date().getFullYear();
   const hasVerifiedAge = yearBorn != null && currentYear - yearBorn >= 18;
+  const storedConsent = memberProfile?.adultConsent ?? false;
+  const adultConsent = storedConsent && hasVerifiedAge;
   return NextResponse.json({
     profile: { ...profile, adultConsent, yearBorn, hasVerifiedAge }
   });

@@ -446,7 +446,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db", width: "100%" }}
               />
               <p style={{ fontSize: 12, color: "#64748b", marginTop: 4, marginBottom: 0 }}>
-                For content purposes (optional). Required for adult content age verification.
+                Optional. Required for adult content: you must be 18+ and provide your birthdate to access mature content.
               </p>
             </div>
             <input
@@ -498,6 +498,9 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
             </label>
             <div className="card">
               <p style={{ marginTop: 0, marginBottom: 12, fontWeight: 600 }}>Adult content</p>
+              <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
+                You must be 18+ and provide your birthdate above to access adult content. Without a birthdate, adult content will not be available.
+              </p>
               <label style={{ cursor: "pointer", display: "block", marginBottom: 12 }}>
                 <input
                   type="checkbox"
@@ -507,7 +510,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                   }
                   style={{ marginRight: 8 }}
                 />
-                I am an adult and am willing to hear audios with mature content.
+                I am 18 or older and consent to hear audios with mature content.
               </label>
               <div style={{ marginLeft: 28, paddingLeft: 12, borderLeft: "2px solid #e5e7eb" }}>
                 <label style={{ cursor: "pointer" }}>

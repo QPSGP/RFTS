@@ -65,8 +65,10 @@ export async function POST(request: Request) {
     stripeIsDemo = false;
   }
   const demoSkipEnv = process.env.DEMO_SKIP_STRIPE === "true";
+  const noStripeKey = !process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === "sk_test_replace";
   const isDemoSkip =
     demoSkipEnv ||
+    noStripeKey ||
     (parsed.data.skipPayment && (stripeIsDemo || demoSkipEnv)) ||
     !plan.priceId;
   if (!isDemoSkip && !plan.priceId) {
@@ -109,15 +111,23 @@ export async function POST(request: Request) {
   });
 
   const token = createUserSessionToken(parsed.data.email);
-  setUserSession(token);
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
   if (isDemoSkip) {
-    return NextResponse.json({ url: "/play-options" });
+    const res = NextResponse.json({ url: "/play-options" });
+    res.cookies.set("rfts_user_session", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/"
+    });
+    return res;
   }
+
+  setUserSession(token);
 
   try {
     const stripe = getStripe();
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       client_reference_id: user.id,

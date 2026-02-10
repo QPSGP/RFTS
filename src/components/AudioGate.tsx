@@ -17,7 +17,7 @@ export default function AudioGate({ item }: AudioGateProps) {
   const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
-    fetch("/api/user/me")
+    fetch("/api/user/me", { credentials: "include" })
       .then((res) => {
         if (!res.ok) {
           throw new Error("Unauthorized");

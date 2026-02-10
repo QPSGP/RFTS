@@ -69,9 +69,10 @@ export async function GET(request: Request) {
       const yearBorn = memberProfile?.yearBorn ?? null;
       const hasVerifiedAge =
         yearBorn != null && new Date().getFullYear() - yearBorn >= 18;
-      const hasConsent = memberProfile?.adultConsent ?? false;
-      if (!hasConsent || !hasVerifiedAge) {
-        return NextResponse.json({ error: "Adult content requires age verification." }, { status: 403 });
+      const storedConsent = memberProfile?.adultConsent ?? false;
+      const canAccess = storedConsent && hasVerifiedAge;
+      if (!canAccess) {
+        return NextResponse.json({ error: "Adult content requires birthdate and 18+ age verification." }, { status: 403 });
       }
     }
     if (
