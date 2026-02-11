@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
-import { createModeratorApplication, listModeratorApplications } from "@/lib/db";
+import {
+  createModeratorApplication,
+  listModeratorApplications
+} from "@/lib/db";
 
 const toSlug = (value: string) =>
   value
@@ -29,22 +32,57 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid request body. Please check your entries." },
+      { status: 400 }
+    );
+  }
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+    const issues = parsed.error.issues || [];
+    const messages = issues.map((i) => {
+      const path = i.path?.join(".") || "field";
+      return `${path}: ${i.message}`;
+    });
+    const msg =
+      messages.length > 0
+        ? messages.join(". ")
+        : "Please check: name (2+ chars), email (valid), focus areas (3+ chars), experience (10+ chars).";
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
-  await createModeratorApplication({
-    name: parsed.data.name,
-    email: parsed.data.email,
-    focusAreas: parsed.data.focusAreas,
-    experience: parsed.data.experience,
-    links: parsed.data.links || "",
-    phone: parsed.data.phone || "",
-    website: parsed.data.website || "",
-    socialLinks: parsed.data.socialLinks || "",
-    photoUrl: parsed.data.photoUrl || "",
-    profileSlug: toSlug(parsed.data.name)
-  });
-  return NextResponse.json({ ok: true });
+  try {
+    const applications = await listModeratorApplications();
+    const existing = applications.find(
+      (a) => a.email.toLowerCase() === parsed.data.email.toLowerCase()
+    );
+    if (existing?.status === "approved") {
+      return NextResponse.json(
+        { error: "An application with this email has already been approved." },
+        { status: 409 }
+      );
+    }
+    await createModeratorApplication({
+      name: parsed.data.name,
+      email: parsed.data.email,
+      focusAreas: parsed.data.focusAreas,
+      experience: parsed.data.experience,
+      links: parsed.data.links || "",
+      phone: parsed.data.phone || "",
+      website: parsed.data.website || "",
+      socialLinks: parsed.data.socialLinks || "",
+      photoUrl: parsed.data.photoUrl || "",
+      profileSlug: toSlug(parsed.data.name)
+    });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("Co-Creator application error:", err);
+    return NextResponse.json(
+      { error: "Unable to save application. Please try again." },
+      { status: 500 }
+    );
+  }
 }

@@ -38,7 +38,8 @@ export default function CoCreatorPage() {
       setStatus("Thanks! Your application has been received.");
       return;
     }
-    setStatus("Something went wrong. Please review your responses and try again.");
+    const data = await response.json().catch(() => ({}));
+    setStatus(data?.error || "Something went wrong. Please review your responses and try again.");
   };
 
   return (
@@ -169,7 +170,7 @@ export default function CoCreatorPage() {
         </form>
         {status && <p style={{ marginTop: 12 }}>{status}</p>}
       </section>
-      <SiteFooter />
+      <SiteFooter showStartJourney={false} />
     </main>
   );
 }
