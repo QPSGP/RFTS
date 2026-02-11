@@ -768,6 +768,14 @@ export const clearModeratorData = async () => {
   await sql`DELETE FROM moderator_applications`;
 };
 
+export const deletePendingModeratorApplications = async () => {
+  await sql`DELETE FROM moderator_applications WHERE status != 'approved'`;
+};
+
+export const deleteModerator = async (moderatorId: string) => {
+  await sql`DELETE FROM moderators WHERE id = ${moderatorId}`;
+};
+
 export const createModeratorApplication = async (payload: {
   name: string;
   email: string;

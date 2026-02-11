@@ -146,6 +146,42 @@ export default function AdminModerators() {
     setStatus("Seed failed. Try again.");
   };
 
+  const clearPendingApplications = async () => {
+    const confirmed = window.confirm(
+      "Clear all pending and declined applications? Approved co-creators will not be affected."
+    );
+    if (!confirmed) return;
+    const response = await fetch("/api/moderator-admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "clear-pending-applications" })
+    });
+    if (response.ok) {
+      setStatus("Pending applications cleared.");
+      await load();
+    } else {
+      setStatus("Failed to clear pending applications.");
+    }
+  };
+
+  const deleteCoCreator = async (moderatorId: string, name: string) => {
+    const confirmed = window.confirm(
+      `Delete co-creator ${name}? This cannot be undone.`
+    );
+    if (!confirmed) return;
+    const response = await fetch("/api/moderator-admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "delete-moderator", moderatorId })
+    });
+    if (response.ok) {
+      setStatus("Co-Creator deleted.");
+      await load();
+    } else {
+      setStatus("Failed to delete co-creator.");
+    }
+  };
+
   const approve = async (applicationId: string) => {
     const rawEmails = assignments[applicationId] || "";
     const assignedUserEmails = rawEmails
@@ -280,11 +316,18 @@ export default function AdminModerators() {
       <h2>Co-Creator Admin</h2>
       <p style={{ color: "#4b5563" }}>
         Co-Creators can only access their assigned subscribers. They cannot add
-        admins or other co-creators.
+        admins or other co-creators. Clear Pending Applications removes only
+        applications not yet approved; approved co-creators stay unless deleted.
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
         <button className="button button-secondary" onClick={resetDemoData}>
-          Clear Co-Creator Data
+          Clear All Co-Creator Data
+        </button>
+        <button
+          className="button button-secondary"
+          onClick={clearPendingApplications}
+        >
+          Clear Pending Applications
         </button>
         <button className="button" onClick={seedDemoApplication}>
           Create Demo Application
@@ -328,7 +371,9 @@ export default function AdminModerators() {
           <h3>Co-Creator Applications</h3>
           <p style={{ color: "#6b7280" }}>
             Applications appear here after someone submits the Co-Creator form.
-            Approve buttons show only while the status is pending.
+            Approve buttons show only while the status is pending. Use "Clear Pending
+            Applications" above to remove only pending/declined applications; approved
+            co-creators stay in the system unless you delete them.
           </p>
           {uniqueApplications.length === 0 ? (
             <p>No applications yet.</p>
@@ -622,7 +667,14 @@ export default function AdminModerators() {
                         )
                       }
                     >
-                      {moderator.status === "active" ? "Pause" : "Activate"}
+                      {moderator.status === "active" ? "Make Inactive" : "Make Active"}
+                    </button>
+                    <button
+                      className="button button-secondary"
+                      onClick={() => deleteCoCreator(moderator.id, moderator.name)}
+                      style={{ color: "#b91c1c" }}
+                    >
+                      Delete Co-Creator
                     </button>
                   </div>
                 </div>

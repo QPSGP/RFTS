@@ -6,6 +6,8 @@ import {
   createModeratorAccount,
   createModeratorApplication,
   clearModeratorData,
+  deleteModerator,
+  deletePendingModeratorApplications,
   getModeratorByEmail,
   listModeratorApplications,
   listModerators,
@@ -75,6 +77,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid input." }, { status: 400 });
     }
     await clearModeratorData();
+    return NextResponse.json({ ok: true });
+  }
+  if (body?.action === "clear-pending-applications") {
+    await deletePendingModeratorApplications();
+    return NextResponse.json({ ok: true });
+  }
+  if (body?.action === "delete-moderator") {
+    const moderatorId = body?.moderatorId;
+    if (!moderatorId || typeof moderatorId !== "string") {
+      return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+    }
+    await deleteModerator(moderatorId);
     return NextResponse.json({ ok: true });
   }
   if (body?.action === "seed-demo") {

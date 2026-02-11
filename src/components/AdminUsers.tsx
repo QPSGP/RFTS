@@ -149,6 +149,29 @@ export default function AdminUsers() {
     );
   };
 
+  const setMemberStatus = async (email: string, status: "active" | "inactive") => {
+    const user = users.find((u) => u.email === email);
+    if (!user) return;
+    const response = await fetch("/api/admin/users", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        tier: user.subscriptionTier ?? "platinum",
+        status,
+        goalIds: user.goalIds,
+        playsPerNight: user.playsPerNight
+      })
+    });
+    if (response.ok) {
+      setStatus(`Member ${status === "inactive" ? "deactivated" : "activated"}.`);
+      await load();
+    } else {
+      const data = await response.json().catch(() => ({}));
+      setStatus(data?.error || "Update failed.");
+    }
+  };
+
   const deleteUser = async (email: string) => {
     if (!window.confirm(`Delete member ${email}? This cannot be undone.`)) {
       return;
@@ -1076,6 +1099,23 @@ export default function AdminUsers() {
                   <button className="button" onClick={() => updateUser(user.email)}>
                     Save
                   </button>
+                  {user.subscriptionStatus === "active" ? (
+                    <button
+                      className="button button-secondary"
+                      type="button"
+                      onClick={() => setMemberStatus(user.email, "inactive")}
+                    >
+                      Make Inactive
+                    </button>
+                  ) : (
+                    <button
+                      className="button button-secondary"
+                      type="button"
+                      onClick={() => setMemberStatus(user.email, "active")}
+                    >
+                      Make Active
+                    </button>
+                  )}
                   <button
                     className="button button-secondary"
                     type="button"
