@@ -77,6 +77,11 @@ export default function AdminModerators() {
     return Array.from(map.values());
   }, [applications]);
 
+  const pendingApplications = useMemo(
+    () => uniqueApplications.filter((app) => app.status !== "approved"),
+    [uniqueApplications]
+  );
+
   const load = async () => {
     const response = await fetch("/api/moderator-admin");
     if (!response.ok) {
@@ -111,26 +116,6 @@ export default function AdminModerators() {
   useEffect(() => {
     load();
   }, []);
-
-  const resetDemoData = async () => {
-    const confirmed = window.confirm(
-      "Clear all co-creator applications and accounts?"
-    );
-    if (!confirmed) {
-      return;
-    }
-    const response = await fetch("/api/moderator-admin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "reset-demo" })
-    });
-    if (response.ok) {
-      setStatus("Co-Creator data cleared.");
-      await load();
-      return;
-    }
-    setStatus("Reset failed. Try again.");
-  };
 
   const seedDemoApplication = async () => {
     const response = await fetch("/api/moderator-admin", {
@@ -316,13 +301,11 @@ export default function AdminModerators() {
       <h2>Co-Creator Admin</h2>
       <p style={{ color: "#4b5563" }}>
         Co-Creators can only access their assigned subscribers. They cannot add
-        admins or other co-creators. Clear Pending Applications removes only
-        applications not yet approved; approved co-creators stay unless deleted.
+        admins or other co-creators. Delete co-creators individually from the
+        Active Co-Creators section below. Approved applications are hidden;
+        only pending and declined applications appear in the list.
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
-        <button className="button button-secondary" onClick={resetDemoData}>
-          Clear All Co-Creator Data
-        </button>
         <button
           className="button button-secondary"
           onClick={clearPendingApplications}
@@ -370,16 +353,14 @@ export default function AdminModerators() {
         <div className="card">
           <h3>Co-Creator Applications</h3>
           <p style={{ color: "#6b7280" }}>
-            Applications appear here after someone submits the Co-Creator form.
-            Approve buttons show only while the status is pending. Use "Clear Pending
-            Applications" above to remove only pending/declined applications; approved
-            co-creators stay in the system unless you delete them.
+            Pending and declined applications appear here. Approved applications
+            are hidden—those co-creators appear in Active Co-Creators below.
           </p>
-          {uniqueApplications.length === 0 ? (
-            <p>No applications yet.</p>
+          {pendingApplications.length === 0 ? (
+            <p>No pending or declined applications.</p>
           ) : (
             <div className="grid">
-              {uniqueApplications.map((app) => (
+              {pendingApplications.map((app) => (
                   <div key={app.id} className="card">
                     <strong>{app.name}</strong>
                     <p>Status: {app.status}</p>
