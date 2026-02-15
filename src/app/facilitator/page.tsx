@@ -10,7 +10,7 @@ const inputStyle = {
   width: "100%"
 };
 
-export default function CoCreatorPage() {
+export default function FacilitatorPage() {
   const [status, setStatus] = useState<string | null>(null);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -45,10 +45,10 @@ export default function CoCreatorPage() {
   return (
     <main>
       <section className="hero section">
-        <span className="pill">Co-Creation Council</span>
-        <h1>Co-Creator Application</h1>
+        <span className="pill">Facilitator Council</span>
+        <h1>Facilitator Application</h1>
         <p>
-          We are building a co-creator community devoted to uplifting personal growth,
+          We are building a facilitator community devoted to uplifting personal growth,
           emotional resilience, and expanded awareness. Help us add and guide
           audio content that supports transformation in a safe, focused environment.
         </p>
@@ -63,14 +63,14 @@ export default function CoCreatorPage() {
           </p>
         </div>
         <div className="card">
-          <h3>What Co-Creators Do</h3>
+          <h3>What Facilitators Do</h3>
           <p>
             Contribute new recordings, refine descriptions, and ensure each session
             aligns with member goals and ethics.
           </p>
         </div>
         <div className="card">
-          <h3>Who We’re Seeking</h3>
+          <h3>Who We're Seeking</h3>
           <p>
             Hypnotherapists, wellness guides, coaches, and mindful practitioners who
             want to shape a trusted healing platform.
@@ -80,7 +80,7 @@ export default function CoCreatorPage() {
 
       <section className="grid grid-2 section">
         <div className="card">
-          <h3>Co-Creation Standards</h3>
+          <h3>Facilitator Standards</h3>
           <div className="stack">
             <p>Clear, calming, and non-manipulative language.</p>
             <p>Respectful handling of sensitive or adult content.</p>
@@ -100,18 +100,18 @@ export default function CoCreatorPage() {
       </section>
 
       <section className="card section">
-        <h2>Featured Co-Creator</h2>
+        <h2>Featured Facilitator</h2>
         <p style={{ color: "#475569" }}>
-          Learn more about our first Co-Creator and her contribution to the
+          Learn more about our first Facilitator and her contribution to the
           Reach For The Stars experience.
         </p>
-        <a className="button button-secondary" href="/co-creators/terry-brussel-rogers">
+        <a className="button button-secondary" href="/facilitators/terry-brussel-rogers">
           View Terry Brussel-Rogers, CCHt
         </a>
       </section>
 
       <section className="card section">
-        <h2>Apply to Become a Co-Creator</h2>
+        <h2>Apply to Become a Facilitator</h2>
         <p style={{ color: "#475569" }}>
           Tell us about your background and the type of consciousness-focused work
           you want to help cultivate. Applications are reviewed by the Success Center

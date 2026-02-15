@@ -294,6 +294,31 @@ button.section-title {
   width: 100%;
 }
 
+/* Keep step 2 form (Personal Details) fully visible: prevent overflow from grid/inputs */
+.signup-card .grid-2,
+.signup-card .grid {
+  max-width: 100%;
+}
+.signup-card .grid-2 > *,
+.signup-card .grid > * {
+  min-width: 0;
+}
+.signup-card .grid-2 input,
+.signup-card .grid-2 select,
+.signup-card .grid input,
+.signup-card .grid select {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.signup-card input[type="date"] {
+  min-width: 0;
+  max-width: 100%;
+}
+.signup-card .grid-2 > div {
+  min-width: 0;
+}
+
 .signup-title {
   text-align: center;
   font-size: 22px;

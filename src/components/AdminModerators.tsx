@@ -133,7 +133,7 @@ export default function AdminModerators() {
 
   const clearPendingApplications = async () => {
     const confirmed = window.confirm(
-      "Clear all pending and declined applications? Approved co-creators will not be affected."
+      "Clear all pending and declined applications? Approved facilitators will not be affected."
     );
     if (!confirmed) return;
     const response = await fetch("/api/moderator-admin", {
@@ -149,9 +149,9 @@ export default function AdminModerators() {
     }
   };
 
-  const deleteCoCreator = async (moderatorId: string, name: string) => {
+  const deleteFacilitator = async (moderatorId: string, name: string) => {
     const confirmed = window.confirm(
-      `Delete co-creator ${name}? This cannot be undone.`
+      `Delete facilitator ${name}? This cannot be undone.`
     );
     if (!confirmed) return;
     const response = await fetch("/api/moderator-admin", {
@@ -160,10 +160,10 @@ export default function AdminModerators() {
       body: JSON.stringify({ action: "delete-moderator", moderatorId })
     });
     if (response.ok) {
-      setStatus("Co-Creator deleted.");
+      setStatus("Facilitator deleted.");
       await load();
     } else {
-      setStatus("Failed to delete co-creator.");
+      setStatus("Failed to delete facilitator.");
     }
   };
 
@@ -242,7 +242,7 @@ export default function AdminModerators() {
       })
     });
     if (response.ok) {
-      setStatus("Co-Creator application updated.");
+      setStatus("Facilitator application updated.");
       await load();
     } else {
       setStatus("Update failed. Check the fields and try again.");
@@ -298,11 +298,11 @@ export default function AdminModerators() {
 
   return (
     <div className="card">
-      <h2>Co-Creator Admin</h2>
+      <h2>Facilitator Admin</h2>
       <p style={{ color: "#4b5563" }}>
-        Co-Creators can only access their assigned subscribers. They cannot add
-        admins or other co-creators. Delete co-creators individually from the
-        Active Co-Creators section below. Approved applications are hidden;
+        Facilitators can only access their assigned subscribers. They cannot add
+        admins or other facilitators. Delete facilitators individually from the
+        Active Facilitators section below. Approved applications are hidden;
         only pending and declined applications appear in the list.
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
@@ -317,17 +317,17 @@ export default function AdminModerators() {
         </button>
       </div>
       <div className="card" style={{ marginTop: 12 }}>
-        <h3>Featured Co-Creator Profiles</h3>
+        <h3>Featured Facilitator Profiles</h3>
         <p style={{ color: "#4b5563" }}>
-          Manage spotlight pages for your co-creators.
+          Manage spotlight pages for your facilitators.
         </p>
         <div className="grid">
           <div className="card">
             <strong>Terry Brussel-Rogers, CCHt</strong>
-            <p>Co-Creator profile page</p>
+            <p>Facilitator profile page</p>
             <a
               className="button button-secondary"
-              href="/co-creators/terry-brussel-rogers"
+              href="/facilitators/terry-brussel-rogers"
             >
               View Profile
             </a>
@@ -335,9 +335,9 @@ export default function AdminModerators() {
         </div>
       </div>
       <div className="card" style={{ marginTop: 12 }}>
-        <h3>Active Co-Creators (Summary)</h3>
+        <h3>Active Facilitators (Summary)</h3>
         {moderators.length === 0 ? (
-          <p>No co-creators yet. Approve a pending application to activate.</p>
+          <p>No facilitators yet. Approve a pending application to activate.</p>
         ) : (
           <div className="stack">
             {moderators.map((moderator) => (
@@ -351,10 +351,10 @@ export default function AdminModerators() {
       {status && <p>{status}</p>}
       <div className="grid" style={{ marginTop: 16 }}>
         <div className="card">
-          <h3>Co-Creator Applications</h3>
+          <h3>Facilitator Applications</h3>
           <p style={{ color: "#6b7280" }}>
             Pending and declined applications appear here. Approved applications
-            are hidden—those co-creators appear in Active Co-Creators below.
+            are hidden—those facilitators appear in Active Facilitators below.
           </p>
           {pendingApplications.length === 0 ? (
             <p>No pending or declined applications.</p>
@@ -496,9 +496,9 @@ export default function AdminModerators() {
         </div>
 
         <div className="card">
-          <h3>Active Co-Creators</h3>
+          <h3>Active Facilitators</h3>
           {moderators.length === 0 ? (
-            <p>No co-creators yet.</p>
+            <p>No facilitators yet.</p>
           ) : (
             <div className="grid">
               {moderators.map((moderator) => (
@@ -629,8 +629,8 @@ export default function AdminModerators() {
                       </div>
                     ) : (
                       <p style={{ color: "#6b7280" }}>
-                        No application profile found for this co-creator yet.
-                        Create one in the Co-Creator Applications section to enable
+                        No application profile found for this facilitator yet.
+                        Create one in the Facilitator Applications section to enable
                         profile editing.
                       </p>
                     )}
@@ -652,10 +652,10 @@ export default function AdminModerators() {
                     </button>
                     <button
                       className="button button-secondary"
-                      onClick={() => deleteCoCreator(moderator.id, moderator.name)}
+                      onClick={() => deleteFacilitator(moderator.id, moderator.name)}
                       style={{ color: "#b91c1c" }}
                     >
-                      Delete Co-Creator
+                      Delete Facilitator
                     </button>
                   </div>
                 </div>

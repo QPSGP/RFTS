@@ -67,7 +67,7 @@ export default function AdminContentPage() {
             type="button"
             onClick={() => toggleSection("moderators", "admin-moderators")}
           >
-            Co-Creators Section
+            Facilitators Section
           </button>
           <button
             className="button button-secondary"

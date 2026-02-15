@@ -6,7 +6,7 @@ export default async function SiteHeader() {
     consoleType === "admin"
       ? { label: "Admin Console", href: "/admin/content" }
       : consoleType === "moderator"
-        ? { label: "Co-Creators Console", href: "/moderator/console" }
+        ? { label: "Facilitators Console", href: "/moderator/console" }
         : consoleType === "member"
           ? { label: "Members Console", href: "/play-options" }
           : null;
@@ -22,7 +22,7 @@ export default async function SiteHeader() {
                 <a href="/how-it-works">How It Works</a>
                 <a href="/science">Science</a>
                 <a href="/faqs">FAQs</a>
-                <a href="/co-creator">Co-Creators</a>
+                <a href="/facilitator">Facilitators</a>
                 <a href="/affiliates">Affiliates</a>
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
               </div>
@@ -43,7 +43,7 @@ export default async function SiteHeader() {
             <a href="/how-it-works">How It Works</a>
             <a href="/science">Science</a>
             <a href="/faqs">FAQs</a>
-            <a href="/co-creator">Co-Creators</a>
+            <a href="/facilitator">Facilitators</a>
             <a href="/affiliates">Affiliates</a>
             {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
           </nav>
@@ -56,7 +56,7 @@ export default async function SiteHeader() {
               <summary className="button header-cta">Login</summary>
               <div className="menu-panel">
                 <a href="/member/login">Members</a>
-                <a href="/moderator/console">Co-Creators</a>
+                <a href="/moderator/console">Facilitators</a>
                 <a href="/affiliates">Affiliates</a>
                 <a href="/login">Administrator</a>
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}

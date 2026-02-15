@@ -97,8 +97,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid input." }, { status: 400 });
     }
     const application = await createModeratorApplication({
-      name: "Demo Co-Creator",
-      email: "demo.cocreator@rfts.test",
+      name: "Demo Facilitator",
+      email: "demo.facilitator@rfts.test",
       focusAreas: "Sleep optimization, motivation, habit change",
       experience: "Demo application used to validate the approval flow.",
       links: "https://rfts.test",
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
       website: "https://rfts.test",
       socialLinks: "https://facebook.com/rfts",
       photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
-      profileSlug: "demo-co-creator"
+      profileSlug: "demo-facilitator"
     });
     return NextResponse.json({ ok: true, application });
   }

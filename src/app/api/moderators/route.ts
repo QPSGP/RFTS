@@ -79,7 +79,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("Co-Creator application error:", err);
+    console.error("Facilitator application error:", err);
     return NextResponse.json(
       { error: "Unable to save application. Please try again." },
       { status: 500 }

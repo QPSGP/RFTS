@@ -437,13 +437,13 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
               <option value="Male">Male</option>
               <option value="Female">Female</option>
             </select>
-            <div>
+            <div className="signup-form-field" style={{ minWidth: 0 }}>
               <input
                 type="date"
                 placeholder="Birthdate"
                 value={profile.birthDate}
                 onChange={(event) => setProfile({ ...profile, birthDate: event.target.value })}
-                style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db", width: "100%" }}
+                style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
               />
               <p style={{ fontSize: 12, color: "#64748b", marginTop: 4, marginBottom: 0 }}>
                 Optional. Required for adult content: you must be 18+ and provide your birthdate to access mature content.

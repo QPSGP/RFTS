@@ -14,7 +14,7 @@ export default async function TerryBrusselRogersPage() {
   return (
     <main>
       <section className="hero section">
-        <span className="pill">Co-Creator Spotlight</span>
+        <span className="pill">Facilitator Spotlight</span>
         <h1>{profile?.name || "Terry Brussel-Rogers, CCHt"}</h1>
         <p>
           Certified Clinical Hypnotherapist registered with the National Guild of
@@ -53,7 +53,7 @@ export default async function TerryBrusselRogersPage() {
           )}
         </div>
         <div className="card">
-          <h2>Co-Creator Profile</h2>
+          <h2>Facilitator Profile</h2>
           {photoUrl ? (
             <img
               src={photoUrl}
