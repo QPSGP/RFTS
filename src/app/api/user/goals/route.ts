@@ -9,28 +9,15 @@ const schema = z.object({
 });
 
 const GOAL_LIMIT = 10;
-const GOAL_CHANGE_WINDOW_DAYS = 30;
 
 const computeGoalEditState = (profile: Awaited<ReturnType<typeof getUserProfile>>) => {
   if (!profile) {
     return { canEdit: false, nextAllowedAt: null as string | null };
   }
-  if (profile.goalIds.length === 0) {
-    return { canEdit: true, nextAllowedAt: null };
-  }
   if (profile.subscriptionStatus !== "active") {
     return { canEdit: false, nextAllowedAt: null };
   }
-  const lastUpdated = profile.goalUpdatedAt
-    ? new Date(profile.goalUpdatedAt)
-    : null;
-  if (!lastUpdated) {
-    return { canEdit: true, nextAllowedAt: null };
-  }
-  const nextAllowed = new Date(lastUpdated.getTime());
-  nextAllowed.setDate(nextAllowed.getDate() + GOAL_CHANGE_WINDOW_DAYS);
-  const canEdit = Date.now() >= nextAllowed.getTime();
-  return { canEdit, nextAllowedAt: canEdit ? null : nextAllowed.toISOString() };
+  return { canEdit: true, nextAllowedAt: null };
 };
 
 export async function GET() {
@@ -73,7 +60,7 @@ export async function PUT(request: Request) {
   if (nextGoals) {
     if (!editState.canEdit) {
       return NextResponse.json(
-        { error: "Goals can only be changed every 30 days. Please try again later.", nextAllowedAt: editState.nextAllowedAt },
+        { error: "You must have an active subscription to update goals." },
         { status: 403 }
       );
     }

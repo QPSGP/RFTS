@@ -334,9 +334,8 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
           <div className="card" style={{ marginTop: 12 }}>
             <h3>Select your goals (up to 10)</h3>
             <p style={{ color: "#4b5563", marginTop: 8, marginBottom: 12 }}>
-              <strong>Important:</strong> Once your first session starts, you will not be able to
-              change your goals for 30 days (unless an administrator updates them). Choose carefully —
-              for best results, stick with your goals through the full 21-times cycle.
+              You can change your goals at any time from your member area. For best results,
+              stick with your goals through the full 21-times cycle when possible.
             </p>
             <input
               style={{

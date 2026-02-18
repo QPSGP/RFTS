@@ -97,11 +97,11 @@ export default function HowItWorksPage() {
             </p>
           </div>
           <div className="card">
-            <h3>Update windows</h3>
+            <h3>Updating your goals</h3>
             <p>
-              Goals can only be changed every 30 days. For best results, stick with your
-              goals until you complete the full 21-times cycle — changing them sooner
-              can interrupt effectiveness.
+              You can change your goals at any time from your member area. For best
+              results, stick with your goals until you complete the full 21-times cycle
+              when possible.
             </p>
           </div>
         </div>

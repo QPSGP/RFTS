@@ -123,19 +123,12 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
         Choose up to {limit} priorities you want your sessions to focus on.
       </p>
       <p style={{ color: "#4b5563" }}>
-        Once your first session starts, you cannot change your goals for 30 days unless an
-        administrator updates them. For best results, stick with your goals until you
-        complete the full 21-times cycle — changing them sooner can interrupt the
-        effectiveness of the subconscious reinforcement.
+        You can change your goals at any time. For best results, stick with your goals
+        until you complete the full 21-times cycle when possible.
       </p>
       <p style={{ color: "#4b5563" }}>
         Changes save when you click &quot;Save Goals&quot;.
       </p>
-      {!canEdit && nextAllowedAt && (
-        <p style={{ color: "#b91c1c" }}>
-          Goal changes are locked until {new Date(nextAllowedAt).toLocaleDateString()}.
-        </p>
-      )}
       <div className="card" style={{ marginTop: 16 }}>
         <h3>Your selected goals (saved order)</h3>
         {orderedGoals.length === 0 ? (

@@ -197,10 +197,10 @@ export default function FaqsPage() {
           </div>
 
           <div className="card">
-            <h3>Why are goal changes limited?</h3>
+            <h3>Can I change my goals?</h3>
             <p>
-              Goal changes are limited to every 30 days. This keeps your session plan
-              consistent and effective.
+              Yes. You can change your goals at any time from your member area. Your
+              session plan will update to reflect your new priorities.
             </p>
           </div>
         </div>
