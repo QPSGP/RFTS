@@ -123,6 +123,11 @@ export default function UserAuth() {
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
+          <p style={{ marginTop: 6, marginBottom: 0 }}>
+            <a href="/member/forgot-password" style={{ fontSize: 13, color: "#0f766e" }}>
+              Forgot password?
+            </a>
+          </p>
           <button className="button" disabled={loading} type="submit">
             {loading ? "Signing in..." : "Sign In"}
           </button>

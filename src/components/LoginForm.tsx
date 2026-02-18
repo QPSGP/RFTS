@@ -94,6 +94,11 @@ export default function LoginForm() {
             {showPassword ? "Hide" : "Show"}
           </button>
         </div>
+        <p style={{ marginTop: 6, marginBottom: 0 }}>
+          <a href="/login/forgot-password" style={{ fontSize: 13, color: "#0f766e" }}>
+            Forgot password?
+          </a>
+        </p>
         <button className="button" disabled={isSubmitting} type="submit">
           {isSubmitting ? "Signing in..." : "Sign In"}
         </button>
