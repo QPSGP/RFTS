@@ -117,6 +117,16 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
       })),
     [goalIds, goalNameById]
   );
+  const showAdultContent = useMemo(() => {
+    if (!profile.birthDate || profile.birthDate.trim() === "") return false;
+    const birth = new Date(profile.birthDate);
+    if (Number.isNaN(birth.getTime())) return false;
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--;
+    return age >= 18;
+  }, [profile.birthDate]);
   const toggleGoal = (id: string) => {
     setGoalIds((prev) => {
       if (prev.includes(id)) {
@@ -483,58 +493,60 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
             />
           </div>
           <div className="grid" style={{ marginTop: 16 }}>
-            <label className="card" style={{ cursor: "pointer" }}>
+            <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
               <input
                 type="checkbox"
                 checked={profile.wantsPracticeGrowth}
                 onChange={(event) =>
                   setProfile({ ...profile, wantsPracticeGrowth: event.target.checked })
                 }
-                style={{ marginRight: 8 }}
+                style={{ marginTop: 3, flexShrink: 0 }}
               />
-              I am interested in building my private hypnotherapy, coaching, or healing
-              practice.
+              <span>I am interested in building my private hypnotherapy, coaching, or healing
+              practice.</span>
             </label>
-            <div className="card">
-              <p style={{ marginTop: 0, marginBottom: 12, fontWeight: 600 }}>Adult content</p>
-              <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
-                You must be 18+ and provide your birthdate above to access adult content. Without a birthdate, adult content will not be available.
-              </p>
-              <label style={{ cursor: "pointer", display: "block", marginBottom: 12 }}>
-                <input
-                  type="checkbox"
-                  checked={profile.adultConsent}
-                  onChange={(event) =>
-                    setProfile({ ...profile, adultConsent: event.target.checked })
-                  }
-                  style={{ marginRight: 8 }}
-                />
-                I am 18 or older and consent to hear audios with mature content.
-              </label>
-              <div style={{ marginLeft: 28, paddingLeft: 12, borderLeft: "2px solid #e5e7eb" }}>
-                <label style={{ cursor: "pointer" }}>
+            {showAdultContent && (
+              <div className="card">
+                <p style={{ marginTop: 0, marginBottom: 12, fontWeight: 600 }}>Adult content</p>
+                <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
+                  You are 18 or older. You may opt in to audios with mature content below.
+                </p>
+                <label style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 12 }}>
                   <input
                     type="checkbox"
-                    checked={profile.wantsPolyamory}
+                    checked={profile.adultConsent}
                     onChange={(event) =>
-                      setProfile({ ...profile, wantsPolyamory: event.target.checked })
+                      setProfile({ ...profile, adultConsent: event.target.checked })
                     }
-                    style={{ marginRight: 8 }}
+                    style={{ marginTop: 3, flexShrink: 0 }}
                   />
-                  I would like to hear audios related to polyamory.
+                  <span>I consent to hear audios with mature content.</span>
                 </label>
+                <div style={{ marginLeft: 28, paddingLeft: 12, borderLeft: "2px solid #e5e7eb" }}>
+                  <label style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                    <input
+                      type="checkbox"
+                      checked={profile.wantsPolyamory}
+                      onChange={(event) =>
+                        setProfile({ ...profile, wantsPolyamory: event.target.checked })
+                      }
+                      style={{ marginTop: 3, flexShrink: 0 }}
+                    />
+                    <span>I would like to hear audios related to polyamory.</span>
+                  </label>
+                </div>
               </div>
-            </div>
-            <label className="card" style={{ cursor: "pointer" }}>
+            )}
+            <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
               <input
                 type="checkbox"
                 checked={profile.hadLgdSession}
                 onChange={(event) =>
                   setProfile({ ...profile, hadLgdSession: event.target.checked })
                 }
-                style={{ marginRight: 8 }}
+                style={{ marginTop: 3, flexShrink: 0 }}
               />
-              Have you had a Life Guidance Discovery Session?
+              <span>Have you had a Life Guidance Discovery Session?</span>
             </label>
             <input
               placeholder="How did you find us? If someone referred you, who?"
