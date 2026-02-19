@@ -278,18 +278,15 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
               onChange={(event) => setProfile({ ...profile, password: event.target.value })}
               style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
             />
-            <select
+            <input
+              placeholder="Gender (optional)"
               value={profile.gender}
               onChange={(event) => setProfile({ ...profile, gender: event.target.value })}
               style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            >
-              <option value="">Gender (optional)</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
+            />
             <div className="signup-form-field" style={{ minWidth: 0 }}>
               <input
-                type="date"
+                type="text"
                 placeholder="Birthdate (optional)"
                 value={profile.birthDate}
                 onChange={(event) => setProfile({ ...profile, birthDate: event.target.value })}
