@@ -23,7 +23,6 @@ export default async function SiteHeader() {
                 <a href="/science">Science</a>
                 <a href="/faqs">FAQs</a>
                 <a href="/facilitator">Facilitators</a>
-                <a href="/affiliates">Affiliates</a>
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
               </div>
             </details>
@@ -44,7 +43,6 @@ export default async function SiteHeader() {
             <a href="/science">Science</a>
             <a href="/faqs">FAQs</a>
             <a href="/facilitator">Facilitators</a>
-            <a href="/affiliates">Affiliates</a>
             {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
           </nav>
           <div className="header-actions">
@@ -57,7 +55,6 @@ export default async function SiteHeader() {
               <div className="menu-panel">
                 <a href="/member/login">Members</a>
                 <a href="/moderator/console">Facilitators</a>
-                <a href="/affiliates">Affiliates</a>
                 <a href="/login">Administrator</a>
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
               </div>

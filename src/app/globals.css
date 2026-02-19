@@ -299,6 +299,9 @@ button.section-title {
 .signup-card .grid {
   max-width: 100%;
 }
+.signup-card .grid-2 {
+  align-items: start;
+}
 .signup-card .grid-2 > *,
 .signup-card .grid > * {
   min-width: 0;
@@ -311,6 +314,12 @@ button.section-title {
   max-width: 100%;
   box-sizing: border-box;
   min-height: 44px;
+}
+@media (min-width: 901px) {
+  .signup-card .grid-2 input,
+  .signup-card .grid-2 select {
+    min-height: 0;
+  }
 }
 .signup-card input[type="date"] {
   min-width: 0;

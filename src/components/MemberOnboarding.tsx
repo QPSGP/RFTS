@@ -285,8 +285,11 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
               style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
             />
             <div className="signup-form-field" style={{ minWidth: 0 }}>
+              <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, marginBottom: 4 }}>
+                Required for adult content: you must be 18+ and provide your birthdate to access mature content.
+              </p>
               <label style={{ display: "block", fontSize: 12, color: "#64748b", marginBottom: 4 }}>
-                Birthdate (optional)
+                Birthdate
               </label>
               <input
                 type="date"
@@ -294,9 +297,6 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 onChange={(event) => setProfile({ ...profile, birthDate: event.target.value })}
                 style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
               />
-              <p style={{ fontSize: 12, color: "#64748b", marginTop: 4, marginBottom: 0 }}>
-                Optional. Required for adult content: you must be 18+ and provide your birthdate to access mature content.
-              </p>
             </div>
             <input
               placeholder="Best Contact Number (optional)"
