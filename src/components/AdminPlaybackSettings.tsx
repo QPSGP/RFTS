@@ -101,13 +101,16 @@ export default function AdminPlaybackSettings() {
           />
         </label>
         <label>
-          Bronze/Silver fallback code
+          Default code
           <input
             style={inputStyle}
             value={settings.fallbackTrackId}
             onChange={(event) => update("fallbackTrackId", event.target.value)}
             placeholder="T-18"
           />
+          <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
+            Used when no CGMR is assigned (for all members, including membership).
+          </span>
         </label>
       </div>
       <button className="button" style={{ marginTop: 12 }} onClick={save}>

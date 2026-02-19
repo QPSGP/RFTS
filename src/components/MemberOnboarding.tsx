@@ -493,16 +493,16 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
             />
           </div>
           <div className="grid" style={{ marginTop: 16 }}>
-            <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
+            <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10 }}>
               <input
                 type="checkbox"
                 checked={profile.wantsPracticeGrowth}
                 onChange={(event) =>
                   setProfile({ ...profile, wantsPracticeGrowth: event.target.checked })
                 }
-                style={{ marginTop: 3, flexShrink: 0 }}
+                style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
               />
-              <span>I am interested in building my private hypnotherapy, coaching, or healing
+              <span style={{ minWidth: 0 }}>I am interested in building my private hypnotherapy, coaching, or healing
               practice.</span>
             </label>
             {showAdultContent && (
@@ -511,42 +511,42 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
                   You are 18 or older. You may opt in to audios with mature content below.
                 </p>
-                <label style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 12 }}>
+                <label style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10, marginBottom: 12 }}>
                   <input
                     type="checkbox"
                     checked={profile.adultConsent}
                     onChange={(event) =>
                       setProfile({ ...profile, adultConsent: event.target.checked })
                     }
-                    style={{ marginTop: 3, flexShrink: 0 }}
+                    style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
                   />
-                  <span>I consent to hear audios with mature content.</span>
+                  <span style={{ minWidth: 0 }}>I consent to hear audios with mature content.</span>
                 </label>
                 <div style={{ marginLeft: 28, paddingLeft: 12, borderLeft: "2px solid #e5e7eb" }}>
-                  <label style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <label style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10 }}>
                     <input
                       type="checkbox"
                       checked={profile.wantsPolyamory}
                       onChange={(event) =>
                         setProfile({ ...profile, wantsPolyamory: event.target.checked })
                       }
-                      style={{ marginTop: 3, flexShrink: 0 }}
+                      style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
                     />
-                    <span>I would like to hear audios related to polyamory.</span>
+                    <span style={{ minWidth: 0 }}>I would like to hear audios related to polyamory.</span>
                   </label>
                 </div>
               </div>
             )}
-            <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
+            <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10 }}>
               <input
                 type="checkbox"
                 checked={profile.hadLgdSession}
                 onChange={(event) =>
                   setProfile({ ...profile, hadLgdSession: event.target.checked })
                 }
-                style={{ marginTop: 3, flexShrink: 0 }}
+                style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
               />
-              <span>Have you had a Life Guidance Discovery Session?</span>
+              <span style={{ minWidth: 0 }}>Have you had a Life Guidance Discovery Session?</span>
             </label>
             <input
               placeholder="How did you find us? If someone referred you, who?"
