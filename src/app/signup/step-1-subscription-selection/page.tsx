@@ -10,9 +10,9 @@ export default async function SubscriptionSelectionPage() {
   return (
     <div className="signup-shell">
       <div className="signup-card">
-        <div className="signup-title">Sign Up for Your Account</div>
+        <div className="signup-title">Begin reaching your highest potential, all while you sleep.</div>
         <div className="signup-subtitle">
-          Begin reaching your highest potential, all while you sleep.
+          By signing up for your 14 day free trial membership!
         </div>
         <MemberOnboarding plans={plans} goals={goals} />
       </div>
