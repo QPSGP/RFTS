@@ -338,13 +338,13 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
             <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10 }}>
               <input
                 type="checkbox"
-                checked={profile.wantsPracticeGrowth}
+                checked={profile.hadLgdSession}
                 onChange={(event) =>
-                  setProfile({ ...profile, wantsPracticeGrowth: event.target.checked })
+                  setProfile({ ...profile, hadLgdSession: event.target.checked })
                 }
                 style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
               />
-              <span style={{ minWidth: 0 }}>I am or would like to be a therapist, healer, or coach.</span>
+              <span style={{ minWidth: 0 }}>Check if you have had a Life Guidance Discovery Session?</span>
             </label>
             {showAdultContent && (
               <div className="card">
@@ -381,13 +381,13 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
             <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10 }}>
               <input
                 type="checkbox"
-                checked={profile.hadLgdSession}
+                checked={profile.wantsPracticeGrowth}
                 onChange={(event) =>
-                  setProfile({ ...profile, hadLgdSession: event.target.checked })
+                  setProfile({ ...profile, wantsPracticeGrowth: event.target.checked })
                 }
                 style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
               />
-              <span style={{ minWidth: 0 }}>Check if you have had a Life Guidance Discovery Session?</span>
+              <span style={{ minWidth: 0 }}>I am or would like to be a therapist, healer, or coach.</span>
             </label>
             <input
               placeholder="How did you find us? If someone referred you, who? (optional)"
