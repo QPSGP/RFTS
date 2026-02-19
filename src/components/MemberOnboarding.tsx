@@ -285,9 +285,11 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
               style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
             />
             <div className="signup-form-field" style={{ minWidth: 0 }}>
+              <label style={{ display: "block", fontSize: 12, color: "#64748b", marginBottom: 4 }}>
+                Birthdate (optional)
+              </label>
               <input
-                type="text"
-                placeholder="Birthdate (optional)"
+                type="date"
                 value={profile.birthDate}
                 onChange={(event) => setProfile({ ...profile, birthDate: event.target.value })}
                 style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}

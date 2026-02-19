@@ -310,6 +310,7 @@ button.section-title {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  min-height: 44px;
 }
 .signup-card input[type="date"] {
   min-width: 0;
