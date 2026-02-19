@@ -286,11 +286,8 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
             />
             <div className="signup-form-field" style={{ minWidth: 0 }}>
               <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, marginBottom: 4 }}>
-                Required for adult content: you must be 18+ and provide your birthdate to access mature content.
+                Birthdate (optional). Required for mature content access 18+.
               </p>
-              <label style={{ display: "block", fontSize: 12, color: "#64748b", marginBottom: 4 }}>
-                Birthdate
-              </label>
               <input
                 type="date"
                 value={profile.birthDate}
