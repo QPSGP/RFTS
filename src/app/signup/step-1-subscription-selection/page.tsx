@@ -12,7 +12,9 @@ export default async function SubscriptionSelectionPage() {
       <div className="signup-card">
         <div className="signup-title">Begin reaching your highest potential, all while you sleep.</div>
         <div className="signup-subtitle" style={{ color: "#4b5563", fontWeight: "normal", fontSize: "1rem" }}>
-          By signing up for your ($29.95/mo) membership starting with a <strong>14 day free trial!</strong>
+          By signing up for your ($29.95/mo) membership starting with a
+          <br />
+          <strong>14 day free trial!</strong>
         </div>
         <MemberOnboarding plans={plans} goals={goals} />
       </div>
