@@ -278,12 +278,6 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
               onChange={(event) => setProfile({ ...profile, password: event.target.value })}
               style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
             />
-            <input
-              placeholder="Gender (optional)"
-              value={profile.gender}
-              onChange={(event) => setProfile({ ...profile, gender: event.target.value })}
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
             <div className="signup-form-field" style={{ minWidth: 0 }}>
               <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, marginBottom: 4 }}>
                 Birthdate (optional). Required for mature content access 18+.
@@ -295,6 +289,23 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
               />
             </div>
+            <div>
+              <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, marginBottom: 4 }}>
+                Helps with customization.
+              </p>
+              <input
+                placeholder="Gender (optional)"
+                value={profile.gender}
+                onChange={(event) => setProfile({ ...profile, gender: event.target.value })}
+                style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+              />
+            </div>
+            <input
+              placeholder="Occupation (optional)"
+              value={profile.occupation}
+              onChange={(event) => setProfile({ ...profile, occupation: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
             <input
               placeholder="Best Contact Number (optional)"
               value={profile.contactNumber}
@@ -322,12 +333,6 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 </option>
               ))}
             </select>
-            <input
-              placeholder="Occupation (optional)"
-              value={profile.occupation}
-              onChange={(event) => setProfile({ ...profile, occupation: event.target.value })}
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
           </div>
           <div className="grid" style={{ marginTop: 16 }}>
             <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10 }}>
