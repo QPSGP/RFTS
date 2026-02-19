@@ -249,7 +249,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
         <>
           <div className="section-heading">Personal Details</div>
           <p style={{ color: "#4b5563" }}>
-            Please fill out the following fields so we may serve you better.
+            Before selecting your goals we need some basic information to start your customization and better service you.
           </p>
           <div className="grid grid-2">
             <input
