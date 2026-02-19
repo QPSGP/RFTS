@@ -15,6 +15,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
   );
   const [adultConsent, setAdultConsent] = useState(false);
   const [hasVerifiedAge, setHasVerifiedAge] = useState(false);
+  const [wantsPracticeGrowth, setWantsPracticeGrowth] = useState(false);
   const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
         setUserEmail(data.profile?.email || "");
         setAdultConsent(!!data.profile?.adultConsent);
         setHasVerifiedAge(!!data.profile?.hasVerifiedAge);
+        setWantsPracticeGrowth(!!data.profile?.wantsPracticeGrowth);
         const subscriptionStatus = data.profile?.subscriptionStatus;
         setStatus(subscriptionStatus === "active" ? "active" : "inactive");
       })
@@ -37,6 +39,8 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
 
   const isCgmr = (item: LibraryItem) =>
     (item.categories || []).some((category) => category.toLowerCase() === "cgmr");
+  const isSpecial = (item: LibraryItem) =>
+    (item.categories || []).some((category) => category.toLowerCase() === "special");
 
   const grouped = useMemo(() => {
     const byInterest = new Map<string, LibraryItem[]>();
@@ -44,7 +48,11 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
       byInterest.set(interest.id, []);
     });
     const unassigned: LibraryItem[] = [];
-    const visibleLibrary = library.filter((item) => !isCgmr(item));
+    const visibleLibrary = library.filter((item) => {
+      if (isCgmr(item)) return false;
+      if (isSpecial(item) && !wantsPracticeGrowth) return false;
+      return true;
+    });
     const canAccessAdult = adultConsent && hasVerifiedAge;
     const libraryForUser = visibleLibrary.filter(
       (item) => !item.isAdult || canAccessAdult
@@ -64,7 +72,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
     });
 
     return { byInterest, unassigned };
-  }, [interests, library, adultConsent, hasVerifiedAge]);
+  }, [interests, library, adultConsent, hasVerifiedAge, wantsPracticeGrowth]);
 
   const renderCard = (item: LibraryItem) => {
     const isLocked = status !== "active";
@@ -163,6 +171,11 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
           >
             {library
               .filter((item) => !(item.categories || []).some((c) => c.toLowerCase() === "cgmr"))
+              .filter((item) => {
+                const special = (item.categories || []).some((c) => c.toLowerCase() === "special");
+                if (special && !wantsPracticeGrowth) return false;
+                return true;
+              })
               .filter((item) => !item.isAdult || (adultConsent && hasVerifiedAge))
               .map((item) => (
                 <Link

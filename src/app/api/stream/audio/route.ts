@@ -64,6 +64,15 @@ export async function GET(request: Request) {
     if (isCgmr) {
       return NextResponse.json({ error: "Access denied." }, { status: 403 });
     }
+    const isSpecial =
+      (item.categories || []).some((c) => c.toLowerCase() === "special") ?? false;
+    if (isSpecial) {
+      const memberProfile = await getMemberProfileByUserId(profile.id);
+      const wantsPracticeGrowth = memberProfile?.wantsPracticeGrowth ?? false;
+      if (!wantsPracticeGrowth) {
+        return NextResponse.json({ error: "Access denied. Special category is for therapists, healers, and coaches." }, { status: 403 });
+      }
+    }
     if (item.isAdult) {
       const memberProfile = await getMemberProfileByUserId(profile.id);
       const yearBorn = memberProfile?.yearBorn ?? null;

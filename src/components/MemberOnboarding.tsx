@@ -48,7 +48,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     "Includes a 15-minute Private Goal Setting Consultation every 90 days with a Success Center hypnotherapist/coach ($444 value annual benefit). Call 800-GOAL-NOW to set your appointment today."
   ];
   const membershipNote =
-    'For best results for reprogramming your subconscious with our system is to have a private "Life Guidance Discovery Session" allowing you to really discover where you are, where you want to go, and how to get there! We then design a customized audio specifically designed by you, for you!  (Membership is reduced to $29.95.)';
+    'For best results for reprogramming your subconscious with our system is to have a private "Life Guidance Discovery Session" allowing you to really discover where you are, where you want to go, and how to get there! We then design a customized audio specifically designed by you, for you!';
   const [goalIds, setGoalIds] = useState<string[]>([]);
   const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
   const [searchTerm, setSearchTerm] = useState("");
@@ -154,18 +154,18 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
   const nextStep = () => {
     setStatus(null);
     if (step === 1) {
+      if (!profile.firstName || !profile.lastName || !profile.email || !profile.password) {
+        setStatus("Complete the required personal details to continue.");
+        return;
+      }
+    }
+    if (step === 2) {
       if (!selectedPlanId) {
         setStatus("Select a subscription package to continue.");
         return;
       }
       if (goalIds.length === 0) {
         setStatus("Select at least one goal to continue.");
-        return;
-      }
-    }
-    if (step === 2) {
-      if (!profile.firstName || !profile.lastName || !profile.email || !profile.password) {
-        setStatus("Complete the required personal details to continue.");
         return;
       }
     }
@@ -237,7 +237,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
   return (
     <div>
       <div className="stepper">
-        {["Subscription & Goals", "Personal Details", "Payment"].map((label, index) => (
+        {["Personal Details", "Subscription & Goals", "Payment"].map((label, index) => (
           <div key={label} className="stepper-item">
             <span className={`stepper-dot ${index + 1 === step ? "active" : ""}`} />
             <span>{label}</span>
@@ -246,6 +246,161 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
       </div>
 
       {step === 1 && (
+        <>
+          <div className="section-heading">Personal Details</div>
+          <p style={{ color: "#4b5563" }}>
+            Please fill out the following fields so we may serve you better.
+          </p>
+          <div className="grid grid-2">
+            <input
+              placeholder="First Name *"
+              value={profile.firstName}
+              onChange={(event) => setProfile({ ...profile, firstName: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <input
+              placeholder="Last Name *"
+              value={profile.lastName}
+              onChange={(event) => setProfile({ ...profile, lastName: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <input
+              placeholder="Email *"
+              type="email"
+              value={profile.email}
+              onChange={(event) => setProfile({ ...profile, email: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <input
+              placeholder="Password *"
+              type="password"
+              value={profile.password}
+              onChange={(event) => setProfile({ ...profile, password: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <select
+              value={profile.gender}
+              onChange={(event) => setProfile({ ...profile, gender: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            >
+              <option value="">Gender (optional)</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+            <div className="signup-form-field" style={{ minWidth: 0 }}>
+              <input
+                type="date"
+                placeholder="Birthdate (optional)"
+                value={profile.birthDate}
+                onChange={(event) => setProfile({ ...profile, birthDate: event.target.value })}
+                style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
+              />
+              <p style={{ fontSize: 12, color: "#64748b", marginTop: 4, marginBottom: 0 }}>
+                Optional. Required for adult content: you must be 18+ and provide your birthdate to access mature content.
+              </p>
+            </div>
+            <input
+              placeholder="Best Contact Number (optional)"
+              value={profile.contactNumber}
+              onChange={(event) =>
+                setProfile({ ...profile, contactNumber: event.target.value })
+              }
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <input
+              placeholder="Best Time(s) Reached (optional)"
+              value={profile.bestContactTimes}
+              onChange={(event) =>
+                setProfile({ ...profile, bestContactTimes: event.target.value })
+              }
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+            <select
+              value={profile.timeZone}
+              onChange={(event) => setProfile({ ...profile, timeZone: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            >
+              {timeZones.map((zone) => (
+                <option key={zone} value={zone}>
+                  {zone}
+                </option>
+              ))}
+            </select>
+            <input
+              placeholder="Occupation (optional)"
+              value={profile.occupation}
+              onChange={(event) => setProfile({ ...profile, occupation: event.target.value })}
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+          </div>
+          <div className="grid" style={{ marginTop: 16 }}>
+            <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10 }}>
+              <input
+                type="checkbox"
+                checked={profile.wantsPracticeGrowth}
+                onChange={(event) =>
+                  setProfile({ ...profile, wantsPracticeGrowth: event.target.checked })
+                }
+                style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
+              />
+              <span style={{ minWidth: 0 }}>I am or would like to be a therapist, healer, or coach.</span>
+            </label>
+            {showAdultContent && (
+              <div className="card">
+                <p style={{ marginTop: 0, marginBottom: 12, fontWeight: 600 }}>Adult content</p>
+                <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
+                  You are 18 or older. You may opt in to audios with mature content below.
+                </p>
+                <label style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10, marginBottom: 12 }}>
+                  <input
+                    type="checkbox"
+                    checked={profile.adultConsent}
+                    onChange={(event) =>
+                      setProfile({ ...profile, adultConsent: event.target.checked })
+                    }
+                    style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
+                  />
+                  <span style={{ minWidth: 0 }}>I consent to hear audios with mature content.</span>
+                </label>
+                <div style={{ marginLeft: 28, paddingLeft: 12, borderLeft: "2px solid #e5e7eb" }}>
+                  <label style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10 }}>
+                    <input
+                      type="checkbox"
+                      checked={profile.wantsPolyamory}
+                      onChange={(event) =>
+                        setProfile({ ...profile, wantsPolyamory: event.target.checked })
+                      }
+                      style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
+                    />
+                    <span style={{ minWidth: 0 }}>I would like to hear audios related to polyamory.</span>
+                  </label>
+                </div>
+              </div>
+            )}
+            <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10 }}>
+              <input
+                type="checkbox"
+                checked={profile.hadLgdSession}
+                onChange={(event) =>
+                  setProfile({ ...profile, hadLgdSession: event.target.checked })
+                }
+                style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
+              />
+              <span style={{ minWidth: 0 }}>Check if you have had a Life Guidance Discovery Session?</span>
+            </label>
+            <input
+              placeholder="How did you find us? If someone referred you, who? (optional)"
+              value={profile.referralSource}
+              onChange={(event) =>
+                setProfile({ ...profile, referralSource: event.target.value })
+              }
+              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
+            />
+          </div>
+        </>
+      )}
+
+      {step === 2 && (
         <>
           {selectedPlan && (
             <div
@@ -283,15 +438,15 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                   <div className="plan-trial plan-trial-emphasis">{plan.trialDays}-Day Free Trial</div>
                   <div style={{ marginTop: 8, fontSize: 12, color: "#4b5563" }}>
                     <div style={{ fontWeight: 600, color: "#0f172a", textAlign: "center" }}>
-                      $29.95/mo. + tax and fees
+                      $29.95/mo.
                     </div>
-                    <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>
+                    <div style={{ marginTop: 8, paddingLeft: 0 }}>
                       {membershipDetails.map((line) => (
-                        <li key={line} style={{ marginTop: 6 }}>
+                        <div key={line} style={{ marginTop: 6 }}>
                           {line}
-                        </li>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                     <div style={{ marginTop: 8, fontStyle: "italic", fontWeight: 700 }}>
                       {membershipNote}
                     </div>
@@ -400,162 +555,6 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 1 per night
               </label>
             </div>
-          </div>
-        </>
-      )}
-
-      {step === 2 && (
-        <>
-          <div className="section-heading">Personal Details</div>
-          <p style={{ color: "#4b5563" }}>
-            Please fill out the following fields so we may serve you better.
-          </p>
-          <div className="grid grid-2">
-            <input
-              placeholder="First Name *"
-              value={profile.firstName}
-              onChange={(event) => setProfile({ ...profile, firstName: event.target.value })}
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
-            <input
-              placeholder="Last Name *"
-              value={profile.lastName}
-              onChange={(event) => setProfile({ ...profile, lastName: event.target.value })}
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
-            <input
-              placeholder="Email *"
-              type="email"
-              value={profile.email}
-              onChange={(event) => setProfile({ ...profile, email: event.target.value })}
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
-            <input
-              placeholder="Password *"
-              type="password"
-              value={profile.password}
-              onChange={(event) => setProfile({ ...profile, password: event.target.value })}
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
-            <select
-              value={profile.gender}
-              onChange={(event) => setProfile({ ...profile, gender: event.target.value })}
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            >
-              <option value="">Gender (optional)</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
-            <div className="signup-form-field" style={{ minWidth: 0 }}>
-              <input
-                type="date"
-                placeholder="Birthdate"
-                value={profile.birthDate}
-                onChange={(event) => setProfile({ ...profile, birthDate: event.target.value })}
-                style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
-              />
-              <p style={{ fontSize: 12, color: "#64748b", marginTop: 4, marginBottom: 0 }}>
-                Optional. Required for adult content: you must be 18+ and provide your birthdate to access mature content.
-              </p>
-            </div>
-            <input
-              placeholder="Best Contact Number"
-              value={profile.contactNumber}
-              onChange={(event) =>
-                setProfile({ ...profile, contactNumber: event.target.value })
-              }
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
-            <input
-              placeholder="Best Time(s) Reached"
-              value={profile.bestContactTimes}
-              onChange={(event) =>
-                setProfile({ ...profile, bestContactTimes: event.target.value })
-              }
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
-            <select
-              value={profile.timeZone}
-              onChange={(event) => setProfile({ ...profile, timeZone: event.target.value })}
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            >
-              {timeZones.map((zone) => (
-                <option key={zone} value={zone}>
-                  {zone}
-                </option>
-              ))}
-            </select>
-            <input
-              placeholder="Occupation"
-              value={profile.occupation}
-              onChange={(event) => setProfile({ ...profile, occupation: event.target.value })}
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
-          </div>
-          <div className="grid" style={{ marginTop: 16 }}>
-            <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10 }}>
-              <input
-                type="checkbox"
-                checked={profile.wantsPracticeGrowth}
-                onChange={(event) =>
-                  setProfile({ ...profile, wantsPracticeGrowth: event.target.checked })
-                }
-                style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
-              />
-              <span style={{ minWidth: 0 }}>I am interested in building my private hypnotherapy, coaching, or healing
-              practice.</span>
-            </label>
-            {showAdultContent && (
-              <div className="card">
-                <p style={{ marginTop: 0, marginBottom: 12, fontWeight: 600 }}>Adult content</p>
-                <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
-                  You are 18 or older. You may opt in to audios with mature content below.
-                </p>
-                <label style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10, marginBottom: 12 }}>
-                  <input
-                    type="checkbox"
-                    checked={profile.adultConsent}
-                    onChange={(event) =>
-                      setProfile({ ...profile, adultConsent: event.target.checked })
-                    }
-                    style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
-                  />
-                  <span style={{ minWidth: 0 }}>I consent to hear audios with mature content.</span>
-                </label>
-                <div style={{ marginLeft: 28, paddingLeft: 12, borderLeft: "2px solid #e5e7eb" }}>
-                  <label style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10 }}>
-                    <input
-                      type="checkbox"
-                      checked={profile.wantsPolyamory}
-                      onChange={(event) =>
-                        setProfile({ ...profile, wantsPolyamory: event.target.checked })
-                      }
-                      style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
-                    />
-                    <span style={{ minWidth: 0 }}>I would like to hear audios related to polyamory.</span>
-                  </label>
-                </div>
-              </div>
-            )}
-            <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10 }}>
-              <input
-                type="checkbox"
-                checked={profile.hadLgdSession}
-                onChange={(event) =>
-                  setProfile({ ...profile, hadLgdSession: event.target.checked })
-                }
-                style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
-              />
-              <span style={{ minWidth: 0 }}>Have you had a Life Guidance Discovery Session?</span>
-            </label>
-            <input
-              placeholder="How did you find us? If someone referred you, who?"
-              value={profile.referralSource}
-              onChange={(event) =>
-                setProfile({ ...profile, referralSource: event.target.value })
-              }
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
           </div>
         </>
       )}

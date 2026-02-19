@@ -17,7 +17,8 @@ export async function GET() {
   const hasVerifiedAge = yearBorn != null && currentYear - yearBorn >= 18;
   const storedConsent = memberProfile?.adultConsent ?? false;
   const adultConsent = storedConsent && hasVerifiedAge;
+  const wantsPracticeGrowth = memberProfile?.wantsPracticeGrowth ?? false;
   return NextResponse.json({
-    profile: { ...profile, adultConsent, yearBorn, hasVerifiedAge }
+    profile: { ...profile, adultConsent, yearBorn, hasVerifiedAge, wantsPracticeGrowth }
   });
 }
