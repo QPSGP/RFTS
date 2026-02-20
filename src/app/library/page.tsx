@@ -7,6 +7,9 @@ export default async function LibraryPage() {
     listLibrary(),
     listInterests()
   ]);
+  const libraryForMember = library.filter(
+    (item) => !(item.skuCode || "").toUpperCase().startsWith("MU")
+  );
   return (
     <main>
       <section id="library-top" style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
@@ -19,7 +22,7 @@ export default async function LibraryPage() {
         </a>
       </section>
       <ScreenWakeToggle />
-      <LibraryBrowser interests={interests} library={library} />
+      <LibraryBrowser interests={interests} library={libraryForMember} />
       <section style={{ textAlign: "center", paddingTop: 24, marginTop: 24, borderTop: "1px solid #e5e7eb" }}>
         <a className="button button-secondary" href="/play-options">
           ← Back to Console
