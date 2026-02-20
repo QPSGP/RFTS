@@ -13,11 +13,13 @@ const createSchema = z.object({
   title: z.string().min(2),
   description: z.string().min(2),
   skuCode: z.string().optional().default(""),
+  fileName: z.string().optional().default(""),
   categories: z.array(z.string()).optional().default([]),
   coverUrl: z.string().optional().default(""),
   audioUrl: z.string().optional().default(""),
   interestIds: z.array(z.string()).default([]),
-  allowedUserEmails: z.array(z.string().email()).optional().default([])
+  allowedUserEmails: z.array(z.string().email()).optional().default([]),
+  isAdult: z.boolean().optional()
 });
 
 const updateSchema = z.object({
@@ -25,6 +27,7 @@ const updateSchema = z.object({
   title: z.string().min(2),
   description: z.string().min(2),
   skuCode: z.string().optional().default(""),
+  fileName: z.string().optional().default(""),
   categories: z.array(z.string()).optional().default([]),
   coverUrl: z.string().optional().default(""),
   audioUrl: z.string().optional().default(""),
@@ -62,11 +65,13 @@ export async function POST(request: Request) {
     title: parsed.data.title,
     description: parsed.data.description,
     skuCode: parsed.data.skuCode,
+    fileName: parsed.data.fileName,
     categories: parsed.data.categories,
     coverUrl: parsed.data.coverUrl,
     audioUrl: parsed.data.audioUrl,
     interestIds: parsed.data.interestIds,
-    allowedUserEmails: parsed.data.allowedUserEmails
+    allowedUserEmails: parsed.data.allowedUserEmails,
+    isAdult: parsed.data.isAdult
   });
   return NextResponse.json({ ok: true, record });
 }
@@ -85,6 +90,7 @@ export async function PATCH(request: Request) {
     title: parsed.data.title,
     description: parsed.data.description,
     skuCode: parsed.data.skuCode,
+    fileName: parsed.data.fileName,
     categories: parsed.data.categories,
     coverUrl: parsed.data.coverUrl,
     audioUrl: parsed.data.audioUrl,

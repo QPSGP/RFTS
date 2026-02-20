@@ -8,6 +8,7 @@ type LibraryItem = {
   title: string;
   description: string;
   skuCode?: string;
+  fileName?: string;
   categories?: string[];
   coverUrl: string;
   audioUrl: string;
@@ -208,18 +209,23 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
       ? allowedUsersRaw.split(",").map((email) => email.trim()).filter(Boolean)
       : [];
     const categoriesRaw = String(formData.get("categories") || "").trim();
-    const categories = categoriesRaw
+    let categories = categoriesRaw
       ? categoriesRaw.split(",").map((category) => category.trim()).filter(Boolean)
       : [];
+    if (formData.get("buildPractice") === "on") {
+      if (!categories.some((c) => c.toLowerCase() === "special")) categories = [...categories, "special"];
+    }
     const payload = {
       title: formData.get("title"),
       description: formData.get("description"),
       skuCode: formData.get("skuCode") || "",
+      fileName: formData.get("fileName") || "",
       categories,
       coverUrl: formData.get("coverUrl") || "",
       audioUrl: formData.get("audioUrl") || "",
       interestIds,
-      allowedUserEmails
+      allowedUserEmails,
+      isAdult: formData.get("adultContent") === "on"
     };
     const response = await fetch("/api/library", {
       method: "POST",
@@ -289,6 +295,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
       title: editDraft.title,
       description: editDraft.description,
       skuCode: editDraft.skuCode || "",
+      fileName: editDraft.fileName || "",
       categories: editDraft.categories || [],
       coverUrl: editDraft.coverUrl || "",
       audioUrl: editDraft.audioUrl || "",
@@ -656,7 +663,10 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             required
             style={inputStyle}
           />
-          <input name="skuCode" placeholder="SKU (e.g., T-01)" style={inputStyle} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <input name="skuCode" placeholder="SKU (e.g., T-01)" style={inputStyle} />
+            <input name="fileName" placeholder="File name" style={inputStyle} />
+          </div>
           <input
             name="categories"
             placeholder="Categories (comma-separated)"
@@ -669,6 +679,16 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             placeholder="Allowed user emails (comma-separated, optional)"
             style={inputStyle}
           />
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center" }}>
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input type="checkbox" name="adultContent" />
+              Adult content (18+)
+            </label>
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input type="checkbox" name="buildPractice" />
+              Build Practice
+            </label>
+          </div>
           <label style={{ fontSize: 13 }}>Attach goals</label>
           <select name="interestIds" multiple style={inputStyle}>
             {interestOptions.map((interest) => (
@@ -704,15 +724,26 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                     required
                     style={inputStyle}
                   />
-                  <input
-                    name="skuCode"
-                    value={editDraft.skuCode || ""}
-                    onChange={(event) =>
-                      setEditDraft({ ...editDraft, skuCode: event.target.value })
-                    }
-                    placeholder="SKU (e.g., T-01)"
-                    style={inputStyle}
-                  />
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <input
+                      name="skuCode"
+                      value={editDraft.skuCode || ""}
+                      onChange={(event) =>
+                        setEditDraft({ ...editDraft, skuCode: event.target.value })
+                      }
+                      placeholder="SKU (e.g., T-01)"
+                      style={inputStyle}
+                    />
+                    <input
+                      name="fileName"
+                      value={editDraft.fileName || ""}
+                      onChange={(event) =>
+                        setEditDraft({ ...editDraft, fileName: event.target.value })
+                      }
+                      placeholder="File name"
+                      style={inputStyle}
+                    />
+                  </div>
                   <input
                     name="categories"
                     value={(editDraft.categories || []).join(", ")}
@@ -779,16 +810,37 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                       </option>
                     ))}
                   </select>
-                  <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <input
-                      type="checkbox"
-                      checked={!!editDraft.isAdult}
-                      onChange={(event) =>
-                        setEditDraft({ ...editDraft, isAdult: event.target.checked })
-                      }
-                    />
-                    Adult content (18+)
-                  </label>
+                  <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center" }}>
+                    <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <input
+                        type="checkbox"
+                        checked={!!editDraft.isAdult}
+                        onChange={(event) =>
+                          setEditDraft({ ...editDraft, isAdult: event.target.checked })
+                        }
+                      />
+                      Adult content (18+)
+                    </label>
+                    <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <input
+                        type="checkbox"
+                        checked={(editDraft.categories || []).some(
+                          (c) => c.toLowerCase() === "special"
+                        )}
+                        onChange={(event) => {
+                          const cats = editDraft.categories || [];
+                          const hasSpecial = cats.some((c) => c.toLowerCase() === "special");
+                          const next = event.target.checked
+                            ? hasSpecial
+                              ? cats
+                              : [...cats, "special"]
+                            : cats.filter((c) => c.toLowerCase() !== "special");
+                          setEditDraft({ ...editDraft, categories: next });
+                        }}
+                      />
+                      Build Practice
+                    </label>
+                  </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button className="button" type="submit">
                       Save
@@ -841,7 +893,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                   )}
                   <strong>{item.skuCode || "SKU?"} - {item.title}</strong>
                   <p>{item.description || "Description pending."}</p>
-                  <p>SKU: {item.skuCode || "Pending"}</p>
+                  <p>SKU: {item.skuCode || "Pending"} {item.fileName ? `· File name: ${item.fileName}` : ""}</p>
                   <p>
                     Categories:{" "}
                     {item.categories && item.categories.length > 0
@@ -857,7 +909,13 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                       ? item.allowedUserEmails.join(", ")
                       : "All users"}
                   </p>
-                  {item.isAdult && <p>Adult content</p>}
+                  {(item.isAdult || (item.categories || []).some((c) => c.toLowerCase() === "special")) && (
+                    <p>
+                      {item.isAdult && "Adult content (18+)"}
+                      {(item.isAdult && (item.categories || []).some((c) => c.toLowerCase() === "special")) && " · "}
+                      {(item.categories || []).some((c) => c.toLowerCase() === "special") && "Build Practice"}
+                    </p>
+                  )}
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button
                       className="button button-secondary"

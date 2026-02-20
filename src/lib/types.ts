@@ -65,6 +65,7 @@ export type LibraryItem = {
   title: string;
   description: string;
   skuCode?: string;
+  fileName?: string;
   categories?: string[];
   coverUrl: string;
   audioUrl: string;

@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS library_items (
   title text NOT NULL,
   description text NOT NULL,
   sku_code text NOT NULL DEFAULT '',
+  file_name text NOT NULL DEFAULT '',
   categories text[] DEFAULT ARRAY[]::text[],
   cover_url text NOT NULL DEFAULT '',
   audio_url text NOT NULL DEFAULT '',

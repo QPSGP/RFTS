@@ -393,9 +393,9 @@ const ensureLibrarySeeded = async () => {
     seedItems.map((item) =>
       sql`
         INSERT INTO library_items
-          (title, description, sku_code, categories, cover_url, audio_url, interest_ids, allowed_user_emails, order_index, is_adult)
+          (title, description, sku_code, file_name, categories, cover_url, audio_url, interest_ids, allowed_user_emails, order_index, is_adult)
         VALUES
-          (${item.title}, ${item.description}, ${item.skuCode || ""}, ${toPgArray(item.categories || [])}::text[],
+          (${item.title}, ${item.description}, ${item.skuCode || ""}, ${(item as { fileName?: string }).fileName ?? ""}, ${toPgArray(item.categories || [])}::text[],
            ${item.coverUrl}, ${item.audioUrl},
            ${toPgArray(item.interestIds)}::text[], ${toPgArray(item.allowedUserEmails)}::text[],
            ${item.order}, ${item.isAdult})
@@ -481,6 +481,7 @@ export const listLibrary = async () => {
       title,
       description,
       sku_code as "skuCode",
+      COALESCE(file_name, '') as "fileName",
       COALESCE(categories, ARRAY[]::text[]) as "categories",
       cover_url as "coverUrl",
       audio_url as "audioUrl",
@@ -503,6 +504,7 @@ export const listPersonalizedLibraryForUser = async (email: string) => {
       title,
       description,
       sku_code as "skuCode",
+      COALESCE(file_name, '') as "fileName",
       COALESCE(categories, ARRAY[]::text[]) as "categories",
       cover_url as "coverUrl",
       audio_url as "audioUrl",
@@ -531,6 +533,7 @@ export const getLibraryItem = async (id: string) => {
       title,
       description,
       sku_code as "skuCode",
+      COALESCE(file_name, '') as "fileName",
       COALESCE(categories, ARRAY[]::text[]) as "categories",
       cover_url as "coverUrl",
       audio_url as "audioUrl",
@@ -550,11 +553,13 @@ export const createLibraryItem = async (payload: {
   title: string;
   description: string;
   skuCode: string;
+  fileName?: string;
   categories: string[];
   coverUrl: string;
   audioUrl: string;
   interestIds: string[];
   allowedUserEmails: string[];
+  isAdult?: boolean;
 }) => {
   const { rows: orderRows } = await sql<{ max: number }>`
     SELECT COALESCE(MAX(order_index), 0)::int as max FROM library_items
@@ -562,17 +567,18 @@ export const createLibraryItem = async (payload: {
   const order = (orderRows[0]?.max || 0) + 1;
   const { rows } = await sql<LibraryItem>`
     INSERT INTO library_items
-      (title, description, sku_code, categories, cover_url, audio_url, interest_ids, allowed_user_emails, order_index, is_adult)
+      (title, description, sku_code, file_name, categories, cover_url, audio_url, interest_ids, allowed_user_emails, order_index, is_adult)
     VALUES
-      (${payload.title}, ${payload.description}, ${payload.skuCode}, ${toPgArray(payload.categories)}::text[],
+      (${payload.title}, ${payload.description}, ${payload.skuCode}, ${payload.fileName ?? ""}, ${toPgArray(payload.categories)}::text[],
        ${payload.coverUrl}, ${payload.audioUrl},
        ${toPgArray(payload.interestIds)}::text[], ${toPgArray(payload.allowedUserEmails)}::text[],
-       ${order}, false)
+       ${order}, ${payload.isAdult ?? false})
     RETURNING
       id,
       title,
       description,
       sku_code as "skuCode",
+      COALESCE(file_name, '') as "fileName",
       COALESCE(categories, ARRAY[]::text[]) as "categories",
       cover_url as "coverUrl",
       audio_url as "audioUrl",
@@ -590,6 +596,7 @@ export const updateLibraryItem = async (payload: {
   title: string;
   description: string;
   skuCode: string;
+  fileName?: string;
   categories: string[];
   coverUrl: string;
   audioUrl: string;
@@ -604,6 +611,7 @@ export const updateLibraryItem = async (payload: {
       title = ${payload.title},
       description = ${payload.description},
       sku_code = ${payload.skuCode},
+      file_name = ${payload.fileName ?? ""},
       categories = ${toPgArray(payload.categories)}::text[],
       cover_url = ${payload.coverUrl},
       audio_url = ${payload.audioUrl},
@@ -617,6 +625,7 @@ export const updateLibraryItem = async (payload: {
       title,
       description,
       sku_code as "skuCode",
+      COALESCE(file_name, '') as "fileName",
       COALESCE(categories, ARRAY[]::text[]) as "categories",
       cover_url as "coverUrl",
       audio_url as "audioUrl",
