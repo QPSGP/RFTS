@@ -19,6 +19,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
   const [wantsPracticeGrowth, setWantsPracticeGrowth] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [expandedGoalId, setExpandedGoalId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/user/me", { credentials: "include" })
@@ -236,26 +237,91 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
         </>
       )}
 
-      {interests.map((interest) => {
-        const items = grouped.byInterest.get(interest.id) || [];
-        if (!items.length) {
-          return null;
-        }
-        return (
-          <section key={interest.id}>
-            <h3>{interest.name}</h3>
-            <div className="grid grid-3">{items.map(renderCard)}</div>
-          </section>
-        );
-      })}
-
-      {grouped.unassigned.length > 0 && (
-        <section>
-          <h3>Unassigned</h3>
-          <div className="grid grid-3">
-            {grouped.unassigned.map(renderCard)}
-          </div>
-        </section>
+      {(interests.some((i) => (grouped.byInterest.get(i.id) || []).length > 0) ||
+        grouped.unassigned.length > 0) && (
+      <section>
+        <h3>By goal</h3>
+        <p style={{ color: "#64748b", fontSize: 14, marginTop: 4 }}>
+          Click a goal to show its audios. Click again or another goal to close or switch.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
+          {interests.map((interest) => {
+            const items = grouped.byInterest.get(interest.id) || [];
+            if (!items.length) return null;
+            const isExpanded = expandedGoalId === interest.id;
+            return (
+              <div key={interest.id}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExpandedGoalId((prev) => (prev === interest.id ? null : interest.id))
+                  }
+                  style={{
+                    width: "100%",
+                    textAlign: "left",
+                    padding: "12px 16px",
+                    borderRadius: 8,
+                    border: `1px solid ${isExpanded ? "#0f766e" : "#e2e8f0"}`,
+                    background: isExpanded ? "rgba(15, 118, 110, 0.08)" : "#fff",
+                    color: "#0f172a",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontSize: 15
+                  }}
+                >
+                  {interest.name}
+                  <span style={{ marginLeft: 8, opacity: 0.8 }}>
+                    ({items.length}) {isExpanded ? "▼" : "▶"}
+                  </span>
+                </button>
+                {isExpanded && (
+                  <div className="grid grid-3" style={{ marginTop: 12, marginBottom: 8 }}>
+                    {items.map(renderCard)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {grouped.unassigned.length > 0 && (
+            <div>
+              <button
+                type="button"
+                onClick={() =>
+                  setExpandedGoalId((prev) =>
+                    prev === "unassigned" ? null : "unassigned"
+                  )
+                }
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  padding: "12px 16px",
+                  borderRadius: 8,
+                  border: `1px solid ${expandedGoalId === "unassigned" ? "#0f766e" : "#e2e8f0"}`,
+                  background:
+                    expandedGoalId === "unassigned"
+                      ? "rgba(15, 118, 110, 0.08)"
+                      : "#fff",
+                  color: "#0f172a",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontSize: 15
+                }}
+              >
+                Unassigned
+                <span style={{ marginLeft: 8, opacity: 0.8 }}>
+                  ({grouped.unassigned.length}){" "}
+                  {expandedGoalId === "unassigned" ? "▼" : "▶"}
+                </span>
+              </button>
+              {expandedGoalId === "unassigned" && (
+                <div className="grid grid-3" style={{ marginTop: 12, marginBottom: 8 }}>
+                  {grouped.unassigned.map(renderCard)}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
       )}
       <div style={{ marginTop: 24 }}>
         <button
