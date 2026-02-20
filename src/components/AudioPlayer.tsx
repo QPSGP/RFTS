@@ -151,10 +151,13 @@ export default function AudioPlayer({
         <div style={{ width: "100%" }}>
           <h2 style={{ marginBottom: 8, marginTop: 0 }}>{title}</h2>
           <p style={{ color: "#4b5563", marginTop: 0, marginBottom: 8 }}>
-            {prepAudioUrl && isPlayingPrep
-              ? "Starting Music — your selected audio will play next."
-              : description}
+            {description}
           </p>
+          {prepAudioUrl && isPlayingPrep && (
+            <p style={{ color: "#6b7280", fontSize: 13, marginTop: 4, marginBottom: 0 }}>
+              Starting Music — your selected audio will play next.
+            </p>
+          )}
           {wakeLockSupported ? (
             <p style={{ color: "#6b7280", fontSize: 13, marginTop: 8 }}>
               {wakeLockActive
