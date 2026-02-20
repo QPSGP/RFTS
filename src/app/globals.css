@@ -223,6 +223,29 @@ main {
     0 0 0 1px rgba(15, 118, 110, 0.12) inset;
 }
 
+/* Scroll areas: green edges so it’s clear the list is active/scrollable (especially on phone) */
+.scroll-list {
+  border-left: 3px solid #0f766e;
+  border-right: 3px solid #0f766e;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.15);
+}
+.scroll-list::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-list::-webkit-scrollbar-track {
+  background: rgba(15, 118, 110, 0.08);
+  border-radius: 4px;
+}
+.scroll-list::-webkit-scrollbar-thumb {
+  background: #0f766e;
+  border-radius: 4px;
+}
+.scroll-list::-webkit-scrollbar-thumb:hover {
+  background: #0d5c56;
+}
+
 .section {
   margin-bottom: 40px;
 }
