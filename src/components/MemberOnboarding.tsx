@@ -623,7 +623,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
         )}
         {step < 3 && (
           <button className="button" type="button" onClick={nextStep}>
-            {step === 2 ? "Membership & Goals" : "Continue"}
+            Membership & Goals
           </button>
         )}
         {step === 3 && (

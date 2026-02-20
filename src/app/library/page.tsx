@@ -7,7 +7,6 @@ export default async function LibraryPage() {
     listLibrary(),
     listInterests()
   ]);
-
   return (
     <main>
       <section id="library-top" style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>

@@ -41,6 +41,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   const [goalDraft, setGoalDraft] = useState<Interest | null>(null);
   const [librarySort, setLibrarySort] = useState<"title" | "sku">("title");
   const [libraryCategoryFilter, setLibraryCategoryFilter] = useState<"all" | "General" | "Special" | "CGMR">("all");
+  const [librarySearch, setLibrarySearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<LibraryItem | null>(null);
   const [editInterestIds, setEditInterestIds] = useState<string[]>([]);
@@ -119,6 +120,16 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     if (libraryCategoryFilter === "General") return sortedLibrary.filter((item) => !hasCategory(item, "cgmr") && !hasCategory(item, "special"));
     return sortedLibrary;
   }, [sortedLibrary, libraryCategoryFilter]);
+
+  const searchFilteredLibrary = useMemo(() => {
+    const term = librarySearch.trim().toLowerCase();
+    if (!term) return filteredLibrary;
+    return filteredLibrary.filter(
+      (item) =>
+        (item.title || "").toLowerCase().includes(term) ||
+        (item.skuCode || "").toLowerCase().includes(term)
+    );
+  }, [filteredLibrary, librarySearch]);
 
   const addInterest = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -582,7 +593,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                 gridTemplateColumns: "repeat(2, minmax(0, 1fr))"
               }}
             >
-              {filteredLibrary.map((item) => (
+              {searchFilteredLibrary.map((item) => (
                 <a key={item.id} href={`#audio-${item.id}`}>
                   {(item.skuCode || "SKU?") + " - " + item.title}
                 </a>
@@ -590,7 +601,17 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             </div>
           </div>
         )}
-        <div style={{ marginTop: 12, display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ marginTop: 12, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            Search
+            <input
+              type="search"
+              placeholder="Name or SKU..."
+              value={librarySearch}
+              onChange={(e) => setLibrarySearch(e.target.value)}
+              style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #d1d5db", minWidth: 160 }}
+            />
+          </label>
           <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
             Category
             <select
@@ -654,7 +675,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
           </button>
         </form>
         <div className="grid" style={{ marginTop: 16 }}>
-          {filteredLibrary.map((item) => (
+          {searchFilteredLibrary.map((item) => (
             <div key={item.id} id={`audio-${item.id}`} className="card">
               {editingId === item.id && editDraft ? (
                 <form onSubmit={saveEdit} className="grid">

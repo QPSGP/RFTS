@@ -17,6 +17,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
   const [hasVerifiedAge, setHasVerifiedAge] = useState(false);
   const [wantsPracticeGrowth, setWantsPracticeGrowth] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetch("/api/user/me", { credentials: "include" })
@@ -41,6 +42,10 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
     (item.categories || []).some((category) => category.toLowerCase() === "cgmr");
   const isSpecial = (item: LibraryItem) =>
     (item.categories || []).some((category) => category.toLowerCase() === "special");
+  const showSkuToMember = (item: LibraryItem) =>
+    !!item.skuCode && !item.skuCode.toUpperCase().startsWith("MU");
+  const displayTitle = (item: LibraryItem) =>
+    showSkuToMember(item) && item.skuCode ? `${item.skuCode} — ${item.title}` : item.title;
 
   const grouped = useMemo(() => {
     const byInterest = new Map<string, LibraryItem[]>();
@@ -54,9 +59,17 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
       return true;
     });
     const canAccessAdult = adultConsent && hasVerifiedAge;
-    const libraryForUser = visibleLibrary.filter(
+    let libraryForUser = visibleLibrary.filter(
       (item) => !item.isAdult || canAccessAdult
     );
+    const term = searchQuery.trim().toLowerCase();
+    if (term) {
+      libraryForUser = libraryForUser.filter(
+        (item) =>
+          (item.title || "").toLowerCase().includes(term) ||
+          (item.skuCode || "").toLowerCase().includes(term)
+      );
+    }
 
     libraryForUser.forEach((item) => {
       if (!item.interestIds.length) {
@@ -72,7 +85,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
     });
 
     return { byInterest, unassigned };
-  }, [interests, library, adultConsent, hasVerifiedAge, wantsPracticeGrowth]);
+  }, [interests, library, adultConsent, hasVerifiedAge, wantsPracticeGrowth, searchQuery]);
 
   const renderCard = (item: LibraryItem) => {
     const isLocked = status !== "active";
@@ -100,7 +113,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
             Cover pending
           </div>
         )}
-        <strong>{item.title}</strong>
+        <strong>{displayTitle(item)}</strong>
         <p style={{ color: "#4b5563" }}>
           {item.description || "Description pending."}
         </p>
@@ -158,6 +171,25 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
 
       {library.length > 0 && (
         <section>
+          <div style={{ marginBottom: 12 }}>
+            <label htmlFor="library-search" style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+              Search by name or SKU
+            </label>
+            <input
+              id="library-search"
+              type="search"
+              placeholder="Search by name or SKU..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: "100%",
+                maxWidth: 320,
+                padding: "8px 12px",
+                borderRadius: 8,
+                border: "1px solid var(--border, #e5e7eb)"
+              }}
+            />
+          </div>
           <h3>All Audios</h3>
           <div
             style={{
@@ -177,6 +209,11 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
                 return true;
               })
               .filter((item) => !item.isAdult || (adultConsent && hasVerifiedAge))
+              .filter((item) => {
+                const term = searchQuery.trim().toLowerCase();
+                if (!term) return true;
+                return (item.title || "").toLowerCase().includes(term) || (item.skuCode || "").toLowerCase().includes(term);
+              })
               .map((item) => (
                 <Link
                   key={item.id}
@@ -189,7 +226,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
                     borderBottom: "1px solid var(--border, #e5e7eb)"
                   }}
                 >
-                  {item.title}
+                  {displayTitle(item)}
                   {item.isAdult && (
                     <>
                       {" "}
