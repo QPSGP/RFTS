@@ -344,7 +344,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 }
                 style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
               />
-              <span style={{ minWidth: 0 }}>Check if you have had a Life Guidance Discovery Session?</span>
+              <span style={{ minWidth: 0 }}>I am interested in a Life Guidance Discovery Session?</span>
             </label>
             {showAdultContent && (
               <div className="card">

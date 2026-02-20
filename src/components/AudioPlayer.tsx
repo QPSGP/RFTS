@@ -7,18 +7,22 @@ type AudioPlayerProps = {
   description: string;
   audioUrl: string;
   coverUrl: string;
+  /** When set, this "Starting Music" track plays first, then the main audio. */
+  prepAudioUrl?: string;
 };
 
 export default function AudioPlayer({
   title,
   description,
   audioUrl,
-  coverUrl
+  coverUrl,
+  prepAudioUrl
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const [wakeLockSupported, setWakeLockSupported] = useState(true);
   const [wakeLockActive, setWakeLockActive] = useState(false);
+  const [isPlayingPrep, setIsPlayingPrep] = useState(!!prepAudioUrl);
 
   const releaseWakeLock = async () => {
     try {
@@ -83,6 +87,42 @@ export default function AudioPlayer({
     };
   }, []);
 
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (prepAudioUrl) {
+      audio.src = prepAudioUrl;
+    }
+  }, [prepAudioUrl]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !prepAudioUrl) return;
+
+    const handleEnded = () => {
+      if (isPlayingPrep) {
+        setIsPlayingPrep(false);
+        audio.src = audioUrl;
+        audio.play().catch(() => {});
+      }
+    };
+
+    const handleError = () => {
+      if (isPlayingPrep) {
+        setIsPlayingPrep(false);
+        audio.src = audioUrl;
+        audio.play().catch(() => {});
+      }
+    };
+
+    audio.addEventListener("ended", handleEnded);
+    audio.addEventListener("error", handleError);
+    return () => {
+      audio.removeEventListener("ended", handleEnded);
+      audio.removeEventListener("error", handleError);
+    };
+  }, [prepAudioUrl, audioUrl, isPlayingPrep]);
+
   return (
     <div className="card">
       <div
@@ -104,7 +144,11 @@ export default function AudioPlayer({
         />
         <div>
           <h2 style={{ marginBottom: 8 }}>{title}</h2>
-          <p style={{ color: "#4b5563", marginTop: 0 }}>{description}</p>
+          <p style={{ color: "#4b5563", marginTop: 0 }}>
+            {prepAudioUrl && isPlayingPrep
+              ? "Starting Music — your selected audio will play next."
+              : description}
+          </p>
           {wakeLockSupported ? (
             <p style={{ color: "#6b7280", fontSize: 13, marginTop: 8 }}>
               {wakeLockActive
@@ -119,7 +163,7 @@ export default function AudioPlayer({
           )}
         </div>
         <audio ref={audioRef} controls controlsList="nodownload" style={{ width: "100%" }}>
-          <source src={audioUrl} />
+          {!prepAudioUrl && <source src={audioUrl} />}
           Your browser does not support the audio element.
         </audio>
       </div>
