@@ -123,6 +123,7 @@ export default function AudioGate({ item }: AudioGateProps) {
       audioUrl={streamUrl}
       coverUrl={item.coverUrl || "/covers/placeholder.png"}
       prepAudioUrl={prepAudioUrl}
+      showCover={false}
     />
   );
 }

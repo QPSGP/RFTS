@@ -9,6 +9,8 @@ type AudioPlayerProps = {
   coverUrl: string;
   /** When set, this "Starting Music" track plays first, then the main audio. */
   prepAudioUrl?: string;
+  /** When false, the cover image is not shown (e.g. library detail page). */
+  showCover?: boolean;
 };
 
 export default function AudioPlayer({
@@ -16,7 +18,8 @@ export default function AudioPlayer({
   description,
   audioUrl,
   coverUrl,
-  prepAudioUrl
+  prepAudioUrl,
+  showCover = true
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
@@ -133,16 +136,18 @@ export default function AudioPlayer({
           alignItems: "flex-start"
         }}
       >
-        <img
-          src={coverUrl}
-          alt={`${title} cover`}
-          style={{
-            width: "100%",
-            maxWidth: 320,
-            borderRadius: 12,
-            border: "1px solid #e5e7eb"
-          }}
-        />
+        {showCover && (
+          <img
+            src={coverUrl}
+            alt={`${title} cover`}
+            style={{
+              width: "100%",
+              maxWidth: 320,
+              borderRadius: 12,
+              border: "1px solid #e5e7eb"
+            }}
+          />
+        )}
         <div style={{ width: "100%" }}>
           <h2 style={{ marginBottom: 8, marginTop: 0 }}>{title}</h2>
           <p style={{ color: "#4b5563", marginTop: 0, marginBottom: 8 }}>
