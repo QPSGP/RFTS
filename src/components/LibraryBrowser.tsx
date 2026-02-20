@@ -48,29 +48,30 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
   const displayTitle = (item: LibraryItem) =>
     showSkuToMember(item) && item.skuCode ? `${item.skuCode} — ${item.title}` : item.title;
 
+  const canAccessAdult = adultConsent && hasVerifiedAge;
+  const libraryFilteredByAccess = useMemo(() => {
+    return library.filter((item) => {
+      if (isCgmr(item)) return false;
+      if (isSpecial(item) && !wantsPracticeGrowth) return false;
+      if (item.isAdult && !canAccessAdult) return false;
+      return true;
+    });
+  }, [library, adultConsent, hasVerifiedAge, wantsPracticeGrowth]);
+
   const grouped = useMemo(() => {
     const byInterest = new Map<string, LibraryItem[]>();
     interests.forEach((interest) => {
       byInterest.set(interest.id, []);
     });
     const unassigned: LibraryItem[] = [];
-    const visibleLibrary = library.filter((item) => {
-      if (isCgmr(item)) return false;
-      if (isSpecial(item) && !wantsPracticeGrowth) return false;
-      return true;
-    });
-    const canAccessAdult = adultConsent && hasVerifiedAge;
-    let libraryForUser = visibleLibrary.filter(
-      (item) => !item.isAdult || canAccessAdult
-    );
     const term = searchQuery.trim().toLowerCase();
-    if (term) {
-      libraryForUser = libraryForUser.filter(
-        (item) =>
-          (item.title || "").toLowerCase().includes(term) ||
-          (item.skuCode || "").toLowerCase().includes(term)
-      );
-    }
+    const libraryForUser = term
+      ? libraryFilteredByAccess.filter(
+          (item) =>
+            (item.title || "").toLowerCase().includes(term) ||
+            (item.skuCode || "").toLowerCase().includes(term)
+        )
+      : libraryFilteredByAccess;
 
     libraryForUser.forEach((item) => {
       if (!item.interestIds.length) {
@@ -86,7 +87,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
     });
 
     return { byInterest, unassigned };
-  }, [interests, library, adultConsent, hasVerifiedAge, wantsPracticeGrowth, searchQuery]);
+  }, [interests, libraryFilteredByAccess, searchQuery]);
 
   const renderCard = (item: LibraryItem) => {
     const isLocked = status !== "active";
@@ -175,20 +176,14 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
             }}
             className="scroll-list"
           >
-            {library
-              .filter((item) => !(item.categories || []).some((c) => c.toLowerCase() === "cgmr"))
-              .filter((item) => {
-                const special = (item.categories || []).some((c) => c.toLowerCase() === "special");
-                if (special && !wantsPracticeGrowth) return false;
-                return true;
-              })
-              .filter((item) => !item.isAdult || (adultConsent && hasVerifiedAge))
-              .filter((item) => {
-                const term = searchQuery.trim().toLowerCase();
-                if (!term) return true;
-                return (item.title || "").toLowerCase().includes(term) || (item.skuCode || "").toLowerCase().includes(term);
-              })
-              .map((item) => (
+            {(searchQuery.trim()
+              ? libraryFilteredByAccess.filter(
+                  (item) =>
+                    (item.title || "").toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
+                    (item.skuCode || "").toLowerCase().includes(searchQuery.trim().toLowerCase())
+                )
+              : libraryFilteredByAccess
+            ).map((item) => (
                 <Link
                   key={item.id}
                   href={`/library/${item.id}`}
@@ -235,7 +230,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
       <section>
         <h3>By goal</h3>
         <p style={{ color: "#64748b", fontSize: 14, marginTop: 4 }}>
-          Click a goal to show its audios. Click again or another goal to close or switch.
+          Goals and audios are filtered by your Adult Consent and Building Practice settings. Click a goal to show its audios; click again or another goal to close or switch.
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
           {interests.map((interest) => {
