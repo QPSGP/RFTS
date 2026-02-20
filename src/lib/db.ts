@@ -379,6 +379,11 @@ const ensurePlaybackSettingsSeeded = async () => {
 };
 
 const ensureLibrarySeeded = async () => {
+  try {
+    await sql`ALTER TABLE library_items ADD COLUMN file_name text NOT NULL DEFAULT ''`;
+  } catch {
+    // Column already exists (e.g. after migration or new install)
+  }
   const { rows } = await sql<{ count: number }>`
     SELECT COUNT(*)::int AS count FROM library_items
   `;
