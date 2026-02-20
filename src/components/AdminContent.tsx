@@ -55,8 +55,8 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
 
   const load = async () => {
     const [interestRes, libraryRes] = await Promise.all([
-      fetch("/api/interests"),
-      fetch("/api/library")
+      fetch("/api/interests", { cache: "no-store", credentials: "include" }),
+      fetch("/api/library", { cache: "no-store", credentials: "include" })
     ]);
     if (!interestRes.ok || !libraryRes.ok) {
       setStatus("Admin session required.");
@@ -133,7 +133,8 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
 
   const addInterest = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const payload = {
       name: formData.get("name"),
       description: formData.get("description")
@@ -141,11 +142,15 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     const response = await fetch("/api/interests", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      credentials: "include"
     });
     if (response.ok) {
-      event.currentTarget.reset();
+      form.reset();
+      setStatus(null);
       await load();
+    } else {
+      setStatus("Failed to add goal. Try again.");
     }
   };
 
