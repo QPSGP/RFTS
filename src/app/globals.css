@@ -252,7 +252,7 @@ main {
 }
 .scroll-list:focus::-webkit-scrollbar-track,
 .scroll-list:focus-within::-webkit-scrollbar-track {
-  background: rgba(15, 118, 110, 0.08);
+  background: #fff;
 }
 .scroll-list:focus::-webkit-scrollbar-thumb,
 .scroll-list:focus-within::-webkit-scrollbar-thumb {
