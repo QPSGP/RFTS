@@ -497,6 +497,48 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
 
       {openLibrary && (
         <section id="admin-audio-library" className="card">
+        {library.length > 0 && (
+          <div style={{ marginBottom: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              Search
+              <input
+                type="search"
+                placeholder="Name or SKU..."
+                value={librarySearch}
+                onChange={(e) => setLibrarySearch(e.target.value)}
+                style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #d1d5db", minWidth: 160 }}
+              />
+            </label>
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              Category
+              <select
+                style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #d1d5db" }}
+                value={libraryCategoryFilter}
+                onChange={(event) =>
+                  setLibraryCategoryFilter(event.target.value as "all" | "General" | "Special" | "CGMR")
+                }
+              >
+                <option value="all">All</option>
+                <option value="General">General</option>
+                <option value="Special">Special</option>
+                <option value="CGMR">CGMR</option>
+              </select>
+            </label>
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              Sort by
+              <select
+                style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #d1d5db" }}
+                value={librarySort}
+                onChange={(event) =>
+                  setLibrarySort(event.target.value as "title" | "sku")
+                }
+              >
+                <option value="title">Title (default)</option>
+                <option value="sku">SKU</option>
+              </select>
+            </label>
+          </div>
+        )}
         {isFirstAdmin && (
           <>
             <p style={{ color: "#4b5563" }}>
@@ -585,7 +627,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
         </div>
         {library.length > 0 && (
           <div className="card" style={{ marginTop: 16 }}>
-            <h3>Audio Title List (Jump Links)</h3>
+            <h3>Audio Title List. Click on a title for complete details.</h3>
             <div
               style={{
                 display: "grid",
@@ -601,46 +643,6 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             </div>
           </div>
         )}
-        <div style={{ marginTop: 12, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            Search
-            <input
-              type="search"
-              placeholder="Name or SKU..."
-              value={librarySearch}
-              onChange={(e) => setLibrarySearch(e.target.value)}
-              style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #d1d5db", minWidth: 160 }}
-            />
-          </label>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            Category
-            <select
-              style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #d1d5db" }}
-              value={libraryCategoryFilter}
-              onChange={(event) =>
-                setLibraryCategoryFilter(event.target.value as "all" | "General" | "Special" | "CGMR")
-              }
-            >
-              <option value="all">All</option>
-              <option value="General">General</option>
-              <option value="Special">Special</option>
-              <option value="CGMR">CGMR</option>
-            </select>
-          </label>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            Sort by
-            <select
-              style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #d1d5db" }}
-              value={librarySort}
-              onChange={(event) =>
-                setLibrarySort(event.target.value as "title" | "sku")
-              }
-            >
-              <option value="title">Title (default)</option>
-              <option value="sku">SKU</option>
-            </select>
-          </label>
-        </div>
         <form onSubmit={addLibraryItem} className="grid">
           <input name="title" placeholder="Title" required style={inputStyle} />
           <input
