@@ -163,6 +163,9 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
           </div>
           <h3>All Audios</h3>
           <div
+            role="region"
+            aria-label="All audios list"
+            tabIndex={0}
             style={{
               maxHeight: 320,
               overflowY: "auto",
