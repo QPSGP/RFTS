@@ -220,16 +220,11 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
         <>
           <div className="card">
             <h2>Adult Content</h2>
-            <p>
-              Adult content is only viewable to members who are 18+ and have given consent
-              during registration. A birthdate is required to verify age. Without a
-              birthdate, adult content is not available.
+            <p style={{ marginBottom: 4 }}>
+              Adult Consent: {adultConsent && hasVerifiedAge ? "Granted · Age verified" : "Denied"}
             </p>
-            <p style={{ fontWeight: 600 }}>
-              Adult Consent: {adultConsent ? "Granted" : "Not Granted"}
-              {adultConsent && (
-                <> · Age verified: {hasVerifiedAge ? "Yes – you can view adult content" : "No – add birthdate in your profile"}</>
-              )}
+            <p style={{ marginTop: 0 }}>
+              Building Practice: {wantsPracticeGrowth ? "Granted" : "Denied"}
             </p>
           </div>
         </>
