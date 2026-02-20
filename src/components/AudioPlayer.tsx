@@ -127,9 +127,10 @@ export default function AudioPlayer({
     <div className="card">
       <div
         style={{
-          display: "grid",
+          display: "flex",
+          flexDirection: "column",
           gap: 16,
-          alignItems: "center"
+          alignItems: "flex-start"
         }}
       >
         <img
@@ -142,9 +143,9 @@ export default function AudioPlayer({
             border: "1px solid #e5e7eb"
           }}
         />
-        <div>
-          <h2 style={{ marginBottom: 8 }}>{title}</h2>
-          <p style={{ color: "#4b5563", marginTop: 0 }}>
+        <div style={{ width: "100%" }}>
+          <h2 style={{ marginBottom: 8, marginTop: 0 }}>{title}</h2>
+          <p style={{ color: "#4b5563", marginTop: 0, marginBottom: 8 }}>
             {prepAudioUrl && isPlayingPrep
               ? "Starting Music — your selected audio will play next."
               : description}
