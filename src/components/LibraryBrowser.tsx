@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import type { Interest, LibraryItem } from "@/lib/types";
 
 type LibraryBrowserProps = {
@@ -219,7 +218,6 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
 
       {library.length > 0 && (
         <>
-          <ScreenWakeToggle />
           <div className="card">
             <h2>Adult Content</h2>
             <p>
