@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import type { Interest, LibraryItem } from "@/lib/types";
 
 type LibraryBrowserProps = {
@@ -97,24 +98,8 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
         : false;
     const content = (
       <div className="card">
-        {item.coverUrl ? (
-          <img
-            src={item.coverUrl}
-            alt={`${item.title} cover`}
-            style={{
-              width: "100%",
-              borderRadius: 10,
-              border: "1px solid #e5e7eb",
-              marginBottom: 12
-            }}
-          />
-        ) : (
-          <div className="card" style={{ marginBottom: 12 }}>
-            Cover pending
-          </div>
-        )}
         <strong>{displayTitle(item)}</strong>
-        <p style={{ color: "#4b5563" }}>
+        <p style={{ color: "#4b5563", marginTop: 4, marginBottom: 0 }}>
           {item.description || "Description pending."}
         </p>
         {item.isAdult && <span className="badge">Adult</span>}
@@ -154,20 +139,6 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
           </a>
         </div>
       )}
-      <div className="card">
-        <h2>Adult Content</h2>
-        <p>
-          Adult content is only viewable to members who are 18+ and have given consent
-          during registration. A birthdate is required to verify age. Without a
-          birthdate, adult content is not available.
-        </p>
-        <p style={{ fontWeight: 600 }}>
-          Adult Consent: {adultConsent ? "Granted" : "Not Granted"}
-          {adultConsent && (
-            <> · Age verified: {hasVerifiedAge ? "Yes – you can view adult content" : "No – add birthdate in your profile"}</>
-          )}
-        </p>
-      </div>
 
       {library.length > 0 && (
         <section>
@@ -226,7 +197,10 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
                     borderBottom: "1px solid var(--border, #e5e7eb)"
                   }}
                 >
-                  {displayTitle(item)}
+                  <strong>{displayTitle(item)}</strong>
+                  <p style={{ color: "#4b5563", margin: "4px 0 0 0", fontSize: 14 }}>
+                    {item.description || "Description pending."}
+                  </p>
                   {item.isAdult && (
                     <>
                       {" "}
@@ -237,6 +211,26 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
               ))}
           </div>
         </section>
+      )}
+
+      {library.length > 0 && (
+        <>
+          <ScreenWakeToggle />
+          <div className="card">
+            <h2>Adult Content</h2>
+            <p>
+              Adult content is only viewable to members who are 18+ and have given consent
+              during registration. A birthdate is required to verify age. Without a
+              birthdate, adult content is not available.
+            </p>
+            <p style={{ fontWeight: 600 }}>
+              Adult Consent: {adultConsent ? "Granted" : "Not Granted"}
+              {adultConsent && (
+                <> · Age verified: {hasVerifiedAge ? "Yes – you can view adult content" : "No – add birthdate in your profile"}</>
+              )}
+            </p>
+          </div>
+        </>
       )}
 
       {interests.map((interest) => {

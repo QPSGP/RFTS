@@ -19,7 +19,7 @@ export default async function LibraryItemPage({ params }: PageProps) {
     <main>
       <section style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1>Now Playing</h1>
+          <h1>Audio Library</h1>
           <p>Stream your selected audio session.</p>
         </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
