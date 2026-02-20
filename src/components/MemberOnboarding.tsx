@@ -237,7 +237,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
   return (
     <div>
       <div className="stepper">
-        {["Personal Details", "Subscription & Goals", "Payment"].map((label, index) => (
+        {["Personal Details", "Membership & Goals", "Payment"].map((label, index) => (
           <div key={label} className="stepper-item">
             <span className={`stepper-dot ${index + 1 === step ? "active" : ""}`} />
             <span>{label}</span>
@@ -623,7 +623,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
         )}
         {step < 3 && (
           <button className="button" type="button" onClick={nextStep}>
-            Continue
+            {step === 2 ? "Membership & Goals" : "Continue"}
           </button>
         )}
         {step === 3 && (

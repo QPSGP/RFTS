@@ -14,6 +14,8 @@ type ScheduleInput = {
   tier: "bronze" | "gold" | "platinum";
   nights: number;
   playsPerNight?: 1 | 2;
+  /** When set, used as the special/CGMR track (e.g. every 4th night) instead of global cgmr/fallback. */
+  userAssignedTrack?: LibraryItem | null;
 };
 
 const libraryById = (library: LibraryItem[]) => {
@@ -81,7 +83,8 @@ export const buildSchedulePreview = ({
   settings,
   tier,
   nights,
-  playsPerNight = 2
+  playsPerNight = 2,
+  userAssignedTrack = null
 }: ScheduleInput): ScheduleNight[] => {
   const goalTrackMap = buildGoalTrackMap(library, interestRecords);
   const orderedGoals = interests.filter((id) => goalTrackMap.has(id));
@@ -93,7 +96,8 @@ export const buildSchedulePreview = ({
     ? pickByCode(library, settings.fallbackTrackId)
     : null;
 
-  const specialTrack = tier === "platinum" ? cgmr || fallback : fallback || cgmr;
+  const defaultSpecialTrack = tier === "platinum" ? cgmr || fallback : fallback || cgmr;
+  const specialTrack = userAssignedTrack ?? defaultSpecialTrack;
   const playCounts = new Map<string, number>();
   const activeGoals = orderedGoals.slice(0, Math.max(settings.initialTracks, 1));
   let nextIndex = activeGoals.length;

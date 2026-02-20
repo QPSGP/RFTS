@@ -3,7 +3,7 @@ import { z } from "zod";
 import fs from "fs";
 import path from "path";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getPlaybackSettings, getUserProfile, listInterests, listLibrary } from "@/lib/db";
+import { getMemberProfileByUserId, getPlaybackSettings, getUserProfile, listInterests, listLibrary } from "@/lib/db";
 import { buildSchedulePreview } from "@/lib/scheduler";
 
 const schema = z.object({
@@ -46,19 +46,45 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
   const nights = parsed.data.nights ?? 7;
-  const [library, settings, interestRecords] = await Promise.all([
+  const [library, settings, interestRecords, memberProfile] = await Promise.all([
     listLibrary(),
     getPlaybackSettings(),
-    listInterests()
+    listInterests(),
+    getMemberProfileByUserId(profile.id)
   ]);
+
+  const yearBorn = memberProfile?.yearBorn ?? null;
+  const hasVerifiedAge = yearBorn != null && new Date().getFullYear() - yearBorn >= 18;
+  const canAccessAdult = (memberProfile?.adultConsent ?? false) && hasVerifiedAge;
+  const wantsPracticeGrowth = memberProfile?.wantsPracticeGrowth ?? false;
+
+  const hasCategory = (item: { categories?: string[] }, cat: string) =>
+    (item.categories || []).some((c) => c.toLowerCase() === cat.toLowerCase());
+  const filteredLibrary = library.filter((item) => {
+    if (item.isAdult && !canAccessAdult) return false;
+    if (hasCategory(item, "special") && !wantsPracticeGrowth) return false;
+    return true;
+  });
+
+  const emailLower = profile.email?.toLowerCase() ?? "";
+  const userAssignedTrack =
+    filteredLibrary.find(
+      (item) =>
+        (item.allowedUserEmails || []).some((e) => e.toLowerCase() === emailLower) &&
+        hasCategory(item, "cgmr")
+    ) ??
+    filteredLibrary.find((item) => (item.allowedUserEmails || []).some((e) => e.toLowerCase() === emailLower)) ??
+    null;
+
   const schedule = buildSchedulePreview({
     interests: profile.goalIds || [],
-    library,
+    library: filteredLibrary,
     interestRecords,
     settings,
     tier: profile.subscriptionTier || "platinum",
     nights,
-    playsPerNight: profile.playsPerNight === 1 ? 1 : 2
+    playsPerNight: profile.playsPerNight === 1 ? 1 : 2,
+    userAssignedTrack: userAssignedTrack ?? undefined
   });
   const blobAssets = readJson<{ audios?: Record<string, string> }>(
     "blob-assets.json",

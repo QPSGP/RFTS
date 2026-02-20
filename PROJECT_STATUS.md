@@ -48,11 +48,13 @@ App code lives in **rfts-platform** (this folder). The repo root is **CursorRFTS
 
 ## Where We Left Off
 
-- **Code:** Signup centering and Cursor agent rules are done. No open coding tasks from this session.
+- **Code:** Admin library category filter, schedule filtering by adult/Special, and user-assigned CGMR in rotation are implemented. Adult content remains enforced in LibraryBrowser, stream route, and schedule (no birthdate or under 18 → no adult).
 - **Git:** Repo not yet initialized in CursorRFTS at last check; push to GitHub is done by you via GitHub Desktop (or Cursor’s Source Control once Git is set up).
 - **Next steps you might want:**
   - Initialize Git in the repo root (CursorRFTS) and push to GitHub via GitHub Desktop.
   - If you open only **rfts-platform** as the workspace, consider adding a `.cursor/rules` or short CONTEXT.md here that points to this file so new chats “know where we left off.”
+
+- **Latest session (admin audios & schedule):** AdminContent has category filter (All/General/Special/CGMR). Schedule API filters library by adult and Special access, uses member profile (yearBorn, adultConsent, wantsPracticeGrowth), and passes user-assigned CGMR into the scheduler for the special slot. Scheduler accepts optional `userAssignedTrack`. Adult content is not viewable without birthdate or if under 18 (LibraryBrowser, stream route, schedule).
 
 ---
 

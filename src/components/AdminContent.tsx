@@ -40,6 +40,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [goalDraft, setGoalDraft] = useState<Interest | null>(null);
   const [librarySort, setLibrarySort] = useState<"title" | "sku">("title");
+  const [libraryCategoryFilter, setLibraryCategoryFilter] = useState<"all" | "General" | "Special" | "CGMR">("all");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<LibraryItem | null>(null);
   const [editInterestIds, setEditInterestIds] = useState<string[]>([]);
@@ -108,6 +109,16 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     }
     return copy.sort((a, b) => a.title.localeCompare(b.title));
   }, [library, librarySort]);
+
+  const hasCategory = (item: LibraryItem, cat: string) =>
+    (item.categories || []).some((c) => c.toLowerCase() === cat.toLowerCase());
+  const filteredLibrary = useMemo(() => {
+    if (libraryCategoryFilter === "all") return sortedLibrary;
+    if (libraryCategoryFilter === "CGMR") return sortedLibrary.filter((item) => hasCategory(item, "cgmr"));
+    if (libraryCategoryFilter === "Special") return sortedLibrary.filter((item) => hasCategory(item, "special"));
+    if (libraryCategoryFilter === "General") return sortedLibrary.filter((item) => !hasCategory(item, "cgmr") && !hasCategory(item, "special"));
+    return sortedLibrary;
+  }, [sortedLibrary, libraryCategoryFilter]);
 
   const addInterest = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -571,7 +582,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                 gridTemplateColumns: "repeat(2, minmax(0, 1fr))"
               }}
             >
-              {sortedLibrary.map((item) => (
+              {filteredLibrary.map((item) => (
                 <a key={item.id} href={`#audio-${item.id}`}>
                   {(item.skuCode || "SKU?") + " - " + item.title}
                 </a>
@@ -579,7 +590,22 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             </div>
           </div>
         )}
-        <div style={{ marginTop: 12, display: "flex", gap: 12 }}>
+        <div style={{ marginTop: 12, display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            Category
+            <select
+              style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #d1d5db" }}
+              value={libraryCategoryFilter}
+              onChange={(event) =>
+                setLibraryCategoryFilter(event.target.value as "all" | "General" | "Special" | "CGMR")
+              }
+            >
+              <option value="all">All</option>
+              <option value="General">General</option>
+              <option value="Special">Special</option>
+              <option value="CGMR">CGMR</option>
+            </select>
+          </label>
           <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
             Sort by
             <select
@@ -628,7 +654,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
           </button>
         </form>
         <div className="grid" style={{ marginTop: 16 }}>
-          {sortedLibrary.map((item) => (
+          {filteredLibrary.map((item) => (
             <div key={item.id} id={`audio-${item.id}`} className="card">
               {editingId === item.id && editDraft ? (
                 <form onSubmit={saveEdit} className="grid">
