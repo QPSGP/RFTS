@@ -40,9 +40,53 @@ function formatDate(iso: string | null): string {
   }
 }
 
+function formatDateTime(iso: string | null): string {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  } catch {
+    return "—";
+  }
+}
+
+type AdminWithLogin = {
+  id: string;
+  email: string;
+  status: string;
+  createdAt: string;
+  lastLoginAt: string | null;
+};
+
+type ModeratorWithLogin = {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  createdAt: string;
+  lastLoginAt: string | null;
+};
+
+type ActivityLogEntry = {
+  id: string;
+  actorType: "admin" | "moderator";
+  actorEmail: string;
+  actorName: string | null;
+  action: string;
+  createdAt: string;
+};
+
 export default function AdminDashboardPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [members, setMembers] = useState<MemberRow[]>([]);
+  const [admins, setAdmins] = useState<AdminWithLogin[]>([]);
+  const [moderators, setModerators] = useState<ModeratorWithLogin[]>([]);
+  const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "unauthorized">("loading");
 
   useEffect(() => {
@@ -59,10 +103,30 @@ export default function AdminDashboardPage() {
           setSummary(data.summary || null);
           setMembers(data.members || []);
           setStatus("ready");
+          fetch("/api/admin/activity", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "viewed_activity_dashboard" }),
+            credentials: "include"
+          }).catch(() => {});
         }
       })
       .catch(() => setStatus("unauthorized"));
   }, []);
+
+  useEffect(() => {
+    if (status !== "ready") return;
+    fetch("/api/admin/staff-activity", { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setAdmins(data.admins || []);
+          setModerators(data.moderators || []);
+          setActivityLog(data.activityLog || []);
+        }
+      })
+      .catch(() => {});
+  }, [status]);
 
   if (status === "loading") {
     return (
@@ -188,6 +252,87 @@ export default function AdminDashboardPage() {
           </table>
           {members.length === 0 && (
             <p style={{ padding: 24, color: "#6b7280" }}>No members yet.</p>
+          )}
+        </div>
+      </section>
+
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ marginBottom: 12, fontSize: 18 }}>Staff activity (Admins &amp; Facilitators)</h2>
+        <div className="grid grid-2" style={{ gap: 24, marginBottom: 24 }}>
+          <div className="card">
+            <h3 style={{ marginTop: 0, fontSize: 16 }}>Admins</h3>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
+                  <th style={{ padding: "8px 10px", fontWeight: 600 }}>Email</th>
+                  <th style={{ padding: "8px 10px", fontWeight: 600 }}>Status</th>
+                  <th style={{ padding: "8px 10px", fontWeight: 600 }}>Last login</th>
+                </tr>
+              </thead>
+              <tbody>
+                {admins.map((a) => (
+                  <tr key={a.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                    <td style={{ padding: "8px 10px" }}>{a.email}</td>
+                    <td style={{ padding: "8px 10px" }}>{a.status}</td>
+                    <td style={{ padding: "8px 10px", color: "#4b5563" }}>{formatDateTime(a.lastLoginAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {admins.length === 0 && <p style={{ padding: 12, color: "#6b7280", margin: 0 }}>No admins.</p>}
+          </div>
+          <div className="card">
+            <h3 style={{ marginTop: 0, fontSize: 16 }}>Facilitators</h3>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
+                  <th style={{ padding: "8px 10px", fontWeight: 600 }}>Name</th>
+                  <th style={{ padding: "8px 10px", fontWeight: 600 }}>Email</th>
+                  <th style={{ padding: "8px 10px", fontWeight: 600 }}>Status</th>
+                  <th style={{ padding: "8px 10px", fontWeight: 600 }}>Last login</th>
+                </tr>
+              </thead>
+              <tbody>
+                {moderators.map((m) => (
+                  <tr key={m.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                    <td style={{ padding: "8px 10px" }}>{m.name}</td>
+                    <td style={{ padding: "8px 10px" }}>{m.email}</td>
+                    <td style={{ padding: "8px 10px" }}>{m.status}</td>
+                    <td style={{ padding: "8px 10px", color: "#4b5563" }}>{formatDateTime(m.lastLoginAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {moderators.length === 0 && <p style={{ padding: 12, color: "#6b7280", margin: 0 }}>No facilitators.</p>}
+          </div>
+        </div>
+        <div className="card" style={{ overflowX: "auto" }}>
+          <h3 style={{ marginTop: 0, fontSize: 16 }}>Recent activity (logins and actions)</h3>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 500 }}>
+            <thead>
+              <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
+                <th style={{ padding: "8px 10px", fontWeight: 600 }}>When</th>
+                <th style={{ padding: "8px 10px", fontWeight: 600 }}>Who</th>
+                <th style={{ padding: "8px 10px", fontWeight: 600 }}>Role</th>
+                <th style={{ padding: "8px 10px", fontWeight: 600 }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activityLog.map((entry) => (
+                <tr key={entry.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                  <td style={{ padding: "8px 10px", color: "#4b5563" }}>{formatDateTime(entry.createdAt)}</td>
+                  <td style={{ padding: "8px 10px" }}>
+                    {entry.actorName || entry.actorEmail}
+                    {entry.actorName && <span style={{ color: "#6b7280", fontSize: 12 }}> ({entry.actorEmail})</span>}
+                  </td>
+                  <td style={{ padding: "8px 10px" }}>{entry.actorType === "admin" ? "Admin" : "Facilitator"}</td>
+                  <td style={{ padding: "8px 10px" }}>{entry.action.replace(/_/g, " ")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {activityLog.length === 0 && (
+            <p style={{ padding: 12, color: "#6b7280", margin: 0 }}>No activity recorded yet.</p>
           )}
         </div>
       </section>

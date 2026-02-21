@@ -6,6 +6,7 @@ import {
   verifyAdminCredentials,
   verifyModeratorCredentials
 } from "@/lib/auth";
+import { getModeratorByEmail, recordStaffActivity } from "@/lib/db";
 
 const schema = z.object({
   email: z.string().email(),
@@ -26,5 +27,10 @@ export async function POST(request: Request) {
   }
   const token = createSessionToken(email);
   setSession(token);
+
+  const actorType = isAdmin ? "admin" : "moderator";
+  const moderator = isModerator ? await getModeratorByEmail(email) : null;
+  await recordStaffActivity(actorType, email, "login", moderator?.name ?? null);
+
   return NextResponse.json({ ok: true, role: isAdmin ? "admin" : "moderator" });
 }

@@ -1130,6 +1130,78 @@ export const listModerators = async () => {
   return rows;
 };
 
+export type StaffActivityRow = {
+  id: string;
+  actorType: "admin" | "moderator";
+  actorEmail: string;
+  actorName: string | null;
+  action: string;
+  createdAt: string;
+};
+
+export const recordStaffActivity = async (
+  actorType: "admin" | "moderator",
+  actorEmail: string,
+  action: string,
+  actorName?: string | null
+): Promise<void> => {
+  try {
+    await sql`
+      INSERT INTO staff_activity_log (actor_type, actor_email, actor_name, action)
+      VALUES (${actorType}, ${actorEmail}, ${actorName ?? null}, ${action})
+    `;
+  } catch {
+    // Table may not exist yet
+  }
+};
+
+/** Last login time by staff email (from staff_activity_log where action = 'login'). */
+export const getLastLoginByStaffEmail = async (): Promise<Map<string, string>> => {
+  const map = new Map<string, string>();
+  try {
+    const { rows } = await sql<{ actor_email: string; last_at: string }>`
+      SELECT actor_email, MAX(created_at)::text AS last_at
+      FROM staff_activity_log
+      WHERE action = 'login'
+      GROUP BY actor_email
+    `;
+    for (const r of rows) {
+      map.set(r.actor_email.toLowerCase(), r.last_at);
+    }
+  } catch {
+    // Table may not exist
+  }
+  return map;
+};
+
+export const getStaffActivityLog = async (limit: number = 100): Promise<StaffActivityRow[]> => {
+  try {
+    const { rows } = await sql<{
+      id: string;
+      actor_type: string;
+      actor_email: string;
+      actor_name: string | null;
+      action: string;
+      created_at: string;
+    }>`
+      SELECT id, actor_type, actor_email, actor_name, action, created_at
+      FROM staff_activity_log
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `;
+    return rows.map((r) => ({
+      id: r.id,
+      actorType: r.actor_type === "moderator" ? "moderator" : "admin",
+      actorEmail: r.actor_email,
+      actorName: r.actor_name,
+      action: r.action,
+      createdAt: r.created_at
+    }));
+  } catch {
+    return [];
+  }
+};
+
 export const getModeratorByEmail = async (email: string) => {
   const { rows } = await sql<ModeratorAccount>`
     SELECT

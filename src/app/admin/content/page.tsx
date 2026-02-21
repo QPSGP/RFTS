@@ -32,6 +32,15 @@ export default function AdminContentPage() {
       .catch(() => setIsFirstAdmin(false));
   }, []);
 
+  useEffect(() => {
+    fetch("/api/admin/activity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "viewed_content_console" }),
+      credentials: "include"
+    }).catch(() => {});
+  }, []);
+
   const toggleSection = (key: keyof typeof openSections, id: string) => {
     setOpenSections((prev) => {
       const nextOpen = !prev[key];

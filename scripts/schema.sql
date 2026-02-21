@@ -149,3 +149,18 @@ CREATE TABLE IF NOT EXISTS member_session_usage (
 
 CREATE INDEX IF NOT EXISTS member_session_usage_user_used
   ON member_session_usage (user_id, used_at);
+
+-- Staff (admin + facilitator) activity: logins and actions
+CREATE TABLE IF NOT EXISTS staff_activity_log (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  actor_type text NOT NULL CHECK (actor_type IN ('admin', 'moderator')),
+  actor_email text NOT NULL,
+  actor_name text,
+  action text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS staff_activity_log_created_at
+  ON staff_activity_log (created_at DESC);
+CREATE INDEX IF NOT EXISTS staff_activity_log_actor_email
+  ON staff_activity_log (actor_email, created_at DESC);
