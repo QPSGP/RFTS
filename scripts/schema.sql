@@ -139,3 +139,13 @@ CREATE TABLE IF NOT EXISTS playback_settings (
   cgmr_track_id text NOT NULL DEFAULT '',
   fallback_track_id text NOT NULL DEFAULT ''
 );
+
+-- One row per session use (member started a session on the console)
+CREATE TABLE IF NOT EXISTS member_session_usage (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  used_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS member_session_usage_user_used
+  ON member_session_usage (user_id, used_at);

@@ -258,6 +258,9 @@ export default function PlayOptionsPage() {
             }
             gapHours={gapHours}
             autoStart={autoStart}
+            onSessionStart={() => {
+              fetch("/api/user/session-used", { method: "POST", credentials: "include" }).catch(() => {});
+            }}
           />
         )}
         {status === "active" && profile && (

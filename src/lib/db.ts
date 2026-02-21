@@ -269,6 +269,8 @@ export type MemberActivityRow = {
   currentPeriodEnd: string | null;
   goalCount: number;
   playsPerNight: number;
+  sessionsUsedToday: number;
+  sessionsUsedLast7: number;
 };
 
 export type MemberActivitySummary = {
@@ -276,6 +278,8 @@ export type MemberActivitySummary = {
   activeSubscriptions: number;
   byTier: { bronze: number; gold: number; platinum: number };
   newThisMonth: number;
+  totalSessionsUsedToday: number;
+  totalSessionsUsedLast7: number;
 };
 
 export const getMemberActivityAnalytics = async (): Promise<{
@@ -311,17 +315,24 @@ export const getMemberActivityAnalytics = async (): Promise<{
     ORDER BY u.created_at DESC
   `;
 
-  const members: MemberActivityRow[] = memberRows.map((r) => ({
-    id: r.id,
-    email: r.email,
-    createdAt: r.createdAt,
-    goalUpdatedAt: r.goalUpdatedAt,
-    subscriptionStatus: r.subscriptionStatus,
-    subscriptionTier: r.subscriptionTier,
-    currentPeriodEnd: r.currentPeriodEnd,
-    goalCount: Array.isArray(r.goalIds) ? r.goalIds.length : 0,
-    playsPerNight: r.playsPerNight ?? 2
-  }));
+  const usageCounts = await getSessionUsageCountsByUser();
+
+  const members: MemberActivityRow[] = memberRows.map((r) => {
+    const usage = usageCounts.get(r.id) || { sessionsToday: 0, sessionsLast7: 0 };
+    return {
+      id: r.id,
+      email: r.email,
+      createdAt: r.createdAt,
+      goalUpdatedAt: r.goalUpdatedAt,
+      subscriptionStatus: r.subscriptionStatus,
+      subscriptionTier: r.subscriptionTier,
+      currentPeriodEnd: r.currentPeriodEnd,
+      goalCount: Array.isArray(r.goalIds) ? r.goalIds.length : 0,
+      playsPerNight: r.playsPerNight ?? 2,
+      sessionsUsedToday: usage.sessionsToday,
+      sessionsUsedLast7: usage.sessionsLast7
+    };
+  });
 
   const totalMembers = members.length;
   const activeSubscriptions = members.filter((m) => m.subscriptionStatus === "active").length;
@@ -331,13 +342,17 @@ export const getMemberActivityAnalytics = async (): Promise<{
     platinum: members.filter((m) => m.subscriptionTier === "platinum" && m.subscriptionStatus === "active").length
   };
   const newThisMonth = members.filter((m) => m.createdAt >= startOfMonth).length;
+  const totalSessionsUsedToday = members.reduce((sum, m) => sum + m.sessionsUsedToday, 0);
+  const totalSessionsUsedLast7 = members.reduce((sum, m) => sum + m.sessionsUsedLast7, 0);
 
   return {
     summary: {
       totalMembers,
       activeSubscriptions,
       byTier,
-      newThisMonth
+      newThisMonth,
+      totalSessionsUsedToday,
+      totalSessionsUsedLast7
     },
     members
   };
@@ -664,6 +679,57 @@ export const getLibraryItemIdBySkuCode = async (
     rows = result.rows;
   }
   return rows[0]?.id ?? null;
+};
+
+/** Record one session use for a member (e.g. when they start a session on the console). */
+export const recordSessionUsed = async (userId: string): Promise<void> => {
+  try {
+    await sql`
+      INSERT INTO member_session_usage (user_id, used_at)
+      VALUES (${userId}, now())
+    `;
+  } catch {
+    // Table may not exist yet if schema not run; avoid breaking the member flow
+  }
+};
+
+/** Get session usage counts per user for today (UTC) and last 7 days. */
+export const getSessionUsageCountsByUser = async (): Promise<
+  Map<string, { sessionsToday: number; sessionsLast7: number }>
+> => {
+  const map = new Map<string, { sessionsToday: number; sessionsLast7: number }>();
+  try {
+    const now = new Date();
+    const startOfTodayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
+    const startOfLast7Utc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 7)).toISOString();
+
+    const { rows: todayRows } = await sql<{ user_id: string; count: string }>`
+      SELECT user_id, COUNT(*)::text AS count
+      FROM member_session_usage
+      WHERE used_at >= ${startOfTodayUtc}
+      GROUP BY user_id
+    `;
+    const { rows: last7Rows } = await sql<{ user_id: string; count: string }>`
+      SELECT user_id, COUNT(*)::text AS count
+      FROM member_session_usage
+      WHERE used_at >= ${startOfLast7Utc}
+      GROUP BY user_id
+    `;
+
+    for (const r of todayRows) {
+      const count = parseInt(r.count, 10) || 0;
+      const existing = map.get(r.user_id) || { sessionsToday: 0, sessionsLast7: 0 };
+      map.set(r.user_id, { ...existing, sessionsToday: count });
+    }
+    for (const r of last7Rows) {
+      const count = parseInt(r.count, 10) || 0;
+      const existing = map.get(r.user_id) || { sessionsToday: 0, sessionsLast7: 0 };
+      map.set(r.user_id, { ...existing, sessionsLast7: count });
+    }
+  } catch {
+    // Table may not exist yet; return empty counts
+  }
+  return map;
 };
 
 export const createLibraryItem = async (payload: {

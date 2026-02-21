@@ -9,6 +9,8 @@ type Summary = {
   activeSubscriptions: number;
   byTier: { bronze: number; gold: number; platinum: number };
   newThisMonth: number;
+  totalSessionsUsedToday?: number;
+  totalSessionsUsedLast7?: number;
 };
 
 type MemberRow = {
@@ -21,6 +23,8 @@ type MemberRow = {
   currentPeriodEnd: string | null;
   goalCount: number;
   playsPerNight: number;
+  sessionsUsedToday?: number;
+  sessionsUsedLast7?: number;
 };
 
 function formatDate(iso: string | null): string {
@@ -131,6 +135,18 @@ export default function AdminDashboardPage() {
                 Bronze: {summary.byTier.bronze} · Gold: {summary.byTier.gold} · Platinum: {summary.byTier.platinum}
               </p>
             </div>
+            <div className="card">
+              <strong>Sessions used today</strong>
+              <p style={{ fontSize: 24, margin: "4px 0 0", fontWeight: 600 }}>
+                {summary.totalSessionsUsedToday ?? 0}
+              </p>
+            </div>
+            <div className="card">
+              <strong>Sessions used (last 7 days)</strong>
+              <p style={{ fontSize: 24, margin: "4px 0 0", fontWeight: 600 }}>
+                {summary.totalSessionsUsedLast7 ?? 0}
+              </p>
+            </div>
           </div>
         </section>
       )}
@@ -149,6 +165,8 @@ export default function AdminDashboardPage() {
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Period end</th>
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Goals</th>
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Plays/night</th>
+                <th style={{ padding: "10px 12px", fontWeight: 600 }}>Sessions today</th>
+                <th style={{ padding: "10px 12px", fontWeight: 600 }}>Sessions (7d)</th>
               </tr>
             </thead>
             <tbody>
@@ -162,6 +180,8 @@ export default function AdminDashboardPage() {
                   <td style={{ padding: "10px 12px", color: "#4b5563" }}>{formatDate(m.currentPeriodEnd)}</td>
                   <td style={{ padding: "10px 12px" }}>{m.goalCount}</td>
                   <td style={{ padding: "10px 12px" }}>{m.playsPerNight}</td>
+                  <td style={{ padding: "10px 12px" }}>{m.sessionsUsedToday ?? 0}</td>
+                  <td style={{ padding: "10px 12px" }}>{m.sessionsUsedLast7 ?? 0}</td>
                 </tr>
               ))}
             </tbody>

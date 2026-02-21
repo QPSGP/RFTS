@@ -13,6 +13,8 @@ type SessionPlayerProps = {
   secondTrack?: SessionTrack | null;
   gapHours: number;
   autoStart?: boolean;
+  /** Called when the member starts a session (for usage analytics). */
+  onSessionStart?: () => void;
 };
 
 export type SessionPlayerHandle = {
@@ -20,7 +22,7 @@ export type SessionPlayerHandle = {
 };
 
 const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(function SessionPlayer(
-  { prepAudio, firstTrack, secondTrack, gapHours, autoStart = false },
+  { prepAudio, firstTrack, secondTrack, gapHours, autoStart = false, onSessionStart },
   ref
 ) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -56,6 +58,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("rfts-session-start"));
     }
+    onSessionStart?.();
     const nextQueue = [prepAudio, firstTrack].filter(
       (track): track is SessionTrack => !!track
     );
@@ -64,7 +67,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     setMessage(null);
     setNeedsUserPlay(false);
     attemptPlay(nextQueue[0]);
-  }, [firstTrack, prepAudio]);
+  }, [firstTrack, prepAudio, onSessionStart]);
 
   const playSecond = useCallback(() => {
     if (!secondTrack) {
