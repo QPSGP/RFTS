@@ -47,6 +47,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   const [library, setLibrary] = useState<LibraryItem[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [populateFilenamesStatus, setPopulateFilenamesStatus] = useState<string | null>(null);
   const [selectedGoalId, setSelectedGoalId] = useState<string>("");
   const [goalSaveStatus, setGoalSaveStatus] = useState<string | null>(null);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
@@ -255,6 +256,28 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     } else {
       const data = await response.json().catch(() => ({}));
       setStatus(data?.error || "Failed to add item.");
+    }
+  };
+
+  const populateFilenamesFromUrls = async () => {
+    setPopulateFilenamesStatus(null);
+    try {
+      const response = await fetch("/api/admin/library-populate-filenames", { method: "POST" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setPopulateFilenamesStatus(data.error || "Failed");
+        return;
+      }
+      setPopulateFilenamesStatus(`Updated ${data.updated ?? 0} of ${data.total ?? 0} file name(s).`);
+      const libraryRes = await fetch("/api/library");
+      const libraryData = await libraryRes.json();
+      setLibrary(
+        (libraryData.library || []).sort(
+          (a: LibraryItem, b: LibraryItem) => a.order - b.order
+        )
+      );
+    } catch (e) {
+      setPopulateFilenamesStatus("Error: " + String(e));
     }
   };
 
@@ -586,7 +609,11 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             <button className="button button-secondary" onClick={syncLibraryMetadata}>
               Sync Descriptions & Covers
             </button>
+            <button className="button button-secondary" type="button" onClick={populateFilenamesFromUrls}>
+              Populate file names from URLs (one-time)
+            </button>
             {syncStatus && <p style={{ marginTop: 8 }}>{syncStatus}</p>}
+            {populateFilenamesStatus && <p style={{ marginTop: 8 }}>{populateFilenamesStatus}</p>}
           </>
         )}
         <div className="card" style={{ marginTop: 16 }}>
