@@ -15,6 +15,8 @@ type Summary = {
 type MemberRow = {
   id: string;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
   createdAt: string;
   goalUpdatedAt: string | null;
   subscriptionStatus: string | null;
@@ -24,6 +26,7 @@ type MemberRow = {
   playsPerNight: number;
   sessionsUsedToday?: number;
   sessionsUsedLast7?: number;
+  sessionsTotal?: number;
 };
 
 function formatDate(iso: string | null): string {
@@ -209,37 +212,39 @@ export default function AdminDashboardPage() {
         </section>
       )}
 
-      <section>
+      <section style={{ fontSize: 14 }}>
         <h2 style={{ marginBottom: 12, fontSize: 18 }}>Member activity</h2>
         <div className="card" style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 640 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 640, fontSize: 14 }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
-                <th style={{ padding: "10px 12px", fontWeight: 600 }}>Email</th>
+                <th style={{ padding: "10px 12px", fontWeight: 600 }}>Name</th>
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Signed up</th>
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Last goals update</th>
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Status</th>
-                <th style={{ padding: "10px 12px", fontWeight: 600 }}>Membership</th>
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Period end</th>
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Goals</th>
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Plays/night</th>
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Sessions today</th>
-                <th style={{ padding: "10px 12px", fontWeight: 600 }}>Sessions (7d)</th>
+                <th style={{ padding: "10px 12px", fontWeight: 600 }}>Total nightly sessions</th>
               </tr>
             </thead>
             <tbody>
               {members.map((m) => (
                 <tr key={m.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                  <td style={{ padding: "10px 12px" }}>{m.email}</td>
+                  <td style={{ padding: "10px 12px" }}>
+                    {m.firstName || m.lastName
+                      ? [m.firstName, m.lastName].filter(Boolean).join(" ").trim()
+                      : m.email}
+                  </td>
                   <td style={{ padding: "10px 12px", color: "#4b5563" }}>{formatDate(m.createdAt)}</td>
                   <td style={{ padding: "10px 12px", color: "#4b5563" }}>{formatDate(m.goalUpdatedAt)}</td>
                   <td style={{ padding: "10px 12px" }}>{m.subscriptionStatus ?? "—"}</td>
-                  <td style={{ padding: "10px 12px" }}>{m.subscriptionStatus === "active" ? "Membership" : "—"}</td>
                   <td style={{ padding: "10px 12px", color: "#4b5563" }}>{formatDate(m.currentPeriodEnd)}</td>
                   <td style={{ padding: "10px 12px" }}>{m.goalCount}</td>
                   <td style={{ padding: "10px 12px" }}>{m.playsPerNight}</td>
                   <td style={{ padding: "10px 12px" }}>{m.sessionsUsedToday ?? 0}</td>
-                  <td style={{ padding: "10px 12px" }}>{m.sessionsUsedLast7 ?? 0}</td>
+                  <td style={{ padding: "10px 12px" }}>{m.sessionsTotal ?? 0}</td>
                 </tr>
               ))}
             </tbody>

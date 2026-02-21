@@ -262,6 +262,8 @@ export const listUsers = async () => {
 export type MemberActivityRow = {
   id: string;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
   createdAt: string;
   goalUpdatedAt: string | null;
   subscriptionStatus: string | null;
@@ -271,6 +273,7 @@ export type MemberActivityRow = {
   playsPerNight: number;
   sessionsUsedToday: number;
   sessionsUsedLast7: number;
+  sessionsTotal: number;
 };
 
 export type MemberActivitySummary = {
@@ -291,6 +294,8 @@ export const getMemberActivityAnalytics = async (): Promise<{
   const { rows: memberRows } = await sql<{
     id: string;
     email: string;
+    firstName: string | null;
+    lastName: string | null;
     createdAt: string;
     goalUpdatedAt: string | null;
     subscriptionStatus: string | null;
@@ -302,6 +307,8 @@ export const getMemberActivityAnalytics = async (): Promise<{
     SELECT
       u.id,
       u.email,
+      mp.first_name AS "firstName",
+      mp.last_name AS "lastName",
       u.created_at AS "createdAt",
       u.goal_updated_at AS "goalUpdatedAt",
       s.status AS "subscriptionStatus",
@@ -311,16 +318,22 @@ export const getMemberActivityAnalytics = async (): Promise<{
       COALESCE(u.plays_per_night, 2) AS "playsPerNight"
     FROM users u
     LEFT JOIN subscriptions s ON s.user_id = u.id
+    LEFT JOIN member_profiles mp ON mp.user_id = u.id
     ORDER BY u.created_at DESC
   `;
 
-  const usageCounts = await getSessionUsageCountsByUser();
+  const [usageCounts, totalCounts] = await Promise.all([
+    getSessionUsageCountsByUser(),
+    getTotalSessionCountByUser()
+  ]);
 
   const members: MemberActivityRow[] = memberRows.map((r) => {
     const usage = usageCounts.get(r.id) || { sessionsToday: 0, sessionsLast7: 0 };
     return {
       id: r.id,
       email: r.email,
+      firstName: r.firstName ?? null,
+      lastName: r.lastName ?? null,
       createdAt: r.createdAt,
       goalUpdatedAt: r.goalUpdatedAt,
       subscriptionStatus: r.subscriptionStatus,
@@ -329,7 +342,8 @@ export const getMemberActivityAnalytics = async (): Promise<{
       goalCount: Array.isArray(r.goalIds) ? r.goalIds.length : 0,
       playsPerNight: r.playsPerNight ?? 2,
       sessionsUsedToday: usage.sessionsToday,
-      sessionsUsedLast7: usage.sessionsLast7
+      sessionsUsedLast7: usage.sessionsLast7,
+      sessionsTotal: totalCounts.get(r.id) ?? 0
     };
   });
 
@@ -721,6 +735,24 @@ export const getSessionUsageCountsByUser = async (): Promise<
     }
   } catch {
     // Table may not exist yet; return empty counts
+  }
+  return map;
+};
+
+/** Total (lifetime) session count per user. */
+export const getTotalSessionCountByUser = async (): Promise<Map<string, number>> => {
+  const map = new Map<string, number>();
+  try {
+    const { rows } = await sql<{ user_id: string; count: string }>`
+      SELECT user_id, COUNT(*)::text AS count
+      FROM member_session_usage
+      GROUP BY user_id
+    `;
+    for (const r of rows) {
+      map.set(r.user_id, parseInt(r.count, 10) || 0);
+    }
+  } catch {
+    // Table may not exist
   }
   return map;
 };
