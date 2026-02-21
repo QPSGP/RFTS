@@ -260,13 +260,70 @@ export default function PlayOptionsPage() {
             autoStart={autoStart}
           />
         )}
+        {status === "active" && profile && (
+          <div className="card">
+            <h3>Sessions per night</h3>
+            <p style={{ color: "#4b5563", marginBottom: 12 }}>
+              Choose 1 or 2 recordings each night (default is 2). You can change this anytime.
+            </p>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="radio"
+                  name="playsPerNightConsole"
+                  checked={(profile?.playsPerNight ?? 2) === 2}
+                  onChange={async () => {
+                    const res = await fetch("/api/user/goals", {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ playsPerNight: 2 }),
+                      credentials: "include"
+                    });
+                    if (res.ok && profile) {
+                      setProfile({ ...profile, playsPerNight: 2 });
+                      const scheduleRes = await fetch("/api/user/schedule?nights=7", { credentials: "include" });
+                      if (scheduleRes.ok) {
+                        const data = await scheduleRes.json();
+                        setSchedule(data?.schedule || []);
+                      }
+                    }
+                  }}
+                />
+                2 per night (recommended)
+              </label>
+              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="radio"
+                  name="playsPerNightConsole"
+                  checked={(profile?.playsPerNight ?? 2) === 1}
+                  onChange={async () => {
+                    const res = await fetch("/api/user/goals", {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ playsPerNight: 1 }),
+                      credentials: "include"
+                    });
+                    if (res.ok && profile) {
+                      setProfile({ ...profile, playsPerNight: 1 });
+                      const scheduleRes = await fetch("/api/user/schedule?nights=7", { credentials: "include" });
+                      if (scheduleRes.ok) {
+                        const data = await scheduleRes.json();
+                        setSchedule(data?.schedule || []);
+                      }
+                    }
+                  }}
+                />
+                1 per night
+              </label>
+            </div>
+          </div>
+        )}
         {schedule.length > 0 && (
           <div className="card">
             <h3>Session Cycle</h3>
             <p>
               Your sessions rotate through the goals you selected. Each night lists the
-              recordings scheduled to play based on the admin-controlled 1 or 2
-              sessions per night setting.
+              recordings scheduled to play. You can change your sessions-per-night setting above and your goals anytime.
             </p>
             <div className="grid" style={{ marginTop: 12 }}>
               {schedule.map((night) => (

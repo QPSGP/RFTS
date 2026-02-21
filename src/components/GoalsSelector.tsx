@@ -199,33 +199,6 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
           </div>
         </div>
       </div>
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3>Sessions per night</h3>
-        <p style={{ color: "#4b5563" }}>
-          Choose to play 1 or 2 recordings each night (default is 2). The rotation
-          schedule is managed by the admin.
-        </p>
-        <div style={{ display: "flex", gap: 12 }}>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input
-              type="radio"
-              name="playsPerNight"
-              checked={playsPerNight === 2}
-              onChange={() => setPlaysPerNight(2)}
-            />
-            2 per night (recommended)
-          </label>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input
-              type="radio"
-              name="playsPerNight"
-              checked={playsPerNight === 1}
-              onChange={() => setPlaysPerNight(1)}
-            />
-            1 per night
-          </label>
-        </div>
-      </div>
       <button
         className="button"
         style={{ marginTop: 16 }}

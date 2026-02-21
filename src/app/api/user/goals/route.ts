@@ -66,7 +66,7 @@ export async function PUT(request: Request) {
     }
     await setUserGoals(profile.id, nextGoals);
   }
-  if (parsed.data.playsPerNight) {
+  if (typeof parsed.data.playsPerNight === "number") {
     await setUserPlaysPerNight(profile.id, parsed.data.playsPerNight);
   }
   return NextResponse.json({ ok: true });
