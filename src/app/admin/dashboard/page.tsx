@@ -7,7 +7,6 @@ import AdminLogoutButton from "@/components/AdminLogoutButton";
 type Summary = {
   totalMembers: number;
   activeSubscriptions: number;
-  byTier: { bronze: number; gold: number; platinum: number };
   newThisMonth: number;
   totalSessionsUsedToday?: number;
   totalSessionsUsedLast7?: number;
@@ -186,18 +185,13 @@ export default function AdminDashboardPage() {
               <p style={{ fontSize: 24, margin: "4px 0 0", fontWeight: 600 }}>{summary.totalMembers}</p>
             </div>
             <div className="card">
-              <strong>Active subscriptions</strong>
+              <strong>Membership</strong>
               <p style={{ fontSize: 24, margin: "4px 0 0", fontWeight: 600 }}>{summary.activeSubscriptions}</p>
+              <p style={{ margin: "4px 0 0", color: "#4b5563", fontSize: 13 }}>Active memberships</p>
             </div>
             <div className="card">
               <strong>New this month</strong>
               <p style={{ fontSize: 24, margin: "4px 0 0", fontWeight: 600 }}>{summary.newThisMonth}</p>
-            </div>
-            <div className="card">
-              <strong>Active by tier</strong>
-              <p style={{ margin: "4px 0 0", color: "#4b5563" }}>
-                Bronze: {summary.byTier.bronze} · Gold: {summary.byTier.gold} · Platinum: {summary.byTier.platinum}
-              </p>
             </div>
             <div className="card">
               <strong>Sessions used today</strong>
@@ -225,7 +219,7 @@ export default function AdminDashboardPage() {
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Signed up</th>
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Last goals update</th>
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Status</th>
-                <th style={{ padding: "10px 12px", fontWeight: 600 }}>Tier</th>
+                <th style={{ padding: "10px 12px", fontWeight: 600 }}>Membership</th>
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Period end</th>
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Goals</th>
                 <th style={{ padding: "10px 12px", fontWeight: 600 }}>Plays/night</th>
@@ -240,7 +234,7 @@ export default function AdminDashboardPage() {
                   <td style={{ padding: "10px 12px", color: "#4b5563" }}>{formatDate(m.createdAt)}</td>
                   <td style={{ padding: "10px 12px", color: "#4b5563" }}>{formatDate(m.goalUpdatedAt)}</td>
                   <td style={{ padding: "10px 12px" }}>{m.subscriptionStatus ?? "—"}</td>
-                  <td style={{ padding: "10px 12px" }}>{m.subscriptionTier ?? "—"}</td>
+                  <td style={{ padding: "10px 12px" }}>{m.subscriptionStatus === "active" ? "Membership" : "—"}</td>
                   <td style={{ padding: "10px 12px", color: "#4b5563" }}>{formatDate(m.currentPeriodEnd)}</td>
                   <td style={{ padding: "10px 12px" }}>{m.goalCount}</td>
                   <td style={{ padding: "10px 12px" }}>{m.playsPerNight}</td>

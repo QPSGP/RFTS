@@ -53,7 +53,7 @@ export type DbSubscription = {
   id: string;
   user_id: string;
   status: "inactive" | "active" | "past_due" | "canceled";
-  tier: "bronze" | "gold" | "platinum";
+  tier: "platinum";
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   current_period_end: string | null;
@@ -276,7 +276,6 @@ export type MemberActivityRow = {
 export type MemberActivitySummary = {
   totalMembers: number;
   activeSubscriptions: number;
-  byTier: { bronze: number; gold: number; platinum: number };
   newThisMonth: number;
   totalSessionsUsedToday: number;
   totalSessionsUsedLast7: number;
@@ -336,11 +335,6 @@ export const getMemberActivityAnalytics = async (): Promise<{
 
   const totalMembers = members.length;
   const activeSubscriptions = members.filter((m) => m.subscriptionStatus === "active").length;
-  const byTier = {
-    bronze: members.filter((m) => m.subscriptionTier === "bronze" && m.subscriptionStatus === "active").length,
-    gold: members.filter((m) => m.subscriptionTier === "gold" && m.subscriptionStatus === "active").length,
-    platinum: members.filter((m) => m.subscriptionTier === "platinum" && m.subscriptionStatus === "active").length
-  };
   const newThisMonth = members.filter((m) => m.createdAt >= startOfMonth).length;
   const totalSessionsUsedToday = members.reduce((sum, m) => sum + m.sessionsUsedToday, 0);
   const totalSessionsUsedLast7 = members.reduce((sum, m) => sum + m.sessionsUsedLast7, 0);
@@ -349,7 +343,6 @@ export const getMemberActivityAnalytics = async (): Promise<{
     summary: {
       totalMembers,
       activeSubscriptions,
-      byTier,
       newThisMonth,
       totalSessionsUsedToday,
       totalSessionsUsedLast7

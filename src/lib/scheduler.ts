@@ -11,7 +11,7 @@ type ScheduleInput = {
   library: LibraryItem[];
   interestRecords?: Interest[];
   settings: PlaybackSettings;
-  tier: "bronze" | "gold" | "platinum";
+  tier: "platinum";
   nights: number;
   playsPerNight?: 1 | 2;
   /** When set, used as the special/CGMR track (e.g. every 4th night) instead of global cgmr/fallback. */

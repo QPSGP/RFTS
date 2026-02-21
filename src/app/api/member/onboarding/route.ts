@@ -81,7 +81,7 @@ export async function POST(request: Request) {
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
   const user = await createUser(parsed.data.email, passwordHash);
   const subscriptionStatus = isDemoSkip ? "active" : "inactive";
-  await ensureSubscription(user.id, plan.id as "bronze" | "gold" | "platinum", subscriptionStatus);
+  await ensureSubscription(user.id, "platinum", subscriptionStatus);
   await setUserGoals(user.id, parsed.data.goalIds);
   await setUserPlaysPerNight(user.id, parsed.data.playsPerNight);
   const yearBorn = parsed.data.profile.yearBorn ?? null;

@@ -28,10 +28,9 @@ export async function POST(request: Request) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const userId = session.client_reference_id;
-    const tier = session.metadata?.tier as "bronze" | "gold" | "platinum" | undefined;
-
-    if (userId && tier && ["bronze", "gold", "platinum"].includes(tier)) {
-      await ensureSubscription(userId, tier, "active");
+    const tier = session.metadata?.tier as string | undefined;
+    if (userId && tier === "platinum") {
+      await ensureSubscription(userId, "platinum", "active");
     }
   }
 

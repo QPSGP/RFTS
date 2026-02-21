@@ -13,7 +13,7 @@ type UserRow = {
   email: string;
   goalIds: string[];
   subscriptionStatus: "inactive" | "active" | "past_due" | "canceled" | null;
-  subscriptionTier: "bronze" | "gold" | "platinum" | null;
+  subscriptionTier: "platinum" | null;
   playsPerNight: number;
 };
 

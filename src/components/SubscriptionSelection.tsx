@@ -7,11 +7,7 @@ type SubscriptionSelectionProps = {
   plans: SubscriptionPlan[];
 };
 
-const mapStripClass = (id: string) => {
-  if (id === "platinum") return "platinum";
-  if (id === "gold") return "gold";
-  return "bronze";
-};
+const mapStripClass = (_id: string) => "platinum";
 
 export default function SubscriptionSelection({ plans }: SubscriptionSelectionProps) {
   const [status, setStatus] = useState<string | null>(null);
