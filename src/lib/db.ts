@@ -647,12 +647,22 @@ export const getLibraryItemIdBySkuCode = async (
     return null;
   }
   const trimmed = skuCode.trim();
-  const { rows } = await sql<{ id: string }>`
-    SELECT id FROM library_items
-    WHERE TRIM(sku_code) = ${trimmed}
-    ${excludeId ? sql`AND id != ${excludeId}` : sql``}
-    LIMIT 1
-  `;
+  let rows: { id: string }[];
+  if (excludeId) {
+    const result = await sql<{ id: string }>`
+      SELECT id FROM library_items
+      WHERE TRIM(sku_code) = ${trimmed} AND id != ${excludeId}
+      LIMIT 1
+    `;
+    rows = result.rows;
+  } else {
+    const result = await sql<{ id: string }>`
+      SELECT id FROM library_items
+      WHERE TRIM(sku_code) = ${trimmed}
+      LIMIT 1
+    `;
+    rows = result.rows;
+  }
   return rows[0]?.id ?? null;
 };
 
