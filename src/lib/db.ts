@@ -541,6 +541,7 @@ export const listInterests = async (): Promise<Interest[]> => {
     `;
     return rows.map((r) => ({
       ...r,
+      description: r.description ?? undefined,
       isAdult: r.isAdult ?? false,
       categories: r.categories ?? []
     }));
@@ -552,6 +553,7 @@ export const listInterests = async (): Promise<Interest[]> => {
     `;
     return rows.map((r) => ({
       ...r,
+      description: r.description ?? undefined,
       audioIdA: null,
       audioIdB: null,
       audioIdC: null,
