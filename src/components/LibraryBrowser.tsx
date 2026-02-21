@@ -143,6 +143,11 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
 
       {library.length > 0 && (
         <section>
+          <p style={{ marginBottom: 8, marginTop: 0 }}>
+            <strong>Adult Consent:</strong> {adultConsent && hasVerifiedAge ? "Granted · Age verified" : "Denied"}
+            {" · "}
+            <strong>Building Practice:</strong> {wantsPracticeGrowth ? "Granted" : "Denied"}
+          </p>
           <div style={{ marginBottom: 12 }}>
             <label htmlFor="library-search" style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
               Search by name or SKU
@@ -209,20 +214,6 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
               ))}
           </div>
         </section>
-      )}
-
-      {library.length > 0 && (
-        <>
-          <div className="card">
-            <h2>Adult Content</h2>
-            <p style={{ marginBottom: 4 }}>
-              Adult Consent: {adultConsent && hasVerifiedAge ? "Granted · Age verified" : "Denied"}
-            </p>
-            <p style={{ marginTop: 0 }}>
-              Building Practice: {wantsPracticeGrowth ? "Granted" : "Denied"}
-            </p>
-          </div>
-        </>
       )}
 
       {(interests.some((i) => (grouped.byInterest.get(i.id) || []).length > 0) ||
