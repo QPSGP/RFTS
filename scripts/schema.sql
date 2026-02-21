@@ -74,6 +74,10 @@ CREATE TABLE IF NOT EXISTS library_items (
   is_adult boolean DEFAULT false
 );
 
+-- Enforce unique SKU (multiple empty SKU allowed; non-empty must be unique)
+CREATE UNIQUE INDEX IF NOT EXISTS library_items_sku_code_unique
+  ON library_items (TRIM(sku_code)) WHERE TRIM(sku_code) <> '';
+
 CREATE TABLE IF NOT EXISTS affiliate_applications (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,

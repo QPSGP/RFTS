@@ -4,6 +4,7 @@ import { isAdminSession } from "@/lib/auth";
 import {
   createLibraryItem,
   deleteLibraryItem,
+  getLibraryItemIdBySkuCode,
   listLibrary,
   reorderLibraryItems,
   updateLibraryItem
@@ -61,6 +62,16 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
+  const sku = (parsed.data.skuCode || "").trim();
+  if (sku) {
+    const existingId = await getLibraryItemIdBySkuCode(sku);
+    if (existingId) {
+      return NextResponse.json(
+        { error: "A library item with this SKU already exists." },
+        { status: 409 }
+      );
+    }
+  }
   const record = await createLibraryItem({
     title: parsed.data.title,
     description: parsed.data.description,
@@ -84,6 +95,16 @@ export async function PATCH(request: Request) {
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+  }
+  const sku = (parsed.data.skuCode || "").trim();
+  if (sku) {
+    const existingId = await getLibraryItemIdBySkuCode(sku, parsed.data.id);
+    if (existingId) {
+      return NextResponse.json(
+        { error: "A library item with this SKU already exists." },
+        { status: 409 }
+      );
+    }
   }
   const record = await updateLibraryItem({
     id: parsed.data.id,

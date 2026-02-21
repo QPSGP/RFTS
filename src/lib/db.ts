@@ -638,6 +638,24 @@ export const getLibraryItem = async (id: string) => {
   return rows[0] || null;
 };
 
+/** Returns the id of a library item that has this SKU, or null. Optional excludeId for updates. */
+export const getLibraryItemIdBySkuCode = async (
+  skuCode: string,
+  excludeId?: string
+): Promise<string | null> => {
+  if (!skuCode || typeof skuCode !== "string" || !skuCode.trim()) {
+    return null;
+  }
+  const trimmed = skuCode.trim();
+  const { rows } = await sql<{ id: string }>`
+    SELECT id FROM library_items
+    WHERE TRIM(sku_code) = ${trimmed}
+    ${excludeId ? sql`AND id != ${excludeId}` : sql``}
+    LIMIT 1
+  `;
+  return rows[0]?.id ?? null;
+};
+
 export const createLibraryItem = async (payload: {
   title: string;
   description: string;

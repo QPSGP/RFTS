@@ -244,8 +244,12 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
       body: JSON.stringify(payload)
     });
     if (response.ok) {
+      setStatus(null);
       event.currentTarget.reset();
       await load();
+    } else {
+      const data = await response.json().catch(() => ({}));
+      setStatus(data?.error || "Failed to add item.");
     }
   };
 
@@ -320,8 +324,12 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
       body: JSON.stringify(payload)
     });
     if (response.ok) {
+      setStatus(null);
       cancelEdit();
       await load();
+    } else {
+      const data = await response.json().catch(() => ({}));
+      setStatus(data?.error || "Failed to save.");
     }
   };
 
