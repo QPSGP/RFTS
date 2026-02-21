@@ -164,3 +164,17 @@ CREATE INDEX IF NOT EXISTS staff_activity_log_created_at
   ON staff_activity_log (created_at DESC);
 CREATE INDEX IF NOT EXISTS staff_activity_log_actor_email
   ON staff_activity_log (actor_email, created_at DESC);
+
+-- Member activity: logins and console actions (for admin behavior insights)
+CREATE TABLE IF NOT EXISTS member_activity_log (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  action text NOT NULL,
+  details text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS member_activity_log_created_at
+  ON member_activity_log (created_at DESC);
+CREATE INDEX IF NOT EXISTS member_activity_log_user_id
+  ON member_activity_log (user_id, created_at DESC);

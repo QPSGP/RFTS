@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getUserProfile, setUserGoals, setUserPlaysPerNight } from "@/lib/db";
+import { getUserProfile, recordMemberActivity, setUserGoals, setUserPlaysPerNight } from "@/lib/db";
 
 const schema = z.object({
   goalIds: z.array(z.string()).min(1).max(10).optional(),
@@ -65,9 +65,11 @@ export async function PUT(request: Request) {
       );
     }
     await setUserGoals(profile.id, nextGoals);
+    await recordMemberActivity(profile.id, "updated_goals");
   }
   if (typeof parsed.data.playsPerNight === "number") {
     await setUserPlaysPerNight(profile.id, parsed.data.playsPerNight);
+    await recordMemberActivity(profile.id, "updated_plays_per_night");
   }
   return NextResponse.json({ ok: true });
 }

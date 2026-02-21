@@ -757,6 +757,76 @@ export const getTotalSessionCountByUser = async (): Promise<Map<string, number>>
   return map;
 };
 
+export type MemberActivityLogRow = {
+  id: string;
+  userId: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  action: string;
+  details: string | null;
+  createdAt: string;
+};
+
+/** Record a member action (login or console activity). */
+export const recordMemberActivity = async (
+  userId: string,
+  action: string,
+  details?: string | null
+): Promise<void> => {
+  try {
+    await sql`
+      INSERT INTO member_activity_log (user_id, action, details)
+      VALUES (${userId}, ${action}, ${details ?? null})
+    `;
+  } catch {
+    // Table may not exist yet
+  }
+};
+
+/** Get recent member activity for admin (with user name/email). */
+export const getMemberActivityLog = async (limit: number = 100): Promise<MemberActivityLogRow[]> => {
+  try {
+    const { rows } = await sql<{
+      id: string;
+      user_id: string;
+      email: string;
+      first_name: string | null;
+      last_name: string | null;
+      action: string;
+      details: string | null;
+      created_at: string;
+    }>`
+      SELECT
+        m.id,
+        m.user_id,
+        u.email,
+        mp.first_name,
+        mp.last_name,
+        m.action,
+        m.details,
+        m.created_at
+      FROM member_activity_log m
+      JOIN users u ON u.id = m.user_id
+      LEFT JOIN member_profiles mp ON mp.user_id = m.user_id
+      ORDER BY m.created_at DESC
+      LIMIT ${limit}
+    `;
+    return rows.map((r) => ({
+      id: r.id,
+      userId: r.user_id,
+      email: r.email,
+      firstName: r.first_name ?? null,
+      lastName: r.last_name ?? null,
+      action: r.action,
+      details: r.details ?? null,
+      createdAt: r.created_at
+    }));
+  } catch {
+    return [];
+  }
+};
+
 export const createLibraryItem = async (payload: {
   title: string;
   description: string;

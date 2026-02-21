@@ -35,6 +35,12 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
         setWantsPracticeGrowth(!!data.profile?.wantsPracticeGrowth);
         const subscriptionStatus = data.profile?.subscriptionStatus;
         setStatus(subscriptionStatus === "active" ? "active" : "inactive");
+        fetch("/api/user/activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "viewed_library" }),
+          credentials: "include"
+        }).catch(() => {});
       })
       .catch(() => setStatus("loggedOut"));
   }, []);

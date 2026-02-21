@@ -61,6 +61,12 @@ export default function PlayOptionsPage() {
         const subscriptionStatus = nextProfile?.subscriptionStatus;
         setStatus(subscriptionStatus === "active" ? "active" : "inactive");
         if (subscriptionStatus === "active") {
+          fetch("/api/user/activity", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "viewed_console" }),
+            credentials: "include"
+          }).catch(() => {});
           fetch("/api/user/schedule?nights=7", { credentials: "include" })
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {

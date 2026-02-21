@@ -83,12 +83,24 @@ type ActivityLogEntry = {
   createdAt: string;
 };
 
+type MemberActivityLogEntry = {
+  id: string;
+  userId: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  action: string;
+  details: string | null;
+  createdAt: string;
+};
+
 export default function AdminDashboardPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [admins, setAdmins] = useState<AdminWithLogin[]>([]);
   const [moderators, setModerators] = useState<ModeratorWithLogin[]>([]);
   const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([]);
+  const [memberActivityLog, setMemberActivityLog] = useState<MemberActivityLogEntry[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "unauthorized">("loading");
 
   useEffect(() => {
@@ -118,16 +130,23 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     if (status !== "ready") return;
-    fetch("/api/admin/staff-activity", { credentials: "include" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) {
-          setAdmins(data.admins || []);
-          setModerators(data.moderators || []);
-          setActivityLog(data.activityLog || []);
-        }
-      })
-      .catch(() => {});
+    Promise.all([
+      fetch("/api/admin/staff-activity", { credentials: "include" }).then((res) =>
+        res.ok ? res.json() : null
+      ),
+      fetch("/api/admin/member-activity", { credentials: "include" }).then((res) =>
+        res.ok ? res.json() : null
+      )
+    ]).then(([staffData, memberData]) => {
+      if (staffData) {
+        setAdmins(staffData.admins || []);
+        setModerators(staffData.moderators || []);
+        setActivityLog(staffData.activityLog || []);
+      }
+      if (memberData) {
+        setMemberActivityLog(memberData.activityLog || []);
+      }
+    });
   }, [status]);
 
   if (status === "loading") {
@@ -251,6 +270,45 @@ export default function AdminDashboardPage() {
           </table>
           {members.length === 0 && (
             <p style={{ padding: 24, color: "#6b7280" }}>No members yet.</p>
+          )}
+        </div>
+      </section>
+
+      <section style={{ marginTop: 32, fontSize: 14 }}>
+        <h2 style={{ marginBottom: 12, fontSize: 18 }}>Recent member activity</h2>
+        <p style={{ color: "#4b5563", marginBottom: 12 }}>
+          Logins and console actions to understand member behavior.
+        </p>
+        <div className="card" style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 500, fontSize: 14 }}>
+            <thead>
+              <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
+                <th style={{ padding: "8px 10px", fontWeight: 600 }}>When</th>
+                <th style={{ padding: "8px 10px", fontWeight: 600 }}>Member</th>
+                <th style={{ padding: "8px 10px", fontWeight: 600 }}>Action</th>
+                <th style={{ padding: "8px 10px", fontWeight: 600 }}>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {memberActivityLog.map((entry) => (
+                <tr key={entry.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                  <td style={{ padding: "8px 10px", color: "#4b5563" }}>{formatDateTime(entry.createdAt)}</td>
+                  <td style={{ padding: "8px 10px" }}>
+                    {entry.firstName || entry.lastName
+                      ? [entry.firstName, entry.lastName].filter(Boolean).join(" ").trim()
+                      : entry.email}
+                    {entry.firstName || entry.lastName ? (
+                      <span style={{ color: "#6b7280", fontSize: 12 }}> ({entry.email})</span>
+                    ) : null}
+                  </td>
+                  <td style={{ padding: "8px 10px" }}>{entry.action.replace(/_/g, " ")}</td>
+                  <td style={{ padding: "8px 10px", color: "#4b5563" }}>{entry.details ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {memberActivityLog.length === 0 && (
+            <p style={{ padding: 12, color: "#6b7280", margin: 0 }}>No member activity recorded yet.</p>
           )}
         </div>
       </section>
