@@ -259,6 +259,90 @@ export const listUsers = async () => {
   return rows;
 };
 
+export type MemberActivityRow = {
+  id: string;
+  email: string;
+  createdAt: string;
+  goalUpdatedAt: string | null;
+  subscriptionStatus: string | null;
+  subscriptionTier: string | null;
+  currentPeriodEnd: string | null;
+  goalCount: number;
+  playsPerNight: number;
+};
+
+export type MemberActivitySummary = {
+  totalMembers: number;
+  activeSubscriptions: number;
+  byTier: { bronze: number; gold: number; platinum: number };
+  newThisMonth: number;
+};
+
+export const getMemberActivityAnalytics = async (): Promise<{
+  summary: MemberActivitySummary;
+  members: MemberActivityRow[];
+}> => {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+  const { rows: memberRows } = await sql<{
+    id: string;
+    email: string;
+    createdAt: string;
+    goalUpdatedAt: string | null;
+    subscriptionStatus: string | null;
+    subscriptionTier: string | null;
+    currentPeriodEnd: string | null;
+    goalIds: string[];
+    playsPerNight: number;
+  }>`
+    SELECT
+      u.id,
+      u.email,
+      u.created_at AS "createdAt",
+      u.goal_updated_at AS "goalUpdatedAt",
+      s.status AS "subscriptionStatus",
+      s.tier AS "subscriptionTier",
+      s.current_period_end AS "currentPeriodEnd",
+      COALESCE(u.goal_ids, ARRAY[]::text[]) AS "goalIds",
+      COALESCE(u.plays_per_night, 2) AS "playsPerNight"
+    FROM users u
+    LEFT JOIN subscriptions s ON s.user_id = u.id
+    ORDER BY u.created_at DESC
+  `;
+
+  const members: MemberActivityRow[] = memberRows.map((r) => ({
+    id: r.id,
+    email: r.email,
+    createdAt: r.createdAt,
+    goalUpdatedAt: r.goalUpdatedAt,
+    subscriptionStatus: r.subscriptionStatus,
+    subscriptionTier: r.subscriptionTier,
+    currentPeriodEnd: r.currentPeriodEnd,
+    goalCount: Array.isArray(r.goalIds) ? r.goalIds.length : 0,
+    playsPerNight: r.playsPerNight ?? 2
+  }));
+
+  const totalMembers = members.length;
+  const activeSubscriptions = members.filter((m) => m.subscriptionStatus === "active").length;
+  const byTier = {
+    bronze: members.filter((m) => m.subscriptionTier === "bronze" && m.subscriptionStatus === "active").length,
+    gold: members.filter((m) => m.subscriptionTier === "gold" && m.subscriptionStatus === "active").length,
+    platinum: members.filter((m) => m.subscriptionTier === "platinum" && m.subscriptionStatus === "active").length
+  };
+  const newThisMonth = members.filter((m) => m.createdAt >= startOfMonth).length;
+
+  return {
+    summary: {
+      totalMembers,
+      activeSubscriptions,
+      byTier,
+      newThisMonth
+    },
+    members
+  };
+};
+
 export const getAdminCount = async () => {
   const { rows } = await sql<{ count: number }>`
     SELECT COUNT(*)::int AS count FROM admins

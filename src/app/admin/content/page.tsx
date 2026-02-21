@@ -1,6 +1,7 @@
  "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import AdminContent from "@/components/AdminContent";
 import AdminSubscriptions from "@/components/AdminSubscriptions";
 import AdminPlaybackSettings from "@/components/AdminPlaybackSettings";
@@ -51,7 +52,12 @@ export default function AdminContentPage() {
           <h1>Admin Content Console</h1>
           <p>Manage goals, audio library items, and ordering.</p>
         </div>
-        <AdminLogoutButton />
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <Link href="/admin/dashboard" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
+            Activity Dashboard
+          </Link>
+          <AdminLogoutButton />
+        </div>
       </section>
       <section style={{ marginBottom: 24 }}>
         <div className="grid grid-2" style={{ gap: 12 }}>
