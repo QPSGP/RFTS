@@ -147,9 +147,12 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
+    const buildPractice = formData.get("buildPractice") === "on";
     const payload = {
       name: formData.get("name"),
-      description: formData.get("description")
+      description: formData.get("description"),
+      isAdult: formData.get("adultContent") === "on",
+      categories: buildPractice ? ["special"] : []
     };
     const response = await fetch("/api/interests", {
       method: "POST",
@@ -202,7 +205,9 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
         description: goalDraft.description || "",
         audioIdA: goalAudioA || null,
         audioIdB: goalAudioB || null,
-        audioIdC: goalAudioC || null
+        audioIdC: goalAudioC || null,
+        isAdult: goalDraft.isAdult ?? false,
+        categories: goalDraft.categories ?? []
       })
     });
     if (response.ok) {
@@ -420,6 +425,33 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                       }
                       placeholder="Description"
                     />
+                    <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center" }}>
+                      <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={!!goalDraft.isAdult}
+                          onChange={(e) =>
+                            setGoalDraft({ ...goalDraft, isAdult: e.target.checked })
+                          }
+                        />
+                        Adult content (18+)
+                      </label>
+                      <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={(goalDraft.categories || []).some((c) => c.toLowerCase() === "special")}
+                          onChange={(e) => {
+                            const cats = goalDraft.categories || [];
+                            const hasSpecial = cats.some((c) => c.toLowerCase() === "special");
+                            const next = e.target.checked
+                              ? hasSpecial ? cats : [...cats, "special"]
+                              : cats.filter((c) => c.toLowerCase() !== "special");
+                            setGoalDraft({ ...goalDraft, categories: next });
+                          }}
+                        />
+                        Build Practice
+                      </label>
+                    </div>
                     <div className="admin-goal-audio-slots">
                       <label>Audio files — play order follows A → B → C in the nightly cycle</label>
                       <div className="grid grid-3" style={{ gap: 12 }}>
@@ -494,6 +526,14 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                             {["A", "B", "C"][i]}
                           </span>
                         ))}
+                      {(interest.isAdult || (interest.categories || []).some((c) => c.toLowerCase() === "special")) && (
+                        <span style={{ marginLeft: 8 }}>
+                          {interest.isAdult && <span style={{ fontSize: 11, background: "#fef3c7", padding: "2px 6px", borderRadius: 4 }}>Adult</span>}
+                          {(interest.categories || []).some((c) => c.toLowerCase() === "special") && (
+                            <span style={{ fontSize: 11, background: "#dbeafe", padding: "2px 6px", borderRadius: 4, marginLeft: interest.isAdult ? 4 : 0 }}>Build Practice</span>
+                          )}
+                        </span>
+                      )}
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
                       <button
@@ -519,6 +559,16 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
           <form onSubmit={addInterest} className="grid" style={{ marginTop: 16, maxWidth: 400 }}>
             <input name="name" placeholder="New goal name" required style={inputStyle} />
             <input name="description" placeholder="Description" style={inputStyle} />
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input type="checkbox" name="adultContent" />
+                Adult content (18+)
+              </label>
+              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input type="checkbox" name="buildPractice" />
+                Build Practice
+              </label>
+            </div>
             <button className="button" type="submit">
               Add Goal
             </button>

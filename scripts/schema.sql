@@ -55,6 +55,8 @@ CREATE TABLE IF NOT EXISTS interests (
   id text PRIMARY KEY,
   name text NOT NULL,
   description text,
+  is_adult boolean DEFAULT false,
+  categories text[] DEFAULT ARRAY[]::text[],
   created_at timestamptz DEFAULT now()
 );
 

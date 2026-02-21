@@ -1,11 +1,39 @@
-import { listInterests, listLibrary } from "@/lib/db";
+import { getMemberProfileByUserId, getUserProfile, listInterests, listLibrary } from "@/lib/db";
+import { getUserSessionEmail } from "@/lib/user-auth";
 import LibraryBrowser from "@/components/LibraryBrowser";
 
+function filterInterestsByMemberAccess(
+  interests: Awaited<ReturnType<typeof listInterests>>,
+  adultConsent: boolean,
+  wantsPracticeGrowth: boolean
+) {
+  return interests.filter((interest) => {
+    if (interest.isAdult && !adultConsent) return false;
+    const hasBuildPractice = (interest.categories || []).some((c) => c.toLowerCase() === "special");
+    if (hasBuildPractice && !wantsPracticeGrowth) return false;
+    return true;
+  });
+}
+
 export default async function LibraryPage() {
-  const [library, interests] = await Promise.all([
+  const email = getUserSessionEmail();
+  const [library, allInterests] = await Promise.all([
     listLibrary(),
     listInterests()
   ]);
+  let interests = allInterests;
+  if (email) {
+    const profile = await getUserProfile(email);
+    const memberProfile = profile ? await getMemberProfileByUserId(profile.id) : null;
+    const yearBorn = memberProfile?.yearBorn ?? null;
+    const currentYear = new Date().getFullYear();
+    const hasVerifiedAge = yearBorn != null && currentYear - yearBorn >= 18;
+    const adultConsent = !!(memberProfile?.adultConsent && hasVerifiedAge);
+    const wantsPracticeGrowth = !!memberProfile?.wantsPracticeGrowth;
+    interests = filterInterestsByMemberAccess(allInterests, adultConsent, wantsPracticeGrowth);
+  } else {
+    interests = filterInterestsByMemberAccess(allInterests, false, false);
+  }
   const libraryForMember = library.filter(
     (item) => !(item.skuCode || "").toUpperCase().startsWith("MU")
   );

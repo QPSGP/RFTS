@@ -10,7 +10,9 @@ import {
 
 const createSchema = z.object({
   name: z.string().min(2),
-  description: z.string().optional()
+  description: z.string().optional(),
+  isAdult: z.boolean().optional(),
+  categories: z.array(z.string()).optional()
 });
 
 const updateSchema = z.object({
@@ -19,7 +21,9 @@ const updateSchema = z.object({
   description: z.string().optional(),
   audioIdA: z.string().uuid().nullable().optional(),
   audioIdB: z.string().uuid().nullable().optional(),
-  audioIdC: z.string().uuid().nullable().optional()
+  audioIdC: z.string().uuid().nullable().optional(),
+  isAdult: z.boolean().optional(),
+  categories: z.array(z.string()).optional()
 });
 
 const deleteSchema = z.object({
@@ -42,7 +46,10 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const record = await createInterest(parsed.data.name, parsed.data.description);
+  const record = await createInterest(parsed.data.name, parsed.data.description, {
+    isAdult: parsed.data.isAdult,
+    categories: parsed.data.categories
+  });
   return NextResponse.json({ ok: true, record });
 }
 
@@ -64,6 +71,12 @@ export async function PATCH(request: Request) {
           a: parsed.data.audioIdA ?? null,
           b: parsed.data.audioIdB ?? null,
           c: parsed.data.audioIdC ?? null
+        }
+      : undefined,
+    parsed.data.isAdult !== undefined || parsed.data.categories !== undefined
+      ? {
+          isAdult: parsed.data.isAdult ?? false,
+          categories: parsed.data.categories ?? []
         }
       : undefined
   );

@@ -57,6 +57,8 @@ export type Interest = {
   audioIdA?: string | null;
   audioIdB?: string | null;
   audioIdC?: string | null;
+  isAdult?: boolean;
+  categories?: string[];
   createdAt: string;
 };
 

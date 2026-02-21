@@ -431,6 +431,16 @@ const toPgArray = (values: string[]) => {
 };
 
 const ensureInterestsSeeded = async () => {
+  try {
+    await sql`ALTER TABLE interests ADD COLUMN is_adult boolean DEFAULT false`;
+  } catch {
+    // Column already exists
+  }
+  try {
+    await sql`ALTER TABLE interests ADD COLUMN categories text[] DEFAULT ARRAY[]::text[]`;
+  } catch {
+    // Column already exists
+  }
   const { rows } = await sql<{ count: number }>`
     SELECT COUNT(*)::int AS count FROM interests
   `;
@@ -518,23 +528,36 @@ const ensureLibrarySeeded = async () => {
 export const listInterests = async (): Promise<Interest[]> => {
   await ensureInterestsSeeded();
   try {
-    const { rows } = await sql<Interest>`
+    const { rows } = await sql<Interest & { audio_id_a?: string; audio_id_b?: string; audio_id_c?: string; is_adult?: boolean }>`
       SELECT id, name, description,
         audio_id_a as "audioIdA",
         audio_id_b as "audioIdB",
         audio_id_c as "audioIdC",
+        COALESCE(is_adult, false) as "isAdult",
+        COALESCE(categories, ARRAY[]::text[]) as "categories",
         created_at as "createdAt"
       FROM interests
       ORDER BY name ASC
     `;
-    return rows;
+    return rows.map((r) => ({
+      ...r,
+      isAdult: r.isAdult ?? false,
+      categories: r.categories ?? []
+    }));
   } catch {
-    const { rows } = await sql<Interest>`
+    const { rows } = await sql<{ id: string; name: string; description: string | null; createdAt: string }>`
       SELECT id, name, description, created_at as "createdAt"
       FROM interests
       ORDER BY name ASC
     `;
-    return rows.map((r) => ({ ...r, audioIdA: null, audioIdB: null, audioIdC: null }));
+    return rows.map((r) => ({
+      ...r,
+      audioIdA: null,
+      audioIdB: null,
+      audioIdC: null,
+      isAdult: false,
+      categories: [] as string[]
+    }));
   }
 };
 
@@ -542,24 +565,53 @@ export const updateInterest = async (
   id: string,
   name: string,
   description?: string,
-  audioIds?: { a?: string | null; b?: string | null; c?: string | null }
+  audioIds?: { a?: string | null; b?: string | null; c?: string | null },
+  opts?: { isAdult?: boolean; categories?: string[] }
 ) => {
-  if (audioIds !== undefined) {
-    try {
+  const isAdult = opts?.isAdult ?? false;
+  const categories = opts?.categories ?? [];
+  try {
+    if (audioIds !== undefined) {
       const { rows } = await sql<Interest>`
         UPDATE interests
         SET name = ${name},
             description = ${description || ""},
             audio_id_a = ${audioIds.a ?? null},
             audio_id_b = ${audioIds.b ?? null},
-            audio_id_c = ${audioIds.c ?? null}
+            audio_id_c = ${audioIds.c ?? null},
+            is_adult = ${isAdult},
+            categories = ${toPgArray(categories)}::text[]
         WHERE id = ${id}
         RETURNING id, name, description, created_at as "createdAt"
       `;
-      return rows[0] || null;
-    } catch {
-      // Columns may not exist yet (migration not run)
+      if (rows[0]) return rows[0];
+    } else {
+      const { rows } = await sql<Interest>`
+        UPDATE interests
+        SET name = ${name},
+            description = ${description || ""},
+            is_adult = ${isAdult},
+            categories = ${toPgArray(categories)}::text[]
+        WHERE id = ${id}
+        RETURNING id, name, description, created_at as "createdAt"
+      `;
+      if (rows[0]) return rows[0];
     }
+  } catch {
+    // is_adult/categories columns may not exist
+  }
+  if (audioIds !== undefined) {
+    const { rows } = await sql<Interest>`
+      UPDATE interests
+      SET name = ${name},
+          description = ${description || ""},
+          audio_id_a = ${audioIds.a ?? null},
+          audio_id_b = ${audioIds.b ?? null},
+          audio_id_c = ${audioIds.c ?? null}
+      WHERE id = ${id}
+      RETURNING id, name, description, created_at as "createdAt"
+    `;
+    return rows[0] || null;
   }
   const { rows } = await sql<Interest>`
     UPDATE interests
@@ -570,14 +622,29 @@ export const updateInterest = async (
   return rows[0] || null;
 };
 
-export const createInterest = async (name: string, description?: string) => {
+export const createInterest = async (
+  name: string,
+  description?: string,
+  opts?: { isAdult?: boolean; categories?: string[] }
+) => {
   const id = crypto.randomUUID();
-  const { rows } = await sql<Interest>`
-    INSERT INTO interests (id, name, description, created_at)
-    VALUES (${id}, ${name}, ${description || ""}, now())
-    RETURNING id, name, description, created_at as "createdAt"
-  `;
-  return rows[0];
+  const isAdult = opts?.isAdult ?? false;
+  const categories = opts?.categories ?? [];
+  try {
+    const { rows } = await sql<Interest>`
+      INSERT INTO interests (id, name, description, is_adult, categories, created_at)
+      VALUES (${id}, ${name}, ${description || ""}, ${isAdult}, ${toPgArray(categories)}::text[], now())
+      RETURNING id, name, description, created_at as "createdAt"
+    `;
+    return rows[0];
+  } catch {
+    const { rows } = await sql<Interest>`
+      INSERT INTO interests (id, name, description, created_at)
+      VALUES (${id}, ${name}, ${description || ""}, now())
+      RETURNING id, name, description, created_at as "createdAt"
+    `;
+    return rows[0];
+  }
 };
 
 export const deleteInterest = async (id: string) => {

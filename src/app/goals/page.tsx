@@ -1,8 +1,31 @@
-import { listInterests } from "@/lib/db";
+import { redirect } from "next/navigation";
+import { getMemberProfileByUserId, getUserProfile, listInterests } from "@/lib/db";
+import { getUserSessionEmail } from "@/lib/user-auth";
 import GoalsSelector from "@/components/GoalsSelector";
 
 export default async function GoalsPage() {
-  const interests = await listInterests();
+  const email = getUserSessionEmail();
+  if (!email) {
+    redirect("/member/login");
+  }
+  const profile = await getUserProfile(email);
+  if (!profile) {
+    redirect("/member/login");
+  }
+  const memberProfile = await getMemberProfileByUserId(profile.id);
+  const yearBorn = memberProfile?.yearBorn ?? null;
+  const currentYear = new Date().getFullYear();
+  const hasVerifiedAge = yearBorn != null && currentYear - yearBorn >= 18;
+  const adultConsent = !!(memberProfile?.adultConsent && hasVerifiedAge);
+  const wantsPracticeGrowth = !!memberProfile?.wantsPracticeGrowth;
+
+  const allInterests = await listInterests();
+  const interests = allInterests.filter((interest) => {
+    if (interest.isAdult && !adultConsent) return false;
+    const hasBuildPractice = (interest.categories || []).some((c) => c.toLowerCase() === "special");
+    if (hasBuildPractice && !wantsPracticeGrowth) return false;
+    return true;
+  });
 
   return (
     <main>
