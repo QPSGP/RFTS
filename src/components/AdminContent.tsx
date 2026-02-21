@@ -25,6 +25,17 @@ const inputStyle = {
   width: "100%"
 };
 
+function getFileNameFromAudioUrl(url: string): string {
+  if (!url || typeof url !== "string") return "";
+  try {
+    const withoutQuery = url.split("?")[0];
+    const segment = withoutQuery.split("/").filter(Boolean).pop();
+    return segment || "";
+  } catch {
+    return "";
+  }
+}
+
 type AdminContentProps = {
   openGoals: boolean;
   openLibrary: boolean;
@@ -901,7 +912,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                       : "None"}
                   </p>
                   <p>Cover: {item.coverUrl || "Pending"}</p>
-                  <p>Audio: {item.audioUrl || "Pending"}</p>
+                  <p>Audio: {item.audioUrl ? getFileNameFromAudioUrl(item.audioUrl) || "Pending" : "Pending"}</p>
                   <p>Interests: {item.interestIds.join(", ") || "None"}</p>
                   <p>
                     Allowed Users:{" "}
