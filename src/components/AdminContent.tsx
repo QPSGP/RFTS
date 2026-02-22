@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Interest } from "@/lib/types";
 
 type LibraryItem = {
@@ -65,6 +65,9 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   const [assignAudioA, setAssignAudioA] = useState<string>("");
   const [assignAudioB, setAssignAudioB] = useState<string>("");
   const [assignAudioC, setAssignAudioC] = useState<string>("");
+  const [uploadAudioStatus, setUploadAudioStatus] = useState<string | null>(null);
+  const [uploadAudioLoading, setUploadAudioLoading] = useState(false);
+  const addLibraryFormRef = useRef<HTMLFormElement>(null);
 
   const load = async () => {
     const [interestRes, libraryRes] = await Promise.all([
@@ -256,6 +259,39 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     } else {
       const data = await response.json().catch(() => ({}));
       setStatus(data?.error || "Failed to add item.");
+    }
+  };
+
+  const uploadAudio = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const fileInput = form.elements.namedItem("uploadAudioFile") as HTMLInputElement;
+    const file = fileInput?.files?.[0];
+    if (!file) {
+      setUploadAudioStatus("Choose an audio file first.");
+      return;
+    }
+    setUploadAudioStatus(null);
+    setUploadAudioLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/admin/upload-audio", { method: "POST", body: formData });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setUploadAudioStatus(data.error || "Upload failed");
+        return;
+      }
+      setUploadAudioStatus(`Uploaded: ${data.fileName}. Use "Add Audio" below and paste the URL if needed.`);
+      const addForm = addLibraryFormRef.current;
+      if (addForm) {
+        (addForm.elements.namedItem("audioUrl") as HTMLInputElement).value = data.url || "";
+        (addForm.elements.namedItem("fileName") as HTMLInputElement).value = data.fileName || "";
+      }
+    } catch (e) {
+      setUploadAudioStatus("Error: " + String(e));
+    } finally {
+      setUploadAudioLoading(false);
     }
   };
 
@@ -751,7 +787,29 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
           </div>
           </>
         )}
-        <form onSubmit={addLibraryItem} className="grid">
+        <div className="card" style={{ marginBottom: 16 }}>
+          <h3 style={{ marginTop: 0 }}>Upload audio</h3>
+          <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>
+            Upload an MP3, M4A, WAV, or OGG file (max 4 MB). The URL and file name will be filled in below for a new item.
+          </p>
+          <form onSubmit={uploadAudio} style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
+            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 13 }}>File</span>
+              <input
+                name="uploadAudioFile"
+                type="file"
+                accept="audio/*"
+                style={inputStyle}
+                disabled={uploadAudioLoading}
+              />
+            </label>
+            <button className="button" type="submit" disabled={uploadAudioLoading}>
+              {uploadAudioLoading ? "Uploading…" : "Upload"}
+            </button>
+          </form>
+          {uploadAudioStatus && <p style={{ marginTop: 12, marginBottom: 0 }}>{uploadAudioStatus}</p>}
+        </div>
+        <form ref={addLibraryFormRef} onSubmit={addLibraryItem} className="grid">
           <input name="title" placeholder="Title" required style={inputStyle} />
           <input
             name="description"

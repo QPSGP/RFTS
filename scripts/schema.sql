@@ -180,3 +180,12 @@ CREATE INDEX IF NOT EXISTS member_activity_log_created_at
   ON member_activity_log (created_at DESC);
 CREATE INDEX IF NOT EXISTS member_activity_log_user_id
   ON member_activity_log (user_id, created_at DESC);
+
+-- Password reset tokens for member self-service (forgot password)
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  token text PRIMARY KEY,
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires_at timestamptz NOT NULL
+);
+CREATE INDEX IF NOT EXISTS password_reset_tokens_expires_at
+  ON password_reset_tokens (expires_at);

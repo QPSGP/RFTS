@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "upload:blob": "node scripts/upload_blob.js"
+    "upload:blob": "node scripts/upload_blob.js",
+    "db:schema": "node scripts/run-schema.js"
   },
   "dependencies": {
     "@vercel/blob": "^2.0.1",
@@ -18,6 +19,7 @@
     "next": "^14.2.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "resend": "^6.9.2",
     "stripe": "^16.12.0",
     "zod": "^3.23.8"
   },
@@ -28,6 +30,7 @@
     "@types/react-dom": "^18.3.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.3",
+    "pg": "^8.18.0",
     "typescript": "^5.5.4"
   }
 }

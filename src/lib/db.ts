@@ -95,6 +95,36 @@ export const deleteUserByEmail = async (email: string) => {
   `;
 };
 
+export const createPasswordResetToken = async (
+  userId: string,
+  token: string,
+  expiresAt: Date
+) => {
+  await sql`
+    INSERT INTO password_reset_tokens (token, user_id, expires_at)
+    VALUES (${token}, ${userId}, ${expiresAt})
+  `;
+};
+
+export const getPasswordResetTokenByToken = async (token: string) => {
+  const { rows } = await sql<{ user_id: string }>`
+    SELECT user_id FROM password_reset_tokens
+    WHERE token = ${token} AND expires_at > now()
+    LIMIT 1
+  `;
+  return rows[0] || null;
+};
+
+export const deletePasswordResetToken = async (token: string) => {
+  await sql`DELETE FROM password_reset_tokens WHERE token = ${token}`;
+};
+
+export const updateUserPassword = async (userId: string, passwordHash: string) => {
+  await sql`
+    UPDATE users SET password_hash = ${passwordHash} WHERE id = ${userId}
+  `;
+};
+
 export const ensureSubscription = async (
   userId: string,
   tier: DbSubscription["tier"],

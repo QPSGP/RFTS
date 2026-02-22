@@ -14,6 +14,10 @@ export default function ForgotEmailPage() {
       </section>
       <section className="section">
         <div className="card">
+          <p style={{ marginBottom: 16 }}>
+            <strong>Forgot your password instead?</strong>{" "}
+            <Link href="/member/forgot-password">Reset it here</Link>.
+          </p>
           <h2>How to recover your email</h2>
           <ol className="list" style={{ paddingLeft: 20, marginTop: 12 }}>
             <li>
