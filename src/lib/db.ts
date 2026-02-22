@@ -100,9 +100,10 @@ export const createPasswordResetToken = async (
   token: string,
   expiresAt: Date
 ) => {
+  const expiresAtStr = expiresAt.toISOString();
   await sql`
     INSERT INTO password_reset_tokens (token, user_id, expires_at)
-    VALUES (${token}, ${userId}, ${expiresAt})
+    VALUES (${token}, ${userId}, ${expiresAtStr})
   `;
 };
 
