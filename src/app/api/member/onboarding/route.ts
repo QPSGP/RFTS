@@ -12,6 +12,12 @@ import {
   setUserPlaysPerNight,
   upsertMemberProfile
 } from "@/lib/db";
+import { sendEmail } from "@/lib/email";
+import {
+  getWelcomeEmailContent,
+  getLgdInterestEmailContent,
+  getTherapistHealerCoachEmailContent
+} from "@/lib/email-templates";
 
 const schema = z.object({
   planId: z.string(),
@@ -109,6 +115,22 @@ export async function POST(request: Request) {
     hadLgdSession: parsed.data.profile.hadLgdSession,
     referralSource: parsed.data.profile.referralSource
   });
+
+  const firstName = parsed.data.profile.firstName || null;
+  const emailTo = parsed.data.email;
+  const welcome = getWelcomeEmailContent(firstName);
+  const welcomeResult = await sendEmail({ to: emailTo, subject: welcome.subject, html: welcome.html, text: welcome.text });
+  if (!welcomeResult.ok) console.error("[onboarding] Welcome email failed:", welcomeResult.error);
+  if (parsed.data.profile.hadLgdSession) {
+    const lgd = getLgdInterestEmailContent(firstName);
+    const lgdResult = await sendEmail({ to: emailTo, subject: lgd.subject, html: lgd.html, text: lgd.text });
+    if (!lgdResult.ok) console.error("[onboarding] LGD interest email failed:", lgdResult.error);
+  }
+  if (parsed.data.profile.wantsPracticeGrowth) {
+    const thc = getTherapistHealerCoachEmailContent(firstName);
+    const thcResult = await sendEmail({ to: emailTo, subject: thc.subject, html: thc.html, text: thc.text });
+    if (!thcResult.ok) console.error("[onboarding] Therapist/healer/coach email failed:", thcResult.error);
+  }
 
   const token = createUserSessionToken(parsed.data.email);
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
