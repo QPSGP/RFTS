@@ -57,10 +57,16 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ url: blob.url, fileName: file.name });
   } catch (e) {
-    console.error("Upload error:", e);
-    return NextResponse.json(
-      { error: process.env.BLOB_READ_WRITE_TOKEN ? "Upload failed." : "BLOB_READ_WRITE_TOKEN not set." },
-      { status: 500 }
-    );
+    const err = e instanceof Error ? e : new Error(String(e));
+    console.error("Upload error:", err);
+    let message = "Upload failed.";
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      message = "Blob not configured. Set BLOB_READ_WRITE_TOKEN in Vercel → Storage.";
+    } else if (err.message?.includes("size") || err.message?.includes("body")) {
+      message = "File too large or request failed. Max 4 MB.";
+    } else if (err.message) {
+      message = `Upload failed: ${err.message}`;
+    }
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
