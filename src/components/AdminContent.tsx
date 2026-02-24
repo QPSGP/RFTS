@@ -637,6 +637,28 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
 
       {openLibrary && (
         <section id="admin-audio-library" className="card">
+        <div className="card" style={{ marginBottom: 16 }}>
+          <h3 style={{ marginTop: 0 }}>Upload audio</h3>
+          <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>
+            Upload an MP3, M4A, WAV, or OGG file (max 4 MB). The URL and file name will be filled in below for a new item.
+          </p>
+          <form onSubmit={uploadAudio} style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
+            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 13 }}>File</span>
+              <input
+                name="uploadAudioFile"
+                type="file"
+                accept="audio/*"
+                style={inputStyle}
+                disabled={uploadAudioLoading}
+              />
+            </label>
+            <button className="button" type="submit" disabled={uploadAudioLoading}>
+              {uploadAudioLoading ? "Uploading…" : "Upload"}
+            </button>
+          </form>
+          {uploadAudioStatus && <p style={{ marginTop: 12, marginBottom: 0 }}>{uploadAudioStatus}</p>}
+        </div>
         {isFirstAdmin && (
           <>
             <p style={{ color: "#4b5563" }}>
@@ -787,28 +809,6 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
           </div>
           </>
         )}
-        <div className="card" style={{ marginBottom: 16 }}>
-          <h3 style={{ marginTop: 0 }}>Upload audio</h3>
-          <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>
-            Upload an MP3, M4A, WAV, or OGG file (max 4 MB). The URL and file name will be filled in below for a new item.
-          </p>
-          <form onSubmit={uploadAudio} style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
-            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={{ fontSize: 13 }}>File</span>
-              <input
-                name="uploadAudioFile"
-                type="file"
-                accept="audio/*"
-                style={inputStyle}
-                disabled={uploadAudioLoading}
-              />
-            </label>
-            <button className="button" type="submit" disabled={uploadAudioLoading}>
-              {uploadAudioLoading ? "Uploading…" : "Upload"}
-            </button>
-          </form>
-          {uploadAudioStatus && <p style={{ marginTop: 12, marginBottom: 0 }}>{uploadAudioStatus}</p>}
-        </div>
         <form ref={addLibraryFormRef} onSubmit={addLibraryItem} className="grid">
           <input name="title" placeholder="Title" required style={inputStyle} />
           <input
