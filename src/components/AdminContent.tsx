@@ -67,6 +67,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   const [assignAudioC, setAssignAudioC] = useState<string>("");
   const [uploadAudioStatus, setUploadAudioStatus] = useState<string | null>(null);
   const [uploadAudioLoading, setUploadAudioLoading] = useState(false);
+  const [libraryAddStatus, setLibraryAddStatus] = useState<string | null>(null);
   const addLibraryFormRef = useRef<HTMLFormElement>(null);
 
   const load = async () => {
@@ -254,11 +255,14 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     });
     if (response.ok) {
       setStatus(null);
+      setLibraryAddStatus(null);
       event.currentTarget.reset();
       await load();
     } else {
       const data = await response.json().catch(() => ({}));
-      setStatus(data?.error || "Failed to add item.");
+      const err = data?.error || "Failed to add item.";
+      setLibraryAddStatus(err);
+      setStatus(err);
     }
   };
 
@@ -638,9 +642,9 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
       {openLibrary && (
         <section id="admin-audio-library" className="card">
         <div className="card" style={{ marginBottom: 16 }}>
-          <h3 style={{ marginTop: 0 }}>Upload audio</h3>
+          <h3 style={{ marginTop: 0 }}>Step 1: Upload an audio file (optional)</h3>
           <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>
-            Upload an MP3, M4A, WAV, or OGG file (max 4 MB). The URL and file name will be filled in below for a new item.
+            Upload an MP3, M4A, WAV, or OGG (max 4 MB). The URL and file name will be filled into the form in Step 2.
           </p>
           <form onSubmit={uploadAudio} style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
             <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -649,7 +653,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                 name="uploadAudioFile"
                 type="file"
                 accept="audio/*"
-                style={inputStyle}
+                style={{ ...inputStyle, maxWidth: 320 }}
                 disabled={uploadAudioLoading}
               />
             </label>
@@ -810,6 +814,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
           </>
         )}
         <form ref={addLibraryFormRef} onSubmit={addLibraryItem} className="grid">
+          <h3 style={{ marginTop: 16, marginBottom: 8 }}>Step 2: Add audio to library</h3>
           <input name="title" placeholder="Title" required style={inputStyle} />
           <input
             name="description"
@@ -854,6 +859,9 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
           <button className="button" type="submit">
             Add Audio
           </button>
+          {libraryAddStatus && (
+            <p style={{ marginTop: 8, color: "#b91c1c", fontWeight: 500 }}>{libraryAddStatus}</p>
+          )}
         </form>
         <div className="grid" style={{ marginTop: 16 }}>
           {searchFilteredLibrary.map((item) => (

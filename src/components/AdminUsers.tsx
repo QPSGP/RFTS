@@ -73,6 +73,7 @@ export default function AdminUsers() {
     Record<string, Record<string, boolean>>
   >({});
   const [audioSaveStatus, setAudioSaveStatus] = useState<Record<string, string>>({});
+  const [personalizedAudioUploading, setPersonalizedAudioUploading] = useState<Record<string, boolean>>({});
   const [newAudioDrafts, setNewAudioDrafts] = useState<
     Record<
       string,
@@ -341,7 +342,7 @@ export default function AdminUsers() {
     if (!draft.title.trim() || !draft.description.trim() || !draft.audioUrl.trim()) {
       setAudioSaveStatus((prev) => ({
         ...prev,
-        [email]: "Add a title, description, and audio URL."
+        [email]: "Add a title, description, and audio URL (or upload a file first)."
       }));
       return;
     }
@@ -355,18 +356,20 @@ export default function AdminUsers() {
       body: JSON.stringify({
         title: draft.title,
         description: draft.description,
-        skuCode: draft.skuCode,
+        skuCode: draft.skuCode || "",
+        fileName: "",
         categories,
-        coverUrl: draft.coverUrl,
+        coverUrl: draft.coverUrl || "",
         audioUrl: draft.audioUrl,
         interestIds: [],
         allowedUserEmails: [email]
       })
     });
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       setAudioSaveStatus((prev) => ({
         ...prev,
-        [email]: "Unable to add audio. Check the fields and try again."
+        [email]: data?.error || "Unable to add audio. Check the fields and try again."
       }));
       return;
     }
@@ -386,6 +389,33 @@ export default function AdminUsers() {
       }
     }));
     await load();
+  };
+
+  const uploadPersonalizedAudioFile = async (email: string, fileInput: HTMLInputElement | null) => {
+    const file = fileInput?.files?.[0];
+    if (!file) {
+      setAudioSaveStatus((prev) => ({ ...prev, [email]: "Choose a file first." }));
+      return;
+    }
+    setPersonalizedAudioUploading((prev) => ({ ...prev, [email]: true }));
+    setAudioSaveStatus((prev) => ({ ...prev, [email]: "" }));
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/admin/upload-audio", { method: "POST", body: formData });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setAudioSaveStatus((prev) => ({ ...prev, [email]: data?.error || "Upload failed." }));
+        return;
+      }
+      updateAudioDraft(email, { audioUrl: data.url || "" });
+      setAudioSaveStatus((prev) => ({ ...prev, [email]: "File uploaded. Fill title and description, then click Add Personalized Audio." }));
+      if (fileInput) fileInput.value = "";
+    } catch (e) {
+      setAudioSaveStatus((prev) => ({ ...prev, [email]: "Upload error: " + String(e) }));
+    } finally {
+      setPersonalizedAudioUploading((prev) => ({ ...prev, [email]: false }));
+    }
   };
 
   const saveProfile = async (email: string) => {
@@ -707,10 +737,32 @@ export default function AdminUsers() {
                       <div style={{ marginTop: 12 }}>
                         <label style={{ fontSize: 12 }}>Personalized audio (CGMR)</label>
                         <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
-                          Assign custom audios for this member. These audios will only be
-                          available to the selected user.
+                          Assign custom audios for this member. Upload a file or paste an Audio URL, then add title and description.
                         </p>
                         <div className="grid" style={{ gap: 8, marginBottom: 12 }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-end" }}>
+                            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                              <span style={{ fontSize: 12 }}>Upload file (optional)</span>
+                              <input
+                                type="file"
+                                accept="audio/*"
+                                id={`personalized-audio-file-${user.email}`}
+                                style={inputStyle}
+                                disabled={!!personalizedAudioUploading[user.email]}
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              className="button button-secondary"
+                              disabled={!!personalizedAudioUploading[user.email]}
+                              onClick={() => {
+                                const el = document.getElementById(`personalized-audio-file-${user.email}`) as HTMLInputElement | null;
+                                uploadPersonalizedAudioFile(user.email, el);
+                              }}
+                            >
+                              {personalizedAudioUploading[user.email] ? "Uploading…" : "Upload file"}
+                            </button>
+                          </div>
                           <input
                             style={inputStyle}
                             placeholder="CGMR title"

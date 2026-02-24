@@ -26,13 +26,15 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ ok: boolea
     return { ok: false, error: "Missing recipient." };
   }
   try {
-    const { error } = await resend.emails.send({
+    const payload = {
       from: options.from || defaultFrom,
       to,
       subject: options.subject,
-      html: options.html,
-      text: options.text
-    });
+      ...(options.html && { html: options.html }),
+      ...(options.text && { text: options.text })
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Resend SDK union requires template/react; we use html/text.
+    const { error } = await resend.emails.send(payload as any);
     if (error) {
       return { ok: false, error: error.message || "Send failed." };
     }

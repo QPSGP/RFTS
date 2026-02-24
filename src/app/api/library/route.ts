@@ -60,7 +60,8 @@ export async function POST(request: Request) {
   const body = await request.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+    const msg = parsed.error.flatten().formErrors?.[0] || parsed.error.errors?.[0]?.message || "Invalid input.";
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
   const sku = (parsed.data.skuCode || "").trim();
   if (sku) {
@@ -94,7 +95,8 @@ export async function PATCH(request: Request) {
   const body = await request.json();
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+    const msg = parsed.error.flatten().formErrors?.[0] || parsed.error.errors?.[0]?.message || "Invalid input.";
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
   const sku = (parsed.data.skuCode || "").trim();
   if (sku) {
