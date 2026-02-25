@@ -1,7 +1,17 @@
 "use client";
 
+import { upload } from "@vercel/blob/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Interest } from "@/lib/types";
+
+function sanitizePathSegment(name: string): string {
+  return name
+    .replace(/\s+/g, "-")
+    .replace(/[^a-zA-Z0-9._-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 200) || "audio";
+}
 
 type LibraryItem = {
   id: string;
@@ -278,22 +288,24 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     setUploadAudioStatus(null);
     setUploadAudioLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const response = await fetch("/api/admin/upload-audio", { method: "POST", body: formData });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setUploadAudioStatus(data.error || "Upload failed");
-        return;
-      }
-      setUploadAudioStatus(`Uploaded: ${data.fileName}. Use "Add Audio" below and paste the URL if needed.`);
+      const baseName = sanitizePathSegment(file.name.replace(/\.[^.]+$/, "") || "audio");
+      const ext = file.name.match(/\.[^.]+$/)?.[0] || ".mp3";
+      const pathname = `audios/${baseName}${ext}`;
+      const blob = await upload(pathname, file, {
+        access: "public",
+        handleUploadUrl: "/api/admin/upload-audio-handler",
+        multipart: file.size > 5 * 1024 * 1024
+      });
+      const url = blob?.url || "";
+      setUploadAudioStatus(url ? `Uploaded: ${file.name}. URL is in Step 2.` : "Upload completed but no URL returned.");
       const addForm = addLibraryFormRef.current;
-      if (addForm) {
-        (addForm.elements.namedItem("audioUrl") as HTMLInputElement).value = data.url || "";
-        (addForm.elements.namedItem("fileName") as HTMLInputElement).value = data.fileName || "";
+      if (addForm && url) {
+        (addForm.elements.namedItem("audioUrl") as HTMLInputElement).value = url;
+        (addForm.elements.namedItem("fileName") as HTMLInputElement).value = file.name || "";
       }
+      if (fileInput) fileInput.value = "";
     } catch (e) {
-      setUploadAudioStatus("Error: " + String(e));
+      setUploadAudioStatus("Error: " + String(e instanceof Error ? e.message : e));
     } finally {
       setUploadAudioLoading(false);
     }
@@ -644,7 +656,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
         <div className="card" style={{ marginBottom: 16 }}>
           <h3 style={{ marginTop: 0 }}>Step 1: Upload an audio file (optional)</h3>
           <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>
-            Upload an MP3, M4A, WAV, or OGG (max 4 MB). The URL and file name will be filled into the form in Step 2.
+            Upload an MP3, M4A, WAV, or OGG (up to 100 MB). The URL and file name will be filled into the form in Step 2.
           </p>
           <form onSubmit={uploadAudio} style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
             <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>

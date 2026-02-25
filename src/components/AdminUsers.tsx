@@ -1,7 +1,17 @@
 "use client";
 
+import { upload } from "@vercel/blob/client";
 import { useEffect, useMemo, useState } from "react";
 import type { LibraryItem } from "@/lib/types";
+
+function sanitizePathSegment(name: string): string {
+  return name
+    .replace(/\s+/g, "-")
+    .replace(/[^a-zA-Z0-9._-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 200) || "audio";
+}
 
 type Interest = {
   id: string;
@@ -69,11 +79,13 @@ export default function AdminUsers() {
   const [updates, setUpdates] = useState<Record<string, Partial<UserRow>>>({});
   const [resetPasswords, setResetPasswords] = useState<Record<string, string>>({});
   const [profileOpen, setProfileOpen] = useState<Record<string, boolean>>({});
+  const [goalsSectionOpen, setGoalsSectionOpen] = useState<Record<string, boolean>>({});
   const [profileDrafts, setProfileDrafts] = useState<Record<string, ProfileDraft>>({});
   const [audioAssignments, setAudioAssignments] = useState<
     Record<string, Record<string, boolean>>
   >({});
   const [audioSaveStatus, setAudioSaveStatus] = useState<Record<string, string>>({});
+  const [uploadStatus, setUploadStatus] = useState<Record<string, string>>({});
   const [personalizedAudioUploading, setPersonalizedAudioUploading] = useState<Record<string, boolean>>({});
   const [newAudioDrafts, setNewAudioDrafts] = useState<
     Record<
@@ -396,25 +408,34 @@ export default function AdminUsers() {
   const uploadPersonalizedAudioFile = async (email: string, fileInput: HTMLInputElement | null) => {
     const file = fileInput?.files?.[0];
     if (!file) {
-      setAudioSaveStatus((prev) => ({ ...prev, [email]: "Choose a file first." }));
+      setUploadStatus((prev) => ({ ...prev, [email]: "Choose a file first." }));
       return;
     }
     setPersonalizedAudioUploading((prev) => ({ ...prev, [email]: true }));
-    setAudioSaveStatus((prev) => ({ ...prev, [email]: "" }));
+    setUploadStatus((prev) => ({ ...prev, [email]: "" }));
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const response = await fetch("/api/admin/upload-audio", { method: "POST", body: formData });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setAudioSaveStatus((prev) => ({ ...prev, [email]: data?.error || "Upload failed." }));
-        return;
-      }
-      updateAudioDraft(email, { audioUrl: data.url || "" });
-      setAudioSaveStatus((prev) => ({ ...prev, [email]: "File uploaded. Fill title and description, then click Add Personalized Audio." }));
+      const baseName = sanitizePathSegment(file.name.replace(/\.[^.]+$/, "") || "audio");
+      const ext = file.name.match(/\.[^.]+$/)?.[0] || ".mp3";
+      const pathname = `audios/${baseName}${ext}`;
+      const blob = await upload(pathname, file, {
+        access: "public",
+        handleUploadUrl: "/api/admin/upload-audio-handler",
+        multipart: file.size > 5 * 1024 * 1024
+      });
+      const url = blob?.url || "";
+      updateAudioDraft(email, { audioUrl: url });
+      setUploadStatus((prev) => ({
+        ...prev,
+        [email]: url
+          ? "Success. URL is in the Audio URL field below. Add title and description, then click Add Personalized Audio."
+          : "Upload completed but no URL returned. Paste a URL manually if needed."
+      }));
       if (fileInput) fileInput.value = "";
     } catch (e) {
-      setAudioSaveStatus((prev) => ({ ...prev, [email]: "Upload error: " + String(e) }));
+      setUploadStatus((prev) => ({
+        ...prev,
+        [email]: "Upload error: " + String(e instanceof Error ? e.message : e)
+      }));
     } finally {
       setPersonalizedAudioUploading((prev) => ({ ...prev, [email]: false }));
     }
@@ -659,93 +680,122 @@ export default function AdminUsers() {
                   )}
                   {profileOpen[user.email] && (
                     <>
-                      <label style={{ fontSize: 12 }}>Assigned goals (up to 10)</label>
-                      <div className="goal-list">
-                        {sortedInterests.map((interest) => {
-                          const orderValue = getGoalOrder(
-                            user.email,
-                            interest.id,
-                            user.goalIds || []
-                          );
-                          return (
-                            <label
-                              key={interest.id}
-                              className="goal-item"
-                              style={{ display: "flex", gap: 8, alignItems: "center" }}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={orderValue !== ""}
-                                onChange={(event) =>
-                                  updateOrderedGoals(
-                                    user.email,
-                                    interest.id,
-                                    event.target.checked ? "1" : ""
-                                  )
-                                }
-                              />
-                              <span style={{ flex: 1 }}>{interest.name}</span>
-                              <input
-                                value={orderValue}
-                                onChange={(event) =>
-                                  updateOrderedGoals(
-                                    user.email,
-                                    interest.id,
-                                    event.target.value
-                                  )
-                                }
-                                placeholder="#"
-                                style={{
-                                  width: 44,
-                                  textAlign: "center",
-                                  borderRadius: 6,
-                                  border: "1px solid #d1d5db",
-                                  padding: "4px 6px",
-                                  background: orderValue ? "#16a34a" : "#ffffff",
-                                  color: orderValue ? "#ffffff" : "#111827",
-                                  fontWeight: 600
-                                }}
-                              />
-                            </label>
-                          );
-                        })}
-                      </div>
-                      <div style={{ marginTop: 12 }}>
-                        <label style={{ fontSize: 12 }}>Audios from goals (read-only)</label>
-                        <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
-                          These are automatically included based on the member's goal
-                          selections.
-                        </p>
-                        <div className="goal-list">
-                          {getDerivedAudios(user.goalIds || []).length === 0 ? (
-                            <span style={{ color: "#6b7280", fontSize: 12 }}>
-                              No goal-based audios assigned yet.
-                            </span>
-                          ) : (
-                            getDerivedAudios(user.goalIds || []).map((item) => (
-                              <div
-                                key={item.id}
-                                className="goal-item"
-                                style={{ display: "flex", gap: 8, alignItems: "center" }}
-                              >
-                                <span style={{ flex: 1 }}>
-                                  {item.skuCode ? `${item.skuCode} - ` : ""}
-                                  {item.title}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setGoalsSectionOpen((prev) => ({
+                            ...prev,
+                            [user.email]: !prev[user.email]
+                          }))
+                        }
+                        style={{
+                          background: "none",
+                          border: "1px solid #d1d5db",
+                          borderRadius: 8,
+                          padding: "8px 12px",
+                          cursor: "pointer",
+                          fontSize: 12,
+                          width: "100%",
+                          textAlign: "left",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8
+                        }}
+                      >
+                        {goalsSectionOpen[user.email] ? "▼" : "▶"}
+                        Assigned goals (up to 10)
+                        {user.goalIds?.length ? ` — ${user.goalIds.length} selected` : ""}
+                      </button>
+                      {goalsSectionOpen[user.email] && (
+                        <>
+                          <div className="goal-list" style={{ marginTop: 8 }}>
+                            {sortedInterests.map((interest) => {
+                              const orderValue = getGoalOrder(
+                                user.email,
+                                interest.id,
+                                user.goalIds || []
+                              );
+                              return (
+                                <label
+                                  key={interest.id}
+                                  className="goal-item"
+                                  style={{ display: "flex", gap: 8, alignItems: "center" }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={orderValue !== ""}
+                                    onChange={(event) =>
+                                      updateOrderedGoals(
+                                        user.email,
+                                        interest.id,
+                                        event.target.checked ? "1" : ""
+                                      )
+                                    }
+                                  />
+                                  <span style={{ flex: 1 }}>{interest.name}</span>
+                                  <input
+                                    value={orderValue}
+                                    onChange={(event) =>
+                                      updateOrderedGoals(
+                                        user.email,
+                                        interest.id,
+                                        event.target.value
+                                      )
+                                    }
+                                    placeholder="#"
+                                    style={{
+                                      width: 44,
+                                      textAlign: "center",
+                                      borderRadius: 6,
+                                      border: "1px solid #d1d5db",
+                                      padding: "4px 6px",
+                                      background: orderValue ? "#16a34a" : "#ffffff",
+                                      color: orderValue ? "#ffffff" : "#111827",
+                                      fontWeight: 600
+                                    }}
+                                  />
+                                </label>
+                              );
+                            })}
+                          </div>
+                          <div style={{ marginTop: 12 }}>
+                            <label style={{ fontSize: 12 }}>Audios from goals (read-only)</label>
+                            <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
+                              These are automatically included based on the member's goal
+                              selections.
+                            </p>
+                            <div className="goal-list">
+                              {getDerivedAudios(user.goalIds || []).length === 0 ? (
+                                <span style={{ color: "#6b7280", fontSize: 12 }}>
+                                  No goal-based audios assigned yet.
                                 </span>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
+                              ) : (
+                                getDerivedAudios(user.goalIds || []).map((item) => (
+                                  <div
+                                    key={item.id}
+                                    className="goal-item"
+                                    style={{ display: "flex", gap: 8, alignItems: "center" }}
+                                  >
+                                    <span style={{ flex: 1 }}>
+                                      {item.skuCode ? `${item.skuCode} - ` : ""}
+                                      {item.title}
+                                    </span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
                       <div style={{ marginTop: 12 }}>
                         <label style={{ fontSize: 12 }}>Personalized audio (CGMR)</label>
                         <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
-                          Assign custom audios for this member. Upload a file or paste an Audio URL, then add title and description.
+                          Assign custom audios for this member. Upload a file (or paste an Audio URL), then add title and description and click Add Personalized Audio. The schedule uses this as the member&apos;s CGMR slot; if none is assigned, T-18 is used.
                         </p>
                         <div className="grid" style={{ gap: 8, marginBottom: 12 }}>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-end" }}>
                             <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                              <span style={{ fontSize: 12 }}>Upload file (optional)</span>
+                              <span style={{ fontSize: 12 }}>Upload file (optional, up to 100 MB)</span>
                               <input
                                 type="file"
                                 accept="audio/*"
@@ -766,6 +816,31 @@ export default function AdminUsers() {
                               {personalizedAudioUploading[user.email] ? "Uploading…" : "Upload file"}
                             </button>
                           </div>
+                          <div
+                            role="status"
+                            aria-live="polite"
+                            style={{
+                              padding: 10,
+                              borderRadius: 8,
+                              border: "1px solid #e5e7eb",
+                              backgroundColor: personalizedAudioUploading[user.email]
+                                ? "#fef3c7"
+                                : uploadStatus[user.email]
+                                  ? /failed|timed out|error|Choose a file/i.test(uploadStatus[user.email])
+                                    ? "#fef2f2"
+                                    : "#f0fdf4"
+                                  : "#f9fafb",
+                              color: uploadStatus[user.email] && /failed|timed out|error|Choose a file/i.test(uploadStatus[user.email])
+                                ? "#b91c1c"
+                                : "#111827",
+                              fontSize: 13,
+                              minHeight: 44
+                            }}
+                          >
+                            {personalizedAudioUploading[user.email]
+                              ? "Uploading… (large files supported; success or error will appear here)"
+                              : uploadStatus[user.email] || "Upload result will appear here."}
+                          </div>
                           <input
                             style={inputStyle}
                             placeholder="CGMR title"
@@ -782,14 +857,19 @@ export default function AdminUsers() {
                               updateAudioDraft(user.email, { description: event.target.value })
                             }
                           />
-                          <input
-                            style={inputStyle}
-                            placeholder="Audio URL (required)"
-                            value={getAudioDraft(user.email).audioUrl}
-                            onChange={(event) =>
-                              updateAudioDraft(user.email, { audioUrl: event.target.value })
-                            }
-                          />
+                          <div>
+                            <label style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
+                              Audio URL (required — filled automatically after upload)
+                            </label>
+                            <input
+                              style={inputStyle}
+                              placeholder="Upload a file above or paste URL"
+                              value={getAudioDraft(user.email).audioUrl}
+                              onChange={(event) =>
+                                updateAudioDraft(user.email, { audioUrl: event.target.value })
+                              }
+                            />
+                          </div>
                           <input
                             style={inputStyle}
                             placeholder="Cover URL (optional)"
