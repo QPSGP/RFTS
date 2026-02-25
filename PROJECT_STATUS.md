@@ -46,15 +46,44 @@ App code lives in **rfts-platform** (this folder). The repo root is **CursorRFTS
 
 ---
 
+## Latest Session (Handoff Summary)
+
+### Email & password reset
+- **`src/lib/email.ts`** — Resend: `sendEmail()`, `getBaseUrl()`. Env: **RESEND_API_KEY** (required), **EMAIL_FROM**, **NEXT_PUBLIC_APP_URL** (optional).
+- **Forgot password:** `POST /api/member/forgot-password`, `POST /api/member/reset-password`; pages `/member/forgot-password`, `/member/reset-password?token=...`. DB: `password_reset_tokens`; Resend type fix: `emails.send()` cast `as any` for build.
+
+### Email templates
+- **`src/lib/email-templates.ts`** — Welcome, LGD interest, therapist/healer/coach. Sent from **`POST /api/member/onboarding`** (welcome always; LGD if `hadLgdSession`; therapist if `wantsPracticeGrowth`).
+
+### Admin: upload audio (Vercel Blob)
+- **Upload:** `POST /api/admin/upload-audio` → **Vercel Blob** (path `audios/`). Env: **BLOB_READ_WRITE_TOKEN**. Max 4 MB; MP3/M4A/WAV/WebM/OGG. Clearer errors in API (Blob config, size, SDK message).
+- **Content Console → Audio Library Section:** Step 1 = Upload file (optional), Step 2 = Add audio to library. Add Audio errors shown under button. Library API returns validation error details.
+- **Members → Personalized audio (CGMR):** Upload file (optional) per member + Add Personalized Audio; API errors shown.
+
+### Schema
+- **`scripts/run-schema.js`** — Run with `node scripts/run-schema.js` or `npm run db:schema`; uses `POSTGRES_URL` from `.env.local`. Skips duplicate unique index.
+
+### Git
+- Pushes to **origin/main** from rfts-platform; repo has Git.
+
+---
+
+## Ongoing / Latest Session
+
+- **Member notes:** Admin can add/edit notes on member records. Schema: `member_profiles.notes`; API: GET/PATCH `/api/admin/member-profile`; UI: Admin → Content → Members → View Member Profile → "Admin notes" textarea. Migration in `scripts/schema.sql`.
+- **Playback schedule by sessions (not nights):** Rotation adds a new goal track every **N sessions**. Scheduler uses session count; admin labels say "Add new track every N sessions" and "Hours between sessions."
+- **4 initial tracks = 3 goals + 1 CGMR/T-18:** Default `initialTracks` is 4. Scheduler: goal count = `initialTracks - 1`, plus one special (CGMR or T-18). Admin UI: "Initial tracks in rotation (total)" is editable; helper text explains 4 = 3 goals + 1 CGMR/T-18.
+- **Admin playback:** GET `/api/playback-settings` requires admin. Existing DBs may have `initial_tracks = 3` — admin can set to 4 and save.
+
+**Agent rule:** Always add or update ongoing work and handoff notes in PROJECT_STATUS.md when making changes.
+
+---
+
 ## Where We Left Off
 
-- **Code:** Admin library category filter, schedule filtering by adult/Special, and user-assigned CGMR in rotation are implemented. Adult content remains enforced in LibraryBrowser, stream route, and schedule (no birthdate or under 18 → no adult).
-- **Git:** Repo not yet initialized in CursorRFTS at last check; push to GitHub is done by you via GitHub Desktop (or Cursor’s Source Control once Git is set up).
-- **Next steps you might want:**
-  - Initialize Git in the repo root (CursorRFTS) and push to GitHub via GitHub Desktop.
-  - If you open only **rfts-platform** as the workspace, consider adding a `.cursor/rules` or short CONTEXT.md here that points to this file so new chats “know where we left off.”
-
-- **Latest session (admin audios & schedule):** AdminContent has category filter (All/General/Special/CGMR). Schedule API filters library by adult and Special access, uses member profile (yearBorn, adultConsent, wantsPracticeGrowth), and passes user-assigned CGMR into the scheduler for the special slot. Scheduler accepts optional `userAssignedTrack`. Adult content is not viewable without birthdate or if under 18 (LibraryBrowser, stream route, schedule).
+- **Handoff:** Read this file and **README.md** for env. Run schema with `npm run db:schema` if DB is new or after schema changes.
+- **Git:** Pushes from rfts-platform to origin/main work; commit PROJECT_STATUS.md with related work.
+- **Previous session (admin audios & schedule):** AdminContent has category filter (All/General/Special/CGMR). Schedule API filters library by adult and Special access, uses member profile, user-assigned CGMR; adult content gated by birthdate/consent.
 
 ---
 
@@ -63,4 +92,6 @@ App code lives in **rfts-platform** (this folder). The repo root is **CursorRFTS
 - **App entry:** `src/app/` (App Router); API routes under `src/app/api/`.
 - **Types:** `src/lib/types.ts`.
 - **Signup flow:** `src/app/signup/step-1-subscription-selection/page.tsx` uses `MemberOnboarding`; subscription UI is in `MemberOnboarding.tsx` and `SubscriptionSelection.tsx`; styles in `src/app/globals.css` (`.signup-card`, `.membership-package-section`, `.plan-grid`, `.plan-card`).
-- **DB/schema:** `scripts/schema.sql` for Vercel Postgres; env in `.env.local` (see README).
+- **DB/schema:** `scripts/schema.sql` for Vercel Postgres; run with `node scripts/run-schema.js`; env in `.env.local` (see README).
+- **Email:** `src/lib/email.ts` (Resend); templates in `src/lib/email-templates.ts`. Env: RESEND_API_KEY, EMAIL_FROM, NEXT_PUBLIC_APP_URL.
+- **Upload audio:** `POST /api/admin/upload-audio` → Vercel Blob; env: BLOB_READ_WRITE_TOKEN.
