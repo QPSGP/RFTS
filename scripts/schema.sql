@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS member_profiles (
   wants_polyamory boolean DEFAULT false,
   had_lgd_session boolean DEFAULT false,
   referral_source text,
+  notes text,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -189,3 +190,6 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 );
 CREATE INDEX IF NOT EXISTS password_reset_tokens_expires_at
   ON password_reset_tokens (expires_at);
+
+-- Migration: admin notes on member profiles (safe to run on existing DBs)
+ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS notes text;

@@ -52,6 +52,7 @@ type ProfileDraft = {
   wantsPolyamory: boolean;
   hadLgdSession: boolean;
   referralSource: string;
+  notes: string;
 };
 
 export default function AdminUsers() {
@@ -246,7 +247,8 @@ export default function AdminUsers() {
         adultConsent: !!profile.adultConsent,
         wantsPolyamory: !!profile.wantsPolyamory,
         hadLgdSession: !!profile.hadLgdSession,
-        referralSource: profile.referralSource || ""
+        referralSource: profile.referralSource || "",
+        notes: profile.notes ?? ""
       }
     }));
   };
@@ -445,7 +447,8 @@ export default function AdminUsers() {
           adultConsent: draft.adultConsent,
           wantsPolyamory: draft.wantsPolyamory,
           hadLgdSession: draft.hadLgdSession,
-          referralSource: draft.referralSource
+          referralSource: draft.referralSource,
+          notes: draft.notes
         }
       })
     });
@@ -878,7 +881,28 @@ export default function AdminUsers() {
                   {profileOpen[user.email] && profileDrafts[user.email] && (
                     <div className="card" style={{ marginTop: 12 }}>
                       <h4>Member Profile</h4>
-                      <div className="grid grid-2">
+                      <label style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
+                        Admin notes
+                      </label>
+                      <textarea
+                        style={{
+                          ...inputStyle,
+                          minHeight: 80,
+                          resize: "vertical"
+                        }}
+                        placeholder="Internal notes about this member (admin only)"
+                        value={profileDrafts[user.email].notes}
+                        onChange={(event) =>
+                          setProfileDrafts({
+                            ...profileDrafts,
+                            [user.email]: {
+                              ...profileDrafts[user.email],
+                              notes: event.target.value
+                            }
+                          })
+                        }
+                      />
+                      <div className="grid grid-2" style={{ marginTop: 12 }}>
                         <input
                           style={inputStyle}
                           placeholder="First Name"

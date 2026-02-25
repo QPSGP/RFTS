@@ -47,6 +47,7 @@ export type MemberProfile = {
   wantsPolyamory?: boolean | null;
   hadLgdSession?: boolean | null;
   referralSource?: string | null;
+  notes?: string | null;
 };
 
 export type DbSubscription = {
@@ -182,7 +183,8 @@ export const upsertMemberProfile = async (profile: MemberProfile) => {
       adult_consent,
       wants_polyamory,
       had_lgd_session,
-      referral_source
+      referral_source,
+      notes
     )
     VALUES (
       ${profile.userId},
@@ -202,7 +204,8 @@ export const upsertMemberProfile = async (profile: MemberProfile) => {
       ${profile.adultConsent ?? false},
       ${profile.wantsPolyamory ?? false},
       ${profile.hadLgdSession ?? false},
-      ${profile.referralSource || null}
+      ${profile.referralSource || null},
+      ${profile.notes || null}
     )
     ON CONFLICT (user_id)
     DO UPDATE SET
@@ -223,6 +226,7 @@ export const upsertMemberProfile = async (profile: MemberProfile) => {
       wants_polyamory = EXCLUDED.wants_polyamory,
       had_lgd_session = EXCLUDED.had_lgd_session,
       referral_source = EXCLUDED.referral_source,
+      notes = EXCLUDED.notes,
       updated_at = now()
   `;
 };
@@ -247,7 +251,8 @@ export const getMemberProfileByUserId = async (userId: string) => {
       adult_consent as "adultConsent",
       wants_polyamory as "wantsPolyamory",
       had_lgd_session as "hadLgdSession",
-      referral_source as "referralSource"
+      referral_source as "referralSource",
+      notes
     FROM member_profiles
     WHERE user_id = ${userId}
     LIMIT 1

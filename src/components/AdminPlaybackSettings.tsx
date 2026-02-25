@@ -43,6 +43,9 @@ export default function AdminPlaybackSettings() {
   return (
     <div className="card">
       <h2>Playback Schedule Settings</h2>
+      <p style={{ fontSize: 14, color: "#4b5563", marginBottom: 12 }}>
+        Schedule is built by <strong>sessions</strong> (not nights). Rotation adds a new goal track every N sessions.
+      </p>
       <div className="grid">
         <label>
           Plays per recording
@@ -56,7 +59,7 @@ export default function AdminPlaybackSettings() {
           />
         </label>
         <label>
-          Hours between nightly recordings
+          Hours between sessions
           <input
             type="number"
             min={0}
@@ -68,11 +71,11 @@ export default function AdminPlaybackSettings() {
           />
         </label>
         <label>
-          Add new track every N nights
+          Add new track every N sessions
           <input
             type="number"
             min={1}
-            max={30}
+            max={60}
             style={inputStyle}
             value={settings.addNewTrackEveryNights}
             onChange={(event) =>
@@ -81,7 +84,7 @@ export default function AdminPlaybackSettings() {
           />
         </label>
         <label>
-          Initial tracks in rotation
+          Initial tracks in rotation (total)
           <input
             type="number"
             min={1}
@@ -90,6 +93,9 @@ export default function AdminPlaybackSettings() {
             value={settings.initialTracks}
             onChange={(event) => update("initialTracks", Number(event.target.value))}
           />
+          <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
+            4 = 3 from goals + 1 CGMR (or T-18 if no CGMR). Editable.
+          </span>
         </label>
         <label>
           CGMR track code

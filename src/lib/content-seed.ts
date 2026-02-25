@@ -51,7 +51,7 @@ export const defaultPlaybackSettings: PlaybackSettings = {
   playsPerRecording: 21,
   nightlyGapHours: 2.5,
   addNewTrackEveryNights: 7,
-  initialTracks: 3,
+  initialTracks: 4,
   cgmrTrackId: "",
   fallbackTrackId: "T-18"
 };

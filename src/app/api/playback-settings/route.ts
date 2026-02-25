@@ -13,6 +13,9 @@ const schema = z.object({
 });
 
 export async function GET() {
+  if (!(await isAdminSession())) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
   return NextResponse.json({ settings: await getPlaybackSettings() });
 }
 

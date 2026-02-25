@@ -26,7 +26,8 @@ const updateSchema = z.object({
     adultConsent: z.boolean().optional(),
     wantsPolyamory: z.boolean().optional(),
     hadLgdSession: z.boolean().optional(),
-    referralSource: z.string().optional()
+    referralSource: z.string().optional(),
+    notes: z.string().optional()
   })
 });
 
@@ -93,7 +94,10 @@ export async function PATCH(request: Request) {
     hadLgdSession:
       parsed.data.profile.hadLgdSession ?? existing?.hadLgdSession ?? false,
     referralSource:
-      parsed.data.profile.referralSource ?? existing?.referralSource ?? null
+      parsed.data.profile.referralSource ?? existing?.referralSource ?? null,
+    notes: parsed.data.profile.notes !== undefined
+      ? parsed.data.profile.notes ?? null
+      : existing?.notes ?? null
   });
   return NextResponse.json({ ok: true });
 }

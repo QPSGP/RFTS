@@ -99,7 +99,9 @@ export const buildSchedulePreview = ({
   const defaultSpecialTrack = tier === "platinum" ? cgmr || fallback : fallback || cgmr;
   const specialTrack = userAssignedTrack ?? defaultSpecialTrack;
   const playCounts = new Map<string, number>();
-  const activeGoals = orderedGoals.slice(0, Math.max(settings.initialTracks, 1));
+  // initialTracks = total in rotation (e.g. 4 = 3 goals + 1 CGMR/T-18)
+  const goalCount = Math.max(1, Math.min(orderedGoals.length, settings.initialTracks - 1));
+  const activeGoals = orderedGoals.slice(0, goalCount);
   let nextIndex = activeGoals.length;
   let goalPointer = 0;
   const goalTrackPointer = new Map<string, number>();
@@ -147,15 +149,18 @@ export const buildSchedulePreview = ({
   };
 
   const schedule: ScheduleNight[] = [];
+  let nextAddAtSession = settings.addNewTrackEveryNights > 0 ? settings.addNewTrackEveryNights : 0;
   for (let night = 1; night <= nights; night += 1) {
-    if (
-      night > 1 &&
-      settings.addNewTrackEveryNights > 0 &&
-      (night - 1) % settings.addNewTrackEveryNights === 0 &&
+    // Add new goal every N sessions (sessions so far = (night - 1) * playsPerNight)
+    const sessionsSoFar = (night - 1) * playsPerNight;
+    while (
+      nextAddAtSession > 0 &&
+      sessionsSoFar >= nextAddAtSession &&
       nextIndex < orderedGoals.length
     ) {
       activeGoals.push(orderedGoals[nextIndex]);
       nextIndex += 1;
+      nextAddAtSession += settings.addNewTrackEveryNights;
     }
 
     const dropGoalIndex = shouldDropGoalOnNight(night);
