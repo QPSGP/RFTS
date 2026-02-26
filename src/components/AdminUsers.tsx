@@ -1,6 +1,6 @@
 "use client";
 
-import { upload } from "@vercel/blob/client";
+import { put } from "@vercel/blob/client";
 import { useEffect, useMemo, useState } from "react";
 import type { LibraryItem } from "@/lib/types";
 
@@ -413,14 +413,38 @@ export default function AdminUsers() {
     }
     setPersonalizedAudioUploading((prev) => ({ ...prev, [email]: true }));
     setUploadStatus((prev) => ({ ...prev, [email]: "" }));
+    const pathname = `audios/${sanitizePathSegment(file.name.replace(/\.[^.]+$/, "") || "audio")}${file.name.match(/\.[^.]+$/)?.[0] || ".mp3"}`;
+    const useMultipart = file.size > 5 * 1024 * 1024;
     try {
-      const baseName = sanitizePathSegment(file.name.replace(/\.[^.]+$/, "") || "audio");
-      const ext = file.name.match(/\.[^.]+$/)?.[0] || ".mp3";
-      const pathname = `audios/${baseName}${ext}`;
-      const blob = await upload(pathname, file, {
+      const tokenRes = await fetch("/api/admin/upload-audio-handler", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "blob.generate-client-token",
+          payload: { pathname, clientPayload: null, multipart: useMultipart }
+        }),
+        credentials: "include"
+      });
+      const tokenData = await tokenRes.json().catch(() => ({}));
+      if (!tokenRes.ok) {
+        setUploadStatus((prev) => ({
+          ...prev,
+          [email]:
+            tokenRes.status === 401
+              ? "Upload failed: Log in as admin and try again."
+              : `Upload failed: ${tokenData?.error || tokenRes.statusText}. Check BLOB_READ_WRITE_TOKEN in Vercel if deployed.`
+        }));
+        return;
+      }
+      const clientToken = tokenData?.clientToken;
+      if (!clientToken) {
+        setUploadStatus((prev) => ({ ...prev, [email]: "Upload failed: No token from server." }));
+        return;
+      }
+      const blob = await put(pathname, file, {
         access: "public",
-        handleUploadUrl: "/api/admin/upload-audio-handler",
-        multipart: file.size > 5 * 1024 * 1024
+        token: clientToken,
+        multipart: useMultipart
       });
       const url = blob?.url || "";
       updateAudioDraft(email, { audioUrl: url });
@@ -432,9 +456,10 @@ export default function AdminUsers() {
       }));
       if (fileInput) fileInput.value = "";
     } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
       setUploadStatus((prev) => ({
         ...prev,
-        [email]: "Upload error: " + String(e instanceof Error ? e.message : e)
+        [email]: `Upload failed: ${msg}. Ensure you're logged in as admin and BLOB_READ_WRITE_TOKEN is set.`
       }));
     } finally {
       setPersonalizedAudioUploading((prev) => ({ ...prev, [email]: false }));
@@ -789,8 +814,36 @@ export default function AdminUsers() {
                       )}
                       <div style={{ marginTop: 12 }}>
                         <label style={{ fontSize: 12 }}>Personalized audio (CGMR)</label>
+                        {(() => {
+                          const emailLower = user.email.toLowerCase();
+                          const assigned = library.filter((item) =>
+                            (item.allowedUserEmails || []).some((e) => e.toLowerCase() === emailLower)
+                          );
+                          const hasCat = (item: LibraryItem, cat: string) =>
+                            (item.categories || []).some((c) => c.toLowerCase() === cat.toLowerCase());
+                          const cgmrTrack = assigned.find((item) => hasCat(item, "cgmr")) ?? assigned[0] ?? null;
+                          return (
+                            <div style={{ marginTop: 8, marginBottom: 8, padding: 10, background: "#f0fdf4", borderRadius: 8, border: "1px solid #bbf7d0" }}>
+                              <strong style={{ fontSize: 12 }}>Assigned to this member:</strong>{" "}
+                              {assigned.length === 0 ? (
+                                <span style={{ color: "#6b7280" }}>None. Their schedule will use T-18 for the CGMR slot.</span>
+                              ) : (
+                                <>
+                                  {assigned.map((item) => (
+                                    <span key={item.id} style={{ marginRight: 8 }}>
+                                      {item.skuCode ? `${item.skuCode} – ` : ""}{item.title}
+                                    </span>
+                                  ))}
+                                  <div style={{ marginTop: 6, fontSize: 12, color: "#047857" }}>
+                                    <strong>Schedule uses as CGMR slot:</strong> {cgmrTrack ? `${cgmrTrack.skuCode ? cgmrTrack.skuCode + " – " : ""}${cgmrTrack.title}` : "T-18 (default)"}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          );
+                        })()}
                         <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
-                          Assign custom audios for this member. Upload a file (or paste an Audio URL), then add title and description and click Add Personalized Audio. The schedule uses this as the member&apos;s CGMR slot; if none is assigned, T-18 is used.
+                          Assign custom audios for this member. Upload a file (or paste an Audio URL), then add title and description and click Add Personalized Audio. The schedule uses the CGMR track above; if none is assigned, T-18 is used.
                         </p>
                         <div className="grid" style={{ gap: 8, marginBottom: 12 }}>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-end" }}>
@@ -886,9 +939,12 @@ export default function AdminUsers() {
                               updateAudioDraft(user.email, { skuCode: event.target.value })
                             }
                           />
+                          <label style={{ fontSize: 12 }}>
+                            Categories (comma-separated) — include <strong>CGMR</strong> so the schedule uses this as the member&apos;s CGMR slot
+                          </label>
                           <input
                             style={inputStyle}
-                            placeholder="Categories (comma-separated)"
+                            placeholder="e.g. CGMR"
                             value={getAudioDraft(user.email).categories}
                             onChange={(event) =>
                               updateAudioDraft(user.email, { categories: event.target.value })
@@ -928,6 +984,9 @@ export default function AdminUsers() {
                             </label>
                           ))}
                         </div>
+                        <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
+                          To remove a track from this member: uncheck it above and click Save Personalized Audios.
+                        </p>
                         <div style={{ marginTop: 8, display: "flex", gap: 12 }}>
                           <button
                             className="button button-secondary"

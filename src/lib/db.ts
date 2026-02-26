@@ -1033,6 +1033,26 @@ export const deleteLibraryItem = async (id: string) => {
   await sql`DELETE FROM library_items WHERE id = ${id}`;
 };
 
+/** Append email to a library item's allowed_user_emails if not already present (case-insensitive). */
+export const addEmailToLibraryItemAllowedList = async (
+  libraryItemId: string,
+  email: string
+): Promise<boolean> => {
+  await ensureLibrarySeeded();
+  const emailLower = email.trim().toLowerCase();
+  if (!emailLower) return false;
+  const { rowCount } = await sql`
+    UPDATE library_items
+    SET allowed_user_emails = array_append(COALESCE(allowed_user_emails, ARRAY[]::text[]), ${email.trim()})
+    WHERE id = ${libraryItemId}
+      AND NOT EXISTS (
+        SELECT 1 FROM unnest(COALESCE(allowed_user_emails, ARRAY[]::text[])) AS e
+        WHERE LOWER(e) = ${emailLower}
+      )
+  `;
+  return (rowCount ?? 0) > 0;
+};
+
 export const listAffiliates = async () => {
   const { rows } = await sql<AffiliateRecord>`
     SELECT

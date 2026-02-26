@@ -4,9 +4,12 @@ import bcrypt from "bcryptjs";
 import { createUserSessionToken, setUserSession } from "@/lib/user-auth";
 import { getStripe, getStripeMode } from "@/lib/stripe";
 import {
+  addEmailToLibraryItemAllowedList,
   createUser,
   ensureSubscription,
+  getPlaybackSettings,
   getUserByEmail,
+  listLibrary,
   listSubscriptionPlans,
   setUserGoals,
   setUserPlaysPerNight,
@@ -115,6 +118,25 @@ export async function POST(request: Request) {
     hadLgdSession: parsed.data.profile.hadLgdSession,
     referralSource: parsed.data.profile.referralSource
   });
+
+  // Assign fallback track (e.g. T-18) to new member so they get it in their schedule until a CGMR is assigned.
+  try {
+    const settings = await getPlaybackSettings();
+    const fallbackCode = (settings.fallbackTrackId || "T-18").trim().toUpperCase();
+    if (fallbackCode) {
+      const library = await listLibrary();
+      const fallbackItem = library.find(
+        (item) =>
+          (item.skuCode || "").toUpperCase().includes(fallbackCode) ||
+          (item.title || "").toUpperCase().includes(fallbackCode)
+      );
+      if (fallbackItem) {
+        await addEmailToLibraryItemAllowedList(fallbackItem.id, parsed.data.email);
+      }
+    }
+  } catch (e) {
+    console.error("[onboarding] Assign fallback track to new member:", e);
+  }
 
   const firstName = parsed.data.profile.firstName || null;
   const emailTo = parsed.data.email;

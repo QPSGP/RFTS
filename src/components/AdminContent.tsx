@@ -1,6 +1,6 @@
 "use client";
 
-import { upload } from "@vercel/blob/client";
+import { put } from "@vercel/blob/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Interest } from "@/lib/types";
 
@@ -287,25 +287,49 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     }
     setUploadAudioStatus(null);
     setUploadAudioLoading(true);
+    const pathname = `audios/${sanitizePathSegment(file.name.replace(/\.[^.]+$/, "") || "audio")}${file.name.match(/\.[^.]+$/)?.[0] || ".mp3"}`;
+    const useMultipart = file.size > 5 * 1024 * 1024;
     try {
-      const baseName = sanitizePathSegment(file.name.replace(/\.[^.]+$/, "") || "audio");
-      const ext = file.name.match(/\.[^.]+$/)?.[0] || ".mp3";
-      const pathname = `audios/${baseName}${ext}`;
-      const blob = await upload(pathname, file, {
+      const tokenRes = await fetch("/api/admin/upload-audio-handler", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "blob.generate-client-token",
+          payload: { pathname, clientPayload: null, multipart: useMultipart }
+        }),
+        credentials: "include"
+      });
+      const tokenData = await tokenRes.json().catch(() => ({}));
+      if (!tokenRes.ok) {
+        setUploadAudioStatus(
+          tokenRes.status === 401
+            ? "Upload failed: Log in as admin and try again."
+            : `Upload failed: ${tokenData?.error || tokenRes.statusText || tokenRes.status}. Check BLOB_READ_WRITE_TOKEN in Vercel if deployed.`
+        );
+        return;
+      }
+      const clientToken = tokenData?.clientToken;
+      if (!clientToken) {
+        setUploadAudioStatus("Upload failed: No token from server.");
+        return;
+      }
+      const blob = await put(pathname, file, {
         access: "public",
-        handleUploadUrl: "/api/admin/upload-audio-handler",
-        multipart: file.size > 5 * 1024 * 1024
+        token: clientToken,
+        multipart: useMultipart
       });
       const url = blob?.url || "";
-      setUploadAudioStatus(url ? `Uploaded: ${file.name}. URL is in Step 2.` : "Upload completed but no URL returned.");
+      setUploadAudioStatus(url ? `Uploaded: ${file.name}. Scroll to Step 2, add title & description, then click Add Audio.` : "Upload completed but no URL returned.");
       const addForm = addLibraryFormRef.current;
       if (addForm && url) {
         (addForm.elements.namedItem("audioUrl") as HTMLInputElement).value = url;
         (addForm.elements.namedItem("fileName") as HTMLInputElement).value = file.name || "";
+        addForm.scrollIntoView({ behavior: "smooth", block: "start" });
       }
       if (fileInput) fileInput.value = "";
     } catch (e) {
-      setUploadAudioStatus("Error: " + String(e instanceof Error ? e.message : e));
+      const msg = e instanceof Error ? e.message : String(e);
+      setUploadAudioStatus(`Upload failed: ${msg}. Ensure you're logged in as admin and BLOB_READ_WRITE_TOKEN is set.`);
     } finally {
       setUploadAudioLoading(false);
     }
@@ -655,8 +679,11 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
         <section id="admin-audio-library" className="card">
         <div className="card" style={{ marginBottom: 16 }}>
           <h3 style={{ marginTop: 0 }}>Step 1: Upload an audio file (optional)</h3>
-          <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>
-            Upload an MP3, M4A, WAV, or OGG (up to 100 MB). The URL and file name will be filled into the form in Step 2.
+          <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>
+            Upload an MP3, M4A, WAV, or OGG (up to 100 MB). The file is stored in the cloud (Vercel Blob). On success, the <strong>Audio URL</strong> and <strong>File name</strong> are filled in Step 2 below.
+          </p>
+          <p style={{ fontSize: 13, color: "#059669", marginBottom: 12, fontWeight: 500 }}>
+            Next: Complete Step 2 (title, description, Add Audio) to add it to the library. Then you can assign it to goals and/or members.
           </p>
           <form onSubmit={uploadAudio} style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
             <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -825,8 +852,11 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
           </div>
           </>
         )}
-        <form ref={addLibraryFormRef} onSubmit={addLibraryItem} className="grid">
-          <h3 style={{ marginTop: 16, marginBottom: 8 }}>Step 2: Add audio to library</h3>
+        <form ref={addLibraryFormRef} id="step-2-add-audio" onSubmit={addLibraryItem} className="grid">
+          <h3 style={{ marginTop: 16, marginBottom: 4 }}>Step 2: Add audio to the library</h3>
+          <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>
+            Fill in title and description (Audio URL is filled by Step 1). Click <strong>Add Audio</strong> to save. The track will appear in the list below and in <strong>Assign Audios by Goal</strong> so you can assign it to goals (A/B/C) and, if needed, to specific members in the Members section.
+          </p>
           <input name="title" placeholder="Title" required style={inputStyle} />
           <input
             name="description"
@@ -844,7 +874,10 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             style={inputStyle}
           />
           <input name="coverUrl" placeholder="Cover URL (optional)" style={inputStyle} />
-          <input name="audioUrl" placeholder="Audio URL (optional)" style={inputStyle} />
+          <label style={{ fontSize: 13 }}>
+            Audio URL <span style={{ color: "#6b7280", fontWeight: 400 }}>(required for playback; filled by Step 1)</span>
+          </label>
+          <input name="audioUrl" placeholder="Paste URL or upload in Step 1" style={inputStyle} />
           <input
             name="allowedUserEmails"
             placeholder="Allowed user emails (comma-separated, optional)"

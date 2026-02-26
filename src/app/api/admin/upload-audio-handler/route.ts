@@ -14,7 +14,10 @@ const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB for large CGMR files
 
 export async function POST(request: Request) {
   if (!(await isAdminSession())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Unauthorized. Log in as admin to upload." },
+      { status: 401 }
+    );
   }
   let body: HandleUploadBody;
   try {
@@ -36,6 +39,12 @@ export async function POST(request: Request) {
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error("Upload handler error:", message);
-    return NextResponse.json({ error: message }, { status: 400 });
+    const hint = !process.env.BLOB_READ_WRITE_TOKEN
+      ? " Set BLOB_READ_WRITE_TOKEN in Vercel (Storage → your Blob store)."
+      : "";
+    return NextResponse.json(
+      { error: message + hint },
+      { status: 400 }
+    );
   }
 }

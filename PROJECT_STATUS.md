@@ -76,6 +76,15 @@ App code lives in **rfts-platform** (this folder). The repo root is **CursorRFTS
 - **Admin playback:** GET `/api/playback-settings` requires admin. Existing DBs may have `initial_tracks = 3` — admin can set to 4 and save.
 - **Large file uploads (up to 100 MB):** Vercel serverless body limit is 4.5 MB, so uploads use **client upload** (browser → Vercel Blob). Token handler: `POST /api/admin/upload-audio-handler` (admin-only). Used in: Audio Library Section Step 1, and Members → Personalized audio (CGMR). Both use `upload()` from `@vercel/blob/client` with multipart for files > 5 MB.
 
+### T-18 auto-assigned on registration (this session)
+
+- **Requirement:** T-18 should be added automatically when a member registers, until a CGMR is assigned to them.
+- **Implementation:**
+  - **`src/lib/db.ts`** — New helper **`addEmailToLibraryItemAllowedList(libraryItemId, email)`**: appends the email to a library item’s `allowed_user_emails` if not already present (case-insensitive). Used to “assign” the fallback track to a new member.
+  - **`src/app/api/member/onboarding/route.ts`** — After creating the user and upserting the member profile, the route now: (1) gets playback settings (`getPlaybackSettings`), (2) finds the library item whose title contains the fallback code (e.g. `"T-18"` from `fallbackTrackId`), (3) calls `addEmailToLibraryItemAllowedList(fallbackItem.id, email)`. Wrapped in try/catch so onboarding does not fail if the fallback track is missing; errors are only logged.
+- **Behavior:** New members get the fallback track (T-18 by default) in “Assigned to this member” and in their schedule. When admin assigns a CGMR (library item with category CGMR and the member’s email), the schedule API already prefers that over T-18, so no further change is needed.
+- **Prerequisite:** A library item whose title contains the fallback code (e.g. “T-18”) must exist; Admin → Playback “Fallback track (code)” should match (default `T-18`).
+
 **Agent rule:** Always add or update ongoing work and handoff notes in PROJECT_STATUS.md when making changes.
 
 ---
@@ -84,7 +93,8 @@ App code lives in **rfts-platform** (this folder). The repo root is **CursorRFTS
 
 - **Handoff:** Read this file and **README.md** for env. Run schema with `npm run db:schema` if DB is new or after schema changes.
 - **Git:** Pushes from rfts-platform to origin/main work; commit PROJECT_STATUS.md with related work.
-- **Previous session (admin audios & schedule):** AdminContent has category filter (All/General/Special/CGMR). Schedule API filters library by adult and Special access, uses member profile, user-assigned CGMR; adult content gated by birthdate/consent.
+- **T-18 on signup:** Implemented. New members are auto-assigned the fallback track (T-18) on registration; when a CGMR is assigned, the schedule uses it instead. No open follow-up for this feature.
+- **Previous context:** AdminContent has category filter (All/General/Special/CGMR). Schedule API filters library by adult and Special access, uses member profile, user-assigned CGMR; adult content gated by birthdate/consent.
 
 ---
 
@@ -93,6 +103,8 @@ App code lives in **rfts-platform** (this folder). The repo root is **CursorRFTS
 - **App entry:** `src/app/` (App Router); API routes under `src/app/api/`.
 - **Types:** `src/lib/types.ts`.
 - **Signup flow:** `src/app/signup/step-1-subscription-selection/page.tsx` uses `MemberOnboarding`; subscription UI is in `MemberOnboarding.tsx` and `SubscriptionSelection.tsx`; styles in `src/app/globals.css` (`.signup-card`, `.membership-package-section`, `.plan-grid`, `.plan-card`).
+- **Member registration/onboarding:** `POST /api/member/onboarding` — creates user, profile, subscription; assigns fallback track (T-18) via `addEmailToLibraryItemAllowedList` in `src/lib/db.ts`. Fallback track is looked up by playback settings `fallbackTrackId` and library item title match.
+- **Schedule / T-18 / CGMR:** `src/lib/scheduler.ts` (`buildSchedulePreview`); schedule API `src/app/api/user/schedule/route.ts` picks `userAssignedTrack` (member in allowedUserEmails + CGMR category, else first with their email). Playback settings: `src/lib/db.ts` `getPlaybackSettings`, `fallbackTrackId` default "T-18".
 - **DB/schema:** `scripts/schema.sql` for Vercel Postgres; run with `node scripts/run-schema.js`; env in `.env.local` (see README).
 - **Email:** `src/lib/email.ts` (Resend); templates in `src/lib/email-templates.ts`. Env: RESEND_API_KEY, EMAIL_FROM, NEXT_PUBLIC_APP_URL.
-- **Upload audio:** `POST /api/admin/upload-audio` → Vercel Blob; env: BLOB_READ_WRITE_TOKEN.
+- **Upload audio:** `POST /api/admin/upload-audio` → Vercel Blob; client large uploads via `POST /api/admin/upload-audio-handler` + `@vercel/blob/client`; env: BLOB_READ_WRITE_TOKEN.

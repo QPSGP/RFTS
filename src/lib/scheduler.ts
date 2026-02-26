@@ -72,7 +72,11 @@ const buildGoalTrackMap = (
 const pickByCode = (library: LibraryItem[], code: string) => {
   const upper = code.toUpperCase();
   return (
-    library.find((item) => item.title.toUpperCase().includes(upper)) || null
+    library.find(
+      (item) =>
+        (item.skuCode || "").toUpperCase().includes(upper) ||
+        (item.title || "").toUpperCase().includes(upper)
+    ) || null
   );
 };
 
@@ -174,30 +178,41 @@ export const buildSchedulePreview = ({
 
     const firstGoal = takeNextGoal();
     const first = firstGoal ? takeNextTrackForGoal(firstGoal) : null;
+    const isSpecialNight = night % 4 === 0;
     const second =
       playsPerNight === 2
-        ? night % 4 === 0
+        ? isSpecialNight
           ? specialTrack
           : (() => {
               const secondGoal = takeNextGoal();
               return secondGoal ? takeNextTrackForGoal(secondGoal) : null;
             })()
         : null;
-    const selectedTracks = playsPerNight === 1 ? [first] : [first, second];
+    const singleTrack =
+      playsPerNight === 1 && isSpecialNight && specialTrack
+        ? specialTrack
+        : first;
+    const selectedTracks = playsPerNight === 1 ? [singleTrack] : [first, second];
     const tracks = selectedTracks.filter(
       (item): item is LibraryItem => !!item
     );
 
     tracks.forEach((item) => markPlayed(item));
 
+    const noteSpecial =
+      playsPerNight === 1
+        ? `T18/CGMR session (${settings.nightlyGapHours} hour gap)`
+        : `T18/CGMR night (${settings.nightlyGapHours} hour gap)`;
     schedule.push({
       night,
       tracks,
       note:
         playsPerNight === 1
-          ? "One session per night"
-          : night % 4 === 0
-            ? `T18/CGMR night (${settings.nightlyGapHours} hour gap)`
+          ? isSpecialNight
+            ? noteSpecial
+            : "One session per night"
+          : isSpecialNight
+            ? noteSpecial
             : `Rotation night (${settings.nightlyGapHours} hour gap)`
     });
 
