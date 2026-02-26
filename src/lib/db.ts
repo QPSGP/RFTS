@@ -48,6 +48,8 @@ export type MemberProfile = {
   hadLgdSession?: boolean | null;
   referralSource?: string | null;
   notes?: string | null;
+  /** Date (YYYY-MM-DD) when the member's schedule "rotation" started; used to advance "tonight" each day. */
+  scheduleStartedAt?: string | null;
 };
 
 export type DbSubscription = {
@@ -252,12 +254,22 @@ export const getMemberProfileByUserId = async (userId: string) => {
       wants_polyamory as "wantsPolyamory",
       had_lgd_session as "hadLgdSession",
       referral_source as "referralSource",
-      notes
+      notes,
+      schedule_started_at as "scheduleStartedAt"
     FROM member_profiles
     WHERE user_id = ${userId}
     LIMIT 1
   `;
   return rows[0] || null;
+};
+
+/** Set schedule start to today (UTC date). Used when first loading schedule or when goals/plays-per-night change so rotation restarts. */
+export const setScheduleStartedToToday = async (userId: string): Promise<void> => {
+  await sql`
+    UPDATE member_profiles
+    SET schedule_started_at = CURRENT_DATE, updated_at = now()
+    WHERE user_id = ${userId}
+  `;
 };
 
 export const getUserProfile = async (email: string) => {
@@ -707,7 +719,7 @@ export const listLibrary = async () => {
       order_index as "order",
       is_adult as "isAdult"
     FROM library_items
-    ORDER BY order_index ASC
+    ORDER BY LOWER(title) ASC
   `;
   return rows;
 };
@@ -736,7 +748,7 @@ export const listPersonalizedLibraryForUser = async (email: string) => {
         FROM unnest(allowed_user_emails) AS allowed
         WHERE LOWER(allowed) = LOWER(${email})
       )
-    ORDER BY order_index ASC
+    ORDER BY LOWER(title) ASC
   `;
   return rows;
 };

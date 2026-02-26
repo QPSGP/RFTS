@@ -22,7 +22,7 @@ export default async function SiteHeader() {
                 <a href="/how-it-works">How It Works</a>
                 <a href="/science">Science</a>
                 <a href="/faqs">FAQs</a>
-                <a href="/facilitator">Facilitators</a>
+                {consoleType === "admin" && <a href="/facilitator">Facilitators</a>}
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
               </div>
             </details>
@@ -42,7 +42,7 @@ export default async function SiteHeader() {
             <a href="/how-it-works">How It Works</a>
             <a href="/science">Science</a>
             <a href="/faqs">FAQs</a>
-            <a href="/facilitator">Facilitators</a>
+            {consoleType === "admin" && <a href="/facilitator">Facilitators</a>}
             {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
           </nav>
           <div className="header-actions">

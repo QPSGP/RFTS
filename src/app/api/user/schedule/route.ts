@@ -3,7 +3,7 @@ import { z } from "zod";
 import fs from "fs";
 import path from "path";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getMemberProfileByUserId, getPlaybackSettings, getUserProfile, listInterests, listLibrary } from "@/lib/db";
+import { getMemberProfileByUserId, getPlaybackSettings, getUserProfile, listInterests, listLibrary, setScheduleStartedToToday } from "@/lib/db";
 import { buildSchedulePreview } from "@/lib/scheduler";
 
 const schema = z.object({
@@ -86,6 +86,22 @@ export async function GET(request: Request) {
     playsPerNight: profile.playsPerNight === 1 ? 1 : 2,
     userAssignedTrack: userAssignedTrack ?? undefined
   });
+
+  // Advance "tonight" by day: use schedule_started_at so night 1 = start date, night 2 = next day, etc.
+  let currentNight = 1;
+  if (memberProfile && memberProfile.scheduleStartedAt) {
+    const started = new Date(memberProfile.scheduleStartedAt + "Z");
+    const today = new Date();
+    const startedDate = new Date(Date.UTC(started.getUTCFullYear(), started.getUTCMonth(), started.getUTCDate()));
+    const todayDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    const diffMs = todayDate.getTime() - startedDate.getTime();
+    const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+    currentNight = Math.max(1, Math.min(nights, days + 1));
+  } else if (memberProfile) {
+    await setScheduleStartedToToday(profile.id);
+    currentNight = 1;
+  }
+
   const blobAssets = readJson<{ audios?: Record<string, string> }>(
     "blob-assets.json",
     {}
@@ -104,6 +120,7 @@ export async function GET(request: Request) {
   }));
   return NextResponse.json({
     schedule: scheduleWithStreamUrls,
+    currentNight,
     nights,
     playsPerNight: profile.playsPerNight === 1 ? 1 : 2,
     gapHours: settings.nightlyGapHours,

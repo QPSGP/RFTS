@@ -18,6 +18,7 @@ export default function PlayOptionsPage() {
   const [schedule, setSchedule] = useState<
     { night: number; tracks: { id: string; title: string; audioUrl: string }[]; note?: string }[]
   >([]);
+  const [currentNight, setCurrentNight] = useState(1);
   const [prepAudio, setPrepAudio] = useState<{ title: string; url: string } | null>(
     null
   );
@@ -71,6 +72,7 @@ export default function PlayOptionsPage() {
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
               setSchedule(data?.schedule || []);
+              setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
               setPrepAudio(data?.prepAudio || null);
               setGapHours(data?.gapHours || 2.5);
             })
@@ -214,16 +216,19 @@ export default function PlayOptionsPage() {
             is scheduled {gapHours} hours later if the admin has enabled 2 sessions
             per night for your account.
           </p>
-          {schedule.length > 0 && (
+          {schedule.length > 0 && (() => {
+            const tonightIndex = Math.max(0, Math.min(currentNight - 1, schedule.length - 1));
+            const tonight = schedule[tonightIndex];
+            return (
             <div style={{ marginTop: 12 }}>
-              <strong>Tonight's lineup</strong>
+              <strong>Tonight&apos;s lineup{schedule.length > 1 ? ` (Night ${tonight.night})` : ""}</strong>
               <div className="stack" style={{ marginTop: 8 }}>
                 {prepAudio && (
                   <span>
                     Preparation audio: {prepAudio.title}
                   </span>
                 )}
-                {schedule[0].tracks.map((track, index) => (
+                {tonight.tracks.map((track, index) => (
                   <a
                     key={track.id}
                     className="button button-secondary"
@@ -246,20 +251,24 @@ export default function PlayOptionsPage() {
                 </div>
               )}
             </div>
-          )}
+            );
+          })()}
         </div>
-        {schedule.length > 0 && (
+        {schedule.length > 0 && (() => {
+          const tonightIndex = Math.max(0, Math.min(currentNight - 1, schedule.length - 1));
+          const tonight = schedule[tonightIndex];
+          return (
           <SessionPlayer
             ref={sessionRef}
             prepAudio={prepAudio}
             firstTrack={
-              schedule[0].tracks[0]
-                ? { title: schedule[0].tracks[0].title, url: schedule[0].tracks[0].audioUrl }
+              tonight.tracks[0]
+                ? { title: tonight.tracks[0].title, url: tonight.tracks[0].audioUrl }
                 : null
             }
             secondTrack={
-              schedule[0].tracks[1]
-                ? { title: schedule[0].tracks[1].title, url: schedule[0].tracks[1].audioUrl }
+              tonight.tracks[1]
+                ? { title: tonight.tracks[1].title, url: tonight.tracks[1].audioUrl }
                 : null
             }
             gapHours={gapHours}
@@ -268,7 +277,8 @@ export default function PlayOptionsPage() {
               fetch("/api/user/session-used", { method: "POST", credentials: "include" }).catch(() => {});
             }}
           />
-        )}
+          );
+        })() }
         {status === "active" && profile && (
           <div className="card">
             <h3>Sessions per night</h3>
@@ -294,6 +304,7 @@ export default function PlayOptionsPage() {
                       if (scheduleRes.ok) {
                         const data = await scheduleRes.json();
                         setSchedule(data?.schedule || []);
+                        setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
                       }
                     }
                   }}
@@ -318,6 +329,7 @@ export default function PlayOptionsPage() {
                       if (scheduleRes.ok) {
                         const data = await scheduleRes.json();
                         setSchedule(data?.schedule || []);
+                        setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
                       }
                     }
                   }}
@@ -336,8 +348,8 @@ export default function PlayOptionsPage() {
             </p>
             <div className="grid" style={{ marginTop: 12 }}>
               {schedule.map((night) => (
-                <div key={night.night} className="card">
-                  <strong>Night {night.night}</strong>
+                <div key={night.night} className="card" style={night.night === currentNight ? { borderColor: "var(--color-primary, #6366f1)", borderWidth: 2 } : undefined}>
+                  <strong>Night {night.night}{night.night === currentNight ? " (tonight)" : ""}</strong>
                   {night.note && <p style={{ color: "#4b5563" }}>{night.note}</p>}
                   <div className="stack">
                     {night.tracks.map((track) => (

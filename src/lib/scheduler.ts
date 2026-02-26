@@ -193,16 +193,21 @@ export const buildSchedulePreview = ({
         ? specialTrack
         : first;
     const selectedTracks = playsPerNight === 1 ? [singleTrack] : [first, second];
-    const tracks = selectedTracks.filter(
+    const filtered = selectedTracks.filter(
       (item): item is LibraryItem => !!item
     );
+    // Dedupe by id so the same track (e.g. T-18 in both goal and special slot) appears once
+    const seenIds = new Set<string>();
+    const tracks = filtered.filter((item) => {
+      if (seenIds.has(item.id)) return false;
+      seenIds.add(item.id);
+      return true;
+    });
 
     tracks.forEach((item) => markPlayed(item));
 
     const noteSpecial =
-      playsPerNight === 1
-        ? `T18/CGMR session (${settings.nightlyGapHours} hour gap)`
-        : `T18/CGMR night (${settings.nightlyGapHours} hour gap)`;
+      playsPerNight === 1 ? "T18/CGMR session" : "T18/CGMR night";
     schedule.push({
       night,
       tracks,

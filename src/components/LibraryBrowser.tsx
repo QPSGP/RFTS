@@ -92,6 +92,11 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
       });
     });
 
+    const sortByTitle = (a: LibraryItem, b: LibraryItem) =>
+      (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" });
+    byInterest.forEach((items, key) => byInterest.set(key, items.slice().sort(sortByTitle)));
+    unassigned.sort(sortByTitle);
+
     return { byInterest, unassigned };
   }, [interests, libraryFilteredByAccess, searchQuery]);
 
