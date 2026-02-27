@@ -9,8 +9,12 @@ export default async function PlayOptionsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const email = await getUserSessionEmail();
-  if (!email) {
+  try {
+    const email = await getUserSessionEmail();
+    if (!email) {
+      redirect("/member/login");
+    }
+  } catch {
     redirect("/member/login");
   }
   return <>{children}</>;

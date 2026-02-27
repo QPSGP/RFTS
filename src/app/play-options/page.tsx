@@ -5,18 +5,23 @@ import PlayOptionsClient from "./PlayOptionsClient";
 export const dynamic = "force-dynamic";
 
 export default async function PlayOptionsPage() {
-  const profile = await getMemberProfileForSession();
+  let profile: Awaited<ReturnType<typeof getMemberProfileForSession>> = null;
+  try {
+    profile = await getMemberProfileForSession();
+  } catch (_e) {
+    redirect("/member/login");
+  }
   if (!profile) {
     redirect("/member/login");
   }
   return (
     <PlayOptionsClient
       initialProfile={{
-        email: profile.email,
-        goalIds: profile.goalIds,
-        subscriptionStatus: profile.subscriptionStatus,
-        subscriptionTier: profile.subscriptionTier,
-        playsPerNight: profile.playsPerNight
+        email: String(profile.email),
+        goalIds: Array.isArray(profile.goalIds) ? profile.goalIds : [],
+        subscriptionStatus: profile.subscriptionStatus ?? null,
+        subscriptionTier: profile.subscriptionTier ?? null,
+        playsPerNight: Number(profile.playsPerNight) || 2
       }}
     />
   );
