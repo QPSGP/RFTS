@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { getUserByEmail, recordMemberActivity } from "@/lib/db";
-import { createUserSessionToken, setUserSession } from "@/lib/user-auth";
+import { createUserSessionToken, setUserSessionCookieOnResponse } from "@/lib/user-auth";
 
 const schema = z.object({
   email: z.string().email(),
@@ -24,7 +24,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
   }
   const token = createUserSessionToken(user.email);
-  setUserSession(token);
   await recordMemberActivity(user.id, "login");
-  return NextResponse.json({ ok: true });
+  const response = NextResponse.json({ ok: true });
+  setUserSessionCookieOnResponse(response, token);
+  return response;
 }

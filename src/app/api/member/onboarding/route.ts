@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { createUserSessionToken, setUserSession } from "@/lib/user-auth";
+import { createUserSessionToken, setUserSessionCookieOnResponse } from "@/lib/user-auth";
 import { getStripe, getStripeMode } from "@/lib/stripe";
 import {
   addEmailToLibraryItemAllowedList,
@@ -159,16 +159,9 @@ export async function POST(request: Request) {
 
   if (isDemoSkip) {
     const res = NextResponse.json({ url: "/play-options" });
-    res.cookies.set("rfts_user_session", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/"
-    });
+    setUserSessionCookieOnResponse(res, token);
     return res;
   }
-
-  setUserSession(token);
 
   try {
     const stripe = getStripe();
@@ -188,6 +181,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ url: session.url });
   } catch (err) {
     // Member already saved; redirect to portal so they can complete payment later
-    return NextResponse.json({ url: "/play-options" });
+    const res = NextResponse.json({ url: "/play-options" });
+    setUserSessionCookieOnResponse(res, token);
+    return res;
   }
 }

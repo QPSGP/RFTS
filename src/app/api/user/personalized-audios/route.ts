@@ -6,7 +6,7 @@ const isCgmr = (categories?: string[]) =>
   (categories || []).some((category) => category.toLowerCase() === "cgmr");
 
 export async function GET() {
-  const email = getUserSessionEmail();
+  const email = await getUserSessionEmail();
   if (!email) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }

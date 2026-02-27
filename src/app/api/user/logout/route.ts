@@ -2,6 +2,6 @@ import { NextResponse } from "next/server";
 import { clearUserSession } from "@/lib/user-auth";
 
 export async function POST() {
-  clearUserSession();
+  await clearUserSession();
   return NextResponse.json({ ok: true });
 }

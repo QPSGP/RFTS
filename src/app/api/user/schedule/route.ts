@@ -26,7 +26,7 @@ const readJson = <T>(fileName: string, fallback: T): T => {
 };
 
 export async function GET(request: Request) {
-  const email = getUserSessionEmail();
+  const email = await getUserSessionEmail();
   if (!email) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }

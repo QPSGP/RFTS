@@ -16,7 +16,7 @@ function filterInterestsByMemberAccess(
 }
 
 export default async function LibraryPage() {
-  const email = getUserSessionEmail();
+  const email = await getUserSessionEmail();
   const [library, allInterests] = await Promise.all([
     listLibrary(),
     listInterests()

@@ -4,7 +4,7 @@ import { getUserSessionEmail } from "@/lib/user-auth";
 import GoalsSelector from "@/components/GoalsSelector";
 
 export default async function GoalsPage() {
-  const email = getUserSessionEmail();
+  const email = await getUserSessionEmail();
   if (!email) {
     redirect("/member/login");
   }

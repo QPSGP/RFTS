@@ -3,7 +3,7 @@ import { getUserSessionEmail } from "@/lib/user-auth";
 import { getUserProfile, recordSessionUsed } from "@/lib/db";
 
 export async function POST() {
-  const email = getUserSessionEmail();
+  const email = await getUserSessionEmail();
   if (!email) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }

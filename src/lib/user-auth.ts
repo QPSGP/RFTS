@@ -1,7 +1,9 @@
 import crypto from "crypto";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
 const sessionCookie = "rfts_user_session";
+const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
 
 const getSecret = () => process.env.SESSION_SECRET || "dev-secret";
 
@@ -20,29 +22,31 @@ export const createUserSessionToken = (email: string) => {
   return `${payload}|${signature}`;
 };
 
-export const setUserSession = (token: string) => {
-  const cookieStore = cookies();
-  cookieStore.set(sessionCookie, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/"
-  });
-};
+const sessionCookieOptions = () => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+  maxAge: SESSION_MAX_AGE_SECONDS
+});
 
-export const clearUserSession = () => {
-  const cookieStore = cookies();
-  cookieStore.set(sessionCookie, "", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 0
-  });
-};
+/** Set session cookie on a response (use in route handlers so Set-Cookie is on the returned response). */
+export function setUserSessionCookieOnResponse(response: NextResponse, token: string): void {
+  response.cookies.set(sessionCookie, token, sessionCookieOptions());
+}
 
-export const getUserSessionEmail = () => {
-  const cookieStore = cookies();
+export async function setUserSession(token: string): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set(sessionCookie, token, sessionCookieOptions());
+}
+
+export async function clearUserSession(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set(sessionCookie, "", { ...sessionCookieOptions(), maxAge: 0 });
+}
+
+export async function getUserSessionEmail(): Promise<string | null> {
+  const cookieStore = await cookies();
   const token = cookieStore.get(sessionCookie)?.value;
   if (!token) {
     return null;

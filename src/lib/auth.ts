@@ -123,6 +123,6 @@ export const getSessionConsoleType = async (): Promise<"admin" | "moderator" | "
   if (role === "admin") return "admin";
   if (role === "moderator") return "moderator";
   const { getUserSessionEmail } = await import("./user-auth");
-  if (getUserSessionEmail()) return "member";
+  if (await getUserSessionEmail()) return "member";
   return null;
 };

@@ -10,7 +10,7 @@ const bodySchema = z.object({
 
 /** Record a member action (e.g. viewed console, viewed library). Call from member frontend. */
 export async function POST(request: Request) {
-  const email = getUserSessionEmail();
+  const email = await getUserSessionEmail();
   if (!email) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
