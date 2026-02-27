@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 const inputStyle = {
@@ -18,6 +18,9 @@ export default function UserAuth() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const successLinkRef = useRef<HTMLAnchorElement>(null);
+
   const submitLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setStatus(null);
@@ -32,8 +35,10 @@ export default function UserAuth() {
       body: JSON.stringify({ email, password })
     });
     if (res.ok) {
-      await new Promise((r) => setTimeout(r, 2000));
-      window.location.href = "/play-options";
+      setLoginSuccess(true);
+      setLoading(false);
+      await new Promise((r) => setTimeout(r, 1500));
+      successLinkRef.current?.click();
       return;
     }
     setStatus("Invalid credentials. Try again.");
@@ -80,7 +85,12 @@ export default function UserAuth() {
       )}
       <div className="card">
         <h2>Member Login</h2>
-        <form onSubmit={submitLogin} className="grid">
+        {loginSuccess ? (
+          <p style={{ marginBottom: 12 }}>
+            Signed in. Taking you to Play Options…
+          </p>
+        ) : null}
+        <form onSubmit={submitLogin} className="grid" style={{ display: loginSuccess ? "none" : undefined }}>
           <div>
             <input name="email" placeholder="Email" type="email" autoComplete="email" required style={inputStyle} />
             <p style={{ marginTop: 6, marginBottom: 0 }}>
@@ -128,6 +138,7 @@ export default function UserAuth() {
             {loading ? "Signing in…" : "Sign In"}
           </button>
         </form>
+        <a ref={successLinkRef} href="/play-options" style={{ display: "none" }} aria-hidden="true" />
         <p style={{ marginTop: 12, color: "#64748b", fontSize: 13 }}>
           New to RFTS? <a href="/signup/step-1-subscription-selection">Sign up here</a>.
         </p>
