@@ -49,8 +49,21 @@ export async function POST(request: Request) {
 
   const token = createUserSessionToken(user.email);
   await recordMemberActivity(user.id, "login");
-  const response = NextResponse.redirect(successUrl, 302);
+
+  const isForm = contentType.includes("application/x-www-form-urlencoded");
+
+  if (isForm) {
+    // 200 + HTML so browser stores cookie then redirects (avoids 302 + Set-Cookie being dropped by some proxies).
+    const html = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${successUrl}"/><script>window.location.replace(${JSON.stringify(successUrl)});</script></head><body>Signing you in… <a href="${successUrl}">Continue to Play Options</a></body></html>`;
+    const response = new NextResponse(html, {
+      status: 200,
+      headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store, no-cache, must-revalidate" }
+    });
+    setUserSessionCookieOnResponse(response, token);
+    return response;
+  }
+
+  const response = NextResponse.json({ ok: true });
   setUserSessionCookieOnResponse(response, token);
-  response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
   return response;
 }
