@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import PlayOptionsClient from "./PlayOptionsClient";
 import type { PlayOptionsProfile } from "./PlayOptionsClient";
 
@@ -35,16 +35,11 @@ const fetchMeWithRetries = (retries = 4, delayMs = 800): Promise<PlayOptionsProf
 export default function PlayOptionsPage() {
   const [profile, setProfile] = useState<PlayOptionsProfile | null | "loading">("loading");
 
-  const loadProfile = useCallback(() => {
-    setProfile("loading");
+  useEffect(() => {
     fetchMeWithRetries()
       .then((p) => setProfile(p))
       .catch(() => setProfile(null));
   }, []);
-
-  useEffect(() => {
-    loadProfile();
-  }, [loadProfile]);
 
   if (profile === "loading") {
     return (
@@ -63,11 +58,8 @@ export default function PlayOptionsPage() {
           <span className="pill">Log in</span>
           <h1>Please log in</h1>
           <p>You need to be signed in to view Play Options.</p>
-          <div className="cta-row" style={{ marginTop: 16, flexWrap: "wrap", gap: 12 }}>
-            <button type="button" className="button" onClick={loadProfile}>
-              Retry (check session again)
-            </button>
-            <a className="button button-secondary" href="/member/login">
+          <div className="cta-row" style={{ marginTop: 16 }}>
+            <a className="button" href="/member/login">
               Go to member login
             </a>
           </div>
