@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { getUserByEmail, recordMemberActivity } from "@/lib/db";
-import { buildMemberSessionSetCookieHeader, createUserSessionToken } from "@/lib/user-auth";
+import { buildMemberSessionSetCookieHeader, createOneTimeSessionToken, createUserSessionToken } from "@/lib/user-auth";
 
 /** Login: JSON only. Success = 200 + Set-Cookie (never 302 — browsers often don't set cookie on redirect). */
 export async function POST(request: Request) {
@@ -29,7 +29,8 @@ export async function POST(request: Request) {
   const token = createUserSessionToken(user.email);
   await recordMemberActivity(user.id, "login");
 
-  const response = NextResponse.json({ ok: true });
+  const oneTimeToken = createOneTimeSessionToken(user.email);
+  const response = NextResponse.json({ ok: true, oneTimeToken });
   response.headers.set("Set-Cookie", buildMemberSessionSetCookieHeader(token));
   response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
   return response;

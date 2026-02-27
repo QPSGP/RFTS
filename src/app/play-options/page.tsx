@@ -36,9 +36,25 @@ export default function PlayOptionsPage() {
   const [profile, setProfile] = useState<PlayOptionsProfile | null | "loading">("loading");
 
   useEffect(() => {
-    fetchMeWithRetries()
-      .then((p) => setProfile(p))
-      .catch(() => setProfile(null));
+    const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const oneTimeToken = params?.get("t") ?? null;
+
+    const run = async () => {
+      if (oneTimeToken) {
+        const consumeRes = await fetch("/api/user/consume-one-time-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ token: oneTimeToken })
+        });
+        if (consumeRes.ok && typeof window !== "undefined") {
+          window.history.replaceState({}, "", "/play-options");
+        }
+      }
+      const p = await fetchMeWithRetries().catch(() => null);
+      setProfile(p);
+    };
+    run();
   }, []);
 
   if (profile === "loading") {

@@ -23,6 +23,35 @@ export const createUserSessionToken = (email: string) => {
   return `${payload}|${signature}`;
 };
 
+const ONE_TIME_TTL_MS = 2 * 60 * 1000; // 2 minutes
+
+/** One-time token for post-login redirect: exchange in consume API to set session cookie from play-options. */
+export function createOneTimeSessionToken(email: string): string {
+  const expiry = (Date.now() + ONE_TIME_TTL_MS).toString();
+  const nonce = crypto.randomBytes(8).toString("hex");
+  const payload = `${email}|${expiry}|${nonce}`;
+  const signature = sign(payload);
+  return Buffer.from(`${payload}|${signature}`).toString("base64url");
+}
+
+/** Returns email if token is valid and not expired. */
+export function verifyOneTimeSessionToken(tokenEnc: string): string | null {
+  let raw: string;
+  try {
+    raw = Buffer.from(tokenEnc, "base64url").toString("utf8");
+  } catch {
+    return null;
+  }
+  const parts = raw.split("|");
+  if (parts.length !== 4) return null;
+  const [email, expiryStr, nonce, signature] = parts;
+  const payload = `${email}|${expiryStr}|${nonce}`;
+  if (sign(payload) !== signature) return null;
+  const expiry = parseInt(expiryStr, 10);
+  if (Number.isNaN(expiry) || Date.now() > expiry) return null;
+  return email;
+}
+
 const sessionCookieOptions = () => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",

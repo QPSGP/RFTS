@@ -34,10 +34,12 @@ export default function UserAuth() {
       body: JSON.stringify({ email, password })
     });
     if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const oneTimeToken = typeof data?.oneTimeToken === "string" ? data.oneTimeToken : "";
       setLoginSuccess(true);
       setLoading(false);
-      await new Promise((r) => setTimeout(r, 2500));
-      window.location.href = "/play-options";
+      await new Promise((r) => setTimeout(r, 800));
+      window.location.href = oneTimeToken ? `/play-options?t=${encodeURIComponent(oneTimeToken)}` : "/play-options";
       return;
     }
     setStatus("Invalid credentials. Try again.");
