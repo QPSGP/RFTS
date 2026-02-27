@@ -91,25 +91,10 @@ export default function PlayOptionsPage() {
   }
 
   if (status === "loggedOut") {
-    return (
-      <main>
-        <section className="hero section">
-          <span className="pill">Member Access</span>
-          <h1>Play Options</h1>
-          <p>
-            Log in to access your nightly sessions and personal audio library.
-          </p>
-          <div className="cta-row" style={{ marginTop: 16 }}>
-            <a className="button" href="/member/login">
-              Member Login
-            </a>
-            <a className="button button-secondary" href="/signup/step-1-subscription-selection">
-              Choose Subscription
-            </a>
-          </div>
-        </section>
-      </main>
-    );
+    if (typeof window !== "undefined") {
+      window.location.replace("/member/login");
+    }
+    return null;
   }
 
   if (status === "inactive") {

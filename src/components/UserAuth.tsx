@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 const inputStyle = {
   padding: 12,
@@ -10,41 +11,11 @@ const inputStyle = {
 };
 
 export default function UserAuth() {
-  const [status, setStatus] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const errorFromUrl = searchParams.get("error") === "invalid";
+  const [status, setStatus] = useState<string | null>(errorFromUrl ? "Invalid credentials. Try again." : null);
   const [loggedIn, setLoggedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  const submit = async (
-    event: React.FormEvent<HTMLFormElement>,
-    mode: "login" | "signup"
-  ) => {
-    event.preventDefault();
-    setStatus(null);
-    setLoading(true);
-    const formData = new FormData(event.currentTarget);
-    const payload = {
-      email: formData.get("email"),
-      password: formData.get("password")
-    };
-    const response = await fetch(`/api/user/${mode}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(payload)
-    });
-    if (response.ok) {
-      if (mode === "signup") {
-        window.location.href = "/goals";
-        return;
-      }
-      const url = response.url && response.url.includes("/play-options") ? response.url : "/play-options";
-      window.location.href = url;
-      return;
-    }
-    setStatus(mode === "signup" ? "Sign up failed." : "Login failed.");
-    setLoading(false);
-  };
 
   const logout = async () => {
     await fetch("/api/user/logout", { method: "POST" });
@@ -86,7 +57,7 @@ export default function UserAuth() {
       )}
       <div className="card">
         <h2>Member Login</h2>
-        <form onSubmit={(event) => submit(event, "login")} className="grid">
+        <form action="/api/user/login" method="POST" className="grid">
           <div>
             <input name="email" placeholder="Email" type="email" required style={inputStyle} />
             <p style={{ marginTop: 6, marginBottom: 0 }}>
@@ -129,8 +100,8 @@ export default function UserAuth() {
               Forgot password?
             </a>
           </p>
-          <button className="button" disabled={loading} type="submit">
-            {loading ? "Signing in..." : "Sign In"}
+          <button className="button" type="submit">
+            Sign In
           </button>
         </form>
         <p style={{ marginTop: 12, color: "#64748b", fontSize: 13 }}>
