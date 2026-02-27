@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { getUserByEmail, recordMemberActivity } from "@/lib/db";
-import { buildMemberSessionSetCookieHeader, createUserSessionToken } from "@/lib/user-auth";
+import { createUserSessionToken, setUserSessionCookieOnResponse } from "@/lib/user-auth";
 
 export async function POST(request: Request) {
   const baseUrl = new URL(request.url).origin;
@@ -50,8 +50,14 @@ export async function POST(request: Request) {
   const token = createUserSessionToken(user.email);
   await recordMemberActivity(user.id, "login");
 
+  if (isForm) {
+    const response = NextResponse.redirect(new URL("/play-options", request.url), 302);
+    setUserSessionCookieOnResponse(response, token);
+    return response;
+  }
+
   const response = NextResponse.json({ ok: true });
-  response.headers.set("Set-Cookie", buildMemberSessionSetCookieHeader(token));
+  setUserSessionCookieOnResponse(response, token);
   response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
   return response;
 }

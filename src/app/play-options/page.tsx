@@ -49,13 +49,23 @@ export default function PlayOptionsPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setAutoStart(params.get("autoplay") === "1");
-    fetch("/api/user/me", { credentials: "include" })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Unauthorized");
-        }
-        return res.json();
-      })
+
+    const checkAuth = (retry = false) =>
+      fetch("/api/user/me", { credentials: "include" })
+        .then((res) => {
+          if (!res.ok && retry) {
+            return new Promise<Response>((resolve) =>
+              setTimeout(() => fetch("/api/user/me", { credentials: "include" }).then(resolve), 400)
+            );
+          }
+          return res;
+        })
+        .then((res) => {
+          if (!res.ok) throw new Error("Unauthorized");
+          return res.json();
+        });
+
+    checkAuth(false)
       .then((data) => {
         const nextProfile = data.profile;
         setProfile(nextProfile || null);
@@ -83,7 +93,17 @@ export default function PlayOptionsPage() {
             .catch(() => setPersonalizedAudios([]));
         }
       })
-      .catch(() => setStatus("loggedOut"));
+      .catch(() => checkAuth(true).then((data) => {
+        const nextProfile = data.profile;
+        setProfile(nextProfile || null);
+        const subscriptionStatus = nextProfile?.subscriptionStatus;
+        setStatus(subscriptionStatus === "active" ? "active" : "inactive");
+        if (subscriptionStatus === "active") {
+          fetch("/api/user/activity", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "viewed_console" }), credentials: "include" }).catch(() => {});
+          fetch("/api/user/schedule?nights=7", { credentials: "include" }).then((res) => (res.ok ? res.json() : null)).then((data) => { setSchedule(data?.schedule || []); setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1); setPrepAudio(data?.prepAudio || null); setGapHours(data?.gapHours || 2.5); }).catch(() => setSchedule([]));
+          fetch("/api/user/personalized-audios", { credentials: "include" }).then((res) => (res.ok ? res.json() : null)).then((data) => setPersonalizedAudios(data?.items || [])).catch(() => setPersonalizedAudios([]));
+        }
+      }).catch(() => setStatus("loggedOut")));
   }, []);
 
   if (status === "loading") {
