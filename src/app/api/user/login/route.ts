@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { getUserByEmail, recordMemberActivity } from "@/lib/db";
-import { buildMemberSessionSetCookieHeader, createUserSessionToken, setUserSessionCookieOnResponse } from "@/lib/user-auth";
+import { buildMemberSessionSetCookieHeader, createUserSessionToken } from "@/lib/user-auth";
 
 export async function POST(request: Request) {
   const baseUrl = new URL(request.url).origin;
@@ -51,8 +51,7 @@ export async function POST(request: Request) {
   await recordMemberActivity(user.id, "login");
 
   const response = NextResponse.json({ ok: true });
-  setUserSessionCookieOnResponse(response, token);
-  response.headers.append("Set-Cookie", buildMemberSessionSetCookieHeader(token));
+  response.headers.set("Set-Cookie", buildMemberSessionSetCookieHeader(token));
   response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
   return response;
 }

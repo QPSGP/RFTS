@@ -35,11 +35,12 @@ export function setUserSessionCookieOnResponse(response: NextResponse, token: st
   response.cookies.set(sessionCookie, token, sessionCookieOptions());
 }
 
-/** Build Set-Cookie header value for member session (for manual header attachment if needed). */
+/** Build Set-Cookie header value (value in quotes so characters like | don't break parsing). */
 export function buildMemberSessionSetCookieHeader(token: string): string {
   const opts = sessionCookieOptions();
+  const value = `"${token.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
   const parts = [
-    `${sessionCookie}=${token}`,
+    `${sessionCookie}=${value}`,
     `Path=${opts.path}`,
     `Max-Age=${opts.maxAge}`,
     `HttpOnly`,
@@ -61,9 +62,12 @@ export async function clearUserSession(): Promise<void> {
 
 export async function getUserSessionEmail(): Promise<string | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get(sessionCookie)?.value;
+  let token = cookieStore.get(sessionCookie)?.value;
   if (!token) {
     return null;
+  }
+  if (token.startsWith('"') && token.endsWith('"')) {
+    token = token.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, "\\");
   }
   const parts = token.split("|");
   if (parts.length !== 4) {

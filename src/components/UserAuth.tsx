@@ -32,7 +32,7 @@ export default function UserAuth() {
       body: JSON.stringify({ email, password })
     });
     if (res.ok) {
-      await new Promise((r) => setTimeout(r, 400));
+      await new Promise((r) => setTimeout(r, 800));
       window.location.href = "/play-options";
       return;
     }
