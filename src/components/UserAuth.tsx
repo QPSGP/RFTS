@@ -14,8 +14,31 @@ export default function UserAuth() {
   const searchParams = useSearchParams();
   const errorFromUrl = searchParams.get("error") === "invalid";
   const [status, setStatus] = useState<string | null>(errorFromUrl ? "Invalid credentials. Try again." : null);
+  const [loading, setLoading] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const submitLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setStatus(null);
+    setLoading(true);
+    const form = e.currentTarget;
+    const email = (form.elements.namedItem("email") as HTMLInputElement)?.value;
+    const password = (form.elements.namedItem("password") as HTMLInputElement)?.value;
+    const res = await fetch("/api/user/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, password })
+    });
+    if (res.ok) {
+      await new Promise((r) => setTimeout(r, 400));
+      window.location.href = "/play-options";
+      return;
+    }
+    setStatus("Invalid credentials. Try again.");
+    setLoading(false);
+  };
 
   const logout = async () => {
     await fetch("/api/user/logout", { method: "POST" });
@@ -57,7 +80,7 @@ export default function UserAuth() {
       )}
       <div className="card">
         <h2>Member Login</h2>
-        <form action="/api/user/login" method="POST" className="grid">
+        <form onSubmit={submitLogin} className="grid">
           <div>
             <input name="email" placeholder="Email" type="email" required style={inputStyle} />
             <p style={{ marginTop: 6, marginBottom: 0 }}>
@@ -100,8 +123,8 @@ export default function UserAuth() {
               Forgot password?
             </a>
           </p>
-          <button className="button" type="submit">
-            Sign In
+          <button className="button" type="submit" disabled={loading}>
+            {loading ? "Signing in…" : "Sign In"}
           </button>
         </form>
         <p style={{ marginTop: 12, color: "#64748b", fontSize: 13 }}>

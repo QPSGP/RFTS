@@ -35,6 +35,20 @@ export function setUserSessionCookieOnResponse(response: NextResponse, token: st
   response.cookies.set(sessionCookie, token, sessionCookieOptions());
 }
 
+/** Build Set-Cookie header value for member session (for manual header attachment if needed). */
+export function buildMemberSessionSetCookieHeader(token: string): string {
+  const opts = sessionCookieOptions();
+  const parts = [
+    `${sessionCookie}=${token}`,
+    `Path=${opts.path}`,
+    `Max-Age=${opts.maxAge}`,
+    `HttpOnly`,
+    `SameSite=${opts.sameSite}`
+  ];
+  if (opts.secure) parts.push("Secure");
+  return parts.join("; ");
+}
+
 export async function setUserSession(token: string): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(sessionCookie, token, sessionCookieOptions());
