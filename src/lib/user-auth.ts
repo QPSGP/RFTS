@@ -66,9 +66,16 @@ export async function getUserSessionEmail(): Promise<string | null> {
   if (!token) {
     return null;
   }
+  try {
+    token = decodeURIComponent(token);
+  } catch {
+    // leave as-is if not encoded
+  }
   if (token.startsWith('"') && token.endsWith('"')) {
     token = token.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, "\\");
   }
+  // Some runtimes send + as space in cookie values; restore for email addresses like user+tag@example.com
+  token = token.replace(/ /g, "+");
   const parts = token.split("|");
   if (parts.length !== 4) {
     return null;

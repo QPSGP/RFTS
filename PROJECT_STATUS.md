@@ -14,6 +14,8 @@ Use this file to get up to speed when opening the project in the **rfts-platform
 
 App code lives in **rfts-platform** (this folder). The repo root is **CursorRFTS** (parent), which also has Marketing docs, products.csv, and Cursor agent rules.
 
+**Until we go live:** When something needs to be done that’s in the agent’s ability (e.g. commit, push, redeploy), the agent should just do it rather than only instructing the user.
+
 ---
 
 ## What We Did in This Session
