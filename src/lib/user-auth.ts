@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { getMemberProfileByUserId, getUserProfile } from "@/lib/db";
 
 const sessionCookie = "rfts_user_session";
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
@@ -87,3 +88,37 @@ export async function getUserSessionEmail(): Promise<string | null> {
   }
   return email;
 };
+
+/** Server-side: get full member profile for current session (same shape as GET /api/user/me). */
+export async function getMemberProfileForSession(): Promise<{
+  id: string;
+  email: string;
+  goalIds: string[];
+  goalUpdatedAt: string | null;
+  playsPerNight: number;
+  subscriptionStatus: string | null;
+  subscriptionTier: string | null;
+  adultConsent: boolean;
+  yearBorn: number | null;
+  hasVerifiedAge: boolean;
+  wantsPracticeGrowth: boolean;
+} | null> {
+  const email = await getUserSessionEmail();
+  if (!email) return null;
+  const profile = await getUserProfile(email);
+  if (!profile) return null;
+  const memberProfile = await getMemberProfileByUserId(profile.id);
+  const yearBorn = memberProfile?.yearBorn ?? null;
+  const currentYear = new Date().getFullYear();
+  const hasVerifiedAge = yearBorn != null && currentYear - yearBorn >= 18;
+  const storedConsent = memberProfile?.adultConsent ?? false;
+  const adultConsent = storedConsent && hasVerifiedAge;
+  const wantsPracticeGrowth = memberProfile?.wantsPracticeGrowth ?? false;
+  return {
+    ...profile,
+    adultConsent,
+    yearBorn,
+    hasVerifiedAge,
+    wantsPracticeGrowth
+  };
+}
