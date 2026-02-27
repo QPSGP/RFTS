@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 const inputStyle = {
@@ -19,7 +19,6 @@ export default function UserAuth() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [loginSuccess, setLoginSuccess] = useState(false);
-  const successLinkRef = useRef<HTMLAnchorElement>(null);
 
   const submitLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -37,8 +36,8 @@ export default function UserAuth() {
     if (res.ok) {
       setLoginSuccess(true);
       setLoading(false);
-      await new Promise((r) => setTimeout(r, 1500));
-      successLinkRef.current?.click();
+      await new Promise((r) => setTimeout(r, 2500));
+      window.location.href = "/play-options";
       return;
     }
     setStatus("Invalid credentials. Try again.");
@@ -138,7 +137,6 @@ export default function UserAuth() {
             {loading ? "Signing in…" : "Sign In"}
           </button>
         </form>
-        <a ref={successLinkRef} href="/play-options" style={{ display: "none" }} aria-hidden="true" />
         <p style={{ marginTop: 12, color: "#64748b", fontSize: 13 }}>
           New to RFTS? <a href="/signup/step-1-subscription-selection">Sign up here</a>.
         </p>
