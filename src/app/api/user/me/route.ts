@@ -5,7 +5,9 @@ import { getMemberProfileByUserId, getUserProfile } from "@/lib/db";
 export async function GET() {
   const email = await getUserSessionEmail();
   if (!email) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    const res = NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    res.headers.set("Cache-Control", "no-store");
+    return res;
   }
   const profile = await getUserProfile(email);
   if (!profile) {
@@ -18,7 +20,9 @@ export async function GET() {
   const storedConsent = memberProfile?.adultConsent ?? false;
   const adultConsent = storedConsent && hasVerifiedAge;
   const wantsPracticeGrowth = memberProfile?.wantsPracticeGrowth ?? false;
-  return NextResponse.json({
+  const res = NextResponse.json({
     profile: { ...profile, adultConsent, yearBorn, hasVerifiedAge, wantsPracticeGrowth }
   });
+  res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  return res;
 }

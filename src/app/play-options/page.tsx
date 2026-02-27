@@ -50,22 +50,19 @@ export default function PlayOptionsPage() {
     const params = new URLSearchParams(window.location.search);
     setAutoStart(params.get("autoplay") === "1");
 
-    const checkAuth = (retry = false) =>
-      fetch("/api/user/me", { credentials: "include" })
-        .then((res) => {
-          if (!res.ok && retry) {
-            return new Promise<Response>((resolve) =>
-              setTimeout(() => fetch("/api/user/me", { credentials: "include" }).then(resolve), 400)
-            );
-          }
-          return res;
-        })
-        .then((res) => {
-          if (!res.ok) throw new Error("Unauthorized");
-          return res.json();
-        });
+    const fetchMe = () => fetch("/api/user/me", { credentials: "include", cache: "no-store" });
+    const loadProfile = (retries = 3): Promise<{ profile: typeof profile }> =>
+      fetchMe().then((res) => {
+        if (res.ok) return res.json();
+        if (retries > 0) {
+          return new Promise<{ profile: typeof profile }>((resolve, reject) =>
+            setTimeout(() => loadProfile(retries - 1).then(resolve).catch(reject), 600)
+          );
+        }
+        throw new Error("Failed to load profile");
+      });
 
-    checkAuth(false)
+    loadProfile()
       .then((data) => {
         const nextProfile = data.profile;
         setProfile(nextProfile || null);
@@ -78,32 +75,22 @@ export default function PlayOptionsPage() {
             body: JSON.stringify({ action: "viewed_console" }),
             credentials: "include"
           }).catch(() => {});
-          fetch("/api/user/schedule?nights=7", { credentials: "include" })
+          fetch("/api/user/schedule?nights=7", { credentials: "include", cache: "no-store" })
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
               setSchedule(data?.schedule || []);
               setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
               setPrepAudio(data?.prepAudio || null);
-              setGapHours(data?.gapHours || 2.5);
+              setGapHours(data?.gapHours ?? 2.5);
             })
             .catch(() => setSchedule([]));
-          fetch("/api/user/personalized-audios", { credentials: "include" })
+          fetch("/api/user/personalized-audios", { credentials: "include", cache: "no-store" })
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => setPersonalizedAudios(data?.items || []))
             .catch(() => setPersonalizedAudios([]));
         }
       })
-      .catch(() => checkAuth(true).then((data) => {
-        const nextProfile = data.profile;
-        setProfile(nextProfile || null);
-        const subscriptionStatus = nextProfile?.subscriptionStatus;
-        setStatus(subscriptionStatus === "active" ? "active" : "inactive");
-        if (subscriptionStatus === "active") {
-          fetch("/api/user/activity", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "viewed_console" }), credentials: "include" }).catch(() => {});
-          fetch("/api/user/schedule?nights=7", { credentials: "include" }).then((res) => (res.ok ? res.json() : null)).then((data) => { setSchedule(data?.schedule || []); setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1); setPrepAudio(data?.prepAudio || null); setGapHours(data?.gapHours || 2.5); }).catch(() => setSchedule([]));
-          fetch("/api/user/personalized-audios", { credentials: "include" }).then((res) => (res.ok ? res.json() : null)).then((data) => setPersonalizedAudios(data?.items || [])).catch(() => setPersonalizedAudios([]));
-        }
-      }).catch(() => setStatus("loggedOut")));
+      .catch(() => setStatus("loggedOut"));
   }, []);
 
   if (status === "loading") {
@@ -111,10 +98,23 @@ export default function PlayOptionsPage() {
   }
 
   if (status === "loggedOut") {
-    if (typeof window !== "undefined") {
-      window.location.replace("/member/login");
-    }
-    return null;
+    return (
+      <main>
+        <section className="hero section">
+          <span className="pill">Session</span>
+          <h1>Having trouble loading your session</h1>
+          <p>Your login was successful. If you don&apos;t see your options, refresh the page.</p>
+          <div className="cta-row" style={{ marginTop: 16 }}>
+            <button type="button" className="button" onClick={() => window.location.reload()}>
+              Refresh page
+            </button>
+            <a className="button button-secondary" href="/member/login">
+              Back to login
+            </a>
+          </div>
+        </section>
+      </main>
+    );
   }
 
   if (status === "inactive") {
