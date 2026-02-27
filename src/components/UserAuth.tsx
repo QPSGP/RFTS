@@ -18,26 +18,10 @@ export default function UserAuth() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const submitLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const submitLogin = (e: React.FormEvent<HTMLFormElement>) => {
     setStatus(null);
     setLoading(true);
-    const form = e.currentTarget;
-    const email = (form.elements.namedItem("email") as HTMLInputElement)?.value;
-    const password = (form.elements.namedItem("password") as HTMLInputElement)?.value;
-    const res = await fetch("/api/user/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ email, password })
-    });
-    if (res.ok) {
-      await new Promise((r) => setTimeout(r, 1500));
-      window.location.href = "/play-options";
-      return;
-    }
-    setStatus("Invalid credentials. Try again.");
-    setLoading(false);
+    // Form POSTs natively; server returns 302 + Set-Cookie so cookie is sent on the redirect.
   };
 
   const logout = async () => {
@@ -80,7 +64,7 @@ export default function UserAuth() {
       )}
       <div className="card">
         <h2>Member Login</h2>
-        <form onSubmit={submitLogin} className="grid">
+        <form action="/api/user/login" method="post" onSubmit={submitLogin} className="grid">
           <div>
             <input name="email" placeholder="Email" type="email" autoComplete="email" required style={inputStyle} />
             <p style={{ marginTop: 6, marginBottom: 0 }}>
