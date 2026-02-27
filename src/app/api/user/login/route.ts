@@ -25,7 +25,8 @@ export async function POST(request: Request) {
   }
   const token = createUserSessionToken(user.email);
   await recordMemberActivity(user.id, "login");
-  const response = NextResponse.json({ ok: true });
+  const baseUrl = new URL(request.url).origin;
+  const response = NextResponse.redirect(`${baseUrl}/play-options`, 302);
   setUserSessionCookieOnResponse(response, token);
   response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
   return response;

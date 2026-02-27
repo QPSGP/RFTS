@@ -38,7 +38,8 @@ export default function UserAuth() {
         window.location.href = "/goals";
         return;
       }
-      window.location.href = "/play-options";
+      const url = response.url && response.url.includes("/play-options") ? response.url : "/play-options";
+      window.location.href = url;
       return;
     }
     setStatus(mode === "signup" ? "Sign up failed." : "Login failed.");
