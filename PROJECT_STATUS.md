@@ -91,9 +91,9 @@ App code lives in **rfts-platform** (this folder). The repo root is **CursorRFTS
 
 ---
 
-## Member login — current issue and next steps (read this first tomorrow)
+## Member login — fixed (form POST → 302)
 
-**Symptom:** After member sign-in, the URL briefly shows Play Options then the user is sent back to the member login page. Still happens on Vercel and in incognito.
+**Symptom (was):** After member sign-in, user landed on Play Options but saw “login to view” / “Go to member login” (cookie not sent or not accepted).
 
 **What’s actually happening:**  
 1. User submits login → server validates and sets session cookie on the response.  
