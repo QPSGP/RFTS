@@ -89,6 +89,47 @@ App code lives in **rfts-platform** (this folder). The repo root is **CursorRFTS
 
 ---
 
+## Member login — current issue and next steps (read this first tomorrow)
+
+**Symptom:** After member sign-in, the URL briefly shows Play Options then the user is sent back to the member login page. Still happens on Vercel and in incognito.
+
+**What’s actually happening:**  
+1. User submits login → server validates and sets session cookie on the response.  
+2. User is sent to `/play-options` (redirect or client navigation).  
+3. Play Options page calls `GET /api/user/me` with `credentials: "include"`.  
+4. If the cookie is missing or invalid, `/api/user/me` returns 401.  
+5. Play Options then does `window.location.replace("/member/login")` (see `src/app/play-options/page.tsx`). So the “flip back” is correct behavior when the app thinks the user is not logged in — the real problem is **the session cookie is not present or not accepted on the request to `/api/user/me`**.
+
+**Timeline of changes (what we tried):**
+
+| Commit / state | What changed |
+|----------------|--------------|
+| **f2906bd** | Login API accepted **JSON only**; returned `200` + `setUserSessionCookieOnResponse(response, token)`. Client had to use **fetch** and then redirect. No form POST. |
+| **2af5bde** | Play Options started **redirecting to `/member/login`** when not logged in (fetch `/api/user/me`, if not ok → replace to login). So from this point on, if the cookie isn’t sent or is invalid, user always bounces back. |
+| **e2c777d → e6971cf** | Many attempts: form POST + 302/303 redirect with Set-Cookie; manual `Set-Cookie` header; 200 + HTML with meta refresh; strip quotes when reading cookie; longer client delay. None fixed the issue on Vercel. |
+
+**Most likely root causes (check tomorrow):**
+
+1. **SESSION_SECRET not set on Vercel**  
+   - Used in `src/lib/user-auth.ts`: `getSecret()` → `process.env.SESSION_SECRET || "dev-secret"`.  
+   - Token is **signed** at login and **verified** in `getUserSessionEmail()`. If `SESSION_SECRET` is missing or different between the request that sets the cookie and the one that reads it, verification fails and the API returns 401.  
+   - **Action:** In Vercel → Project → Settings → Environment Variables, ensure **SESSION_SECRET** is set (same value for Production/Preview if you use both). Redeploy after adding.
+
+2. **Cookie not set or not sent**  
+   - **Action:** In DevTools → Network: on the **login** response, confirm there is a **Set-Cookie** header for `rfts_user_session`. On the **next** request (to `play-options` or `api/user/me`), confirm the **Cookie** header includes `rfts_user_session`. If Set-Cookie is missing, the server isn’t setting it. If Cookie is missing on the next request, the browser isn’t storing or sending it (e.g. Secure/domain/path).
+
+3. **Using a custom `Set-Cookie` header instead of Next’s API**  
+   - Next’s recommended way is `response.cookies.set(...)`. Passing a raw `Set-Cookie` in a headers object can behave differently on Vercel. The code was reverted below to use **only** `setUserSessionCookieOnResponse` (which uses `response.cookies.set()`) and **only** the **JSON + fetch** path (no form POST to API).
+
+**What was reverted for tomorrow:**
+
+- **Login API** (`src/app/api/user/login/route.ts`): Form POST path removed. Only accepts **JSON** body. On success returns **200 JSON** and sets the cookie with **`setUserSessionCookieOnResponse(response, token)`** (no manual Set-Cookie, no redirect, no HTML).
+- **Member login form** (`src/components/UserAuth.tsx`): Form uses **fetch** again: `preventDefault()`, POST JSON to `/api/user/login`, `credentials: "include"`, then after **1.5 s** delay `window.location.href = "/play-options"`. Autocomplete attributes kept.
+
+**Single path:** Client always does fetch → 200 + Set-Cookie → wait 1.5 s → redirect. One code path, Next’s cookie API only. If it still fails, the next step is to confirm **SESSION_SECRET** on Vercel and inspect **Set-Cookie** and **Cookie** in Network as above.
+
+---
+
 ## Where We Left Off
 
 - **Handoff:** Read this file and **README.md** for env. Run schema with `npm run db:schema` if DB is new or after schema changes.
