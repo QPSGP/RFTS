@@ -51,9 +51,16 @@ export async function POST(request: Request) {
   await recordMemberActivity(user.id, "login");
 
   if (isForm) {
-    const redirectUrl = new URL("/play-options", request.url);
-    const response = NextResponse.redirect(redirectUrl, 303);
-    response.headers.set("Set-Cookie", buildMemberSessionSetCookieHeader(token));
+    const redirectUrl = new URL("/play-options", request.url).toString();
+    const html = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectUrl}"></head><body>Signing you in…</body></html>`;
+    const response = new NextResponse(html, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Set-Cookie": buildMemberSessionSetCookieHeader(token),
+        "Cache-Control": "no-store, no-cache, must-revalidate"
+      }
+    });
     return response;
   }
 

@@ -67,7 +67,7 @@ export default function UserAuth() {
         <h2>Member Login</h2>
         <form action="/api/user/login" method="post" onSubmit={submitLogin} className="grid">
           <div>
-            <input name="email" placeholder="Email" type="email" required style={inputStyle} />
+            <input name="email" placeholder="Email" type="email" autoComplete="email" required style={inputStyle} />
             <p style={{ marginTop: 6, marginBottom: 0 }}>
               <a href="/member/forgot-email" style={{ fontSize: 13, color: "#0f766e" }}>
                 Forgot email?
@@ -79,6 +79,7 @@ export default function UserAuth() {
               name="password"
               placeholder="Password"
               type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
               required
               style={{ ...inputStyle, paddingRight: 56 }}
             />
