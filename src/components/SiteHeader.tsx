@@ -7,9 +7,8 @@ export default async function SiteHeader() {
       ? { label: "Admin Console", href: "/admin/content" }
       : consoleType === "moderator"
         ? { label: "Facilitators Console", href: "/moderator/console" }
-        : consoleType === "member"
-          ? { label: "Members Console", href: "/play-options" }
-          : null;
+        : null;
+  const memberConsoleLink = consoleType === "member" ? { label: "Members Console", href: "/play-options" } : null;
   return (
     <header id="page-top" className="site-header">
       <div className="site-header-inner">
@@ -57,6 +56,7 @@ export default async function SiteHeader() {
                 <a href="/moderator/console">Facilitators</a>
                 <a href="/login">Administrator</a>
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
+                {memberConsoleLink && <a href={memberConsoleLink.href}>{memberConsoleLink.label}</a>}
               </div>
             </details>
           </div>

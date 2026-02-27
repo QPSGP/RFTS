@@ -27,5 +27,6 @@ export async function POST(request: Request) {
   await recordMemberActivity(user.id, "login");
   const response = NextResponse.json({ ok: true });
   setUserSessionCookieOnResponse(response, token);
+  response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
   return response;
 }
