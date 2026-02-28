@@ -134,6 +134,7 @@ App code lives in **rfts-platform** (this folder). The repo root is **CursorRFTS
 
 ## Where We Left Off
 
+- **Member login (working):** Form POST to `/api/user/login` returns **200 + Set-Cookie + HTML** (meta refresh to `/play-options`) so the cookie is stored reliably. Play-options uses the cookie and shows the console. **`ClearSessionOnEnter`** on `/member/login` clears any stale member session when you open the login page so the header doesn’t show “Members Console” until you’ve logged in. Test user for E2E: `node scripts/seed-test-user.js` then `node scripts/test-login-e2e.js` (dev server must be running).
 - **Handoff:** Read this file and **README.md** for env. Run schema with `npm run db:schema` if DB is new or after schema changes.
 - **Git:** Pushes from rfts-platform to origin/main work; commit PROJECT_STATUS.md with related work.
 - **T-18 on signup:** Implemented. New members are auto-assigned the fallback track (T-18) on registration; when a CGMR is assigned, the schedule uses it instead. No open follow-up for this feature.

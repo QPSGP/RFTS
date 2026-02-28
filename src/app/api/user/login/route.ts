@@ -3,19 +3,25 @@ import bcrypt from "bcryptjs";
 import { getUserByEmail, recordMemberActivity } from "@/lib/db";
 import { createUserSessionToken, setUserSessionCookieOnResponse } from "@/lib/user-auth";
 
-/**
- * Login: form POST → 302 redirect to /play-options with Set-Cookie (so cookie is sent on the next request).
- * JSON POST still supported for API clients (200 + Set-Cookie, no redirect).
- */
 export async function POST(request: Request) {
+  try {
+    return await doPost(request);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[POST /api/user/login]", message);
+    return NextResponse.json({ error: "Server error.", detail: message }, { status: 500 });
+  }
+}
+
+async function doPost(request: Request) {
   const baseUrl = new URL(request.url).origin;
   const loginErrorUrl = `${baseUrl}/member/login?error=invalid`;
   const successUrl = `${baseUrl}/play-options`;
 
   let email: string;
   let password: string;
-  const contentType = request.headers.get("content-type") || "";
 
+  const contentType = request.headers.get("content-type") || "";
   if (contentType.includes("application/x-www-form-urlencoded")) {
     const formData = await request.formData();
     const e = formData.get("email");
@@ -44,24 +50,26 @@ export async function POST(request: Request) {
 
   const user = await getUserByEmail(email);
   if (!user) {
-    return contentType.includes("application/x-www-form-urlencoded")
-      ? NextResponse.redirect(loginErrorUrl, 302)
-      : NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
+    return NextResponse.redirect(loginErrorUrl, 302);
   }
   const isValid = await bcrypt.compare(password, user.password_hash);
   if (!isValid) {
-    return contentType.includes("application/x-www-form-urlencoded")
-      ? NextResponse.redirect(loginErrorUrl, 302)
-      : NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
+    return NextResponse.redirect(loginErrorUrl, 302);
   }
 
   const token = createUserSessionToken(user.email);
   await recordMemberActivity(user.id, "login");
 
   if (contentType.includes("application/x-www-form-urlencoded")) {
-    const response = NextResponse.redirect(successUrl, 302);
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=${successUrl}"></head><body>Signed in. Taking you to Play Options…</body></html>`;
+    const response = new NextResponse(html, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store, no-cache, must-revalidate"
+      }
+    });
     setUserSessionCookieOnResponse(response, token);
-    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
     return response;
   }
 
@@ -70,3 +78,4 @@ export async function POST(request: Request) {
   response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
   return response;
 }
+

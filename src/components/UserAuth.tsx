@@ -17,8 +17,6 @@ export default function UserAuth() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  /** Native form POST so server returns 302 to /play-options + Set-Cookie; browser follows redirect with cookie. */
-
   const logout = async () => {
     await fetch("/api/user/logout", { method: "POST" });
     setStatus("Logged out.");
@@ -61,7 +59,7 @@ export default function UserAuth() {
         <h2>Member Login</h2>
         <form action="/api/user/login" method="POST" className="grid">
           <div>
-            <input name="email" placeholder="Email" type="email" autoComplete="email" required style={inputStyle} />
+            <input name="email" placeholder="Email" type="email" required style={inputStyle} />
             <p style={{ marginTop: 6, marginBottom: 0 }}>
               <a href="/member/forgot-email" style={{ fontSize: 13, color: "#0f766e" }}>
                 Forgot email?
@@ -73,7 +71,6 @@ export default function UserAuth() {
               name="password"
               placeholder="Password"
               type={showPassword ? "text" : "password"}
-              autoComplete="current-password"
               required
               style={{ ...inputStyle, paddingRight: 56 }}
             />
