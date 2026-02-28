@@ -1,0 +1,16 @@
+---
+description: Read PROJECT_STATUS.md for where we left off and session context
+alwaysApply: true
+---
+
+# Handoff & context
+
+When the user asks where we left off, what we're doing, or for a summary of the project:
+
+1. **Read `PROJECT_STATUS.md`** in this folder (rfts-platform). It summarizes:
+   - What the project is
+   - What was done in the last session (agent rules, signup centering, Git attempts)
+   - Where we left off and next steps
+   - Quick reference for key paths and components
+
+Use that file to give an accurate, up-to-date summary and to continue work in the right place.
