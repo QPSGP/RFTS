@@ -53,8 +53,19 @@ export async function GET(request: Request) {
     getMemberProfileByUserId(profile.id)
   ]);
 
-  const yearBorn = memberProfile?.yearBorn ?? null;
-  const hasVerifiedAge = yearBorn != null && new Date().getFullYear() - yearBorn >= 18;
+  const yearBornRaw = memberProfile?.yearBorn ?? null;
+  const yearBorn =
+    yearBornRaw != null
+      ? typeof yearBornRaw === "number"
+        ? yearBornRaw
+        : parseInt(String(yearBornRaw), 10)
+      : null;
+  const yearBornNum =
+    yearBorn != null && !Number.isNaN(yearBorn) && yearBorn >= 1900 && yearBorn <= 2100
+      ? yearBorn
+      : null;
+  const hasVerifiedAge =
+    yearBornNum != null && new Date().getFullYear() - yearBornNum >= 18;
   const canAccessAdult = (memberProfile?.adultConsent ?? false) && hasVerifiedAge;
   const wantsPracticeGrowth = memberProfile?.wantsPracticeGrowth ?? false;
 

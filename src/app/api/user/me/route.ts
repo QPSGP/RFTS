@@ -15,9 +15,19 @@ export async function GET() {
       return NextResponse.json({ error: "Not found." }, { status: 404 });
     }
     const memberProfile = await getMemberProfileByUserId(profile.id);
-    const yearBorn = memberProfile?.yearBorn ?? null;
+    const yearBornRaw = memberProfile?.yearBorn ?? null;
+    const yearBorn =
+      yearBornRaw != null
+        ? typeof yearBornRaw === "number"
+          ? yearBornRaw
+          : parseInt(String(yearBornRaw), 10)
+        : null;
+    const yearBornNum =
+      yearBorn != null && !Number.isNaN(yearBorn) && yearBorn >= 1900 && yearBorn <= 2100
+        ? yearBorn
+        : null;
     const currentYear = new Date().getFullYear();
-    const hasVerifiedAge = yearBorn != null && currentYear - yearBorn >= 18;
+    const hasVerifiedAge = yearBornNum != null && currentYear - yearBornNum >= 18;
     const storedConsent = memberProfile?.adultConsent ?? false;
     const adultConsent = storedConsent && hasVerifiedAge;
     const wantsPracticeGrowth = memberProfile?.wantsPracticeGrowth ?? false;
@@ -29,7 +39,7 @@ export async function GET() {
         firstName,
         lastName,
         adultConsent,
-        yearBorn,
+        yearBorn: yearBornNum,
         hasVerifiedAge,
         wantsPracticeGrowth
       }

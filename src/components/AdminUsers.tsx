@@ -1273,55 +1273,6 @@ export default function AdminUsers() {
                         </div>
                       </div>
                       <div style={{ marginTop: 12 }}>
-                        <h4 style={{ marginBottom: 8 }}>5. Check audios designed for them</h4>
-                        <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
-                          Check which audios this member can access. Managed members are entered only by a facilitator or admin; you choose their recordings and order.
-                        </p>
-                        <div className="goal-list">
-                          {library.map((item) => (
-                            <label
-                              key={item.id}
-                              className="goal-item"
-                              style={{ display: "flex", gap: 8, alignItems: "center" }}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={
-                                  audioAssignments[user.email]?.[item.id] ??
-                                  item.allowedUserEmails?.some(
-                                    (allowed) =>
-                                      allowed.toLowerCase() === user.email.toLowerCase()
-                                  ) ??
-                                  false
-                                }
-                                onChange={() => toggleAudioAssignment(user.email, item.id)}
-                              />
-                              <span style={{ flex: 1 }}>
-                                {item.skuCode ? `${item.skuCode} - ` : ""}
-                                {item.title}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                        <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
-                          To remove a track from this member: uncheck it above and click Save Personalized Audios.
-                        </p>
-                        <div style={{ marginTop: 8, display: "flex", gap: 12 }}>
-                          <button
-                            className="button button-secondary"
-                            type="button"
-                            onClick={() => saveAudioAssignments(user.email)}
-                          >
-                            Save Personalized Audios
-                          </button>
-                          {audioSaveStatus[user.email] && (
-                            <span style={{ alignSelf: "center" }}>
-                              {audioSaveStatus[user.email]}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div style={{ marginTop: 12 }}>
                         <h4 style={{ marginBottom: 8 }}>4. Add file</h4>
                         <label style={{ fontSize: 12 }}>Personalized audio (CGMR)</label>
                         {(() => {
@@ -1467,6 +1418,55 @@ export default function AdminUsers() {
                           >
                             Add Personalized Audio
                           </button>
+                        </div>
+                      </div>
+                      <div style={{ marginTop: 12 }}>
+                        <h4 style={{ marginBottom: 8 }}>5. Check audios designed for them</h4>
+                        <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
+                          Check which audios this member can access. Managed members are entered only by a facilitator or admin; you choose their recordings and order.
+                        </p>
+                        <div className="goal-list">
+                          {library.map((item) => (
+                            <label
+                              key={item.id}
+                              className="goal-item"
+                              style={{ display: "flex", gap: 8, alignItems: "center" }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={
+                                  audioAssignments[user.email]?.[item.id] ??
+                                  item.allowedUserEmails?.some(
+                                    (allowed) =>
+                                      allowed.toLowerCase() === user.email.toLowerCase()
+                                  ) ??
+                                  false
+                                }
+                                onChange={() => toggleAudioAssignment(user.email, item.id)}
+                              />
+                              <span style={{ flex: 1 }}>
+                                {item.skuCode ? `${item.skuCode} - ` : ""}
+                                {item.title}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                        <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
+                          To remove a track from this member: uncheck it above and click Save Personalized Audios.
+                        </p>
+                        <div style={{ marginTop: 8, display: "flex", gap: 12 }}>
+                          <button
+                            className="button button-secondary"
+                            type="button"
+                            onClick={() => saveAudioAssignments(user.email)}
+                          >
+                            Save Personalized Audios
+                          </button>
+                          {audioSaveStatus[user.email] && (
+                            <span style={{ alignSelf: "center" }}>
+                              {audioSaveStatus[user.email]}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="card" style={{ marginTop: 12, background: "#f8fafc", border: "1px solid #e2e8f0" }}>

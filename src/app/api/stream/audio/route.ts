@@ -75,9 +75,19 @@ export async function GET(request: Request) {
     }
     if (item.isAdult) {
       const memberProfile = await getMemberProfileByUserId(profile.id);
-      const yearBorn = memberProfile?.yearBorn ?? null;
+      const yearBornRaw = memberProfile?.yearBorn ?? null;
+      const yearBorn =
+        yearBornRaw != null
+          ? typeof yearBornRaw === "number"
+            ? yearBornRaw
+            : parseInt(String(yearBornRaw), 10)
+          : null;
+      const yearBornNum =
+        yearBorn != null && !Number.isNaN(yearBorn) && yearBorn >= 1900 && yearBorn <= 2100
+          ? yearBorn
+          : null;
       const hasVerifiedAge =
-        yearBorn != null && new Date().getFullYear() - yearBorn >= 18;
+        yearBornNum != null && new Date().getFullYear() - yearBornNum >= 18;
       const storedConsent = memberProfile?.adultConsent ?? false;
       const canAccess = storedConsent && hasVerifiedAge;
       if (!canAccess) {
