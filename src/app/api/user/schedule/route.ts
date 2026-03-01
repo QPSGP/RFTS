@@ -87,19 +87,23 @@ export async function GET(request: Request) {
     userAssignedTrack: userAssignedTrack ?? undefined
   });
 
-  // Advance "tonight" by day: use schedule_started_at so night 1 = start date, night 2 = next day, etc.
+  // Advance "tonight" by day: use schedule_started_at (UTC) so night 1 = start date, night 2 = next day, etc.
   let currentNight = 1;
-  if (memberProfile && memberProfile.scheduleStartedAt) {
-    const started = new Date(memberProfile.scheduleStartedAt + "Z");
-    const today = new Date();
-    const startedDate = new Date(Date.UTC(started.getUTCFullYear(), started.getUTCMonth(), started.getUTCDate()));
-    const todayDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
-    const diffMs = todayDate.getTime() - startedDate.getTime();
-    const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-    currentNight = Math.max(1, Math.min(nights, days + 1));
-  } else if (memberProfile) {
+  const startedAtRaw = memberProfile?.scheduleStartedAt;
+  if (startedAtRaw) {
+    const str = String(startedAtRaw).trim();
+    const started = str.includes("T") ? new Date(str) : new Date(str + "T00:00:00Z");
+    if (!Number.isNaN(started.getTime())) {
+      const startedDate = new Date(Date.UTC(started.getUTCFullYear(), started.getUTCMonth(), started.getUTCDate()));
+      const now = new Date();
+      const todayDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+      const diffMs = todayDate.getTime() - startedDate.getTime();
+      const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+      currentNight = Math.max(1, Math.min(nights, days + 1));
+    }
+  }
+  if (currentNight === 1 && !startedAtRaw) {
     await setScheduleStartedToToday(profile.id);
-    currentNight = 1;
   }
 
   const blobAssets = readJson<{ audios?: Record<string, string> }>(
