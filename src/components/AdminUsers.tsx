@@ -21,6 +21,8 @@ type Interest = {
 type UserRow = {
   id: string;
   email: string;
+  firstName?: string | null;
+  lastName?: string | null;
   goalIds: string[];
   subscriptionStatus: "inactive" | "active" | "past_due" | "canceled" | null;
   subscriptionTier: "platinum" | null;
@@ -72,6 +74,8 @@ export default function AdminUsers() {
   const [status, setStatus] = useState<string | null>(null);
   const [createEmail, setCreateEmail] = useState("");
   const [createPassword, setCreatePassword] = useState("");
+  const [createFirstName, setCreateFirstName] = useState("");
+  const [createLastName, setCreateLastName] = useState("");
   const [createTier, setCreateTier] = useState<UserRow["subscriptionTier"]>("platinum");
   const [createStatus, setCreateStatus] =
     useState<UserRow["subscriptionStatus"]>("inactive");
@@ -143,6 +147,8 @@ export default function AdminUsers() {
       body: JSON.stringify({
         email: createEmail,
         password: createPassword,
+        firstName: createFirstName.trim() || undefined,
+        lastName: createLastName.trim() || undefined,
         tier: createTier,
         status: createStatus,
         playsPerNight: createPlaysPerNight
@@ -152,6 +158,8 @@ export default function AdminUsers() {
       setStatus("User created.");
       setCreateEmail("");
       setCreatePassword("");
+      setCreateFirstName("");
+      setCreateLastName("");
       setCreatePlaysPerNight(2);
       await load();
       return;
@@ -574,6 +582,18 @@ export default function AdminUsers() {
               placeholder="Temporary password"
               type="password"
             />
+            <input
+              style={inputStyle}
+              value={createFirstName}
+              onChange={(event) => setCreateFirstName(event.target.value)}
+              placeholder="First name"
+            />
+            <input
+              style={inputStyle}
+              value={createLastName}
+              onChange={(event) => setCreateLastName(event.target.value)}
+              placeholder="Last name"
+            />
             <select
               style={inputStyle}
               value={createTier || "platinum"}
@@ -621,7 +641,16 @@ export default function AdminUsers() {
             <div className="grid">
               {users.map((user) => (
                 <div key={user.id} className="card">
-                  <strong>{user.email}</strong>
+                  <strong>
+                    {user.firstName || user.lastName
+                      ? [user.firstName, user.lastName].filter(Boolean).join(" ")
+                      : user.email}
+                  </strong>
+                  {user.firstName != null || user.lastName != null ? (
+                    <p style={{ margin: "4px 0 0 0", fontSize: "0.9em", color: "#6b7280" }}>
+                      {user.email}
+                    </p>
+                  ) : null}
                   <p>Goals: {user.goalIds?.length || 0}</p>
                   <select
                     style={inputStyle}

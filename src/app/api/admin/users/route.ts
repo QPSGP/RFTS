@@ -11,12 +11,15 @@ import {
   getUserProfile,
   listUsers,
   setUserGoals,
-  setUserPlaysPerNight
+  setUserPlaysPerNight,
+  upsertMemberProfile
 } from "@/lib/db";
 
 const createSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
   tier: z.enum(["platinum"]).default("platinum"),
   status: z.enum(["inactive", "active", "past_due", "canceled"]).default("inactive"),
   playsPerNight: z.number().int().min(1).max(2).optional()
@@ -59,6 +62,11 @@ export async function POST(request: Request) {
     if (parsed.data.playsPerNight) {
       await setUserPlaysPerNight(user.id, parsed.data.playsPerNight);
     }
+    await upsertMemberProfile({
+      userId: user.id,
+      firstName: parsed.data.firstName?.trim() || null,
+      lastName: parsed.data.lastName?.trim() || null
+    });
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json(

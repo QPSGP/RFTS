@@ -263,12 +263,14 @@ export const getMemberProfileByUserId = async (userId: string) => {
   return rows[0] || null;
 };
 
-/** Set schedule start to today (UTC date). Used when first loading schedule or when goals/plays-per-night change so rotation restarts. */
+/** Set schedule start to today (UTC date). Used when first loading schedule or when goals/plays-per-night change so rotation restarts. Upserts so rotation works even if member_profiles row was missing. */
 export const setScheduleStartedToToday = async (userId: string): Promise<void> => {
   await sql`
-    UPDATE member_profiles
-    SET schedule_started_at = CURRENT_DATE, updated_at = now()
-    WHERE user_id = ${userId}
+    INSERT INTO member_profiles (user_id, schedule_started_at, updated_at)
+    VALUES (${userId}, (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date, now())
+    ON CONFLICT (user_id) DO UPDATE SET
+      schedule_started_at = (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date,
+      updated_at = now()
   `;
 };
 
@@ -290,8 +292,13 @@ export const getUserProfile = async (email: string) => {
   return rows[0] || null;
 };
 
-export const listUsers = async () => {
-  const { rows } = await sql<UserProfile>`
+export type UserRowWithName = UserProfile & {
+  firstName: string | null;
+  lastName: string | null;
+};
+
+export const listUsers = async (): Promise<UserRowWithName[]> => {
+  const { rows } = await sql<UserRowWithName>`
     SELECT
       u.id,
       u.email,
@@ -299,9 +306,12 @@ export const listUsers = async () => {
       u.goal_updated_at AS "goalUpdatedAt",
       COALESCE(u.plays_per_night, 2) AS "playsPerNight",
       s.status AS "subscriptionStatus",
-      s.tier AS "subscriptionTier"
+      s.tier AS "subscriptionTier",
+      mp.first_name AS "firstName",
+      mp.last_name AS "lastName"
     FROM users u
     LEFT JOIN subscriptions s ON s.user_id = u.id
+    LEFT JOIN member_profiles mp ON mp.user_id = u.id
     ORDER BY u.created_at DESC
   `;
   return rows;
