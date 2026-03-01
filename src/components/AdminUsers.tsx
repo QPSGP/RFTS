@@ -95,8 +95,6 @@ export default function AdminUsers() {
   const [profileOpen, setProfileOpen] = useState<Record<string, boolean>>({});
   const [goalsSectionOpen, setGoalsSectionOpen] = useState<Record<string, boolean>>({});
   const [profileDrafts, setProfileDrafts] = useState<Record<string, ProfileDraft>>({});
-  const [nameDrafts, setNameDrafts] = useState<Record<string, { firstName: string; lastName: string }>>({});
-  const [nameSaveStatus, setNameSaveStatus] = useState<Record<string, string>>({});
   const [audioAssignments, setAudioAssignments] = useState<Record<string, Record<string, boolean>>>({});
   const [audioSaveStatus, setAudioSaveStatus] = useState<Record<string, string>>({});
   const [uploadStatus, setUploadStatus] = useState<Record<string, string>>({});
@@ -521,29 +519,6 @@ export default function AdminUsers() {
     setStatus(data?.error || `Profile save failed. (status ${response.status})`);
   };
 
-  const saveNameOnly = async (email: string) => {
-    const current = nameDrafts[email] ?? {
-      firstName: users.find((u) => u.email === email)?.firstName ?? "",
-      lastName: users.find((u) => u.email === email)?.lastName ?? ""
-    };
-    setNameSaveStatus((prev) => ({ ...prev, [email]: "Saving…" }));
-    const response = await fetch("/api/admin/member-profile", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email,
-        profile: { firstName: current.firstName.trim() || undefined, lastName: current.lastName.trim() || undefined }
-      })
-    });
-    if (response.ok) {
-      setNameSaveStatus((prev) => ({ ...prev, [email]: "Saved" }));
-      await load();
-      return;
-    }
-    const data = await response.json().catch(() => ({}));
-    setNameSaveStatus((prev) => ({ ...prev, [email]: data?.error || "Save failed" }));
-  };
-
   const getDerivedAudios = (goalIds: string[]) => {
     if (!goalIds || goalIds.length === 0) {
       return [];
@@ -681,51 +656,6 @@ export default function AdminUsers() {
                       {user.email}
                     </p>
                   ) : null}
-                  <div style={{ marginTop: 8 }}>
-                    <label style={{ fontSize: 12, display: "block", marginBottom: 4 }}>Name</label>
-                    <div className="grid grid-2" style={{ gap: 8 }}>
-                      <input
-                        style={inputStyle}
-                        placeholder="First name"
-                        value={nameDrafts[user.email]?.firstName ?? user.firstName ?? ""}
-                        onChange={(e) =>
-                          setNameDrafts((prev) => ({
-                            ...prev,
-                            [user.email]: {
-                              firstName: e.target.value,
-                              lastName: prev[user.email]?.lastName ?? user.lastName ?? ""
-                            }
-                          }))
-                        }
-                      />
-                      <input
-                        style={inputStyle}
-                        placeholder="Last name"
-                        value={nameDrafts[user.email]?.lastName ?? user.lastName ?? ""}
-                        onChange={(e) =>
-                          setNameDrafts((prev) => ({
-                            ...prev,
-                            [user.email]: {
-                              firstName: prev[user.email]?.firstName ?? user.firstName ?? "",
-                              lastName: e.target.value
-                            }
-                          }))
-                        }
-                      />
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-                      <button
-                        type="button"
-                        className="button button-secondary"
-                        onClick={() => saveNameOnly(user.email)}
-                      >
-                        Save name
-                      </button>
-                      {nameSaveStatus[user.email] ? (
-                        <span style={{ fontSize: 12, color: "#6b7280" }}>{nameSaveStatus[user.email]}</span>
-                      ) : null}
-                    </div>
-                  </div>
                   {!profileOpen[user.email] && (
                     <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
                       Goals: {user.goalIds?.length || 0} · {user.subscriptionTier ?? "platinum"} · {user.subscriptionStatus ?? "inactive"} · {user.playsPerNight ?? 2}/night

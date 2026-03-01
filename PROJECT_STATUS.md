@@ -4,6 +4,23 @@ Use this file to get up to speed when opening the project in the **rfts-platform
 
 ---
 
+## Summary of changes (for the day)
+
+**Use this section to keep up to date and write your daily notes.**
+
+- **Admin → Members → Create member:** Form includes First name and Last name; list shows member name (or email). API: `POST /api/admin/users` and list use `upsertMemberProfile`; names stored on `member_profiles`.
+- **Admin → View/Edit member order:** Sections are: 1. Member Profile, 2. Goals, 3. Membership/Active/sessions/Reset, 4. Add file, 5. Check audios, 6. Billing.
+- **Profile save:** `PATCH /api/admin/member-profile` coerces `yearBorn` and `incomeGoalYear` to valid numbers; client sends valid years. Admin can save profile without errors.
+- **Birth date and adult content:** `yearBorn` is validated (number, 1900–2100) in `/api/user/me`, `/api/user/schedule`, and `/api/stream/audio`. `hasVerifiedAge` and adult access use it. New members and admin profile both use birth year for 18+ gating.
+- **Member profile matches new-member onboarding (this session):**
+  - **File:** `src/components/AdminUsers.tsx` — “1. Member Profile” card only (no API changes).
+  - **Layout:** Intro line “Same fields as new member signup”; Admin notes at top; then **Personal details** in onboarding order: First name, Last name, Birth year (hint: mature content 18+), Gender (hint: helps with customization), Occupation, Best contact number, Best times, Timezone.
+  - **Then:** LGD checkbox (“I am interested in a Life Guidance Discovery Session?”), **Adult content** card (only when birth year implies 18+): “I consent to hear audios with mature content” + “I would like to hear audios related to polyamory”, then “I am or would like to be a therapist, healer, or coach”, then Referral (“How did you find us?…”).
+  - **Separate “Additional (admin)”:** Income goal, Goal year, Goal vs current income, First responder. Save Profile unchanged.
+  - **Labels/copy** aligned with `MemberOnboarding.tsx` step 1 where applicable.
+
+---
+
 ## What This Project Is
 
 **Reach For The Stars (RFTS)** — A wellness platform with:
@@ -138,6 +155,7 @@ App code lives in **rfts-platform** (this folder). The repo root is **CursorRFTS
 - **Handoff:** Read this file and **README.md** for env. Run schema with `npm run db:schema` if DB is new or after schema changes.
 - **Git:** Pushes from rfts-platform to origin/main work; commit PROJECT_STATUS.md with related work.
 - **T-18 on signup:** Implemented. New members are auto-assigned the fallback track (T-18) on registration; when a CGMR is assigned, the schedule uses it instead. No open follow-up for this feature.
+- **Member profile like new member:** Done. Admin “1. Member Profile” now matches new-member onboarding (field order, labels, LGD → Adult content → Build practice → Referral, Adult block only when birth year implies 18+, “Additional (admin)” section). See “Summary of changes (for the day)” above.
 - **Previous context:** AdminContent has category filter (All/General/Special/CGMR). Schedule API filters library by adult and Special access, uses member profile, user-assigned CGMR; adult content gated by birthdate/consent.
 
 ---
