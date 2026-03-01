@@ -1,7 +1,7 @@
 "use client";
 
 import { put } from "@vercel/blob/client";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { LibraryItem } from "@/lib/types";
 
 function sanitizePathSegment(name: string): string {
@@ -67,6 +67,15 @@ type ProfileDraft = {
   notes: string;
 };
 
+type NewAudioDraft = {
+  title: string;
+  description: string;
+  audioUrl: string;
+  coverUrl: string;
+  skuCode: string;
+  categories: string;
+};
+
 export default function AdminUsers() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [interests, setInterests] = useState<Interest[]>([]);
@@ -87,25 +96,11 @@ export default function AdminUsers() {
   const [profileDrafts, setProfileDrafts] = useState<Record<string, ProfileDraft>>({});
   const [nameDrafts, setNameDrafts] = useState<Record<string, { firstName: string; lastName: string }>>({});
   const [nameSaveStatus, setNameSaveStatus] = useState<Record<string, string>>({});
-  const [audioAssignments, setAudioAssignments] = useState<
-    Record<string, Record<string, boolean>>
-  >({});
+  const [audioAssignments, setAudioAssignments] = useState<Record<string, Record<string, boolean>>>({});
   const [audioSaveStatus, setAudioSaveStatus] = useState<Record<string, string>>({});
   const [uploadStatus, setUploadStatus] = useState<Record<string, string>>({});
   const [personalizedAudioUploading, setPersonalizedAudioUploading] = useState<Record<string, boolean>>({});
-  const [newAudioDrafts, setNewAudioDrafts] = useState<
-    Record<
-      string,
-      {
-        title: string;
-        description: string;
-        audioUrl: string;
-        coverUrl: string;
-        skuCode: string;
-        categories: string;
-      }
-    >
-  >({});
+  const [newAudioDrafts, setNewAudioDrafts] = useState<Record<string, NewAudioDraft>>({});
 
   const sortedInterests = useMemo(
     () => interests.slice().sort((a, b) => a.name.localeCompare(b.name)),
@@ -115,7 +110,7 @@ export default function AdminUsers() {
   const resolveGoalNames = (goalIds: string[]) => {
     return goalIds
       .map((id) => interests.find((goal) => goal.id === id)?.name)
-      .filter((name): name is string => !!name);
+      .filter((n) => Boolean(n)) as string[];
   };
 
 
@@ -351,7 +346,7 @@ export default function AdminUsers() {
       categories: "CGMR"
     };
 
-  const updateAudioDraft = (email: string, patch: Partial<(typeof newAudioDrafts)[string]>) => {
+  const updateAudioDraft = (email: string, patch: Partial<NewAudioDraft>) => {
     setNewAudioDrafts((prev) => ({
       ...prev,
       [email]: {
@@ -590,7 +585,6 @@ export default function AdminUsers() {
     const index = list.indexOf(goalId);
     return index === -1 ? "" : String(index + 1);
   };
-
   return (
     <div className="card">
       <h2>Member Accounts</h2>
@@ -698,7 +692,7 @@ export default function AdminUsers() {
                               firstName: e.target.value,
                               lastName: prev[user.email]?.lastName ?? user.lastName ?? ""
                             }
-                          })
+                          }))
                         }
                       />
                       <input
@@ -712,7 +706,7 @@ export default function AdminUsers() {
                               firstName: prev[user.email]?.firstName ?? user.firstName ?? "",
                               lastName: e.target.value
                             }
-                          })
+                          }))
                         }
                       />
                     </div>
@@ -729,86 +723,13 @@ export default function AdminUsers() {
                       ) : null}
                     </div>
                   </div>
-                  <p>Goals: {user.goalIds?.length || 0}</p>
-                  <select
-                    style={inputStyle}
-                    value={
-                      updates[user.email]?.subscriptionTier ||
-                      user.subscriptionTier ||
-                      "platinum"
-                    }
-                    onChange={(event) =>
-                      setUpdates({
-                        ...updates,
-                        [user.email]: {
-                          ...updates[user.email],
-                          subscriptionTier: event.target
-                            .value as UserRow["subscriptionTier"]
-                        }
-                      })
-                    }
-                  >
-                    <option value="platinum">Membership</option>
-                  </select>
-                  <select
-                    style={inputStyle}
-                    value={
-                      updates[user.email]?.subscriptionStatus ||
-                      user.subscriptionStatus ||
-                      "inactive"
-                    }
-                    onChange={(event) =>
-                      setUpdates({
-                        ...updates,
-                        [user.email]: {
-                          ...updates[user.email],
-                          subscriptionStatus: event.target
-                            .value as UserRow["subscriptionStatus"]
-                        }
-                      })
-                    }
-                  >
-                    <option value="inactive">Inactive</option>
-                    <option value="active">Active</option>
-                    <option value="past_due">Past Due</option>
-                    <option value="canceled">Canceled</option>
-                  </select>
-                  <select
-                    style={inputStyle}
-                    value={updates[user.email]?.playsPerNight || user.playsPerNight || 2}
-                    onChange={(event) =>
-                      setUpdates({
-                        ...updates,
-                        [user.email]: {
-                          ...updates[user.email],
-                          playsPerNight: Number(event.target.value) as 1 | 2
-                        }
-                      })
-                    }
-                  >
-                    <option value={2}>2 sessions per night</option>
-                    <option value={1}>1 session per night</option>
-                  </select>
-                  <input
-                    style={inputStyle}
-                    placeholder="Reset password (optional)"
-                    type="password"
-                    value={resetPasswords[user.email] || ""}
-                    onChange={(event) =>
-                      setResetPasswords({
-                        ...resetPasswords,
-                        [user.email]: event.target.value
-                      })
-                    }
-                  />
+                  {!profileOpen[user.email] && (
+                    <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+                      Goals: {user.goalIds?.length || 0} · {user.subscriptionTier ?? "platinum"} · {user.subscriptionStatus ?? "inactive"} · {user.playsPerNight ?? 2}/night
+                    </p>
+                  )}
                   {!profileOpen[user.email] && (
                     <>
-                      <div style={{ fontSize: 12, color: "#6b7280" }}>
-                        <div>Goals assigned: {user.goalIds?.length || 0}</div>
-                        {user.goalIds?.length ? (
-                          <div>{resolveGoalNames(user.goalIds).sort().join(", ")}</div>
-                        ) : null}
-                      </div>
                       <button
                         className="button button-secondary"
                         type="button"
@@ -819,7 +740,7 @@ export default function AdminUsers() {
                           }
                         }}
                       >
-                        View Member Profile
+                        View / Edit member
                       </button>
                     </>
                   )}
@@ -1133,7 +1054,223 @@ export default function AdminUsers() {
                         </div>
                       )}
                       <div style={{ marginTop: 12 }}>
-                        <h4 style={{ marginBottom: 8 }}>2. Audio list</h4>
+                        <h4 style={{ marginBottom: 8 }}>2. Goals</h4>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setGoalsSectionOpen((prev) => ({
+                              ...prev,
+                              [user.email]: !prev[user.email]
+                            }))
+                          }
+                          style={{
+                            background: "none",
+                            border: "1px solid #d1d5db",
+                            borderRadius: 8,
+                            padding: "8px 12px",
+                            cursor: "pointer",
+                            fontSize: 12,
+                            width: "100%",
+                            textAlign: "left",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8
+                          }}
+                        >
+                          {goalsSectionOpen[user.email] ? "▼" : "▶"}
+                          Assigned goals (up to 10)
+                          {user.goalIds?.length ? ` — ${user.goalIds.length} selected` : ""}
+                        </button>
+                        {goalsSectionOpen[user.email] && (
+                          <>
+                            <div className="goal-list" style={{ marginTop: 8 }}>
+                              {sortedInterests.map((interest) => {
+                                const orderValue = getGoalOrder(
+                                  user.email,
+                                  interest.id,
+                                  user.goalIds || []
+                                );
+                                return (
+                                  <label
+                                    key={interest.id}
+                                    className="goal-item"
+                                    style={{ display: "flex", gap: 8, alignItems: "center" }}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={orderValue !== ""}
+                                      onChange={(event) =>
+                                        updateOrderedGoals(
+                                          user.email,
+                                          interest.id,
+                                          event.target.checked ? "1" : ""
+                                        )
+                                      }
+                                    />
+                                    <span style={{ flex: 1 }}>{interest.name}</span>
+                                    <input
+                                      value={orderValue}
+                                      onChange={(event) =>
+                                        updateOrderedGoals(
+                                          user.email,
+                                          interest.id,
+                                          event.target.value
+                                        )
+                                      }
+                                      placeholder="#"
+                                      style={{
+                                        width: 44,
+                                        textAlign: "center",
+                                        borderRadius: 6,
+                                        border: "1px solid #d1d5db",
+                                        padding: "4px 6px",
+                                        background: orderValue ? "#16a34a" : "#ffffff",
+                                        color: orderValue ? "#ffffff" : "#111827",
+                                        fontWeight: 600
+                                      }}
+                                    />
+                                  </label>
+                                );
+                              })}
+                            </div>
+                            <div style={{ marginTop: 12 }}>
+                              <label style={{ fontSize: 12 }}>Audios from goals (read-only)</label>
+                              <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
+                                These are automatically included based on the member&apos;s goal selections.
+                              </p>
+                              <div className="goal-list">
+                                {getDerivedAudios(user.goalIds || []).length === 0 ? (
+                                  <span style={{ color: "#6b7280", fontSize: 12 }}>
+                                    No goal-based audios assigned yet.
+                                  </span>
+                                ) : (
+                                  getDerivedAudios(user.goalIds || []).map((item) => (
+                                    <div
+                                      key={item.id}
+                                      className="goal-item"
+                                      style={{ display: "flex", gap: 8, alignItems: "center" }}
+                                    >
+                                      <span style={{ flex: 1 }}>
+                                        {item.skuCode ? `${item.skuCode} - ` : ""}
+                                        {item.title}
+                                      </span>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <div style={{ marginTop: 12 }}>
+                        <h4 style={{ marginBottom: 8 }}>3. Membership, Active, sessions, Reset password</h4>
+                        <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
+                          Tier, status, sessions per night, and reset password. Click Save to apply.
+                        </p>
+                        <select
+                          style={inputStyle}
+                          value={
+                            updates[user.email]?.subscriptionTier ||
+                            user.subscriptionTier ||
+                            "platinum"
+                          }
+                          onChange={(event) =>
+                            setUpdates({
+                              ...updates,
+                              [user.email]: {
+                                ...updates[user.email],
+                                subscriptionTier: event.target
+                                  .value as UserRow["subscriptionTier"]
+                              }
+                            })
+                          }
+                        >
+                          <option value="platinum">Membership</option>
+                        </select>
+                        <select
+                          style={inputStyle}
+                          value={
+                            updates[user.email]?.subscriptionStatus ||
+                            user.subscriptionStatus ||
+                            "inactive"
+                          }
+                          onChange={(event) =>
+                            setUpdates({
+                              ...updates,
+                              [user.email]: {
+                                ...updates[user.email],
+                                subscriptionStatus: event.target
+                                  .value as UserRow["subscriptionStatus"]
+                              }
+                            })
+                          }
+                        >
+                          <option value="inactive">Inactive</option>
+                          <option value="active">Active</option>
+                          <option value="past_due">Past Due</option>
+                          <option value="canceled">Canceled</option>
+                        </select>
+                        <select
+                          style={inputStyle}
+                          value={updates[user.email]?.playsPerNight || user.playsPerNight || 2}
+                          onChange={(event) =>
+                            setUpdates({
+                              ...updates,
+                              [user.email]: {
+                                ...updates[user.email],
+                                playsPerNight: Number(event.target.value) as 1 | 2
+                              }
+                            })
+                          }
+                        >
+                          <option value={2}>2 sessions per night</option>
+                          <option value={1}>1 session per night</option>
+                        </select>
+                        <input
+                          style={inputStyle}
+                          placeholder="Reset password (optional)"
+                          type="password"
+                          value={resetPasswords[user.email] || ""}
+                          onChange={(event) =>
+                            setResetPasswords({
+                              ...resetPasswords,
+                              [user.email]: event.target.value
+                            })
+                          }
+                        />
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                          <button className="button" onClick={() => updateUser(user.email)}>
+                            Save
+                          </button>
+                          {user.subscriptionStatus === "active" ? (
+                            <button
+                              className="button button-secondary"
+                              type="button"
+                              onClick={() => setMemberStatus(user.email, "inactive")}
+                            >
+                              Make Inactive
+                            </button>
+                          ) : (
+                            <button
+                              className="button button-secondary"
+                              type="button"
+                              onClick={() => setMemberStatus(user.email, "active")}
+                            >
+                              Make Active
+                            </button>
+                          )}
+                          <button
+                            className="button button-secondary"
+                            type="button"
+                            onClick={() => deleteUser(user.email)}
+                            style={{ color: "#b91c1c" }}
+                          >
+                            Delete Member
+                          </button>
+                        </div>
+                      </div>
+                      <div style={{ marginTop: 12 }}>
+                        <h4 style={{ marginBottom: 8 }}>5. Check audios designed for them</h4>
                         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
                           Check which audios this member can access. Managed members are entered only by a facilitator or admin; you choose their recordings and order.
                         </p>
@@ -1182,90 +1319,7 @@ export default function AdminUsers() {
                         </div>
                       </div>
                       <div style={{ marginTop: 12 }}>
-                        <h4 style={{ marginBottom: 8 }}>3. Add personalized audio</h4>
-                        <label style={{ fontSize: 12 }}>Personalized audio (CGMR)</label>
-                      {goalsSectionOpen[user.email] && (
-                        <>
-                          <div className="goal-list" style={{ marginTop: 8 }}>
-                            {sortedInterests.map((interest) => {
-                              const orderValue = getGoalOrder(
-                                user.email,
-                                interest.id,
-                                user.goalIds || []
-                              );
-                              return (
-                                <label
-                                  key={interest.id}
-                                  className="goal-item"
-                                  style={{ display: "flex", gap: 8, alignItems: "center" }}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={orderValue !== ""}
-                                    onChange={(event) =>
-                                      updateOrderedGoals(
-                                        user.email,
-                                        interest.id,
-                                        event.target.checked ? "1" : ""
-                                      )
-                                    }
-                                  />
-                                  <span style={{ flex: 1 }}>{interest.name}</span>
-                                  <input
-                                    value={orderValue}
-                                    onChange={(event) =>
-                                      updateOrderedGoals(
-                                        user.email,
-                                        interest.id,
-                                        event.target.value
-                                      )
-                                    }
-                                    placeholder="#"
-                                    style={{
-                                      width: 44,
-                                      textAlign: "center",
-                                      borderRadius: 6,
-                                      border: "1px solid #d1d5db",
-                                      padding: "4px 6px",
-                                      background: orderValue ? "#16a34a" : "#ffffff",
-                                      color: orderValue ? "#ffffff" : "#111827",
-                                      fontWeight: 600
-                                    }}
-                                  />
-                                </label>
-                              );
-                            })}
-                          </div>
-                          <div style={{ marginTop: 12 }}>
-                            <label style={{ fontSize: 12 }}>Audios from goals (read-only)</label>
-                            <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
-                              These are automatically included based on the member's goal
-                              selections.
-                            </p>
-                            <div className="goal-list">
-                              {getDerivedAudios(user.goalIds || []).length === 0 ? (
-                                <span style={{ color: "#6b7280", fontSize: 12 }}>
-                                  No goal-based audios assigned yet.
-                                </span>
-                              ) : (
-                                getDerivedAudios(user.goalIds || []).map((item) => (
-                                  <div
-                                    key={item.id}
-                                    className="goal-item"
-                                    style={{ display: "flex", gap: 8, alignItems: "center" }}
-                                  >
-                                    <span style={{ flex: 1 }}>
-                                      {item.skuCode ? `${item.skuCode} - ` : ""}
-                                      {item.title}
-                                    </span>
-                                  </div>
-                                ))
-                              )}
-                            </div>
-                          </div>
-                        </>
-                      )}
-                      <div style={{ marginTop: 12 }}>
+                        <h4 style={{ marginBottom: 8 }}>4. Add file</h4>
                         <label style={{ fontSize: 12 }}>Personalized audio (CGMR)</label>
                         {(() => {
                           const emailLower = user.email.toLowerCase();
@@ -1412,116 +1466,8 @@ export default function AdminUsers() {
                           </button>
                         </div>
                       </div>
-                      <div style={{ marginTop: 12 }}>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setGoalsSectionOpen((prev) => ({
-                              ...prev,
-                              [user.email]: !prev[user.email]
-                            }))
-                          }
-                          style={{
-                            background: "none",
-                            border: "1px solid #d1d5db",
-                            borderRadius: 8,
-                            padding: "8px 12px",
-                            cursor: "pointer",
-                            fontSize: 12,
-                            width: "100%",
-                            textAlign: "left",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8
-                          }}
-                        >
-                          {goalsSectionOpen[user.email] ? "▼" : "▶"}
-                          Assigned goals (up to 10)
-                          {user.goalIds?.length ? ` — ${user.goalIds.length} selected` : ""}
-                        </button>
-                        {goalsSectionOpen[user.email] && (
-                          <>
-                            <div className="goal-list" style={{ marginTop: 8 }}>
-                              {sortedInterests.map((interest) => {
-                                const orderValue = getGoalOrder(
-                                  user.email,
-                                  interest.id,
-                                  user.goalIds || []
-                                );
-                                return (
-                                  <label
-                                    key={interest.id}
-                                    className="goal-item"
-                                    style={{ display: "flex", gap: 8, alignItems: "center" }}
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={orderValue !== ""}
-                                      onChange={(event) =>
-                                        updateOrderedGoals(
-                                          user.email,
-                                          interest.id,
-                                          event.target.checked ? "1" : ""
-                                        )
-                                      }
-                                    />
-                                    <span style={{ flex: 1 }}>{interest.name}</span>
-                                    <input
-                                      value={orderValue}
-                                      onChange={(event) =>
-                                        updateOrderedGoals(
-                                          user.email,
-                                          interest.id,
-                                          event.target.value
-                                        )
-                                      }
-                                      placeholder="#"
-                                      style={{
-                                        width: 44,
-                                        textAlign: "center",
-                                        borderRadius: 6,
-                                        border: "1px solid #d1d5db",
-                                        padding: "4px 6px",
-                                        background: orderValue ? "#16a34a" : "#ffffff",
-                                        color: orderValue ? "#ffffff" : "#111827",
-                                        fontWeight: 600
-                                      }}
-                                    />
-                                  </label>
-                                );
-                              })}
-                            </div>
-                            <div style={{ marginTop: 12 }}>
-                              <label style={{ fontSize: 12 }}>Audios from goals (read-only)</label>
-                              <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
-                                These are automatically included based on the member&apos;s goal selections.
-                              </p>
-                              <div className="goal-list">
-                                {getDerivedAudios(user.goalIds || []).length === 0 ? (
-                                  <span style={{ color: "#6b7280", fontSize: 12 }}>
-                                    No goal-based audios assigned yet.
-                                  </span>
-                                ) : (
-                                  getDerivedAudios(user.goalIds || []).map((item) => (
-                                    <div
-                                      key={item.id}
-                                      className="goal-item"
-                                      style={{ display: "flex", gap: 8, alignItems: "center" }}
-                                    >
-                                      <span style={{ flex: 1 }}>
-                                        {item.skuCode ? `${item.skuCode} - ` : ""}
-                                        {item.title}
-                                      </span>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
                       <div className="card" style={{ marginTop: 12, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                        <h4 style={{ marginBottom: 6 }}>4. Billing &amp; rate</h4>
+                        <h4 style={{ marginBottom: 6 }}>6. Billing &amp; rate</h4>
                         <p style={{ fontSize: 12, color: "#475569", marginBottom: 8 }}>
                           <strong>Gold:</strong> $19.99/mo, $149/yr — Affiliate 25% ($5/mo, $60/yr).<br />
                           <strong>Gold Managed:</strong> $39.99/mo, $399.99/yr — Facilitator-Affiliate 25% ($10/mo, $120/yr); Facilitator-Managed 50% ($20/mo, $240/yr).
@@ -1532,34 +1478,38 @@ export default function AdminUsers() {
                       </div>
                     </>
                   )}
-                  <button className="button" onClick={() => updateUser(user.email)}>
-                    Save
-                  </button>
-                  {user.subscriptionStatus === "active" ? (
-                    <button
-                      className="button button-secondary"
-                      type="button"
-                      onClick={() => setMemberStatus(user.email, "inactive")}
-                    >
-                      Make Inactive
-                    </button>
-                  ) : (
-                    <button
-                      className="button button-secondary"
-                      type="button"
-                      onClick={() => setMemberStatus(user.email, "active")}
-                    >
-                      Make Active
-                    </button>
+                  {!profileOpen[user.email] && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                      <button className="button" onClick={() => updateUser(user.email)}>
+                        Save
+                      </button>
+                      {user.subscriptionStatus === "active" ? (
+                        <button
+                          className="button button-secondary"
+                          type="button"
+                          onClick={() => setMemberStatus(user.email, "inactive")}
+                        >
+                          Make Inactive
+                        </button>
+                      ) : (
+                        <button
+                          className="button button-secondary"
+                          type="button"
+                          onClick={() => setMemberStatus(user.email, "active")}
+                        >
+                          Make Active
+                        </button>
+                      )}
+                      <button
+                        className="button button-secondary"
+                        type="button"
+                        onClick={() => deleteUser(user.email)}
+                        style={{ color: "#b91c1c" }}
+                      >
+                        Delete Member
+                      </button>
+                    </div>
                   )}
-                  <button
-                    className="button button-secondary"
-                    type="button"
-                    onClick={() => deleteUser(user.email)}
-                    style={{ color: "#b91c1c" }}
-                  >
-                    Delete Member
-                  </button>
                 </div>
               ))}
             </div>
