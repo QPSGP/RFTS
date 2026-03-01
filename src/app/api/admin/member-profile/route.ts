@@ -7,19 +7,29 @@ const querySchema = z.object({
   email: z.string().email()
 });
 
+const yearSchema = z
+  .union([z.number(), z.string()])
+  .optional()
+  .transform((v) => {
+    if (v === undefined || v === null || v === "") return undefined;
+    const n = typeof v === "string" ? parseInt(v, 10) : v;
+    if (Number.isNaN(n) || n < 1900 || n > 2100) return undefined;
+    return n;
+  });
+
 const updateSchema = z.object({
   email: z.string().email(),
   profile: z.object({
     firstName: z.string().optional(),
     lastName: z.string().optional(),
     gender: z.string().optional(),
-    yearBorn: z.number().int().min(1900).max(2100).optional(),
+    yearBorn: yearSchema,
     contactNumber: z.string().optional(),
     bestContactTimes: z.string().optional(),
     timeZone: z.string().optional(),
     occupation: z.string().optional(),
     incomeGoal: z.string().optional(),
-    incomeGoalYear: z.number().int().min(1900).max(2100).optional(),
+    incomeGoalYear: yearSchema,
     incomeGoalRelation: z.string().optional(),
     isFirstResponder: z.boolean().optional(),
     wantsPracticeGrowth: z.boolean().optional(),

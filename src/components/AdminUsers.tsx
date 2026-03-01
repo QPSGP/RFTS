@@ -85,6 +85,8 @@ export default function AdminUsers() {
   const [profileOpen, setProfileOpen] = useState<Record<string, boolean>>({});
   const [goalsSectionOpen, setGoalsSectionOpen] = useState<Record<string, boolean>>({});
   const [profileDrafts, setProfileDrafts] = useState<Record<string, ProfileDraft>>({});
+  const [nameDrafts, setNameDrafts] = useState<Record<string, { firstName: string; lastName: string }>>({});
+  const [nameSaveStatus, setNameSaveStatus] = useState<Record<string, string>>({});
   const [audioAssignments, setAudioAssignments] = useState<
     Record<string, Record<string, boolean>>
   >({});
@@ -474,6 +476,13 @@ export default function AdminUsers() {
     }
   };
 
+  const toYear = (v: string): number | undefined => {
+    if (!v || !v.trim()) return undefined;
+    const n = Number(v.trim());
+    if (Number.isNaN(n) || n < 1900 || n > 2100) return undefined;
+    return n;
+  };
+
   const saveProfile = async (email: string) => {
     const draft = profileDrafts[email];
     if (!draft) {
@@ -488,13 +497,13 @@ export default function AdminUsers() {
           firstName: draft.firstName,
           lastName: draft.lastName,
           gender: draft.gender,
-          yearBorn: draft.yearBorn ? Number(draft.yearBorn) : undefined,
+          yearBorn: toYear(draft.yearBorn),
           contactNumber: draft.contactNumber,
           bestContactTimes: draft.bestContactTimes,
           timeZone: draft.timeZone,
           occupation: draft.occupation,
           incomeGoal: draft.incomeGoal,
-          incomeGoalYear: draft.incomeGoalYear ? Number(draft.incomeGoalYear) : undefined,
+          incomeGoalYear: toYear(draft.incomeGoalYear),
           incomeGoalRelation: draft.incomeGoalRelation,
           isFirstResponder: draft.isFirstResponder,
           wantsPracticeGrowth: draft.wantsPracticeGrowth,
@@ -509,10 +518,34 @@ export default function AdminUsers() {
     if (response.ok) {
       setStatus("Member profile saved.");
       setProfileOpen((prev) => ({ ...prev, [email]: false }));
+      await load();
       return;
     }
     const data = await response.json().catch(() => ({}));
     setStatus(data?.error || `Profile save failed. (status ${response.status})`);
+  };
+
+  const saveNameOnly = async (email: string) => {
+    const current = nameDrafts[email] ?? {
+      firstName: users.find((u) => u.email === email)?.firstName ?? "",
+      lastName: users.find((u) => u.email === email)?.lastName ?? ""
+    };
+    setNameSaveStatus((prev) => ({ ...prev, [email]: "Saving…" }));
+    const response = await fetch("/api/admin/member-profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        profile: { firstName: current.firstName.trim() || undefined, lastName: current.lastName.trim() || undefined }
+      })
+    });
+    if (response.ok) {
+      setNameSaveStatus((prev) => ({ ...prev, [email]: "Saved" }));
+      await load();
+      return;
+    }
+    const data = await response.json().catch(() => ({}));
+    setNameSaveStatus((prev) => ({ ...prev, [email]: data?.error || "Save failed" }));
   };
 
   const getDerivedAudios = (goalIds: string[]) => {
@@ -651,6 +684,51 @@ export default function AdminUsers() {
                       {user.email}
                     </p>
                   ) : null}
+                  <div style={{ marginTop: 8 }}>
+                    <label style={{ fontSize: 12, display: "block", marginBottom: 4 }}>Name</label>
+                    <div className="grid grid-2" style={{ gap: 8 }}>
+                      <input
+                        style={inputStyle}
+                        placeholder="First name"
+                        value={nameDrafts[user.email]?.firstName ?? user.firstName ?? ""}
+                        onChange={(e) =>
+                          setNameDrafts((prev) => ({
+                            ...prev,
+                            [user.email]: {
+                              firstName: e.target.value,
+                              lastName: prev[user.email]?.lastName ?? user.lastName ?? ""
+                            }
+                          })
+                        }
+                      />
+                      <input
+                        style={inputStyle}
+                        placeholder="Last name"
+                        value={nameDrafts[user.email]?.lastName ?? user.lastName ?? ""}
+                        onChange={(e) =>
+                          setNameDrafts((prev) => ({
+                            ...prev,
+                            [user.email]: {
+                              firstName: prev[user.email]?.firstName ?? user.firstName ?? "",
+                              lastName: e.target.value
+                            }
+                          })
+                        }
+                      />
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+                      <button
+                        type="button"
+                        className="button button-secondary"
+                        onClick={() => saveNameOnly(user.email)}
+                      >
+                        Save name
+                      </button>
+                      {nameSaveStatus[user.email] ? (
+                        <span style={{ fontSize: 12, color: "#6b7280" }}>{nameSaveStatus[user.email]}</span>
+                      ) : null}
+                    </div>
+                  </div>
                   <p>Goals: {user.goalIds?.length || 0}</p>
                   <select
                     style={inputStyle}
@@ -724,42 +802,388 @@ export default function AdminUsers() {
                     }
                   />
                   {!profileOpen[user.email] && (
-                    <div style={{ fontSize: 12, color: "#6b7280" }}>
-                      <div>Goals assigned: {user.goalIds?.length || 0}</div>
-                      {user.goalIds?.length ? (
-                        <div>{resolveGoalNames(user.goalIds).sort().join(", ")}</div>
-                      ) : null}
-                      <div>Open View Member Profile to edit ordering.</div>
-                    </div>
+                    <>
+                      <div style={{ fontSize: 12, color: "#6b7280" }}>
+                        <div>Goals assigned: {user.goalIds?.length || 0}</div>
+                        {user.goalIds?.length ? (
+                          <div>{resolveGoalNames(user.goalIds).sort().join(", ")}</div>
+                        ) : null}
+                      </div>
+                      <button
+                        className="button button-secondary"
+                        type="button"
+                        onClick={async () => {
+                          setProfileOpen({ ...profileOpen, [user.email]: true });
+                          if (!profileDrafts[user.email]) {
+                            await loadProfile(user.email);
+                          }
+                        }}
+                      >
+                        View Member Profile
+                      </button>
+                    </>
                   )}
                   {profileOpen[user.email] && (
                     <>
                       <button
+                        className="button button-secondary"
                         type="button"
-                        onClick={() =>
-                          setGoalsSectionOpen((prev) => ({
-                            ...prev,
-                            [user.email]: !prev[user.email]
-                          }))
-                        }
-                        style={{
-                          background: "none",
-                          border: "1px solid #d1d5db",
-                          borderRadius: 8,
-                          padding: "8px 12px",
-                          cursor: "pointer",
-                          fontSize: 12,
-                          width: "100%",
-                          textAlign: "left",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8
+                        onClick={async () => {
+                          const next = !profileOpen[user.email];
+                          setProfileOpen({ ...profileOpen, [user.email]: next });
+                          if (next && !profileDrafts[user.email]) {
+                            await loadProfile(user.email);
+                          }
                         }}
                       >
-                        {goalsSectionOpen[user.email] ? "▼" : "▶"}
-                        Assigned goals (up to 10)
-                        {user.goalIds?.length ? ` — ${user.goalIds.length} selected` : ""}
+                        {profileOpen[user.email] ? "Hide Member Profile" : "View Member Profile"}
                       </button>
+                      {profileDrafts[user.email] && (
+                        <div className="card" style={{ marginTop: 12 }}>
+                          <h4>1. Member Profile</h4>
+                          <label style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
+                            Admin notes
+                          </label>
+                          <textarea
+                            style={{
+                              ...inputStyle,
+                              minHeight: 80,
+                              resize: "vertical"
+                            }}
+                            placeholder="Internal notes about this member (admin only)"
+                            value={profileDrafts[user.email].notes}
+                            onChange={(event) =>
+                              setProfileDrafts({
+                                ...profileDrafts,
+                                [user.email]: {
+                                  ...profileDrafts[user.email],
+                                  notes: event.target.value
+                                }
+                              })
+                            }
+                          />
+                          <div className="grid grid-2" style={{ marginTop: 12 }}>
+                            <input
+                              style={inputStyle}
+                              placeholder="First Name"
+                              value={profileDrafts[user.email].firstName}
+                              onChange={(event) =>
+                                setProfileDrafts({
+                                  ...profileDrafts,
+                                  [user.email]: {
+                                    ...profileDrafts[user.email],
+                                    firstName: event.target.value
+                                  }
+                                })
+                              }
+                            />
+                            <input
+                              style={inputStyle}
+                              placeholder="Last Name"
+                              value={profileDrafts[user.email].lastName}
+                              onChange={(event) =>
+                                setProfileDrafts({
+                                  ...profileDrafts,
+                                  [user.email]: {
+                                    ...profileDrafts[user.email],
+                                    lastName: event.target.value
+                                  }
+                                })
+                              }
+                            />
+                            <input
+                              style={inputStyle}
+                              placeholder="Gender"
+                              value={profileDrafts[user.email].gender}
+                              onChange={(event) =>
+                                setProfileDrafts({
+                                  ...profileDrafts,
+                                  [user.email]: {
+                                    ...profileDrafts[user.email],
+                                    gender: event.target.value
+                                  }
+                                })
+                              }
+                            />
+                            <input
+                              style={inputStyle}
+                              placeholder="Year born"
+                              value={profileDrafts[user.email].yearBorn}
+                              onChange={(event) =>
+                                setProfileDrafts({
+                                  ...profileDrafts,
+                                  [user.email]: {
+                                    ...profileDrafts[user.email],
+                                    yearBorn: event.target.value
+                                  }
+                                })
+                              }
+                            />
+                            <input
+                              style={inputStyle}
+                              placeholder="Best Contact Number"
+                              value={profileDrafts[user.email].contactNumber}
+                              onChange={(event) =>
+                                setProfileDrafts({
+                                  ...profileDrafts,
+                                  [user.email]: {
+                                    ...profileDrafts[user.email],
+                                    contactNumber: event.target.value
+                                  }
+                                })
+                              }
+                            />
+                            <input
+                              style={inputStyle}
+                              placeholder="Best Time(s) Reached"
+                              value={profileDrafts[user.email].bestContactTimes}
+                              onChange={(event) =>
+                                setProfileDrafts({
+                                  ...profileDrafts,
+                                  [user.email]: {
+                                    ...profileDrafts[user.email],
+                                    bestContactTimes: event.target.value
+                                  }
+                                })
+                              }
+                            />
+                            <select
+                              style={inputStyle}
+                              value={profileDrafts[user.email].timeZone}
+                              onChange={(event) =>
+                                setProfileDrafts({
+                                  ...profileDrafts,
+                                  [user.email]: {
+                                    ...profileDrafts[user.email],
+                                    timeZone: event.target.value
+                                  }
+                                })
+                              }
+                            >
+                              {timeZones.map((zone) => (
+                                <option key={zone} value={zone}>
+                                  {zone}
+                                </option>
+                              ))}
+                            </select>
+                            <input
+                              style={inputStyle}
+                              placeholder="Occupation"
+                              value={profileDrafts[user.email].occupation}
+                              onChange={(event) =>
+                                setProfileDrafts({
+                                  ...profileDrafts,
+                                  [user.email]: {
+                                    ...profileDrafts[user.email],
+                                    occupation: event.target.value
+                                  }
+                                })
+                              }
+                            />
+                            <input
+                              style={inputStyle}
+                              placeholder="Annual income goal"
+                              value={profileDrafts[user.email].incomeGoal}
+                              onChange={(event) =>
+                                setProfileDrafts({
+                                  ...profileDrafts,
+                                  [user.email]: {
+                                    ...profileDrafts[user.email],
+                                    incomeGoal: event.target.value
+                                  }
+                                })
+                              }
+                            />
+                            <input
+                              style={inputStyle}
+                              placeholder="Goal year"
+                              value={profileDrafts[user.email].incomeGoalYear}
+                              onChange={(event) =>
+                                setProfileDrafts({
+                                  ...profileDrafts,
+                                  [user.email]: {
+                                    ...profileDrafts[user.email],
+                                    incomeGoalYear: event.target.value
+                                  }
+                                })
+                              }
+                            />
+                            <input
+                              style={inputStyle}
+                              placeholder="Goal vs current income"
+                              value={profileDrafts[user.email].incomeGoalRelation}
+                              onChange={(event) =>
+                                setProfileDrafts({
+                                  ...profileDrafts,
+                                  [user.email]: {
+                                    ...profileDrafts[user.email],
+                                    incomeGoalRelation: event.target.value
+                                  }
+                                })
+                              }
+                            />
+                            <label className="card" style={{ cursor: "pointer" }}>
+                              <input
+                                type="checkbox"
+                                checked={profileDrafts[user.email].isFirstResponder}
+                                onChange={(event) =>
+                                  setProfileDrafts({
+                                    ...profileDrafts,
+                                    [user.email]: {
+                                      ...profileDrafts[user.email],
+                                      isFirstResponder: event.target.checked
+                                    }
+                                  })
+                                }
+                                style={{ marginRight: 8 }}
+                              />
+                              First responder / healthcare
+                            </label>
+                            <label className="card" style={{ cursor: "pointer" }}>
+                              <input
+                                type="checkbox"
+                                checked={profileDrafts[user.email].wantsPracticeGrowth}
+                                onChange={(event) =>
+                                  setProfileDrafts({
+                                    ...profileDrafts,
+                                    [user.email]: {
+                                      ...profileDrafts[user.email],
+                                      wantsPracticeGrowth: event.target.checked
+                                    }
+                                  })
+                                }
+                                style={{ marginRight: 8 }}
+                              />
+                              Build private practice
+                            </label>
+                            <label className="card" style={{ cursor: "pointer" }}>
+                              <input
+                                type="checkbox"
+                                checked={profileDrafts[user.email].adultConsent}
+                                onChange={(event) =>
+                                  setProfileDrafts({
+                                    ...profileDrafts,
+                                    [user.email]: {
+                                      ...profileDrafts[user.email],
+                                      adultConsent: event.target.checked
+                                    }
+                                  })
+                                }
+                                style={{ marginRight: 8 }}
+                              />
+                              Adult content consent
+                            </label>
+                            <label className="card" style={{ cursor: "pointer" }}>
+                              <input
+                                type="checkbox"
+                                checked={profileDrafts[user.email].wantsPolyamory}
+                                onChange={(event) =>
+                                  setProfileDrafts({
+                                    ...profileDrafts,
+                                    [user.email]: {
+                                      ...profileDrafts[user.email],
+                                      wantsPolyamory: event.target.checked
+                                    }
+                                  })
+                                }
+                                style={{ marginRight: 8 }}
+                              />
+                              Interested in polyamory audios
+                            </label>
+                            <label className="card" style={{ cursor: "pointer" }}>
+                              <input
+                                type="checkbox"
+                                checked={profileDrafts[user.email].hadLgdSession}
+                                onChange={(event) =>
+                                  setProfileDrafts({
+                                    ...profileDrafts,
+                                    [user.email]: {
+                                      ...profileDrafts[user.email],
+                                      hadLgdSession: event.target.checked
+                                    }
+                                  })
+                                }
+                                style={{ marginRight: 8 }}
+                              />
+                              Life Guidance Discovery Session
+                            </label>
+                            <input
+                              style={inputStyle}
+                              placeholder="Referral source"
+                              value={profileDrafts[user.email].referralSource}
+                              onChange={(event) =>
+                                setProfileDrafts({
+                                  ...profileDrafts,
+                                  [user.email]: {
+                                    ...profileDrafts[user.email],
+                                    referralSource: event.target.value
+                                  }
+                                })
+                              }
+                            />
+                          </div>
+                          <button
+                            className="button"
+                            type="button"
+                            style={{ marginTop: 12 }}
+                            onClick={() => saveProfile(user.email)}
+                          >
+                            Save Profile
+                          </button>
+                        </div>
+                      )}
+                      <div style={{ marginTop: 12 }}>
+                        <h4 style={{ marginBottom: 8 }}>2. Audio list</h4>
+                        <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
+                          Check which audios this member can access. Managed members are entered only by a facilitator or admin; you choose their recordings and order.
+                        </p>
+                        <div className="goal-list">
+                          {library.map((item) => (
+                            <label
+                              key={item.id}
+                              className="goal-item"
+                              style={{ display: "flex", gap: 8, alignItems: "center" }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={
+                                  audioAssignments[user.email]?.[item.id] ??
+                                  item.allowedUserEmails?.some(
+                                    (allowed) =>
+                                      allowed.toLowerCase() === user.email.toLowerCase()
+                                  ) ??
+                                  false
+                                }
+                                onChange={() => toggleAudioAssignment(user.email, item.id)}
+                              />
+                              <span style={{ flex: 1 }}>
+                                {item.skuCode ? `${item.skuCode} - ` : ""}
+                                {item.title}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                        <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
+                          To remove a track from this member: uncheck it above and click Save Personalized Audios.
+                        </p>
+                        <div style={{ marginTop: 8, display: "flex", gap: 12 }}>
+                          <button
+                            className="button button-secondary"
+                            type="button"
+                            onClick={() => saveAudioAssignments(user.email)}
+                          >
+                            Save Personalized Audios
+                          </button>
+                          {audioSaveStatus[user.email] && (
+                            <span style={{ alignSelf: "center" }}>
+                              {audioSaveStatus[user.email]}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ marginTop: 12 }}>
+                        <h4 style={{ marginBottom: 8 }}>3. Add personalized audio</h4>
+                        <label style={{ fontSize: 12 }}>Personalized audio (CGMR)</label>
                       {goalsSectionOpen[user.email] && (
                         <>
                           <div className="goal-list" style={{ marginTop: 8 }}>
@@ -987,358 +1411,126 @@ export default function AdminUsers() {
                             Add Personalized Audio
                           </button>
                         </div>
-                        <div className="goal-list">
-                          {library.map((item) => (
-                            <label
-                              key={item.id}
-                              className="goal-item"
-                              style={{ display: "flex", gap: 8, alignItems: "center" }}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={
-                                  audioAssignments[user.email]?.[item.id] ??
-                                  item.allowedUserEmails?.some(
-                                    (allowed) =>
-                                      allowed.toLowerCase() === user.email.toLowerCase()
-                                  ) ??
-                                  false
-                                }
-                                onChange={() => toggleAudioAssignment(user.email, item.id)}
-                              />
-                              <span style={{ flex: 1 }}>
-                                {item.skuCode ? `${item.skuCode} - ` : ""}
-                                {item.title}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                        <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
-                          To remove a track from this member: uncheck it above and click Save Personalized Audios.
+                      </div>
+                      <div style={{ marginTop: 12 }}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setGoalsSectionOpen((prev) => ({
+                              ...prev,
+                              [user.email]: !prev[user.email]
+                            }))
+                          }
+                          style={{
+                            background: "none",
+                            border: "1px solid #d1d5db",
+                            borderRadius: 8,
+                            padding: "8px 12px",
+                            cursor: "pointer",
+                            fontSize: 12,
+                            width: "100%",
+                            textAlign: "left",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8
+                          }}
+                        >
+                          {goalsSectionOpen[user.email] ? "▼" : "▶"}
+                          Assigned goals (up to 10)
+                          {user.goalIds?.length ? ` — ${user.goalIds.length} selected` : ""}
+                        </button>
+                        {goalsSectionOpen[user.email] && (
+                          <>
+                            <div className="goal-list" style={{ marginTop: 8 }}>
+                              {sortedInterests.map((interest) => {
+                                const orderValue = getGoalOrder(
+                                  user.email,
+                                  interest.id,
+                                  user.goalIds || []
+                                );
+                                return (
+                                  <label
+                                    key={interest.id}
+                                    className="goal-item"
+                                    style={{ display: "flex", gap: 8, alignItems: "center" }}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={orderValue !== ""}
+                                      onChange={(event) =>
+                                        updateOrderedGoals(
+                                          user.email,
+                                          interest.id,
+                                          event.target.checked ? "1" : ""
+                                        )
+                                      }
+                                    />
+                                    <span style={{ flex: 1 }}>{interest.name}</span>
+                                    <input
+                                      value={orderValue}
+                                      onChange={(event) =>
+                                        updateOrderedGoals(
+                                          user.email,
+                                          interest.id,
+                                          event.target.value
+                                        )
+                                      }
+                                      placeholder="#"
+                                      style={{
+                                        width: 44,
+                                        textAlign: "center",
+                                        borderRadius: 6,
+                                        border: "1px solid #d1d5db",
+                                        padding: "4px 6px",
+                                        background: orderValue ? "#16a34a" : "#ffffff",
+                                        color: orderValue ? "#ffffff" : "#111827",
+                                        fontWeight: 600
+                                      }}
+                                    />
+                                  </label>
+                                );
+                              })}
+                            </div>
+                            <div style={{ marginTop: 12 }}>
+                              <label style={{ fontSize: 12 }}>Audios from goals (read-only)</label>
+                              <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
+                                These are automatically included based on the member&apos;s goal selections.
+                              </p>
+                              <div className="goal-list">
+                                {getDerivedAudios(user.goalIds || []).length === 0 ? (
+                                  <span style={{ color: "#6b7280", fontSize: 12 }}>
+                                    No goal-based audios assigned yet.
+                                  </span>
+                                ) : (
+                                  getDerivedAudios(user.goalIds || []).map((item) => (
+                                    <div
+                                      key={item.id}
+                                      className="goal-item"
+                                      style={{ display: "flex", gap: 8, alignItems: "center" }}
+                                    >
+                                      <span style={{ flex: 1 }}>
+                                        {item.skuCode ? `${item.skuCode} - ` : ""}
+                                        {item.title}
+                                      </span>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <div className="card" style={{ marginTop: 12, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                        <h4 style={{ marginBottom: 6 }}>4. Billing &amp; rate</h4>
+                        <p style={{ fontSize: 12, color: "#475569", marginBottom: 8 }}>
+                          <strong>Gold:</strong> $19.99/mo, $149/yr — Affiliate 25% ($5/mo, $60/yr).<br />
+                          <strong>Gold Managed:</strong> $39.99/mo, $399.99/yr — Facilitator-Affiliate 25% ($10/mo, $120/yr); Facilitator-Managed 50% ($20/mo, $240/yr).
                         </p>
-                        <div style={{ marginTop: 8, display: "flex", gap: 12 }}>
-                          <button
-                            className="button button-secondary"
-                            type="button"
-                            onClick={() => saveAudioAssignments(user.email)}
-                          >
-                            Save Personalized Audios
-                          </button>
-                          {audioSaveStatus[user.email] && (
-                            <span style={{ alignSelf: "center" }}>
-                              {audioSaveStatus[user.email]}
-                            </span>
-                          )}
-                        </div>
+                        <p style={{ fontSize: 12, margin: 0 }}>
+                          Current tier: <strong>{user.subscriptionTier ?? "platinum"}</strong> — use subscription controls above to activate and charge. Managed members at higher rate.
+                        </p>
                       </div>
                     </>
-                  )}
-                  <button
-                    className="button button-secondary"
-                    type="button"
-                    onClick={async () => {
-                      const next = !profileOpen[user.email];
-                      setProfileOpen({ ...profileOpen, [user.email]: next });
-                      if (next && !profileDrafts[user.email]) {
-                        await loadProfile(user.email);
-                      }
-                    }}
-                  >
-                    {profileOpen[user.email] ? "Hide Member Profile" : "View Member Profile"}
-                  </button>
-                  {profileOpen[user.email] && profileDrafts[user.email] && (
-                    <div className="card" style={{ marginTop: 12 }}>
-                      <h4>Member Profile</h4>
-                      <label style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
-                        Admin notes
-                      </label>
-                      <textarea
-                        style={{
-                          ...inputStyle,
-                          minHeight: 80,
-                          resize: "vertical"
-                        }}
-                        placeholder="Internal notes about this member (admin only)"
-                        value={profileDrafts[user.email].notes}
-                        onChange={(event) =>
-                          setProfileDrafts({
-                            ...profileDrafts,
-                            [user.email]: {
-                              ...profileDrafts[user.email],
-                              notes: event.target.value
-                            }
-                          })
-                        }
-                      />
-                      <div className="grid grid-2" style={{ marginTop: 12 }}>
-                        <input
-                          style={inputStyle}
-                          placeholder="First Name"
-                          value={profileDrafts[user.email].firstName}
-                          onChange={(event) =>
-                            setProfileDrafts({
-                              ...profileDrafts,
-                              [user.email]: {
-                                ...profileDrafts[user.email],
-                                firstName: event.target.value
-                              }
-                            })
-                          }
-                        />
-                        <input
-                          style={inputStyle}
-                          placeholder="Last Name"
-                          value={profileDrafts[user.email].lastName}
-                          onChange={(event) =>
-                            setProfileDrafts({
-                              ...profileDrafts,
-                              [user.email]: {
-                                ...profileDrafts[user.email],
-                                lastName: event.target.value
-                              }
-                            })
-                          }
-                        />
-                        <input
-                          style={inputStyle}
-                          placeholder="Gender"
-                          value={profileDrafts[user.email].gender}
-                          onChange={(event) =>
-                            setProfileDrafts({
-                              ...profileDrafts,
-                              [user.email]: {
-                                ...profileDrafts[user.email],
-                                gender: event.target.value
-                              }
-                            })
-                          }
-                        />
-                        <input
-                          style={inputStyle}
-                          placeholder="Year born"
-                          value={profileDrafts[user.email].yearBorn}
-                          onChange={(event) =>
-                            setProfileDrafts({
-                              ...profileDrafts,
-                              [user.email]: {
-                                ...profileDrafts[user.email],
-                                yearBorn: event.target.value
-                              }
-                            })
-                          }
-                        />
-                        <input
-                          style={inputStyle}
-                          placeholder="Best Contact Number"
-                          value={profileDrafts[user.email].contactNumber}
-                          onChange={(event) =>
-                            setProfileDrafts({
-                              ...profileDrafts,
-                              [user.email]: {
-                                ...profileDrafts[user.email],
-                                contactNumber: event.target.value
-                              }
-                            })
-                          }
-                        />
-                        <input
-                          style={inputStyle}
-                          placeholder="Best Time(s) Reached"
-                          value={profileDrafts[user.email].bestContactTimes}
-                          onChange={(event) =>
-                            setProfileDrafts({
-                              ...profileDrafts,
-                              [user.email]: {
-                                ...profileDrafts[user.email],
-                                bestContactTimes: event.target.value
-                              }
-                            })
-                          }
-                        />
-                        <select
-                          style={inputStyle}
-                          value={profileDrafts[user.email].timeZone}
-                          onChange={(event) =>
-                            setProfileDrafts({
-                              ...profileDrafts,
-                              [user.email]: {
-                                ...profileDrafts[user.email],
-                                timeZone: event.target.value
-                              }
-                            })
-                          }
-                        >
-                          {timeZones.map((zone) => (
-                            <option key={zone} value={zone}>
-                              {zone}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          style={inputStyle}
-                          placeholder="Occupation"
-                          value={profileDrafts[user.email].occupation}
-                          onChange={(event) =>
-                            setProfileDrafts({
-                              ...profileDrafts,
-                              [user.email]: {
-                                ...profileDrafts[user.email],
-                                occupation: event.target.value
-                              }
-                            })
-                          }
-                        />
-                        <input
-                          style={inputStyle}
-                          placeholder="Annual income goal"
-                          value={profileDrafts[user.email].incomeGoal}
-                          onChange={(event) =>
-                            setProfileDrafts({
-                              ...profileDrafts,
-                              [user.email]: {
-                                ...profileDrafts[user.email],
-                                incomeGoal: event.target.value
-                              }
-                            })
-                          }
-                        />
-                        <input
-                          style={inputStyle}
-                          placeholder="Goal year"
-                          value={profileDrafts[user.email].incomeGoalYear}
-                          onChange={(event) =>
-                            setProfileDrafts({
-                              ...profileDrafts,
-                              [user.email]: {
-                                ...profileDrafts[user.email],
-                                incomeGoalYear: event.target.value
-                              }
-                            })
-                          }
-                        />
-                        <input
-                          style={inputStyle}
-                          placeholder="Goal vs current income"
-                          value={profileDrafts[user.email].incomeGoalRelation}
-                          onChange={(event) =>
-                            setProfileDrafts({
-                              ...profileDrafts,
-                              [user.email]: {
-                                ...profileDrafts[user.email],
-                                incomeGoalRelation: event.target.value
-                              }
-                            })
-                          }
-                        />
-                        <label className="card" style={{ cursor: "pointer" }}>
-                          <input
-                            type="checkbox"
-                            checked={profileDrafts[user.email].isFirstResponder}
-                            onChange={(event) =>
-                              setProfileDrafts({
-                                ...profileDrafts,
-                                [user.email]: {
-                                  ...profileDrafts[user.email],
-                                  isFirstResponder: event.target.checked
-                                }
-                              })
-                            }
-                            style={{ marginRight: 8 }}
-                          />
-                          First responder / healthcare
-                        </label>
-                        <label className="card" style={{ cursor: "pointer" }}>
-                          <input
-                            type="checkbox"
-                            checked={profileDrafts[user.email].wantsPracticeGrowth}
-                            onChange={(event) =>
-                              setProfileDrafts({
-                                ...profileDrafts,
-                                [user.email]: {
-                                  ...profileDrafts[user.email],
-                                  wantsPracticeGrowth: event.target.checked
-                                }
-                              })
-                            }
-                            style={{ marginRight: 8 }}
-                          />
-                          Build private practice
-                        </label>
-                        <label className="card" style={{ cursor: "pointer" }}>
-                          <input
-                            type="checkbox"
-                            checked={profileDrafts[user.email].adultConsent}
-                            onChange={(event) =>
-                              setProfileDrafts({
-                                ...profileDrafts,
-                                [user.email]: {
-                                  ...profileDrafts[user.email],
-                                  adultConsent: event.target.checked
-                                }
-                              })
-                            }
-                            style={{ marginRight: 8 }}
-                          />
-                          Adult content consent
-                        </label>
-                        <label className="card" style={{ cursor: "pointer" }}>
-                          <input
-                            type="checkbox"
-                            checked={profileDrafts[user.email].wantsPolyamory}
-                            onChange={(event) =>
-                              setProfileDrafts({
-                                ...profileDrafts,
-                                [user.email]: {
-                                  ...profileDrafts[user.email],
-                                  wantsPolyamory: event.target.checked
-                                }
-                              })
-                            }
-                            style={{ marginRight: 8 }}
-                          />
-                          Interested in polyamory audios
-                        </label>
-                        <label className="card" style={{ cursor: "pointer" }}>
-                          <input
-                            type="checkbox"
-                            checked={profileDrafts[user.email].hadLgdSession}
-                            onChange={(event) =>
-                              setProfileDrafts({
-                                ...profileDrafts,
-                                [user.email]: {
-                                  ...profileDrafts[user.email],
-                                  hadLgdSession: event.target.checked
-                                }
-                              })
-                            }
-                            style={{ marginRight: 8 }}
-                          />
-                          Life Guidance Discovery Session
-                        </label>
-                        <input
-                          style={inputStyle}
-                          placeholder="Referral source"
-                          value={profileDrafts[user.email].referralSource}
-                          onChange={(event) =>
-                            setProfileDrafts({
-                              ...profileDrafts,
-                              [user.email]: {
-                                ...profileDrafts[user.email],
-                                referralSource: event.target.value
-                              }
-                            })
-                          }
-                        />
-                      </div>
-                      <button
-                        className="button"
-                        type="button"
-                        style={{ marginTop: 12 }}
-                        onClick={() => saveProfile(user.email)}
-                      >
-                        Save Profile
-                      </button>
-                    </div>
                   )}
                   <button className="button" onClick={() => updateUser(user.email)}>
                     Save
