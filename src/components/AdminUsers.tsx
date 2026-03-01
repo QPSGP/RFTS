@@ -4,6 +4,7 @@ import { put } from "@vercel/blob/client";
 import React, { useEffect, useMemo, useState } from "react";
 import type { LibraryItem } from "@/lib/types";
 
+
 function sanitizePathSegment(name: string): string {
   return name
     .replace(/\s+/g, "-")
@@ -585,8 +586,10 @@ export default function AdminUsers() {
     const index = list.indexOf(goalId);
     return index === -1 ? "" : String(index + 1);
   };
-  return (
-    <div className="card">
+  return React.createElement(
+    "div",
+    { className: "card" },
+    <>
       <h2>Member Accounts</h2>
       <p style={{ color: "#4b5563" }}>
         Create member accounts, assign tiers, and activate subscriptions.
@@ -1516,6 +1519,6 @@ export default function AdminUsers() {
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }
