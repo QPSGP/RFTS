@@ -695,109 +695,114 @@ export default function AdminUsers() {
                       {profileDrafts[user.email] && (
                         <div className="card" style={{ marginTop: 12 }}>
                           <h4>1. Member Profile</h4>
-                          <label style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
-                            Admin notes
+                          <p style={{ color: "#4b5563", marginTop: 4 }}>
+                            Same fields and order as new member signup (Personal Details step).
+                          </p>
+                          <label style={{ fontSize: 12, display: "block", marginBottom: 4, marginTop: 12 }}>
+                            Admin notes (internal only)
                           </label>
                           <textarea
-                            style={{
-                              ...inputStyle,
-                              minHeight: 80,
-                              resize: "vertical"
-                            }}
+                            style={{ ...inputStyle, minHeight: 60, resize: "vertical" }}
                             placeholder="Internal notes about this member (admin only)"
                             value={profileDrafts[user.email].notes}
                             onChange={(event) =>
                               setProfileDrafts({
                                 ...profileDrafts,
-                                [user.email]: {
-                                  ...profileDrafts[user.email],
-                                  notes: event.target.value
-                                }
+                                [user.email]: { ...profileDrafts[user.email], notes: event.target.value }
                               })
                             }
                           />
-                          <div className="grid grid-2" style={{ marginTop: 12 }}>
+                          <div className="section-heading" style={{ marginTop: 16, marginBottom: 4 }}>
+                            Personal Details
+                          </div>
+                          <p style={{ color: "#4b5563", fontSize: 14, marginBottom: 12 }}>
+                            Before selecting your goals we need some basic information to start your customization and better service you.
+                          </p>
+                          <div className="grid grid-2">
                             <input
                               style={inputStyle}
-                              placeholder="First Name"
+                              placeholder="First Name *"
                               value={profileDrafts[user.email].firstName}
                               onChange={(event) =>
                                 setProfileDrafts({
                                   ...profileDrafts,
-                                  [user.email]: {
-                                    ...profileDrafts[user.email],
-                                    firstName: event.target.value
-                                  }
+                                  [user.email]: { ...profileDrafts[user.email], firstName: event.target.value }
                                 })
                               }
                             />
                             <input
                               style={inputStyle}
-                              placeholder="Last Name"
+                              placeholder="Last Name *"
                               value={profileDrafts[user.email].lastName}
                               onChange={(event) =>
                                 setProfileDrafts({
                                   ...profileDrafts,
-                                  [user.email]: {
-                                    ...profileDrafts[user.email],
-                                    lastName: event.target.value
-                                  }
+                                  [user.email]: { ...profileDrafts[user.email], lastName: event.target.value }
                                 })
                               }
                             />
+                            <div style={{ minWidth: 0 }}>
+                              <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, marginBottom: 4 }}>
+                                Birthdate (optional). Required for mature content access 18+.
+                              </p>
+                              <input
+                                style={inputStyle}
+                                placeholder="Year e.g. 1990"
+                                value={profileDrafts[user.email].yearBorn}
+                                onChange={(event) =>
+                                  setProfileDrafts({
+                                    ...profileDrafts,
+                                    [user.email]: { ...profileDrafts[user.email], yearBorn: event.target.value }
+                                  })
+                                }
+                              />
+                            </div>
+                            <div>
+                              <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, marginBottom: 4 }}>
+                                Helps with customization.
+                              </p>
+                              <input
+                                style={inputStyle}
+                                placeholder="Gender (optional)"
+                                value={profileDrafts[user.email].gender}
+                                onChange={(event) =>
+                                  setProfileDrafts({
+                                    ...profileDrafts,
+                                    [user.email]: { ...profileDrafts[user.email], gender: event.target.value }
+                                  })
+                                }
+                              />
+                            </div>
                             <input
                               style={inputStyle}
-                              placeholder="Gender"
-                              value={profileDrafts[user.email].gender}
+                              placeholder="Occupation (optional)"
+                              value={profileDrafts[user.email].occupation}
                               onChange={(event) =>
                                 setProfileDrafts({
                                   ...profileDrafts,
-                                  [user.email]: {
-                                    ...profileDrafts[user.email],
-                                    gender: event.target.value
-                                  }
+                                  [user.email]: { ...profileDrafts[user.email], occupation: event.target.value }
                                 })
                               }
                             />
                             <input
                               style={inputStyle}
-                              placeholder="Year born"
-                              value={profileDrafts[user.email].yearBorn}
-                              onChange={(event) =>
-                                setProfileDrafts({
-                                  ...profileDrafts,
-                                  [user.email]: {
-                                    ...profileDrafts[user.email],
-                                    yearBorn: event.target.value
-                                  }
-                                })
-                              }
-                            />
-                            <input
-                              style={inputStyle}
-                              placeholder="Best Contact Number"
+                              placeholder="Best Contact Number (optional)"
                               value={profileDrafts[user.email].contactNumber}
                               onChange={(event) =>
                                 setProfileDrafts({
                                   ...profileDrafts,
-                                  [user.email]: {
-                                    ...profileDrafts[user.email],
-                                    contactNumber: event.target.value
-                                  }
+                                  [user.email]: { ...profileDrafts[user.email], contactNumber: event.target.value }
                                 })
                               }
                             />
                             <input
                               style={inputStyle}
-                              placeholder="Best Time(s) Reached"
+                              placeholder="Best Time(s) Reached (optional)"
                               value={profileDrafts[user.email].bestContactTimes}
                               onChange={(event) =>
                                 setProfileDrafts({
                                   ...profileDrafts,
-                                  [user.email]: {
-                                    ...profileDrafts[user.email],
-                                    bestContactTimes: event.target.value
-                                  }
+                                  [user.email]: { ...profileDrafts[user.email], bestContactTimes: event.target.value }
                                 })
                               }
                             />
@@ -807,174 +812,149 @@ export default function AdminUsers() {
                               onChange={(event) =>
                                 setProfileDrafts({
                                   ...profileDrafts,
-                                  [user.email]: {
-                                    ...profileDrafts[user.email],
-                                    timeZone: event.target.value
-                                  }
+                                  [user.email]: { ...profileDrafts[user.email], timeZone: event.target.value }
                                 })
                               }
                             >
                               {timeZones.map((zone) => (
-                                <option key={zone} value={zone}>
-                                  {zone}
-                                </option>
+                                <option key={zone} value={zone}>{zone}</option>
                               ))}
                             </select>
-                            <input
-                              style={inputStyle}
-                              placeholder="Occupation"
-                              value={profileDrafts[user.email].occupation}
-                              onChange={(event) =>
-                                setProfileDrafts({
-                                  ...profileDrafts,
-                                  [user.email]: {
-                                    ...profileDrafts[user.email],
-                                    occupation: event.target.value
-                                  }
-                                })
-                              }
-                            />
-                            <input
-                              style={inputStyle}
-                              placeholder="Annual income goal"
-                              value={profileDrafts[user.email].incomeGoal}
-                              onChange={(event) =>
-                                setProfileDrafts({
-                                  ...profileDrafts,
-                                  [user.email]: {
-                                    ...profileDrafts[user.email],
-                                    incomeGoal: event.target.value
-                                  }
-                                })
-                              }
-                            />
-                            <input
-                              style={inputStyle}
-                              placeholder="Goal year"
-                              value={profileDrafts[user.email].incomeGoalYear}
-                              onChange={(event) =>
-                                setProfileDrafts({
-                                  ...profileDrafts,
-                                  [user.email]: {
-                                    ...profileDrafts[user.email],
-                                    incomeGoalYear: event.target.value
-                                  }
-                                })
-                              }
-                            />
-                            <input
-                              style={inputStyle}
-                              placeholder="Goal vs current income"
-                              value={profileDrafts[user.email].incomeGoalRelation}
-                              onChange={(event) =>
-                                setProfileDrafts({
-                                  ...profileDrafts,
-                                  [user.email]: {
-                                    ...profileDrafts[user.email],
-                                    incomeGoalRelation: event.target.value
-                                  }
-                                })
-                              }
-                            />
-                            <label className="card" style={{ cursor: "pointer" }}>
-                              <input
-                                type="checkbox"
-                                checked={profileDrafts[user.email].isFirstResponder}
-                                onChange={(event) =>
-                                  setProfileDrafts({
-                                    ...profileDrafts,
-                                    [user.email]: {
-                                      ...profileDrafts[user.email],
-                                      isFirstResponder: event.target.checked
-                                    }
-                                  })
-                                }
-                                style={{ marginRight: 8 }}
-                              />
-                              First responder / healthcare
-                            </label>
-                            <label className="card" style={{ cursor: "pointer" }}>
-                              <input
-                                type="checkbox"
-                                checked={profileDrafts[user.email].wantsPracticeGrowth}
-                                onChange={(event) =>
-                                  setProfileDrafts({
-                                    ...profileDrafts,
-                                    [user.email]: {
-                                      ...profileDrafts[user.email],
-                                      wantsPracticeGrowth: event.target.checked
-                                    }
-                                  })
-                                }
-                                style={{ marginRight: 8 }}
-                              />
-                              Build private practice
-                            </label>
-                            <label className="card" style={{ cursor: "pointer" }}>
-                              <input
-                                type="checkbox"
-                                checked={profileDrafts[user.email].adultConsent}
-                                onChange={(event) =>
-                                  setProfileDrafts({
-                                    ...profileDrafts,
-                                    [user.email]: {
-                                      ...profileDrafts[user.email],
-                                      adultConsent: event.target.checked
-                                    }
-                                  })
-                                }
-                                style={{ marginRight: 8 }}
-                              />
-                              Adult content consent
-                            </label>
-                            <label className="card" style={{ cursor: "pointer" }}>
-                              <input
-                                type="checkbox"
-                                checked={profileDrafts[user.email].wantsPolyamory}
-                                onChange={(event) =>
-                                  setProfileDrafts({
-                                    ...profileDrafts,
-                                    [user.email]: {
-                                      ...profileDrafts[user.email],
-                                      wantsPolyamory: event.target.checked
-                                    }
-                                  })
-                                }
-                                style={{ marginRight: 8 }}
-                              />
-                              Interested in polyamory audios
-                            </label>
-                            <label className="card" style={{ cursor: "pointer" }}>
+                          </div>
+                          <div className="grid" style={{ marginTop: 16 }}>
+                            <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
                               <input
                                 type="checkbox"
                                 checked={profileDrafts[user.email].hadLgdSession}
                                 onChange={(event) =>
                                   setProfileDrafts({
                                     ...profileDrafts,
-                                    [user.email]: {
-                                      ...profileDrafts[user.email],
-                                      hadLgdSession: event.target.checked
-                                    }
+                                    [user.email]: { ...profileDrafts[user.email], hadLgdSession: event.target.checked }
                                   })
                                 }
-                                style={{ marginRight: 8 }}
+                                style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
                               />
-                              Life Guidance Discovery Session
+                              <span>I am interested in a Life Guidance Discovery Session?</span>
+                            </label>
+                            {(() => {
+                              const y = profileDrafts[user.email].yearBorn;
+                              const yearNum = typeof y === "string" ? parseInt(String(y).trim(), 10) : y;
+                              const showAdult = Number.isInteger(yearNum) && yearNum >= 1900 && yearNum <= 2100 && new Date().getFullYear() - yearNum >= 18;
+                              return showAdult ? (
+                                <div className="card">
+                                  <p style={{ marginTop: 0, marginBottom: 12, fontWeight: 600 }}>Adult content</p>
+                                  <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
+                                    You are 18 or older. You may opt in to audios with mature content below.
+                                  </p>
+                                  <label style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 12 }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={profileDrafts[user.email].adultConsent}
+                                      onChange={(event) =>
+                                        setProfileDrafts({
+                                          ...profileDrafts,
+                                          [user.email]: { ...profileDrafts[user.email], adultConsent: event.target.checked }
+                                        })
+                                      }
+                                      style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
+                                    />
+                                    <span>I consent to hear audios with mature content.</span>
+                                  </label>
+                                  <div style={{ marginLeft: 28, paddingLeft: 12, borderLeft: "2px solid #e5e7eb" }}>
+                                    <label style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                                      <input
+                                        type="checkbox"
+                                        checked={profileDrafts[user.email].wantsPolyamory}
+                                        onChange={(event) =>
+                                          setProfileDrafts({
+                                            ...profileDrafts,
+                                            [user.email]: { ...profileDrafts[user.email], wantsPolyamory: event.target.checked }
+                                          })
+                                        }
+                                        style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
+                                      />
+                                      <span>I would like to hear audios related to polyamory.</span>
+                                    </label>
+                                  </div>
+                                </div>
+                              ) : null;
+                            })()}
+                            <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                              <input
+                                type="checkbox"
+                                checked={profileDrafts[user.email].wantsPracticeGrowth}
+                                onChange={(event) =>
+                                  setProfileDrafts({
+                                    ...profileDrafts,
+                                    [user.email]: { ...profileDrafts[user.email], wantsPracticeGrowth: event.target.checked }
+                                  })
+                                }
+                                style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
+                              />
+                              <span>I am or would like to be a therapist, healer, or coach.</span>
                             </label>
                             <input
                               style={inputStyle}
-                              placeholder="Referral source"
+                              placeholder="How did you find us? If someone referred you, who? (optional)"
                               value={profileDrafts[user.email].referralSource}
                               onChange={(event) =>
                                 setProfileDrafts({
                                   ...profileDrafts,
-                                  [user.email]: {
-                                    ...profileDrafts[user.email],
-                                    referralSource: event.target.value
-                                  }
+                                  [user.email]: { ...profileDrafts[user.email], referralSource: event.target.value }
                                 })
                               }
                             />
+                          </div>
+                          <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid #e5e7eb" }}>
+                            <p style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Additional (admin)</p>
+                            <div className="grid grid-2" style={{ gap: 8 }}>
+                              <input
+                                style={inputStyle}
+                                placeholder="Annual income goal"
+                                value={profileDrafts[user.email].incomeGoal}
+                                onChange={(event) =>
+                                  setProfileDrafts({
+                                    ...profileDrafts,
+                                    [user.email]: { ...profileDrafts[user.email], incomeGoal: event.target.value }
+                                  })
+                                }
+                              />
+                              <input
+                                style={inputStyle}
+                                placeholder="Goal year"
+                                value={profileDrafts[user.email].incomeGoalYear}
+                                onChange={(event) =>
+                                  setProfileDrafts({
+                                    ...profileDrafts,
+                                    [user.email]: { ...profileDrafts[user.email], incomeGoalYear: event.target.value }
+                                  })
+                                }
+                              />
+                              <input
+                                style={inputStyle}
+                                placeholder="Goal vs current income"
+                                value={profileDrafts[user.email].incomeGoalRelation}
+                                onChange={(event) =>
+                                  setProfileDrafts({
+                                    ...profileDrafts,
+                                    [user.email]: { ...profileDrafts[user.email], incomeGoalRelation: event.target.value }
+                                  })
+                                }
+                              />
+                              <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={profileDrafts[user.email].isFirstResponder}
+                                  onChange={(event) =>
+                                    setProfileDrafts({
+                                      ...profileDrafts,
+                                      [user.email]: { ...profileDrafts[user.email], isFirstResponder: event.target.checked }
+                                    })
+                                  }
+                                />
+                                First responder / healthcare
+                              </label>
+                            </div>
                           </div>
                           <button
                             className="button"
