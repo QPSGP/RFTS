@@ -21,17 +21,28 @@ export type SessionPlayerHandle = {
   startSession: () => void;
 };
 
+type Phase = "idle" | "first" | "waiting" | "second";
+
 const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(function SessionPlayer(
   { prepAudio, firstTrack, secondTrack, gapHours, autoStart = false, onSessionStart },
   ref
 ) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const secondTrackRef = useRef<SessionTrack | null>(null);
+  const waitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const secondStartAtRef = useRef<number>(0);
+
   const [queue, setQueue] = useState<SessionTrack[]>([]);
   const [current, setCurrent] = useState<SessionTrack | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [needsUserPlay, setNeedsUserPlay] = useState(false);
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [remainingSeconds, setRemainingSeconds] = useState<number>(0);
+
+  secondTrackRef.current = secondTrack ?? null;
 
   const attemptPlay = (track?: SessionTrack | null) => {
     const audio = audioRef.current;
@@ -59,6 +70,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       window.dispatchEvent(new Event("rfts-session-start"));
     }
     onSessionStart?.();
+    setPhase("first");
     const nextQueue = [prepAudio, firstTrack].filter(
       (track): track is SessionTrack => !!track
     );
@@ -74,6 +86,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       setMessage("No second recording scheduled tonight.");
       return;
     }
+    setPhase("second");
     setQueue([secondTrack]);
     setCurrent(secondTrack);
     setMessage(null);
@@ -107,6 +120,12 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   }, [autoStart, firstTrack?.url]);
 
   useEffect(() => {
+    return () => {
+      clearWaitTimers();
+    };
+  }, [clearWaitTimers]);
+
+  useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
@@ -121,14 +140,62 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     return () => media.removeListener(handleChange);
   }, []);
 
-  const handleEnded = () => {
-    if (queue.length <= 1) {
+  const clearWaitTimers = useCallback(() => {
+    if (waitTimeoutRef.current) {
+      clearTimeout(waitTimeoutRef.current);
+      waitTimeoutRef.current = null;
+    }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+  }, []);
+
+  const handleEnded = useCallback(() => {
+    if (queue.length > 1) {
+      const [, ...rest] = queue;
+      setQueue(rest);
+      setCurrent(rest[0] || null);
       return;
     }
-    const [, ...rest] = queue;
-    setQueue(rest);
-    setCurrent(rest[0] || null);
-  };
+    // Last track in queue just ended — close and optionally queue second
+    const hasSecond = !!secondTrackRef.current;
+    if (phase === "first" && hasSecond) {
+      clearWaitTimers();
+      setQueue([]);
+      setCurrent(null);
+      setPhase("waiting");
+      const gapMs = gapHours * 60 * 60 * 1000;
+      secondStartAtRef.current = Date.now() + gapMs;
+      setRemainingSeconds(Math.round(gapMs / 1000));
+      countdownIntervalRef.current = setInterval(() => {
+        const left = Math.max(0, Math.round((secondStartAtRef.current - Date.now()) / 1000));
+        setRemainingSeconds(left);
+      }, 1000);
+      waitTimeoutRef.current = setTimeout(() => {
+        clearWaitTimers();
+        const tr = secondTrackRef.current;
+        if (tr) {
+          setPhase("second");
+          setQueue([tr]);
+          setCurrent(tr);
+          setMessage(null);
+          setNeedsUserPlay(false);
+          const audio = audioRef.current;
+          if (audio) {
+            audio.src = tr.url;
+            audio.play().catch(() => setNeedsUserPlay(true));
+          }
+        } else {
+          setPhase("idle");
+        }
+      }, gapMs);
+    } else {
+      setPhase("idle");
+      setQueue([]);
+      setCurrent(null);
+    }
+  }, [phase, gapHours, queue, clearWaitTimers]);
 
   const handlePause = () => {
     audioRef.current?.pause();
@@ -168,6 +235,20 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         )}
       </div>
       {message && <p style={{ marginTop: 12 }}>{message}</p>}
+      {phase === "waiting" && (
+        <div className="card" style={{ marginTop: 16, background: "#f0fdf4", borderColor: "#22c55e" }}>
+          <p style={{ margin: 0, fontWeight: 600, color: "#166534" }}>First session complete.</p>
+          <p style={{ margin: "8px 0 0", color: "#15803d" }}>
+            Second recording will start in{" "}
+            {remainingSeconds >= 3600
+              ? `${Math.floor(remainingSeconds / 3600)}h ${Math.floor((remainingSeconds % 3600) / 60)}m`
+              : remainingSeconds >= 60
+                ? `${Math.floor(remainingSeconds / 60)}m ${remainingSeconds % 60}s`
+                : `${remainingSeconds}s`}
+            . It will begin and close automatically.
+          </p>
+        </div>
+      )}
       {current && (
         <div style={{ marginTop: 16 }}>
           <strong>Now Playing: {current.title}</strong>
