@@ -124,6 +124,9 @@ export default function PlayOptionsPage() {
             <a className="button" href="/signup/step-1-subscription-selection">
               Choose Subscription
             </a>
+            <a className="button button-secondary" href="/member/profile">
+              My Profile
+            </a>
             <a className="button button-secondary" href="/member/login">
               Switch Account
             </a>
@@ -163,21 +166,24 @@ export default function PlayOptionsPage() {
         <p>
           Tap to start your session and keep exploring your personalized tools below.
         </p>
-        <div className="cta-row" style={{ marginTop: 16 }}>
-          <button
-            className="button"
-            type="button"
-            style={{ padding: "14px 22px", fontSize: 16 }}
-            onClick={() => {
-              sessionRef.current?.startSession();
-              const sessionEl = document.getElementById("meditation-session");
-              sessionEl?.scrollIntoView({ behavior: "smooth" });
-            }}
-          >
-            Start Session
+          <div className="cta-row" style={{ marginTop: 16 }}>
+            <button
+              className="button"
+              type="button"
+              style={{ padding: "14px 22px", fontSize: 16 }}
+              onClick={() => {
+                sessionRef.current?.startSession();
+                const sessionEl = document.getElementById("meditation-session");
+                sessionEl?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              Start Session
           </button>
           <a className="button button-secondary" href="/library">
             Open Library
+          </a>
+          <a className="button button-secondary" href="/member/profile">
+            My Profile
           </a>
           <button className="button button-secondary" type="button" onClick={logout}>
             Log Out
@@ -197,6 +203,13 @@ export default function PlayOptionsPage() {
       )}
       <ScreenWakeToggle />
       <section className="grid">
+        <div className="card">
+          <h3>My Profile</h3>
+          <p>View and update your personal details (name, contact, preferences).</p>
+          <a className="button button-secondary" href="/member/profile">
+            View Profile
+          </a>
+        </div>
         <div className="card">
           <h3>Your Goals</h3>
           <p>Manage the goals that drive your session lineup.</p>
