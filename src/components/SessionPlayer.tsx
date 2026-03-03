@@ -120,12 +120,6 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   }, [autoStart, firstTrack?.url]);
 
   useEffect(() => {
-    return () => {
-      clearWaitTimers();
-    };
-  }, [clearWaitTimers]);
-
-  useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
@@ -150,6 +144,10 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       countdownIntervalRef.current = null;
     }
   }, []);
+
+  useEffect(() => {
+    return () => clearWaitTimers();
+  }, [clearWaitTimers]);
 
   const handleEnded = useCallback(() => {
     if (queue.length > 1) {
