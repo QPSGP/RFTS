@@ -6,6 +6,10 @@ export type ScheduleNight = {
   note?: string;
 };
 
+/**
+ * Session definition: one full session = two audio plays (e.g. first recording + second after gap).
+ * So playsPerNight 2 = one full session per night; playsPerNight 1 = half a session (one play) per night.
+ */
 type ScheduleInput = {
   interests: string[];
   library: LibraryItem[];
@@ -13,6 +17,7 @@ type ScheduleInput = {
   settings: PlaybackSettings;
   tier: "platinum";
   nights: number;
+  /** 2 = one full session (two plays) per night; 1 = half a session (one play) per night. */
   playsPerNight?: 1 | 2;
   /** When set, used as the special/CGMR track (e.g. every 4th night) instead of global cgmr/fallback. */
   userAssignedTrack?: LibraryItem | null;
