@@ -303,6 +303,7 @@ export default function PlayOptionsPage() {
                 : null
             }
             gapHours={gapHours}
+            playsPerNight={(profile?.playsPerNight ?? 2) === 1 ? 1 : 2}
             autoStart={autoStart}
             onSessionStart={() => {
               fetch("/api/user/session-used", { method: "POST", credentials: "include" }).catch(() => {});

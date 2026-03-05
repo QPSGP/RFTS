@@ -12,6 +12,8 @@ type SessionPlayerProps = {
   firstTrack?: SessionTrack | null;
   secondTrack?: SessionTrack | null;
   gapHours: number;
+  /** 2 = full session (first + second after gap); 1 = half session — after first ends, close only; no auto second. */
+  playsPerNight?: 1 | 2;
   autoStart?: boolean;
   /** Called when the member starts a session (for usage analytics). */
   onSessionStart?: () => void;
@@ -24,7 +26,7 @@ export type SessionPlayerHandle = {
 type Phase = "idle" | "first" | "waiting" | "second";
 
 const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(function SessionPlayer(
-  { prepAudio, firstTrack, secondTrack, gapHours, autoStart = false, onSessionStart },
+  { prepAudio, firstTrack, secondTrack, gapHours, playsPerNight = 2, autoStart = false, onSessionStart },
   ref
 ) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -156,9 +158,10 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       setCurrent(rest[0] || null);
       return;
     }
-    // Last track in queue just ended — close and optionally queue second
+    // Last track in queue just ended — close and optionally queue second (only when 2 per night)
     const hasSecond = !!secondTrackRef.current;
-    if (phase === "first" && hasSecond) {
+    const doSecondAfterGap = playsPerNight === 2 && phase === "first" && hasSecond;
+    if (doSecondAfterGap) {
       clearWaitTimers();
       setQueue([]);
       setCurrent(null);
@@ -193,7 +196,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       setQueue([]);
       setCurrent(null);
     }
-  }, [phase, gapHours, queue, clearWaitTimers]);
+  }, [phase, gapHours, playsPerNight, queue, clearWaitTimers]);
 
   const handlePause = () => {
     audioRef.current?.pause();
