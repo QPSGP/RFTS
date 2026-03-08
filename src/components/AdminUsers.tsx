@@ -96,6 +96,7 @@ export default function AdminUsers() {
   const [goalsSectionOpen, setGoalsSectionOpen] = useState<Record<string, boolean>>({});
   const [profileDrafts, setProfileDrafts] = useState<Record<string, ProfileDraft>>({});
   const [audioAssignments, setAudioAssignments] = useState<Record<string, Record<string, boolean>>>({});
+  const [audioOrder, setAudioOrder] = useState<Record<string, string[]>>({});
   const [audioSaveStatus, setAudioSaveStatus] = useState<Record<string, string>>({});
   const [uploadStatus, setUploadStatus] = useState<Record<string, string>>({});
   const [personalizedAudioUploading, setPersonalizedAudioUploading] = useState<Record<string, boolean>>({});
@@ -279,14 +280,85 @@ export default function AdminUsers() {
     }, {});
   };
 
+  const buildAudioOrder = async (email: string) => {
+    const response = await fetch(`/api/admin/member-audio-order?email=${encodeURIComponent(email)}`);
+    if (response.ok) {
+      const data = await response.json();
+      return data.order || [];
+    }
+    // Fallback: build order from current assignments
+    const emailLower = email.toLowerCase();
+    const assigned = library
+      .filter((item) =>
+        item.allowedUserEmails?.some((allowed) => allowed.toLowerCase() === emailLower)
+      )
+      .map((item) => item.id);
+    return assigned;
+  };
+
   const toggleAudioAssignment = (email: string, itemId: string) => {
+    const current = audioAssignments[email]?.[itemId] ?? false;
+    const newValue = !current;
+    
     setAudioAssignments((prev) => ({
       ...prev,
       [email]: {
         ...(prev[email] || {}),
-        [itemId]: !(prev[email]?.[itemId] ?? false)
+        [itemId]: newValue
       }
     }));
+
+    // Update order: if checking, add to end; if unchecking, remove
+    setAudioOrder((prev) => {
+      const currentOrder = prev[email] || [];
+      if (newValue) {
+        // Add to end if not already present
+        if (!currentOrder.includes(itemId)) {
+          return {
+            ...prev,
+            [email]: [...currentOrder, itemId]
+          };
+        }
+      } else {
+        // Remove from order
+        return {
+          ...prev,
+          [email]: currentOrder.filter((id) => id !== itemId)
+        };
+      }
+      return prev;
+    });
+  };
+
+  const updateAudioOrder = (email: string, itemId: string, orderValue: string) => {
+    const parsed = Number(orderValue);
+    if (!orderValue || Number.isNaN(parsed) || parsed <= 0) {
+      // Remove from order but keep assignment
+      setAudioOrder((prev) => {
+        const currentOrder = prev[email] || [];
+        return {
+          ...prev,
+          [email]: currentOrder.filter((id) => id !== itemId)
+        };
+      });
+      return;
+    }
+    setAudioOrder((prev) => {
+      const currentOrder = prev[email] || [];
+      const without = currentOrder.filter((id) => id !== itemId);
+      const next = [...without];
+      next.splice(Math.min(parsed - 1, next.length), 0, itemId);
+      return {
+        ...prev,
+        [email]: next
+      };
+    });
+  };
+
+  const getAudioOrder = (email: string, itemId: string, fallback: string[]) => {
+    const list = audioOrder[email] || fallback;
+    const index = list.indexOf(itemId);
+    return index === -1 ? "" : String(index + 1);
   };
 
   const saveAudioAssignments = async (email: string) => {
@@ -299,10 +371,12 @@ export default function AdminUsers() {
         false;
       return shouldHave !== hasEmail;
     });
-    if (updates.length === 0) {
+    if (updates.length === 0 && !audioOrder[email]) {
       setAudioSaveStatus((prev) => ({ ...prev, [email]: "No changes to save." }));
       return;
     }
+    
+    // Save assignments
     await Promise.all(
       updates.map((item) => {
         const allowed = item.allowedUserEmails || [];
@@ -328,9 +402,31 @@ export default function AdminUsers() {
         });
       })
     );
+
+    // Save order
+    const order = audioOrder[email] || [];
+    if (order.length > 0) {
+      const orderResponse = await fetch("/api/admin/member-audio-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          order
+        })
+      });
+      if (!orderResponse.ok) {
+        setAudioSaveStatus((prev) => ({
+          ...prev,
+          [email]: `Saved ${updates.length} assignment(s), but order save failed.`
+        }));
+        await load();
+        return;
+      }
+    }
+
     setAudioSaveStatus((prev) => ({
       ...prev,
-      [email]: `Saved ${updates.length} personalized audio update(s).`
+      [email]: `Saved ${updates.length} personalized audio update(s)${order.length > 0 ? ` and order` : ""}.`
     }));
     await load();
   };
@@ -671,6 +767,17 @@ export default function AdminUsers() {
                           if (!profileDrafts[user.email]) {
                             await loadProfile(user.email);
                           }
+                          // Load audio assignments and order
+                          const assignments = buildAudioAssignment(user.email);
+                          setAudioAssignments((prev) => ({
+                            ...prev,
+                            [user.email]: assignments
+                          }));
+                          const order = await buildAudioOrder(user.email);
+                          setAudioOrder((prev) => ({
+                            ...prev,
+                            [user.email]: order
+                          }));
                         }}
                       >
                         View / Edit member
@@ -687,6 +794,19 @@ export default function AdminUsers() {
                           setProfileOpen({ ...profileOpen, [user.email]: next });
                           if (next && !profileDrafts[user.email]) {
                             await loadProfile(user.email);
+                          }
+                          if (next) {
+                            // Load audio assignments and order
+                            const assignments = buildAudioAssignment(user.email);
+                            setAudioAssignments((prev) => ({
+                              ...prev,
+                              [user.email]: assignments
+                            }));
+                            const order = await buildAudioOrder(user.email);
+                            setAudioOrder((prev) => ({
+                              ...prev,
+                              [user.email]: order
+                            }));
                           }
                         }}
                       >
@@ -1333,33 +1453,83 @@ export default function AdminUsers() {
                       <div style={{ marginTop: 12 }}>
                         <h4 style={{ marginBottom: 8 }}>5. Check audios designed for them</h4>
                         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
-                          Check which audios this member can access. Managed members are entered only by a facilitator or admin; you choose their recordings and order.
+                          Check which audios this member can access. Managed members are entered only by a facilitator or admin; you choose their recordings and order. The order you check them (shown as numbers) is used by the algorithm.
                         </p>
                         <div className="goal-list">
-                          {library.map((item) => (
-                            <label
-                              key={item.id}
-                              className="goal-item"
-                              style={{ display: "flex", gap: 8, alignItems: "center" }}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={
-                                  audioAssignments[user.email]?.[item.id] ??
-                                  item.allowedUserEmails?.some(
-                                    (allowed) =>
-                                      allowed.toLowerCase() === user.email.toLowerCase()
-                                  ) ??
-                                  false
-                                }
-                                onChange={() => toggleAudioAssignment(user.email, item.id)}
-                              />
-                              <span style={{ flex: 1 }}>
-                                {item.skuCode ? `${item.skuCode} - ` : ""}
-                                {item.title}
-                              </span>
-                            </label>
-                          ))}
+                          {library
+                            .slice()
+                            .sort((a, b) => {
+                              // Sort by SKU: items with SKU first, then by SKU value, then by title
+                              const skuA = (a.skuCode || "").trim();
+                              const skuB = (b.skuCode || "").trim();
+                              const hasSkuA = !!skuA;
+                              const hasSkuB = !!skuB;
+                              
+                              // Items with SKU come before items without SKU
+                              if (hasSkuA && !hasSkuB) return -1;
+                              if (!hasSkuA && hasSkuB) return 1;
+                              
+                              // Both have SKU or both don't have SKU
+                              if (hasSkuA && hasSkuB) {
+                                return skuA.localeCompare(skuB, undefined, { numeric: true, sensitivity: 'base' });
+                              }
+                              
+                              // Neither has SKU, sort by title
+                              return (a.title || "").localeCompare(b.title || "");
+                            })
+                            .map((item) => {
+                            const emailLower = user.email.toLowerCase();
+                            const isAssigned =
+                              audioAssignments[user.email]?.[item.id] ??
+                              item.allowedUserEmails?.some(
+                                (allowed) => allowed.toLowerCase() === emailLower
+                              ) ??
+                              false;
+                            const currentOrder = audioOrder[user.email] || [];
+                            const fallbackOrder = library
+                              .filter((i) =>
+                                i.allowedUserEmails?.some((e) => e.toLowerCase() === emailLower)
+                              )
+                              .map((i) => i.id);
+                            const orderValue = getAudioOrder(user.email, item.id, fallbackOrder);
+                            return (
+                              <label
+                                key={item.id}
+                                className="goal-item"
+                                style={{ display: "flex", gap: 8, alignItems: "center" }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isAssigned}
+                                  onChange={() => toggleAudioAssignment(user.email, item.id)}
+                                />
+                                <span style={{ flex: 1 }}>
+                                  {item.skuCode || item.title || "No SKU/Title"}
+                                </span>
+                                <input
+                                  value={orderValue}
+                                  onChange={(event) =>
+                                    updateAudioOrder(
+                                      user.email,
+                                      item.id,
+                                      event.target.value
+                                    )
+                                  }
+                                  placeholder="#"
+                                  style={{
+                                    width: 44,
+                                    textAlign: "center",
+                                    borderRadius: 6,
+                                    border: "1px solid #d1d5db",
+                                    padding: "4px 6px",
+                                    background: orderValue ? "#16a34a" : "#ffffff",
+                                    color: orderValue ? "#ffffff" : "#111827",
+                                    fontWeight: 600
+                                  }}
+                                />
+                              </label>
+                            );
+                          })}
                         </div>
                         <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
                           To remove a track from this member: uncheck it above and click Save Personalized Audios.

@@ -196,3 +196,14 @@ ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS notes text;
 
 -- Migration: schedule start date so "tonight" advances each day (safe to run on existing DBs)
 ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS schedule_started_at date;
+
+-- Member audio assignments with order (for managed members)
+CREATE TABLE IF NOT EXISTS member_audio_assignments (
+  user_email text NOT NULL,
+  library_item_id uuid NOT NULL REFERENCES library_items(id) ON DELETE CASCADE,
+  assignment_order integer NOT NULL,
+  created_at timestamptz DEFAULT now(),
+  PRIMARY KEY (user_email, library_item_id)
+);
+CREATE INDEX IF NOT EXISTS member_audio_assignments_user_email
+  ON member_audio_assignments (user_email, assignment_order);
