@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getUserProfile, recordMemberActivity, setScheduleStartedToToday, setUserGoals, setUserPlaysPerNight } from "@/lib/db";
+import { getMemberAudioOrder, getUserProfile, recordMemberActivity, setScheduleStartedToToday, setUserGoals, setUserPlaysPerNight } from "@/lib/db";
 
 const schema = z.object({
   goalIds: z.array(z.string()).min(1).max(10).optional(),
@@ -29,15 +29,21 @@ export async function GET() {
   if (!profile) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
+  
+  // Check if this is a managed member (has assigned audios)
+  const assignedAudioOrder = await getMemberAudioOrder(email);
+  const isManaged = assignedAudioOrder.length > 0;
+  
   const editState = computeGoalEditState(profile);
   return NextResponse.json({
     goalIds: profile.goalIds || [],
     limit: GOAL_LIMIT,
-    canEdit: editState.canEdit,
+    canEdit: isManaged ? false : editState.canEdit, // Managed members cannot edit goals
     nextAllowedAt: editState.nextAllowedAt,
     subscriptionTier: profile.subscriptionTier,
     subscriptionStatus: profile.subscriptionStatus,
-    playsPerNight: profile.playsPerNight || 2
+    playsPerNight: profile.playsPerNight || 2,
+    isManaged // Flag to indicate this is a managed member
   });
 }
 
@@ -50,6 +56,11 @@ export async function PUT(request: Request) {
   if (!profile) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
+  
+  // Check if this is a managed member
+  const assignedAudioOrder = await getMemberAudioOrder(email);
+  const isManaged = assignedAudioOrder.length > 0;
+  
   const body = await request.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
@@ -58,6 +69,12 @@ export async function PUT(request: Request) {
   const editState = computeGoalEditState(profile);
   const nextGoals = parsed.data.goalIds;
   if (nextGoals) {
+    if (isManaged) {
+      return NextResponse.json(
+        { error: "Managed members cannot update goals. Your content is managed by an administrator." },
+        { status: 403 }
+      );
+    }
     if (!editState.canEdit) {
       return NextResponse.json(
         { error: "You must have an active subscription to update goals." },

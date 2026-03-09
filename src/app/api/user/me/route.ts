@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getMemberProfileByUserId, getUserProfile } from "@/lib/db";
+import { getMemberAudioOrder, getMemberProfileByUserId, getUserProfile } from "@/lib/db";
 
 export async function GET() {
   try {
@@ -33,6 +33,11 @@ export async function GET() {
     const wantsPracticeGrowth = memberProfile?.wantsPracticeGrowth ?? false;
     const firstName = memberProfile?.firstName ?? null;
     const lastName = memberProfile?.lastName ?? null;
+    
+    // Check if this is a managed member
+    const assignedAudioOrder = await getMemberAudioOrder(email);
+    const isManaged = assignedAudioOrder.length > 0;
+    
     const res = NextResponse.json({
       profile: {
         ...profile,
@@ -41,7 +46,8 @@ export async function GET() {
         adultConsent,
         yearBorn: yearBornNum,
         hasVerifiedAge,
-        wantsPracticeGrowth
+        wantsPracticeGrowth,
+        isManaged
       }
     });
     res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");

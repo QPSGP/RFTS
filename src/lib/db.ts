@@ -1075,6 +1075,27 @@ export const addEmailToLibraryItemAllowedList = async (
   return (rowCount ?? 0) > 0;
 };
 
+/** Get the ordered list of library item IDs assigned to a member (for managed members). */
+export const getMemberAudioOrder = async (email: string): Promise<string[]> => {
+  try {
+    const emailLower = email.toLowerCase();
+    const { rows } = await sql<{ library_item_id: string }>`
+      SELECT library_item_id
+      FROM member_audio_assignments
+      WHERE user_email = ${emailLower}
+      ORDER BY assignment_order ASC
+    `;
+    return rows.map((row) => row.library_item_id);
+  } catch (error: any) {
+    // If table doesn't exist, return empty array
+    if (error?.code === "42P01") {
+      return [];
+    }
+    console.error("Error loading member audio order:", error);
+    return [];
+  }
+};
+
 export const listAffiliates = async () => {
   const { rows } = await sql<AffiliateRecord>`
     SELECT

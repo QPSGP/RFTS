@@ -3,7 +3,7 @@ import { z } from "zod";
 import fs from "fs";
 import path from "path";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getMemberProfileByUserId, getPlaybackSettings, getUserProfile, listInterests, listLibrary, setScheduleStartedToToday } from "@/lib/db";
+import { getMemberAudioOrder, getMemberProfileByUserId, getPlaybackSettings, getUserProfile, listInterests, listLibrary, setScheduleStartedToToday } from "@/lib/db";
 import { buildSchedulePreview } from "@/lib/scheduler";
 
 const schema = z.object({
@@ -87,6 +87,10 @@ export async function GET(request: Request) {
     filteredLibrary.find((item) => (item.allowedUserEmails || []).some((e) => e.toLowerCase() === emailLower)) ??
     null;
 
+  // Check if this is a managed member with assigned audios
+  const assignedAudioOrder = await getMemberAudioOrder(profile.email || "");
+  const isManagedMember = assignedAudioOrder.length > 0;
+
   const schedule = buildSchedulePreview({
     interests: profile.goalIds || [],
     library: filteredLibrary,
@@ -95,7 +99,8 @@ export async function GET(request: Request) {
     tier: profile.subscriptionTier || "platinum",
     nights,
     playsPerNight: profile.playsPerNight === 1 ? 1 : 2,
-    userAssignedTrack: userAssignedTrack ?? undefined
+    userAssignedTrack: userAssignedTrack ?? undefined,
+    assignedAudioIds: isManagedMember ? assignedAudioOrder : undefined
   });
 
   // Advance "tonight" by day: use schedule_started_at (UTC) so night 1 = start date, night 2 = next day, etc.

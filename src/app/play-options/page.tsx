@@ -16,6 +16,7 @@ export default function PlayOptionsPage() {
     subscriptionStatus: string | null;
     subscriptionTier: string | null;
     playsPerNight: number;
+    isManaged?: boolean;
   } | null>(null);
   const [schedule, setSchedule] = useState<
     { night: number; tracks: { id: string; title: string; audioUrl: string }[]; note?: string }[]
@@ -190,7 +191,7 @@ export default function PlayOptionsPage() {
           </button>
         </div>
       </section>
-      {profile && profile.goalIds?.length === 0 && (
+      {profile && !profile.isManaged && profile.goalIds?.length === 0 && (
         <section className="card" style={{ marginBottom: 16 }}>
           <h3>Pick your goals</h3>
           <p>
@@ -199,6 +200,14 @@ export default function PlayOptionsPage() {
           <a className="button" href="/goals">
             Set Goals
           </a>
+        </section>
+      )}
+      {profile && profile.isManaged && (
+        <section className="card" style={{ marginBottom: 16, background: "#f0fdf4", borderColor: "#bbf7d0" }}>
+          <h3>Managed Account</h3>
+          <p style={{ color: "#166534" }}>
+            Your content is customized by your administrator. Your schedule uses the audios assigned to you.
+          </p>
         </section>
       )}
       <ScreenWakeToggle />
@@ -210,28 +219,32 @@ export default function PlayOptionsPage() {
             View Profile
           </a>
         </div>
-        <div className="card">
-          <h3>Your Goals</h3>
-          <p>Manage the goals that drive your session lineup.</p>
-          <a className="button button-secondary" href="/goals">
-            Update Goals
-          </a>
-        </div>
-        <div className="card">
-          <h3>Audios from your goals</h3>
-          <p>These audios are automatically included based on your goal selections.</p>
-          {derivedTracks.length === 0 ? (
-            <p style={{ color: "#6b7280" }}>No goal-based audios listed yet.</p>
-          ) : (
-            <div className="goal-list" style={{ marginTop: 8 }}>
-              {derivedTracks.map((track) => (
-                <div key={track.id} className="goal-item">
-                  {track.title}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {!profile?.isManaged && (
+          <div className="card">
+            <h3>Your Goals</h3>
+            <p>Manage the goals that drive your session lineup.</p>
+            <a className="button button-secondary" href="/goals">
+              Update Goals
+            </a>
+          </div>
+        )}
+        {!profile?.isManaged && (
+          <div className="card">
+            <h3>Audios from your goals</h3>
+            <p>These audios are automatically included based on your goal selections.</p>
+            {derivedTracks.length === 0 ? (
+              <p style={{ color: "#6b7280" }}>No goal-based audios listed yet.</p>
+            ) : (
+              <div className="goal-list" style={{ marginTop: 8 }}>
+                {derivedTracks.map((track) => (
+                  <div key={track.id} className="goal-item">
+                    {track.title}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <div className="card" id="meditation-library">
           <h3>Meditation Library</h3>
           <p>Browse the full audio library and play any track on demand. This will not affect your sessions!</p>
@@ -375,8 +388,9 @@ export default function PlayOptionsPage() {
           <div className="card">
             <h3>Session Cycle</h3>
             <p>
-              Your sessions rotate through the goals you selected. Each night lists the
-              recordings scheduled to play. You can change your sessions-per-night setting above and your goals anytime.
+              {profile?.isManaged
+                ? "Your sessions use the audios assigned by your administrator. Each night lists the recordings scheduled to play. You can change your sessions-per-night setting above."
+                : "Your sessions rotate through the goals you selected. Each night lists the recordings scheduled to play. You can change your sessions-per-night setting above and your goals anytime."}
             </p>
             <div className="grid" style={{ marginTop: 12 }}>
               {schedule.map((night) => (

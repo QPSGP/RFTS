@@ -21,6 +21,8 @@ type ScheduleInput = {
   playsPerNight?: 1 | 2;
   /** When set, used as the special/CGMR track (e.g. every 4th night) instead of global cgmr/fallback. */
   userAssignedTrack?: LibraryItem | null;
+  /** For managed members: ordered list of assigned audio IDs (replaces goals-based scheduling). */
+  assignedAudioIds?: string[];
 };
 
 const libraryById = (library: LibraryItem[]) => {
@@ -93,8 +95,20 @@ export const buildSchedulePreview = ({
   tier,
   nights,
   playsPerNight = 2,
-  userAssignedTrack = null
+  userAssignedTrack = null,
+  assignedAudioIds = undefined
 }: ScheduleInput): ScheduleNight[] => {
+  const libraryByIdMap = libraryById(library);
+  const isManagedMember = assignedAudioIds && assignedAudioIds.length > 0;
+  
+  // For managed members: use assigned audios directly
+  let assignedAudios: LibraryItem[] = [];
+  if (isManagedMember) {
+    assignedAudios = assignedAudioIds
+      .map((id) => libraryByIdMap.get(id))
+      .filter((item): item is LibraryItem => !!item);
+  }
+
   const goalTrackMap = buildGoalTrackMap(library, interestRecords);
   const orderedGoals = interests.filter((id) => goalTrackMap.has(id));
 
@@ -108,11 +122,16 @@ export const buildSchedulePreview = ({
   const defaultSpecialTrack = tier === "platinum" ? cgmr || fallback : fallback || cgmr;
   const specialTrack = userAssignedTrack ?? defaultSpecialTrack;
   const playCounts = new Map<string, number>();
-  // initialTracks = total in rotation (e.g. 4 = 3 goals + 1 CGMR/T-18)
-  const goalCount = Math.max(1, Math.min(orderedGoals.length, settings.initialTracks - 1));
-  const activeGoals = orderedGoals.slice(0, goalCount);
-  let nextIndex = activeGoals.length;
+  
+  // For managed members: use assigned audios; for regular members: use goals
+  const goalCount = isManagedMember
+    ? Math.max(1, Math.min(assignedAudios.length, settings.initialTracks - 1))
+    : Math.max(1, Math.min(orderedGoals.length, settings.initialTracks - 1));
+  const activeGoals = isManagedMember ? [] : orderedGoals.slice(0, goalCount);
+  const activeAssignedAudios = isManagedMember ? assignedAudios.slice(0, goalCount) : [];
+  let nextIndex = isManagedMember ? activeAssignedAudios.length : activeGoals.length;
   let goalPointer = 0;
+  let assignedAudioPointer = 0;
   const goalTrackPointer = new Map<string, number>();
 
   const takeNextGoal = () => {
@@ -133,6 +152,15 @@ export const buildSchedulePreview = ({
     const track = tracks[pointer % tracks.length];
     goalTrackPointer.set(goalId, pointer + 1);
     return track;
+  };
+
+  const takeNextAssignedAudio = () => {
+    if (!activeAssignedAudios.length) {
+      return null;
+    }
+    const audio = activeAssignedAudios[assignedAudioPointer % activeAssignedAudios.length];
+    assignedAudioPointer += 1;
+    return audio;
   };
 
   const markPlayed = (item: LibraryItem | null) => {
@@ -160,38 +188,59 @@ export const buildSchedulePreview = ({
   const schedule: ScheduleNight[] = [];
   let nextAddAtSession = settings.addNewTrackEveryNights > 0 ? settings.addNewTrackEveryNights : 0;
   for (let night = 1; night <= nights; night += 1) {
-    // Add new goal every N sessions (sessions so far = (night - 1) * playsPerNight)
+    // Add new goal/audio every N sessions (sessions so far = (night - 1) * playsPerNight)
     const sessionsSoFar = (night - 1) * playsPerNight;
-    while (
-      nextAddAtSession > 0 &&
-      sessionsSoFar >= nextAddAtSession &&
-      nextIndex < orderedGoals.length
-    ) {
-      activeGoals.push(orderedGoals[nextIndex]);
-      nextIndex += 1;
-      nextAddAtSession += settings.addNewTrackEveryNights;
-    }
-
-    const dropGoalIndex = shouldDropGoalOnNight(night);
-    if (dropGoalIndex && orderedGoals[dropGoalIndex - 1]) {
-      const dropId = orderedGoals[dropGoalIndex - 1];
-      const dropIdx = activeGoals.indexOf(dropId);
-      if (dropIdx !== -1) {
-        activeGoals.splice(dropIdx, 1);
+    if (isManagedMember) {
+      while (
+        nextAddAtSession > 0 &&
+        sessionsSoFar >= nextAddAtSession &&
+        nextIndex < assignedAudios.length
+      ) {
+        activeAssignedAudios.push(assignedAudios[nextIndex]);
+        nextIndex += 1;
+        nextAddAtSession += settings.addNewTrackEveryNights;
+      }
+    } else {
+      while (
+        nextAddAtSession > 0 &&
+        sessionsSoFar >= nextAddAtSession &&
+        nextIndex < orderedGoals.length
+      ) {
+        activeGoals.push(orderedGoals[nextIndex]);
+        nextIndex += 1;
+        nextAddAtSession += settings.addNewTrackEveryNights;
       }
     }
 
-    const firstGoal = takeNextGoal();
-    const first = firstGoal ? takeNextTrackForGoal(firstGoal) : null;
+    if (!isManagedMember) {
+      const dropGoalIndex = shouldDropGoalOnNight(night);
+      if (dropGoalIndex && orderedGoals[dropGoalIndex - 1]) {
+        const dropId = orderedGoals[dropGoalIndex - 1];
+        const dropIdx = activeGoals.indexOf(dropId);
+        if (dropIdx !== -1) {
+          activeGoals.splice(dropIdx, 1);
+        }
+      }
+    }
+
+    // For managed members: use assigned audios directly; for regular: use goals
+    const first = isManagedMember
+      ? takeNextAssignedAudio()
+      : (() => {
+          const firstGoal = takeNextGoal();
+          return firstGoal ? takeNextTrackForGoal(firstGoal) : null;
+        })();
     const isSpecialNight = night % 4 === 0;
     const second =
       playsPerNight === 2
         ? isSpecialNight
           ? specialTrack
-          : (() => {
-              const secondGoal = takeNextGoal();
-              return secondGoal ? takeNextTrackForGoal(secondGoal) : null;
-            })()
+          : isManagedMember
+            ? takeNextAssignedAudio()
+            : (() => {
+                const secondGoal = takeNextGoal();
+                return secondGoal ? takeNextTrackForGoal(secondGoal) : null;
+              })()
         : null;
     const singleTrack =
       playsPerNight === 1 && isSpecialNight && specialTrack
@@ -228,18 +277,32 @@ export const buildSchedulePreview = ({
 
     // Remove tracks that reached the play target
     if (settings.playsPerRecording > 0) {
-      activeGoals.forEach((goalId) => {
-        const tracksForGoal = goalTrackMap.get(goalId) || [];
-        const completed = tracksForGoal.every(
-          (track) => (playCounts.get(track.id) || 0) >= settings.playsPerRecording
-        );
-        if (completed) {
-          const idx = activeGoals.indexOf(goalId);
-          if (idx !== -1) {
-            activeGoals.splice(idx, 1);
+      if (isManagedMember) {
+        // For managed members: remove audios that reached play target
+        activeAssignedAudios.forEach((audio) => {
+          const playCount = playCounts.get(audio.id) || 0;
+          if (playCount >= settings.playsPerRecording) {
+            const idx = activeAssignedAudios.indexOf(audio);
+            if (idx !== -1) {
+              activeAssignedAudios.splice(idx, 1);
+            }
           }
-        }
-      });
+        });
+      } else {
+        // For regular members: remove goals whose tracks all reached play target
+        activeGoals.forEach((goalId) => {
+          const tracksForGoal = goalTrackMap.get(goalId) || [];
+          const completed = tracksForGoal.every(
+            (track) => (playCounts.get(track.id) || 0) >= settings.playsPerRecording
+          );
+          if (completed) {
+            const idx = activeGoals.indexOf(goalId);
+            if (idx !== -1) {
+              activeGoals.splice(idx, 1);
+            }
+          }
+        });
+      }
     }
   }
 

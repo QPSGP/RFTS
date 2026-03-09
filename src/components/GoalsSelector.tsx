@@ -16,6 +16,7 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
   const [nextAllowedAt, setNextAllowedAt] = useState<string | null>(null);
   const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isManaged, setIsManaged] = useState(false);
   const goalNameById = useMemo(() => {
     const map = new Map<string, Interest>();
     interests.forEach((interest) => {
@@ -52,7 +53,8 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
       .then((data) => {
         setGoalIds(data.goalIds || []);
         setLimit(data.limit || 10);
-        setCanEdit(data.canEdit ?? true);
+        setIsManaged(data.isManaged ?? false);
+        setCanEdit(data.isManaged ? false : (data.canEdit ?? true));
         setNextAllowedAt(data.nextAllowedAt || null);
         setPlaysPerNight(data.playsPerNight === 1 ? 1 : 2);
         setStatus("ready");
@@ -111,6 +113,23 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
         <p>Log in to set your goals and personalize your sessions.</p>
         <a className="button" href="/member/login">
           Member Login
+        </a>
+      </div>
+    );
+  }
+
+  if (isManaged) {
+    return (
+      <div className="card">
+        <h2>Managed Account</h2>
+        <p style={{ color: "#4b5563" }}>
+          Your account is managed by an administrator. Your content and schedule are customized for you.
+        </p>
+        <p style={{ color: "#4b5563" }}>
+          If you need to make changes, please contact your administrator.
+        </p>
+        <a className="button button-secondary" href="/play-options">
+          Back to Play Options
         </a>
       </div>
     );
