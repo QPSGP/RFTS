@@ -44,6 +44,13 @@ export const defaultSubscriptionPlans: SubscriptionPlan[] = [
     priceId: "",
     trialDays: 14,
     description: "Tailored Recordings Are Scheduled Based on Your Priorities."
+  },
+  {
+    id: "platinum_managed",
+    name: "Platinum Managed",
+    priceId: "",
+    trialDays: 14,
+    description: "Curated sessions and assigned audios; no goal selection."
   }
 ];
 

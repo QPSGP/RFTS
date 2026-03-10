@@ -517,12 +517,6 @@ const ensureInterestsSeeded = async () => {
 };
 
 const ensureSubscriptionPlansSeeded = async () => {
-  const { rows } = await sql<{ count: number }>`
-    SELECT COUNT(*)::int AS count FROM subscription_plans
-  `;
-  if (rows[0]?.count) {
-    return;
-  }
   await Promise.all(
     defaultSubscriptionPlans.map((plan) =>
       sql`

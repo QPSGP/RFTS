@@ -25,8 +25,10 @@ export default function AdminSubscriptions() {
   }, []);
 
   const visiblePlans = useMemo(() => {
-    const membershipOnly = plans.filter((plan) => plan.id === "platinum");
-    return membershipOnly.length > 0 ? membershipOnly : plans;
+    const knownTiers = plans.filter((plan) =>
+      plan.id === "platinum" || plan.id === "platinum_managed"
+    );
+    return knownTiers.length > 0 ? knownTiers : plans;
   }, [plans]);
 
   const updatePlan = (

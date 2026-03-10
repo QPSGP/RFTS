@@ -18,6 +18,25 @@ Use this file to get up to speed when opening the project in the **rfts-platform
   - **Then:** LGD checkbox (“I am interested in a Life Guidance Discovery Session?”), **Adult content** card (only when birth year implies 18+): “I consent to hear audios with mature content” + “I would like to hear audios related to polyamory”, then “I am or would like to be a therapist, healer, or coach”, then Referral (“How did you find us?…”).
   - **Separate “Additional (admin)”:** Income goal, Goal year, Goal vs current income, First responder. Save Profile unchanged.
   - **Labels/copy** aligned with `MemberOnboarding.tsx` step 1 where applicable.
+- **Platinum Managed tier:** New tier `platinum_managed`; managed members use admin-assigned audios (no goal-based lineup). `DbSubscription` / types include `platinum_managed`. Signup page pricing updated (e.g. .95/mo Platinum). Admin member list: search by name/email, filter by membership tier (`AdminUsers.tsx`).
+- **Managed members — goals hidden, audio order:** For managed accounts, goals UI is hidden; schedule uses assigned audios only. Audio order: admin can set display order by SKU (numbered inputs); schema + `POST /api/admin/member-audio-order`; ordering used in schedule/library for managed members.
+- **Session behavior (1 vs 2 per night):** One session = two audio plays; 2 per night = full session (prep + first, gap, then second); 1 per night = half session (stop and close after first audio, no 2.5h countdown or auto second). SessionPlayer: auto-close when session ends; first session closes and queues second after gap; second auto-starts then closes. Scheduler docs updated (`src/lib/scheduler.ts`).
+- **Admin Subscription Plans — second plan:** Platinum Managed added. **`src/lib/content-seed.ts`:** `defaultSubscriptionPlans` now has two entries: `platinum` (Membership) and `platinum_managed` (Platinum Managed; description: "Curated sessions and assigned audios; no goal selection."). **`src/components/AdminSubscriptions.tsx`:** UI shows both plans (filter: `platinum` or `platinum_managed`). **`src/lib/db.ts`:** `ensureSubscriptionPlansSeeded()` now inserts each default plan if missing (no longer exits when any plan exists), so existing DBs get `platinum_managed` on first load of subscription plans. Admin can set Stripe Price ID and save for both plans.
+
+---
+
+## Moving to another computer
+
+**Open this file (`PROJECT_STATUS.md`) and README for env/setup.** Then:
+
+1. **Repo:** Clone or pull **rfts-platform** (or parent CursorRFTS). Work from **rfts-platform** for app code.
+2. **Install:** `npm install` in rfts-platform.
+3. **Env:** Copy `.env.example` to `.env.local` (or use existing); set `POSTGRES_URL`, `SESSION_SECRET`, Stripe/Blob/Resend keys per README.
+4. **DB:** If new or after schema changes: `npm run db:schema` (or `node scripts/run-schema.js`).
+5. **Uncommitted work (this session):** Subscription plans change: `src/lib/content-seed.ts`, `src/components/AdminSubscriptions.tsx`, `src/lib/db.ts`. Optionally: `src/app/play-options/PlayOptionsClient.tsx` (may show as modified due to line endings only). Commit and push when ready.
+6. **Run:** `npm run dev`; admin at `/admin/setup` or use `ADMIN_EMAIL` / `ADMIN_PASSWORD_HASH`. Member login at `/member/login`; Play Options at `/play-options`.
+
+**Quick context:** RFTS = Next.js 14 wellness platform (Postgres, Stripe, Vercel Blob). Two subscription tiers: Platinum (Membership) and Platinum Managed; admin manages both under Subscription Plans. See "Where We Left Off" and "Quick Reference" below.
 
 ---
 
@@ -149,13 +168,34 @@ App code lives in **rfts-platform** (this folder). The repo root is **CursorRFTS
 
 ---
 
+## Recent commits (handoff for next chat)
+
+So any chat can take over from the current codebase state:
+
+| Commit   | What changed |
+|----------|--------------|
+| **a178500** | Admin member list: search by name/email, filter by membership tier. File: `src/components/AdminUsers.tsx`. |
+| **64daea8** | TypeScript: `DbSubscription` tier type includes `platinum_managed`. File: `src/lib/db.ts`. |
+| **ea4ef84** | Signup page: Platinum membership pricing .95/mo. File: `src/app/signup/step-1-subscription-selection/page.tsx`. |
+| **b8c0ab2** | Platinum Managed tier; fix audio ordering; update pricing and UI text. Files: admin users route, play-options page, AdminUsers, scheduler. |
+| **d325946** | Hide goals for managed members; managed accounts use assigned audios instead of goals. Files: `/api/user/goals`, `/api/user/me`, `/api/user/schedule`, play-options page, GoalsSelector, db, scheduler. |
+| **b7a2d4d** | Audio order tracking for managed members: display by SKU with numbered order inputs. Schema change + `POST /api/admin/member-audio-order`; AdminUsers. |
+| **b61a15d** | 1 per night: stop and close after first audio; no 2.5h countdown or auto second. Files: PlayOptionsClient, play-options page, SessionPlayer. |
+| **7afbe64** | Docs: one session = two audio plays; 2 per night = full session, 1 per night = half session. Scheduler. |
+| **be14894** | SessionPlayer: move cleanup useEffect after clearWaitTimers declaration. |
+| **06b8c79** | Session: auto-close when session ends; first session closes and queues second after gap; second auto-starts then closes. SessionPlayer. |
+
+---
+
 ## Where We Left Off
 
+- **Uncommitted (this session):** **Subscription plans (second plan):** `src/lib/content-seed.ts`, `src/components/AdminSubscriptions.tsx`, `src/lib/db.ts`. Also possibly `src/app/play-options/PlayOptionsClient.tsx` (line-ending only). Commit these when moving computers or when ready; then push to origin/main.
 - **Member login (working):** Form POST to `/api/user/login` returns **200 + Set-Cookie + HTML** (meta refresh to `/play-options`) so the cookie is stored reliably. Play-options uses the cookie and shows the console. **`ClearSessionOnEnter`** on `/member/login` clears any stale member session when you open the login page so the header doesn’t show “Members Console” until you’ve logged in. Test user for E2E: `node scripts/seed-test-user.js` then `node scripts/test-login-e2e.js` (dev server must be running).
 - **Handoff:** Read this file and **README.md** for env. Run schema with `npm run db:schema` if DB is new or after schema changes.
 - **Git:** Pushes from rfts-platform to origin/main work; commit PROJECT_STATUS.md with related work.
 - **T-18 on signup:** Implemented. New members are auto-assigned the fallback track (T-18) on registration; when a CGMR is assigned, the schedule uses it instead. No open follow-up for this feature.
 - **Member profile like new member:** Done. Admin “1. Member Profile” now matches new-member onboarding (field order, labels, LGD → Adult content → Build practice → Referral, Adult block only when birth year implies 18+, “Additional (admin)” section). See “Summary of changes (for the day)” above.
+- **Platinum Managed / sessions:** See "Summary of changes" and "Recent commits" above. Managed members: no goals UI, assigned-audio order via admin; 1 vs 2 per night in Play Options and SessionPlayer.
 - **Previous context:** AdminContent has category filter (All/General/Special/CGMR). Schedule API filters library by adult and Special access, uses member profile, user-assigned CGMR; adult content gated by birthdate/consent.
 
 ---
@@ -170,3 +210,5 @@ App code lives in **rfts-platform** (this folder). The repo root is **CursorRFTS
 - **DB/schema:** `scripts/schema.sql` for Vercel Postgres; run with `node scripts/run-schema.js`; env in `.env.local` (see README).
 - **Email:** `src/lib/email.ts` (Resend); templates in `src/lib/email-templates.ts`. Env: RESEND_API_KEY, EMAIL_FROM, NEXT_PUBLIC_APP_URL.
 - **Upload audio:** `POST /api/admin/upload-audio` → Vercel Blob; client large uploads via `POST /api/admin/upload-audio-handler` + `@vercel/blob/client`; env: BLOB_READ_WRITE_TOKEN.
+- **Admin members:** `src/components/AdminUsers.tsx` — list with search (name/email), filter by tier; managed members: goals hidden, audio order via `POST /api/admin/member-audio-order` and schema (member_audio_order). Play Options / SessionPlayer: `src/app/play-options/PlayOptionsClient.tsx`, `src/components/SessionPlayer.tsx` (1 vs 2 per night).
+- **Admin Subscription Plans:** `src/components/AdminSubscriptions.tsx` — edit both plans (Platinum + Platinum Managed). Defaults in `src/lib/content-seed.ts` (`defaultSubscriptionPlans`); seeding in `src/lib/db.ts` (`ensureSubscriptionPlansSeeded` inserts each default if missing). API: GET/POST `/api/subscriptions`.
