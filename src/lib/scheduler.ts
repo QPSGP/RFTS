@@ -15,7 +15,7 @@ type ScheduleInput = {
   library: LibraryItem[];
   interestRecords?: Interest[];
   settings: PlaybackSettings;
-  tier: "platinum";
+  tier: "platinum" | "platinum_managed";
   nights: number;
   /** 2 = one full session (two plays) per night; 1 = half a session (one play) per night. */
   playsPerNight?: 1 | 2;
@@ -119,7 +119,8 @@ export const buildSchedulePreview = ({
     ? pickByCode(library, settings.fallbackTrackId)
     : null;
 
-  const defaultSpecialTrack = tier === "platinum" ? cgmr || fallback : fallback || cgmr;
+  // Both platinum and platinum_managed use the same special track logic
+  const defaultSpecialTrack = (tier === "platinum" || tier === "platinum_managed") ? cgmr || fallback : fallback || cgmr;
   const specialTrack = userAssignedTrack ?? defaultSpecialTrack;
   const playCounts = new Map<string, number>();
   

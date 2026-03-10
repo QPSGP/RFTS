@@ -20,14 +20,14 @@ const createSchema = z.object({
   password: z.string().min(6),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  tier: z.enum(["platinum"]).default("platinum"),
+  tier: z.enum(["platinum", "platinum_managed"]).default("platinum"),
   status: z.enum(["inactive", "active", "past_due", "canceled"]).default("inactive"),
   playsPerNight: z.number().int().min(1).max(2).optional()
 });
 
 const updateSchema = z.object({
   email: z.string().email(),
-  tier: z.enum(["platinum"]).optional(),
+  tier: z.enum(["platinum", "platinum_managed"]).optional(),
   status: z.enum(["inactive", "active", "past_due", "canceled"]).optional(),
   goalIds: z.array(z.string()).max(10).optional(),
   playsPerNight: z.number().int().min(1).max(2).optional(),

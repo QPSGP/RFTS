@@ -26,7 +26,7 @@ type UserRow = {
   lastName?: string | null;
   goalIds: string[];
   subscriptionStatus: "inactive" | "active" | "past_due" | "canceled" | null;
-  subscriptionTier: "platinum" | null;
+  subscriptionTier: "platinum" | "platinum_managed" | null;
   playsPerNight: number;
 };
 
@@ -702,7 +702,8 @@ export default function AdminUsers() {
                 setCreateTier(event.target.value as UserRow["subscriptionTier"])
               }
             >
-              <option value="platinum">Membership</option>
+              <option value="platinum">Platinum ($19.95/mo)</option>
+              <option value="platinum_managed">Platinum Managed ($39.95/mo)</option>
             </select>
             <select
               style={inputStyle}
@@ -754,7 +755,7 @@ export default function AdminUsers() {
                   ) : null}
                   {!profileOpen[user.email] && (
                     <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
-                      Goals: {user.goalIds?.length || 0} · {user.subscriptionTier ?? "platinum"} · {user.subscriptionStatus ?? "inactive"} · {user.playsPerNight ?? 2}/night
+                      Goals: {user.goalIds?.length || 0} · {user.subscriptionTier === "platinum_managed" ? "Platinum Managed" : "Platinum"} · {user.subscriptionStatus ?? "inactive"} · {user.playsPerNight ?? 2}/night
                     </p>
                   )}
                   {!profileOpen[user.email] && (
@@ -1218,7 +1219,8 @@ export default function AdminUsers() {
                             })
                           }
                         >
-                          <option value="platinum">Membership</option>
+                          <option value="platinum">Platinum ($19.95/mo)</option>
+                          <option value="platinum_managed">Platinum Managed ($39.95/mo)</option>
                         </select>
                         <select
                           style={inputStyle}
@@ -1310,21 +1312,33 @@ export default function AdminUsers() {
                           const assigned = library.filter((item) =>
                             (item.allowedUserEmails || []).some((e) => e.toLowerCase() === emailLower)
                           );
+                          // Sort by the order they were selected (from audioOrder state)
+                          const order = audioOrder[user.email] || [];
+                          const assignedOrdered = assigned.slice().sort((a, b) => {
+                            const indexA = order.indexOf(a.id);
+                            const indexB = order.indexOf(b.id);
+                            if (indexA === -1 && indexB === -1) return 0;
+                            if (indexA === -1) return 1;
+                            if (indexB === -1) return -1;
+                            return indexA - indexB;
+                          });
                           const hasCat = (item: LibraryItem, cat: string) =>
                             (item.categories || []).some((c) => c.toLowerCase() === cat.toLowerCase());
-                          const cgmrTrack = assigned.find((item) => hasCat(item, "cgmr")) ?? assigned[0] ?? null;
+                          const cgmrTrack = assignedOrdered.find((item) => hasCat(item, "cgmr")) ?? assignedOrdered[0] ?? null;
                           return (
                             <div style={{ marginTop: 8, marginBottom: 8, padding: 10, background: "#f0fdf4", borderRadius: 8, border: "1px solid #bbf7d0" }}>
-                              <strong style={{ fontSize: 12 }}>Assigned to this member:</strong>{" "}
-                              {assigned.length === 0 ? (
+                              <strong style={{ fontSize: 12 }}>Assigned to this member (in selection order):</strong>{" "}
+                              {assignedOrdered.length === 0 ? (
                                 <span style={{ color: "#6b7280" }}>None. Their schedule will use T-18 for the CGMR slot.</span>
                               ) : (
                                 <>
-                                  {assigned.map((item) => (
-                                    <span key={item.id} style={{ marginRight: 8 }}>
-                                      {item.skuCode ? `${item.skuCode} – ` : ""}{item.title}
-                                    </span>
-                                  ))}
+                                  <div style={{ marginTop: 6 }}>
+                                    {assignedOrdered.map((item, index) => (
+                                      <div key={item.id} style={{ marginBottom: 4, fontSize: 12 }}>
+                                        <strong>{index + 1}.</strong> {item.skuCode || item.title || "No SKU/Title"}
+                                      </div>
+                                    ))}
+                                  </div>
                                   <div style={{ marginTop: 6, fontSize: 12, color: "#047857" }}>
                                     <strong>Schedule uses as CGMR slot:</strong> {cgmrTrack ? `${cgmrTrack.skuCode ? cgmrTrack.skuCode + " – " : ""}${cgmrTrack.title}` : "T-18 (default)"}
                                   </div>
@@ -1552,11 +1566,11 @@ export default function AdminUsers() {
                       <div className="card" style={{ marginTop: 12, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
                         <h4 style={{ marginBottom: 6 }}>6. Billing &amp; rate</h4>
                         <p style={{ fontSize: 12, color: "#475569", marginBottom: 8 }}>
-                          <strong>Gold:</strong> $19.99/mo, $149/yr — Affiliate 25% ($5/mo, $60/yr).<br />
-                          <strong>Gold Managed:</strong> $39.99/mo, $399.99/yr — Facilitator-Affiliate 25% ($10/mo, $120/yr); Facilitator-Managed 50% ($20/mo, $240/yr).
+                          <strong>Platinum:</strong> $19.95/mo — Regular membership with goal-based scheduling.<br />
+                          <strong>Platinum Managed:</strong> $39.95/mo — Managed membership with admin-assigned audios (no goals).
                         </p>
                         <p style={{ fontSize: 12, margin: 0 }}>
-                          Current tier: <strong>{user.subscriptionTier ?? "platinum"}</strong> — use subscription controls above to activate and charge. Managed members at higher rate.
+                          Current tier: <strong>{user.subscriptionTier === "platinum_managed" ? "Platinum Managed ($39.95/mo)" : "Platinum ($19.95/mo)"}</strong> — use subscription controls above to activate and charge.
                         </p>
                       </div>
                     </>

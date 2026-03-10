@@ -144,10 +144,15 @@ export default function PlayOptionsPage() {
     profile?.firstName || profile?.lastName
       ? [profile?.firstName, profile?.lastName].filter(Boolean).join(" ").trim()
       : profile?.email ?? "";
+  const getTierLabel = (tier: string | null) => {
+    if (tier === "platinum_managed") return "Platinum Managed";
+    if (tier === "platinum") return "Platinum";
+    return tier || "Membership";
+  };
   const membershipLabel =
     profile?.subscriptionStatus === "active"
       ? profile?.subscriptionTier
-        ? `Membership: ${profile.subscriptionTier}`
+        ? `Membership: ${getTierLabel(profile.subscriptionTier)}`
         : "Membership: Active"
       : "Membership: Inactive";
 
