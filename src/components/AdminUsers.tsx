@@ -101,11 +101,37 @@ export default function AdminUsers() {
   const [uploadStatus, setUploadStatus] = useState<Record<string, string>>({});
   const [personalizedAudioUploading, setPersonalizedAudioUploading] = useState<Record<string, boolean>>({});
   const [newAudioDrafts, setNewAudioDrafts] = useState<Record<string, NewAudioDraft>>({});
+  const [memberSearchTerm, setMemberSearchTerm] = useState("");
+  const [memberTierFilter, setMemberTierFilter] = useState<"all" | "platinum" | "platinum_managed">("all");
 
   const sortedInterests = useMemo(
     () => interests.slice().sort((a, b) => a.name.localeCompare(b.name)),
     [interests]
   );
+
+  const filteredUsers = useMemo(() => {
+    let filtered = users;
+    
+    // Filter by search term (name or email)
+    if (memberSearchTerm.trim()) {
+      const searchLower = memberSearchTerm.toLowerCase().trim();
+      filtered = filtered.filter((user) => {
+        const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ").toLowerCase();
+        const email = user.email.toLowerCase();
+        return fullName.includes(searchLower) || email.includes(searchLower);
+      });
+    }
+    
+    // Filter by membership tier
+    if (memberTierFilter !== "all") {
+      filtered = filtered.filter((user) => {
+        const tier = user.subscriptionTier || "platinum";
+        return tier === memberTierFilter;
+      });
+    }
+    
+    return filtered;
+  }, [users, memberSearchTerm, memberTierFilter]);
 
   const resolveGoalNames = (goalIds: string[]) => {
     return goalIds
@@ -740,8 +766,34 @@ export default function AdminUsers() {
           {users.length === 0 ? (
             <p>No member accounts yet.</p>
           ) : (
-            <div className="grid">
-              {users.map((user) => (
+            <>
+              <div style={{ marginBottom: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+                <input
+                  style={{ ...inputStyle, maxWidth: 300, flex: "1 1 200px" }}
+                  placeholder="Search by name or email..."
+                  value={memberSearchTerm}
+                  onChange={(event) => setMemberSearchTerm(event.target.value)}
+                />
+                <select
+                  style={{ ...inputStyle, maxWidth: 200, flex: "0 0 auto" }}
+                  value={memberTierFilter}
+                  onChange={(event) => setMemberTierFilter(event.target.value as "all" | "platinum" | "platinum_managed")}
+                >
+                  <option value="all">All Memberships</option>
+                  <option value="platinum">Platinum</option>
+                  <option value="platinum_managed">Platinum Managed</option>
+                </select>
+                {filteredUsers.length !== users.length && (
+                  <span style={{ fontSize: 12, color: "#64748b" }}>
+                    Showing {filteredUsers.length} of {users.length} members
+                  </span>
+                )}
+              </div>
+              {filteredUsers.length === 0 ? (
+                <p style={{ color: "#64748b" }}>No members match your search criteria.</p>
+              ) : (
+                <div className="grid">
+                  {filteredUsers.map((user) => (
                 <div key={user.id} className="card">
                   <strong>
                     {user.firstName || user.lastName
@@ -1608,8 +1660,10 @@ export default function AdminUsers() {
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
+            </>
           )}
         </div>
       </div>
