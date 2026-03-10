@@ -45,57 +45,98 @@ export default function FacilitatorPage() {
   return (
     <main>
       <section className="hero section">
-        <span className="pill">Facilitator Council</span>
-        <h1>Facilitator Application</h1>
+        <span className="pill">Facilitator Program</span>
+        <h1>Use Our System for Your Clients</h1>
         <p>
-          We are building a facilitator community devoted to uplifting personal growth,
-          emotional resilience, and expanded awareness. Help us add and guide
-          audio content that supports transformation in a safe, focused environment.
+          Facilitators are practitioners who use Reach For The Stars with their clients—whether
+          by referring them to the platform or by actively managing their journey. You get
+          access to our audio library, the ability to add your own recordings for your clients,
+          and ongoing affiliate benefits for everyone you bring in. When you manage a client,
+          you earn an additional 25% on top of your affiliate share—and if you later step
+          back from managing, you keep the affiliate 25% for as long as they stay.
         </p>
       </section>
 
-      <section className="grid grid-3 section">
-        <div className="card">
-          <h3>Our Mission</h3>
-          <p>
-            Protect the integrity of the experience while elevating recordings that
-            foster healing, clarity, and higher consciousness.
+      <section className="section">
+        <div className="section-head">
+          <span className="eyebrow">How It Works</span>
+          <h2 className="section-title">Refer, manage, or both.</h2>
+          <p className="section-subtitle">
+            Your relationship with your clients and with RFTS is flexible and lasting.
           </p>
         </div>
-        <div className="card">
-          <h3>What Facilitators Do</h3>
-          <p>
-            Contribute new recordings, refine descriptions, and ensure each session
-            aligns with member goals and ethics.
-          </p>
+        <div className="grid grid-3 section">
+          <div className="card">
+            <h3>Refer Only</h3>
+            <p>
+              If you simply refer clients to Reach For The Stars, you are an affiliate:
+              you earn 25% ongoing for every referred member who stays subscribed. No
+              management required—your referral link does the work.
+            </p>
+          </div>
+          <div className="card">
+            <h3>Manage Clients</h3>
+            <p>
+              When you manage clients on the platform, you are both facilitator and
+              affiliate. You curate their experience using our library, add your own
+              audios for them, and earn your affiliate 25% plus an additional 25% for
+              managing them—so you are rewarded for both bringing them in and guiding
+              their journey.
+            </p>
+          </div>
+          <div className="card">
+            <h3>If You Step Back</h3>
+            <p>
+              If you stop managing clients, you remain an affiliate for everyone you
+              referred. Your ongoing 25% share continues for as long as those members
+              stay—so your initial work keeps supporting your practice and your income.
+            </p>
+          </div>
         </div>
-        <div className="card">
-          <h3>Who We're Seeking</h3>
-          <p>
-            Hypnotherapists, wellness guides, coaches, and mindful practitioners who
-            want to shape a trusted healing platform.
-          </p>
+      </section>
+
+      <section className="section">
+        <div className="section-head">
+          <span className="eyebrow">What You Get</span>
+          <h2 className="section-title">Tools that support your practice.</h2>
+        </div>
+        <div className="grid grid-2 section">
+          <div className="card">
+            <h3>Our Audio Library</h3>
+            <p>
+              Use the full Reach For The Stars library—goal-based sessions, sleep and
+              recovery tracks, and vetted content—as the foundation for your clients&apos;
+              experience.
+            </p>
+          </div>
+          <div className="card">
+            <h3>Your Own Audios for Your Clients</h3>
+            <p>
+              Add personalized or custom recordings for the clients you manage. Your
+              voice, your methods, integrated into their journey alongside our library—so
+              they get one cohesive, professional experience.
+            </p>
+          </div>
         </div>
       </section>
 
       <section className="grid grid-2 section">
         <div className="card">
-          <h3>Facilitator Standards</h3>
+          <h3>Why Become a Facilitator</h3>
           <div className="stack">
-            <p>Clear, calming, and non-manipulative language.</p>
-            <p>Respectful handling of sensitive or adult content.</p>
-            <p>Accurate titles, descriptions, and goal mappings.</p>
-            <p>Aligned with constructive, consciousness-expanding outcomes.</p>
+            <p>Extend your reach with a platform built for transformation and growth.</p>
+            <p>Earn 25% ongoing on every member you refer; add an extra 25% when you manage them.</p>
+            <p>Keep earning even if you stop managing—your affiliate 25% stays for those you brought in.</p>
+            <p>Strengthen client outcomes with our library plus your own content.</p>
           </div>
         </div>
         <div className="card">
-          <h3>Why Join</h3>
-          <div className="stack">
-            <p>Shape a growing library of transformational recordings.</p>
-            <p>Collaborate with a vetted community of practitioners.</p>
-            <p>Help members reach mental, emotional, and spiritual clarity.</p>
-            <p>Be recognized as a contributor to a mission-driven platform.</p>
-          </div>
+          <h3>Who It&apos;s For</h3>
+          <p>
+            Coaches, hypnotherapists, wellness practitioners, and therapists who want to
+            offer guided audio as part of their practice—with a simple referral path, full
+            management options, and lasting affiliate rewards.
+          </p>
         </div>
       </section>
 
@@ -113,9 +154,10 @@ export default function FacilitatorPage() {
       <section className="card section">
         <h2>Apply to Become a Facilitator</h2>
         <p style={{ color: "#475569" }}>
-          Tell us about your background and the type of consciousness-focused work
-          you want to help cultivate. Applications are reviewed by the Success Center
-          team.
+          Tell us about your practice and how you plan to use Reach For The Stars with
+          your clients—whether you intend to refer, manage, or both. Applications are
+          reviewed by our team; approved facilitators get access to the platform and
+          affiliate terms.
         </p>
         <form onSubmit={submit} className="grid" style={{ marginTop: 16 }}>
           <input name="name" placeholder="Full name" required style={inputStyle} />

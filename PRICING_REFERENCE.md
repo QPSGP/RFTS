@@ -60,9 +60,8 @@ RFTS sits **between** generic apps (Headspace/Calm) and high-touch personal deve
 ## 5. Facilitator Recommendations
 
 - **Benchmarks:** Coach/facilitator revenue share on platforms often **20–30%**; some niches 15–25%.
-- **Suggested:** **20% of subscription revenue** for members attributed to that facilitator (e.g. signed up through their link or assigned to their content/CGMR).
-- **Optional:** One-time **10–15%** when a member they referred converts from trial, in addition to or instead of recurring, depending on attribution rules.
-- **Operational:** Monthly payout; clear rules for “facilitator-attributed” members (link, tag, or CGMR assignment).
+- **Current structure:** Facilitators who refer are affiliates (25% ongoing). When they **manage** a client, they earn an **additional 25%** on top of that—so 25% affiliate + 25% management = **50% total** for managed clients. If they stop managing, they keep the 25% affiliate share for those they brought in.
+- **Operational:** Monthly payout; clear rules for “facilitator-attributed and managed” members (link, tag, or CGMR assignment).
 
 ---
 
@@ -74,7 +73,7 @@ RFTS sits **between** generic apps (Headspace/Calm) and high-touch personal deve
 | **Member annual** | **$149/year** (~$12.42/mo) or **$119/year** (~$9.92/mo). |
 | **Free trial** | 7–14 days. |
 | **Affiliate** | 25% ongoing for as long as the referred member stays subscribed. |
-| **Facilitator share** | 20% of revenue for members attributed to them; optional one-time on conversion. |
+| **Facilitator** | 25% affiliate + **additional 25%** when managing the client (50% total for managed); if they stop managing, 25% affiliate continues. |
 
 ---
 
