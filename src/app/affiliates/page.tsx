@@ -14,8 +14,8 @@ export default async function AffiliatesPage() {
         <span className="pill">Affiliate Growth Network</span>
         <h1>Share the work. Earn as they grow.</h1>
         <p>
-          Refer new members and earn 25% of their first payment, then 15% recurring
-          for as long as they stay subscribed (up to 12 months).
+          Refer new members and earn 25% ongoing from each subscriber for as long
+          as they stay subscribed.
         </p>
       </section>
       <section className="section">
@@ -37,7 +37,7 @@ export default async function AffiliatesPage() {
           </div>
           <div className="card">
             <h3>Earn</h3>
-            <p>You earn 25% on first payment and 15% recurring for every active subscriber you bring in.</p>
+            <p>You earn 25% ongoing for every active subscriber you bring in.</p>
           </div>
         </div>
       </section>

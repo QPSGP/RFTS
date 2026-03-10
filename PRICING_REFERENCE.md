@@ -51,11 +51,8 @@ RFTS sits **between** generic apps (Headspace/Calm) and high-touch personal deve
 
 ## 4. Affiliate Recommendations
 
+- **Current rate:** **25% ongoing** — affiliates earn 25% of subscription revenue for as long as the referred member stays subscribed.
 - **Benchmarks:** Insight Timer ~50% of first year; others 25–45% one-time or 10–30% recurring.
-- **Suggested structure:**
-  - **25% of first payment** (trial conversion or first month).
-  - **15% recurring** for as long as the referred member stays (or cap at 12 months if preferred).
-- **Optional:** 20% recurring if you want to prioritize affiliate acquisition.
 - **Operational:** Monthly payout; minimum threshold ~$25–50; cookie 30–60 days.
 
 ---
@@ -76,8 +73,7 @@ RFTS sits **between** generic apps (Headspace/Calm) and high-touch personal deve
 | **Member monthly** | **$19.99/month** (list); consider $14.99 as promo or regional. |
 | **Member annual** | **$149/year** (~$12.42/mo) or **$119/year** (~$9.92/mo). |
 | **Free trial** | 7–14 days. |
-| **Affiliate (first)** | 25% of first payment (or first year at 25% total). |
-| **Affiliate (recurring)** | 15% (or 20%) for ongoing months, e.g. up to 12 months. |
+| **Affiliate** | 25% ongoing for as long as the referred member stays subscribed. |
 | **Facilitator share** | 20% of revenue for members attributed to them; optional one-time on conversion. |
 
 ---

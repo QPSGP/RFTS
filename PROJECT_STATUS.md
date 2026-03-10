@@ -22,6 +22,10 @@ Use this file to get up to speed when opening the project in the **rfts-platform
 - **Managed members — goals hidden, audio order:** For managed accounts, goals UI is hidden; schedule uses assigned audios only. Audio order: admin can set display order by SKU (numbered inputs); schema + `POST /api/admin/member-audio-order`; ordering used in schedule/library for managed members.
 - **Session behavior (1 vs 2 per night):** One session = two audio plays; 2 per night = full session (prep + first, gap, then second); 1 per night = half session (stop and close after first audio, no 2.5h countdown or auto second). SessionPlayer: auto-close when session ends; first session closes and queues second after gap; second auto-starts then closes. Scheduler docs updated (`src/lib/scheduler.ts`).
 - **Admin Subscription Plans — second plan:** Platinum Managed added. **`src/lib/content-seed.ts`:** `defaultSubscriptionPlans` now has two entries: `platinum` (Membership) and `platinum_managed` (Platinum Managed; description: "Curated sessions and assigned audios; no goal selection."). **`src/components/AdminSubscriptions.tsx`:** UI shows both plans (filter: `platinum` or `platinum_managed`). **`src/lib/db.ts`:** `ensureSubscriptionPlansSeeded()` now inserts each default plan if missing (no longer exits when any plan exists), so existing DBs get `platinum_managed` on first load of subscription plans. Admin can set Stripe Price ID and save for both plans.
+- **Affiliates — admin-only and rate copy:**
+  - **Access:** `/affiliates` is admin-only. Page uses `isAdminSession()`; non-admins redirect to `/login`. **`src/components/SiteHeader.tsx`:** "Affiliates" link shown only when `consoleType === "admin"` (mobile and desktop nav). Affiliate Section remains in Admin Content Console (`/admin/content` → Affiliate Section).
+  - **Rate:** **25% ongoing** — affiliates earn 25% of subscription revenue for as long as the referred member stays subscribed. **`src/app/affiliates/page.tsx`:** Hero and "Earn" card copy updated to "25% ongoing" (no first/recurring split). **`PRICING_REFERENCE.md`:** Section 4 and summary table updated to current rate: 25% ongoing; operational notes (monthly payout, threshold ~$25–50, cookie 30–60 days) kept.
+  - **API:** `GET` and `PATCH` `/api/affiliates` require admin; `POST` (create affiliate) remains open for future public signup if needed.
 
 ---
 
@@ -33,7 +37,7 @@ Use this file to get up to speed when opening the project in the **rfts-platform
 2. **Install:** `npm install` in rfts-platform.
 3. **Env:** Copy `.env.example` to `.env.local` (or use existing); set `POSTGRES_URL`, `SESSION_SECRET`, Stripe/Blob/Resend keys per README.
 4. **DB:** If new or after schema changes: `npm run db:schema` (or `node scripts/run-schema.js`).
-5. **Uncommitted work (this session):** Subscription plans change: `src/lib/content-seed.ts`, `src/components/AdminSubscriptions.tsx`, `src/lib/db.ts`. Optionally: `src/app/play-options/PlayOptionsClient.tsx` (may show as modified due to line endings only). Commit and push when ready.
+5. **Uncommitted work:** None expected; agent should commit and push at end of session when making changes.
 6. **Run:** `npm run dev`; admin at `/admin/setup` or use `ADMIN_EMAIL` / `ADMIN_PASSWORD_HASH`. Member login at `/member/login`; Play Options at `/play-options`.
 
 **Quick context:** RFTS = Next.js 14 wellness platform (Postgres, Stripe, Vercel Blob). Two subscription tiers: Platinum (Membership) and Platinum Managed; admin manages both under Subscription Plans. See "Where We Left Off" and "Quick Reference" below.
@@ -174,6 +178,9 @@ So any chat can take over from the current codebase state:
 
 | Commit   | What changed |
 |----------|--------------|
+| **(latest)** | Affiliates: 25% ongoing rate copy; PRICING_REFERENCE updated; PROJECT_STATUS handoff. Files: `src/app/affiliates/page.tsx`, `PRICING_REFERENCE.md`, `PROJECT_STATUS.md`. |
+| **a745f31** | Affiliates: admin-only page (redirect to `/login` if not admin), header link for admins only, initial rate copy. Files: `src/app/affiliates/page.tsx`, `src/components/SiteHeader.tsx`. |
+| **3252ad3** | Subscription plans: Platinum + Platinum Managed; seed both; AdminSubscriptions UI; PROJECT_STATUS. Files: `content-seed.ts`, `AdminSubscriptions.tsx`, `db.ts`, `PROJECT_STATUS.md`. |
 | **a178500** | Admin member list: search by name/email, filter by membership tier. File: `src/components/AdminUsers.tsx`. |
 | **64daea8** | TypeScript: `DbSubscription` tier type includes `platinum_managed`. File: `src/lib/db.ts`. |
 | **ea4ef84** | Signup page: Platinum membership pricing .95/mo. File: `src/app/signup/step-1-subscription-selection/page.tsx`. |
@@ -189,7 +196,7 @@ So any chat can take over from the current codebase state:
 
 ## Where We Left Off
 
-- **Uncommitted (this session):** **Subscription plans (second plan):** `src/lib/content-seed.ts`, `src/components/AdminSubscriptions.tsx`, `src/lib/db.ts`. Also possibly `src/app/play-options/PlayOptionsClient.tsx` (line-ending only). Commit these when moving computers or when ready; then push to origin/main.
+- **Affiliates:** Admin-only. `/affiliates` redirects non-admins to `/login`. Header shows "Affiliates" only for admins. Rate on site and in `PRICING_REFERENCE.md`: **25% ongoing**. API: GET/PATCH admin-only; POST open. See "Summary of changes (for the day)" for details.
 - **Member login (working):** Form POST to `/api/user/login` returns **200 + Set-Cookie + HTML** (meta refresh to `/play-options`) so the cookie is stored reliably. Play-options uses the cookie and shows the console. **`ClearSessionOnEnter`** on `/member/login` clears any stale member session when you open the login page so the header doesn’t show “Members Console” until you’ve logged in. Test user for E2E: `node scripts/seed-test-user.js` then `node scripts/test-login-e2e.js` (dev server must be running).
 - **Handoff:** Read this file and **README.md** for env. Run schema with `npm run db:schema` if DB is new or after schema changes.
 - **Git:** Pushes from rfts-platform to origin/main work; commit PROJECT_STATUS.md with related work.
@@ -212,3 +219,4 @@ So any chat can take over from the current codebase state:
 - **Upload audio:** `POST /api/admin/upload-audio` → Vercel Blob; client large uploads via `POST /api/admin/upload-audio-handler` + `@vercel/blob/client`; env: BLOB_READ_WRITE_TOKEN.
 - **Admin members:** `src/components/AdminUsers.tsx` — list with search (name/email), filter by tier; managed members: goals hidden, audio order via `POST /api/admin/member-audio-order` and schema (member_audio_order). Play Options / SessionPlayer: `src/app/play-options/PlayOptionsClient.tsx`, `src/components/SessionPlayer.tsx` (1 vs 2 per night).
 - **Admin Subscription Plans:** `src/components/AdminSubscriptions.tsx` — edit both plans (Platinum + Platinum Managed). Defaults in `src/lib/content-seed.ts` (`defaultSubscriptionPlans`); seeding in `src/lib/db.ts` (`ensureSubscriptionPlansSeeded` inserts each default if missing). API: GET/POST `/api/subscriptions`.
+- **Affiliates:** `src/app/affiliates/page.tsx` — admin-only (server check, redirect to `/login`). Rate: 25% ongoing (copy + `PRICING_REFERENCE.md`). Header: `SiteHeader.tsx` shows "Affiliates" when `consoleType === "admin"`. API: `GET`/`PATCH` `/api/affiliates` require admin; `POST` open. Also in Admin Content Console → Affiliate Section.
