@@ -46,7 +46,7 @@ export default function FacilitatorPage() {
     <main>
       <section className="hero section">
         <span className="pill">Facilitator Program</span>
-        <h1>Use Our System for Your Clients</h1>
+        <h1>If you see the value that our system delivers for your clients, use the RFTS system.</h1>
         <p>
           Facilitators are practitioners who use Reach For The Stars with their clients—whether
           by referring them to the platform or by actively managing their journey. You get
