@@ -231,10 +231,13 @@ export default function MemberProfilePage() {
               Birthdate (optional). Required for mature content access 18+.
             </p>
             <input
+              type="date"
               style={inputStyle}
-              placeholder="Year e.g. 1990"
-              value={profile.yearBorn}
-              onChange={(e) => setProfile((p) => ({ ...p, yearBorn: e.target.value }))}
+              value={profile.yearBorn ? `${profile.yearBorn}-01-01` : ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                setProfile((p) => ({ ...p, yearBorn: v ? v.slice(0, 4) : "" }));
+              }}
             />
           </div>
           <div>

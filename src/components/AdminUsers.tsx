@@ -919,15 +919,23 @@ export default function AdminUsers() {
                                 Birthdate (optional). Required for mature content access 18+.
                               </p>
                               <input
+                                type="date"
                                 style={inputStyle}
-                                placeholder="Year e.g. 1990"
-                                value={profileDrafts[user.email].yearBorn}
-                                onChange={(event) =>
+                                value={
+                                  profileDrafts[user.email].yearBorn
+                                    ? `${profileDrafts[user.email].yearBorn}-01-01`
+                                    : ""
+                                }
+                                onChange={(event) => {
+                                  const v = event.target.value;
                                   setProfileDrafts({
                                     ...profileDrafts,
-                                    [user.email]: { ...profileDrafts[user.email], yearBorn: event.target.value }
-                                  })
-                                }
+                                    [user.email]: {
+                                      ...profileDrafts[user.email],
+                                      yearBorn: v ? v.slice(0, 4) : ""
+                                    }
+                                  });
+                                }}
                               />
                             </div>
                             <div>
