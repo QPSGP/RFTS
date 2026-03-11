@@ -72,6 +72,9 @@ export async function GET(request: Request) {
     if (isAdmin) {
       audioUrl = item.audioUrl;
     } else {
+    if (!profile) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
     const isSpecial =
       (item.categories || []).some((c) => c.toLowerCase() === "special") ?? false;
     if (isSpecial) {
