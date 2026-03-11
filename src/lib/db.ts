@@ -34,6 +34,8 @@ export type MemberProfile = {
   lastName?: string | null;
   gender?: string | null;
   yearBorn?: number | null;
+  /** Full birth date YYYY-MM-DD when set; used for calendar display and age (year) derivation. */
+  birthDate?: string | null;
   contactNumber?: string | null;
   bestContactTimes?: string | null;
   timeZone?: string | null;
@@ -166,6 +168,24 @@ export const setUserPlaysPerNight = async (userId: string, playsPerNight: number
 };
 
 export const upsertMemberProfile = async (profile: MemberProfile) => {
+  const birthDate = profile.birthDate?.trim() || null;
+  const yearFromBirthDate =
+    birthDate != null
+      ? (() => {
+          const y = parseInt(birthDate.slice(0, 4), 10);
+          return !Number.isNaN(y) && y >= 1900 && y <= 2100 ? y : null;
+        })()
+      : null;
+  const yearBorn = yearFromBirthDate ?? profile.yearBorn ?? null;
+  const normalizedBirthDate =
+    birthDate != null && typeof birthDate === "string" ? birthDate.trim().slice(0, 10) : null;
+  const birthDateForDb =
+    normalizedBirthDate && /^\d{4}-\d{2}-\d{2}$/.test(normalizedBirthDate)
+      ? normalizedBirthDate
+      : yearBorn != null
+        ? `${yearBorn}-01-01`
+        : null;
+
   await sql`
     INSERT INTO member_profiles (
       user_id,
@@ -173,6 +193,7 @@ export const upsertMemberProfile = async (profile: MemberProfile) => {
       last_name,
       gender,
       year_born,
+      birth_date,
       contact_number,
       best_contact_times,
       time_zone,
@@ -193,7 +214,8 @@ export const upsertMemberProfile = async (profile: MemberProfile) => {
       ${profile.firstName || null},
       ${profile.lastName || null},
       ${profile.gender || null},
-      ${profile.yearBorn || null},
+      ${yearBorn},
+      ${birthDateForDb},
       ${profile.contactNumber || null},
       ${profile.bestContactTimes || null},
       ${profile.timeZone || null},
@@ -215,6 +237,7 @@ export const upsertMemberProfile = async (profile: MemberProfile) => {
       last_name = EXCLUDED.last_name,
       gender = EXCLUDED.gender,
       year_born = EXCLUDED.year_born,
+      birth_date = EXCLUDED.birth_date,
       contact_number = EXCLUDED.contact_number,
       best_contact_times = EXCLUDED.best_contact_times,
       time_zone = EXCLUDED.time_zone,
@@ -233,14 +256,15 @@ export const upsertMemberProfile = async (profile: MemberProfile) => {
   `;
 };
 
-export const getMemberProfileByUserId = async (userId: string) => {
-  const { rows } = await sql<MemberProfile>`
+export const getMemberProfileByUserId = async (userId: string): Promise<MemberProfile | null> => {
+  const { rows } = await sql<Omit<MemberProfile, "birthDate"> & { birth_date: string | null }>`
     SELECT
       user_id as "userId",
       first_name as "firstName",
       last_name as "lastName",
       gender,
       year_born as "yearBorn",
+      birth_date,
       contact_number as "contactNumber",
       best_contact_times as "bestContactTimes",
       time_zone as "timeZone",
@@ -260,7 +284,22 @@ export const getMemberProfileByUserId = async (userId: string) => {
     WHERE user_id = ${userId}
     LIMIT 1
   `;
-  return rows[0] || null;
+  const row = rows[0];
+  if (!row) return null;
+  const { birth_date: bd, ...rest } = row;
+  const birthDate = bd ? String(bd).slice(0, 10) : null;
+  const yearBorn =
+    birthDate != null
+      ? (() => {
+          const y = parseInt(birthDate.slice(0, 4), 10);
+          return !Number.isNaN(y) && y >= 1900 && y <= 2100 ? y : rest.yearBorn ?? null;
+        })()
+      : rest.yearBorn ?? null;
+  return {
+    ...rest,
+    birthDate: birthDate ?? null,
+    yearBorn
+  } as MemberProfile;
 };
 
 /** Set schedule start to today (UTC date). Used when first loading schedule or when goals/plays-per-night change so rotation restarts. Upserts so rotation works even if member_profiles row was missing. */

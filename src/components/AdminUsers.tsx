@@ -52,6 +52,7 @@ type ProfileDraft = {
   lastName: string;
   gender: string;
   yearBorn: string;
+  birthDate: string;
   contactNumber: string;
   bestContactTimes: string;
   timeZone: string;
@@ -278,6 +279,7 @@ export default function AdminUsers() {
         lastName: profile.lastName || "",
         gender: profile.gender || "",
         yearBorn: profile.yearBorn ? String(profile.yearBorn) : "",
+        birthDate: profile.birthDate?.trim() || (profile.yearBorn ? `${profile.yearBorn}-01-01` : ""),
         contactNumber: profile.contactNumber || "",
         bestContactTimes: profile.bestContactTimes || "",
         timeZone: profile.timeZone || "Pacific Time",
@@ -614,6 +616,7 @@ export default function AdminUsers() {
           lastName: draft.lastName,
           gender: draft.gender,
           yearBorn: toYear(draft.yearBorn),
+          birthDate: draft.birthDate?.trim() || undefined,
           contactNumber: draft.contactNumber,
           bestContactTimes: draft.bestContactTimes,
           timeZone: draft.timeZone,
@@ -921,17 +924,14 @@ export default function AdminUsers() {
                               <input
                                 type="date"
                                 style={inputStyle}
-                                value={
-                                  profileDrafts[user.email].yearBorn
-                                    ? `${profileDrafts[user.email].yearBorn}-01-01`
-                                    : ""
-                                }
+                                value={profileDrafts[user.email].birthDate}
                                 onChange={(event) => {
                                   const v = event.target.value;
                                   setProfileDrafts({
                                     ...profileDrafts,
                                     [user.email]: {
                                       ...profileDrafts[user.email],
+                                      birthDate: v,
                                       yearBorn: v ? v.slice(0, 4) : ""
                                     }
                                   });

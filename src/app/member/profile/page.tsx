@@ -26,6 +26,8 @@ type ProfileState = {
   firstName: string | null;
   lastName: string | null;
   gender: string | null;
+  /** Full birth date YYYY-MM-DD for calendar; used with yearBorn for age. */
+  birthDate: string;
   yearBorn: string;
   contactNumber: string | null;
   bestContactTimes: string | null;
@@ -43,6 +45,7 @@ const emptyProfile: ProfileState = {
   firstName: null,
   lastName: null,
   gender: null,
+  birthDate: "",
   yearBorn: "",
   contactNumber: null,
   bestContactTimes: null,
@@ -61,6 +64,7 @@ function toState(profile: {
   lastName?: string | null;
   gender?: string | null;
   yearBorn?: number | null;
+  birthDate?: string | null;
   contactNumber?: string | null;
   bestContactTimes?: string | null;
   timeZone?: string | null;
@@ -71,15 +75,18 @@ function toState(profile: {
   hadLgdSession?: boolean;
   referralSource?: string | null;
 }): ProfileState {
+  const birthDate = profile.birthDate?.trim() || "";
+  const yearBorn =
+    profile.yearBorn != null && !Number.isNaN(profile.yearBorn)
+      ? String(profile.yearBorn)
+      : "";
   return {
     email: profile.email ?? "",
     firstName: profile.firstName ?? null,
     lastName: profile.lastName ?? null,
     gender: profile.gender ?? null,
-    yearBorn:
-      profile.yearBorn != null && !Number.isNaN(profile.yearBorn)
-        ? String(profile.yearBorn)
-        : "",
+    birthDate: birthDate || (yearBorn ? `${yearBorn}-01-01` : ""),
+    yearBorn,
     contactNumber: profile.contactNumber ?? null,
     bestContactTimes: profile.bestContactTimes ?? null,
     timeZone: profile.timeZone ?? "Pacific Time",
@@ -99,12 +106,12 @@ export default function MemberProfilePage() {
   const [saving, setSaving] = useState(false);
 
   const showAdultContent = useMemo(() => {
-    const y = profile.yearBorn.trim();
-    if (!y) return false;
-    const yearNum = parseInt(y, 10);
+    const dateStr = profile.birthDate.trim() || (profile.yearBorn.trim() ? `${profile.yearBorn}-01-01` : "");
+    if (!dateStr) return false;
+    const yearNum = parseInt(dateStr.slice(0, 4), 10);
     if (Number.isNaN(yearNum) || yearNum < 1900 || yearNum > 2100) return false;
     return new Date().getFullYear() - yearNum >= 18;
-  }, [profile.yearBorn]);
+  }, [profile.birthDate, profile.yearBorn]);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/member/profile", { credentials: "include" });
@@ -135,13 +142,10 @@ export default function MemberProfilePage() {
   const save = async () => {
     setSaveMessage(null);
     setSaving(true);
-    const yearBorn =
-      profile.yearBorn.trim() === ""
-        ? undefined
-        : (() => {
-            const n = parseInt(profile.yearBorn, 10);
-            return !Number.isNaN(n) && n >= 1900 && n <= 2100 ? n : undefined;
-          })();
+    const birthDate =
+      typeof profile.birthDate === "string" && profile.birthDate.trim()
+        ? profile.birthDate.trim().slice(0, 10)
+        : undefined;
     const res = await fetch("/api/member/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -150,7 +154,7 @@ export default function MemberProfilePage() {
         firstName: profile.firstName?.trim() || undefined,
         lastName: profile.lastName?.trim() || undefined,
         gender: profile.gender?.trim() || undefined,
-        yearBorn,
+        birthDate,
         contactNumber: profile.contactNumber?.trim() || undefined,
         bestContactTimes: profile.bestContactTimes?.trim() || undefined,
         timeZone: profile.timeZone || undefined,
@@ -165,6 +169,7 @@ export default function MemberProfilePage() {
     setSaving(false);
     if (res.ok) {
       setSaveMessage("Profile saved.");
+      load();
       return;
     }
     const data = await res.json().catch(() => ({}));
@@ -233,10 +238,14 @@ export default function MemberProfilePage() {
             <input
               type="date"
               style={inputStyle}
-              value={profile.yearBorn ? `${profile.yearBorn}-01-01` : ""}
+              value={profile.birthDate}
               onChange={(e) => {
                 const v = e.target.value;
-                setProfile((p) => ({ ...p, yearBorn: v ? v.slice(0, 4) : "" }));
+                setProfile((p) => ({
+                  ...p,
+                  birthDate: v,
+                  yearBorn: v ? v.slice(0, 4) : ""
+                }));
               }}
             />
           </div>

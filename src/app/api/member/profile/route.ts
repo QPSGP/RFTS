@@ -17,11 +17,24 @@ const yearSchema = z
     return n;
   });
 
+const birthDateSchema = z
+  .string()
+  .optional()
+  .transform((v) => {
+    if (v === undefined || v === null) return undefined;
+    const s = String(v).trim();
+    if (!s) return undefined;
+    const datePart = s.slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return datePart;
+    return undefined;
+  });
+
 const updateSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   gender: z.string().optional(),
   yearBorn: yearSchema,
+  birthDate: birthDateSchema,
   contactNumber: z.string().optional(),
   bestContactTimes: z.string().optional(),
   timeZone: z.string().optional(),
@@ -51,6 +64,7 @@ export async function GET() {
         lastName: null,
         gender: null,
         yearBorn: null,
+        birthDate: null,
         contactNumber: null,
         bestContactTimes: null,
         timeZone: "Pacific Time",
@@ -63,17 +77,8 @@ export async function GET() {
       }
     });
   }
-  const yearBornRaw = memberProfile.yearBorn ?? null;
-  const yearBorn =
-    yearBornRaw != null
-      ? typeof yearBornRaw === "number"
-        ? yearBornRaw
-        : parseInt(String(yearBornRaw), 10)
-      : null;
-  const yearBornNum =
-    yearBorn != null && !Number.isNaN(yearBorn) && yearBorn >= 1900 && yearBorn <= 2100
-      ? yearBorn
-      : null;
+  const yearBornNum = memberProfile.yearBorn ?? null;
+  const birthDate = memberProfile.birthDate ?? null;
   return NextResponse.json({
     profile: {
       email: user.email,
@@ -81,6 +86,7 @@ export async function GET() {
       lastName: memberProfile.lastName ?? null,
       gender: memberProfile.gender ?? null,
       yearBorn: yearBornNum,
+      birthDate,
       contactNumber: memberProfile.contactNumber ?? null,
       bestContactTimes: memberProfile.bestContactTimes ?? null,
       timeZone: memberProfile.timeZone ?? "Pacific Time",
@@ -109,19 +115,33 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
   const existing = await getMemberProfileByUserId(user.id);
-  const yearBorn = parsed.data.yearBorn ?? existing?.yearBorn ?? null;
+  const rawBirthDate = parsed.data.birthDate;
+  const birthDate =
+    typeof rawBirthDate === "string" && rawBirthDate.trim().length >= 10
+      ? rawBirthDate.trim().slice(0, 10)
+      : rawBirthDate ?? existing?.birthDate ?? null;
+  const yearBornFromBirthDate =
+    birthDate != null
+      ? (() => {
+          const y = parseInt(birthDate.slice(0, 4), 10);
+          return !Number.isNaN(y) && y >= 1900 && y <= 2100 ? y : null;
+        })()
+      : null;
+  const yearBorn = yearBornFromBirthDate ?? parsed.data.yearBorn ?? existing?.yearBorn ?? null;
   const currentYear = new Date().getFullYear();
   const isAgeVerified = yearBorn != null && currentYear - yearBorn >= 18;
   const rawAdultConsent = parsed.data.adultConsent ?? existing?.adultConsent ?? false;
   const adultConsent = rawAdultConsent && isAgeVerified;
 
-  await upsertMemberProfile({
-    userId: user.id,
-    firstName: parsed.data.firstName ?? existing?.firstName ?? null,
-    lastName: parsed.data.lastName ?? existing?.lastName ?? null,
-    gender: parsed.data.gender !== undefined ? parsed.data.gender : existing?.gender ?? null,
-    yearBorn,
-    contactNumber:
+  try {
+    await upsertMemberProfile({
+      userId: user.id,
+      firstName: parsed.data.firstName ?? existing?.firstName ?? null,
+      lastName: parsed.data.lastName ?? existing?.lastName ?? null,
+      gender: parsed.data.gender !== undefined ? parsed.data.gender : existing?.gender ?? null,
+      yearBorn,
+      birthDate: birthDate ?? undefined,
+      contactNumber:
       parsed.data.contactNumber !== undefined
         ? parsed.data.contactNumber
         : existing?.contactNumber ?? null,
@@ -150,5 +170,16 @@ export async function PATCH(request: Request) {
         : existing?.referralSource ?? null,
     notes: existing?.notes ?? null
   });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[PATCH /api/member/profile]", message);
+    if (message.includes("birth_date") || message.includes("column")) {
+      return NextResponse.json(
+        { error: "Database may need a schema update. Run: npm run db:schema" },
+        { status: 500 }
+      );
+    }
+    return NextResponse.json({ error: "Save failed." }, { status: 500 });
+  }
   return NextResponse.json({ ok: true });
 }

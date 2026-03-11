@@ -197,6 +197,9 @@ ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS notes text;
 -- Migration: schedule start date so "tonight" advances each day (safe to run on existing DBs)
 ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS schedule_started_at date;
 
+-- Migration: full birth date (day/month/year) for calendar picker; age still derived from year (safe to run on existing DBs)
+ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS birth_date date;
+
 -- Member audio assignments with order (for managed members)
 CREATE TABLE IF NOT EXISTS member_audio_assignments (
   user_email text NOT NULL,

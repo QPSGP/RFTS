@@ -1,9 +1,28 @@
 import { NextResponse } from "next/server";
+import { getSessionRole } from "@/lib/auth";
 import { getUserSessionEmail } from "@/lib/user-auth";
 import { getMemberProfileByUserId, getUserProfile } from "@/lib/db";
 
 export async function GET() {
   try {
+    const role = await getSessionRole();
+    if (role === "admin") {
+      const res = NextResponse.json({
+        isAdmin: true,
+        profile: {
+          subscriptionStatus: "active",
+          email: "",
+          hasVerifiedAge: true,
+          adultConsent: true,
+          wantsPracticeGrowth: true,
+          isManaged: false,
+          goalIds: [],
+          playsPerNight: 2
+        }
+      });
+      res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+      return res;
+    }
     const email = await getUserSessionEmail();
     if (!email) {
       const res = NextResponse.json({ error: "Unauthorized." }, { status: 401 });
@@ -38,6 +57,7 @@ export async function GET() {
     const isManaged = profile.subscriptionTier === "platinum_managed";
     
     const res = NextResponse.json({
+      isAdmin: false,
       profile: {
         ...profile,
         firstName,

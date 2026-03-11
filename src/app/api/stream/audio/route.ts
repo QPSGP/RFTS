@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { isAdminSession } from "@/lib/auth";
 import { getUserSessionEmail } from "@/lib/user-auth";
 import {
   getLibraryItem,
@@ -29,17 +30,21 @@ const getContentType = (url: string) => {
 };
 
 export async function GET(request: Request) {
+  const isAdmin = await isAdminSession();
   const email = await getUserSessionEmail();
-  if (!email) {
+  if (!isAdmin && !email) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const profile = await getUserProfile(email);
-  if (!profile) {
-    return NextResponse.json({ error: "Not found." }, { status: 404 });
-  }
-  if (profile.subscriptionStatus !== "active") {
-    return NextResponse.json({ error: "Subscription required." }, { status: 403 });
+  let profile: Awaited<ReturnType<typeof getUserProfile>> = null;
+  if (email) {
+    profile = await getUserProfile(email);
+    if (!profile) {
+      return NextResponse.json({ error: "Not found." }, { status: 404 });
+    }
+    if (profile.subscriptionStatus !== "active") {
+      return NextResponse.json({ error: "Subscription required." }, { status: 403 });
+    }
   }
 
   const { searchParams } = new URL(request.url);
@@ -64,6 +69,9 @@ export async function GET(request: Request) {
     if (isCgmr) {
       return NextResponse.json({ error: "Access denied." }, { status: 403 });
     }
+    if (isAdmin) {
+      audioUrl = item.audioUrl;
+    } else {
     const isSpecial =
       (item.categories || []).some((c) => c.toLowerCase() === "special") ?? false;
     if (isSpecial) {
@@ -98,12 +106,13 @@ export async function GET(request: Request) {
       item.allowedUserEmails &&
       item.allowedUserEmails.length > 0 &&
       !item.allowedUserEmails.some(
-        (e) => e.toLowerCase() === email.toLowerCase()
+        (e) => e.trim().toLowerCase() === email.trim().toLowerCase()
       )
     ) {
       return NextResponse.json({ error: "Access denied." }, { status: 403 });
     }
     audioUrl = item.audioUrl;
+    }
   }
 
   if (!audioUrl) {

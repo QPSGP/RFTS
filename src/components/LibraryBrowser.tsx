@@ -13,6 +13,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
   const [status, setStatus] = useState<"loading" | "loggedOut" | "inactive" | "active">(
     "loading"
   );
+  const [isAdmin, setIsAdmin] = useState(false);
   const [adultConsent, setAdultConsent] = useState(false);
   const [hasVerifiedAge, setHasVerifiedAge] = useState(false);
   const [wantsPracticeGrowth, setWantsPracticeGrowth] = useState(false);
@@ -29,6 +30,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
         return res.json();
       })
       .then((data) => {
+        setIsAdmin(!!data.isAdmin);
         setUserEmail(data.profile?.email || "");
         setAdultConsent(!!data.profile?.adultConsent);
         setHasVerifiedAge(!!data.profile?.hasVerifiedAge);
@@ -103,9 +105,11 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
   const renderCard = (item: LibraryItem) => {
     const isLocked = status !== "active";
     const isUserLocked =
-      item.allowedUserEmails && item.allowedUserEmails.length > 0
+      !isAdmin &&
+      item.allowedUserEmails &&
+      item.allowedUserEmails.length > 0
         ? !item.allowedUserEmails.some(
-            (email) => email.toLowerCase() === userEmail.toLowerCase()
+            (e) => e.trim().toLowerCase() === userEmail.trim().toLowerCase()
           )
         : false;
     const content = (

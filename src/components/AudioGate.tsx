@@ -12,6 +12,7 @@ export default function AudioGate({ item }: AudioGateProps) {
   const [status, setStatus] = useState<"loading" | "loggedOut" | "inactive" | "active">(
     "loading"
   );
+  const [isAdmin, setIsAdmin] = useState(false);
   const [hasAdultConsent, setHasAdultConsent] = useState(false);
   const [hasVerifiedAge, setHasVerifiedAge] = useState(false);
   const [userEmail, setUserEmail] = useState("");
@@ -25,6 +26,7 @@ export default function AudioGate({ item }: AudioGateProps) {
         return res.json();
       })
       .then((data) => {
+        setIsAdmin(!!data.isAdmin);
         setUserEmail(data.profile?.email || "");
         setHasAdultConsent(!!data.profile?.adultConsent);
         setHasVerifiedAge(!!data.profile?.hasVerifiedAge);
@@ -35,10 +37,12 @@ export default function AudioGate({ item }: AudioGateProps) {
   }, []);
 
   const isUserAllowed =
-    !item.allowedUserEmails || item.allowedUserEmails.length === 0
+    isAdmin ||
+    !item.allowedUserEmails ||
+    item.allowedUserEmails.length === 0
       ? true
       : item.allowedUserEmails.some(
-          (email) => email.toLowerCase() === userEmail.toLowerCase()
+          (e) => e.trim().toLowerCase() === userEmail.trim().toLowerCase()
         );
   const isCgmr =
     item.categories?.some((category) => category.toLowerCase() === "cgmr") ?? false;

@@ -7,8 +7,9 @@ export type ScheduleNight = {
 };
 
 /**
- * Session definition: one full session = two audio plays (e.g. first recording + second after gap).
- * So playsPerNight 2 = one full session per night; playsPerNight 1 = half a session (one play) per night.
+ * Schedule is session-based (plays), not night-based. One play = one session.
+ * playsPerNight 2 = two sessions per night; playsPerNight 1 = one session per night (same rotation, double the nights).
+ * Add-new-track and T18/CGMR special slot are keyed off session index; goal drops are by session count.
  */
 type ScheduleInput = {
   interests: string[];
@@ -170,20 +171,17 @@ export const buildSchedulePreview = ({
     playCounts.set(item.id, count + 1);
   };
 
-  const shouldDropGoalOnNight = (night: number) => {
-    const dropMap = new Map<number, number>([
-      [45, 1],
-      [46, 2],
-      [47, 3],
-      [56, 4],
-      [63, 5],
-      [70, 6],
-      [77, 7],
-      [84, 8],
-      [90, 10],
-      [91, 9]
-    ]);
-    return dropMap.get(night) || null;
+  // Drop goals by session count so rotation is the same for 1 or 2 plays per night (1 per night = double the nights)
+  const dropGoalBySession: [number, number][] = [
+    [88, 1], [90, 2], [92, 3], [110, 4], [124, 5], [138, 6], [152, 7], [166, 8], [178, 9], [180, 10]
+  ];
+  const getGoalToDropAtSession = (sessionsSoFar: number): number | null => {
+    for (let i = 0; i < dropGoalBySession.length; i++) {
+      const [threshold, goalIndex] = dropGoalBySession[i];
+      const nextThreshold = dropGoalBySession[i + 1]?.[0] ?? Infinity;
+      if (sessionsSoFar >= threshold && sessionsSoFar < nextThreshold) return goalIndex;
+    }
+    return null;
   };
 
   const schedule: ScheduleNight[] = [];
@@ -214,7 +212,7 @@ export const buildSchedulePreview = ({
     }
 
     if (!isManagedMember) {
-      const dropGoalIndex = shouldDropGoalOnNight(night);
+      const dropGoalIndex = getGoalToDropAtSession(sessionsSoFar);
       if (dropGoalIndex && orderedGoals[dropGoalIndex - 1]) {
         const dropId = orderedGoals[dropGoalIndex - 1];
         const dropIdx = activeGoals.indexOf(dropId);
@@ -224,17 +222,21 @@ export const buildSchedulePreview = ({
       }
     }
 
-    // For managed members: use assigned audios directly; for regular: use goals
+    // Session-based rotation: same sequence of plays whether 1 or 2 per night (1 per night = double the nights)
+    const sessionIndexFirst = (night - 1) * playsPerNight + 1;
+    const sessionIndexSecond = (night - 1) * playsPerNight + 2;
+    const isSpecialSessionFirst = sessionIndexFirst % 8 === 0;
+    const isSpecialSessionSecond = sessionIndexSecond % 8 === 0;
+
     const first = isManagedMember
       ? takeNextAssignedAudio()
       : (() => {
           const firstGoal = takeNextGoal();
           return firstGoal ? takeNextTrackForGoal(firstGoal) : null;
         })();
-    const isSpecialNight = night % 4 === 0;
     const second =
       playsPerNight === 2
-        ? isSpecialNight
+        ? isSpecialSessionSecond
           ? specialTrack
           : isManagedMember
             ? takeNextAssignedAudio()
@@ -244,7 +246,7 @@ export const buildSchedulePreview = ({
               })()
         : null;
     const singleTrack =
-      playsPerNight === 1 && isSpecialNight && specialTrack
+      playsPerNight === 1 && isSpecialSessionFirst && specialTrack
         ? specialTrack
         : first;
     const selectedTracks = playsPerNight === 1 ? [singleTrack] : [first, second];
@@ -261,6 +263,7 @@ export const buildSchedulePreview = ({
 
     tracks.forEach((item) => markPlayed(item));
 
+    const isSpecialThisNight = playsPerNight === 1 ? isSpecialSessionFirst : isSpecialSessionSecond;
     const noteSpecial =
       playsPerNight === 1 ? "T18/CGMR session" : "T18/CGMR night";
     schedule.push({
@@ -268,10 +271,10 @@ export const buildSchedulePreview = ({
       tracks,
       note:
         playsPerNight === 1
-          ? isSpecialNight
+          ? isSpecialSessionFirst
             ? noteSpecial
             : "One session per night"
-          : isSpecialNight
+          : isSpecialThisNight
             ? noteSpecial
             : `Rotation night (${settings.nightlyGapHours} hour gap)`
     });

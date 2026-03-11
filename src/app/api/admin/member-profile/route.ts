@@ -17,6 +17,12 @@ const yearSchema = z
     return n;
   });
 
+const birthDateSchema = z
+  .string()
+  .optional()
+  .refine((v) => !v || /^\d{4}-\d{2}-\d{2}$/.test(v), "Invalid date YYYY-MM-DD")
+  .transform((v) => (v && v.trim() ? v.trim() : undefined));
+
 const updateSchema = z.object({
   email: z.string().email(),
   profile: z.object({
@@ -24,6 +30,7 @@ const updateSchema = z.object({
     lastName: z.string().optional(),
     gender: z.string().optional(),
     yearBorn: yearSchema,
+    birthDate: birthDateSchema,
     contactNumber: z.string().optional(),
     bestContactTimes: z.string().optional(),
     timeZone: z.string().optional(),
@@ -72,7 +79,15 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
   const existing = await getMemberProfileByUserId(user.id);
-  const yearBorn = parsed.data.profile.yearBorn ?? existing?.yearBorn ?? null;
+  const birthDate = parsed.data.profile.birthDate ?? existing?.birthDate ?? null;
+  const yearFromBirthDate =
+    birthDate != null
+      ? (() => {
+          const y = parseInt(birthDate.slice(0, 4), 10);
+          return !Number.isNaN(y) && y >= 1900 && y <= 2100 ? y : null;
+        })()
+      : null;
+  const yearBorn = yearFromBirthDate ?? parsed.data.profile.yearBorn ?? existing?.yearBorn ?? null;
   const currentYear = new Date().getFullYear();
   const isAgeVerified = yearBorn != null && currentYear - yearBorn >= 18;
   const rawAdultConsent = parsed.data.profile.adultConsent ?? existing?.adultConsent ?? false;
@@ -84,6 +99,7 @@ export async function PATCH(request: Request) {
     lastName: parsed.data.profile.lastName ?? existing?.lastName ?? null,
     gender: parsed.data.profile.gender ?? existing?.gender ?? null,
     yearBorn,
+    birthDate: birthDate ?? undefined,
     contactNumber: parsed.data.profile.contactNumber ?? existing?.contactNumber ?? null,
     bestContactTimes:
       parsed.data.profile.bestContactTimes ?? existing?.bestContactTimes ?? null,
