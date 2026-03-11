@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getMemberAudioOrder, getUserProfile, recordMemberActivity, setScheduleStartedToToday, setUserGoals, setUserPlaysPerNight } from "@/lib/db";
+import { getUserProfile, recordMemberActivity, setScheduleStartedToToday, setUserGoals, setUserPlaysPerNight } from "@/lib/db";
 
 const schema = z.object({
   goalIds: z.array(z.string()).min(1).max(10).optional(),
@@ -30,10 +30,9 @@ export async function GET() {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
   
-  // Check if this is a managed member (has assigned audios)
-  const assignedAudioOrder = await getMemberAudioOrder(email);
-  const isManaged = assignedAudioOrder.length > 0;
-  
+  // Managed = Platinum Managed tier only (Platinum = goal-based, can see and edit goals)
+  const isManaged = profile.subscriptionTier === "platinum_managed";
+
   const editState = computeGoalEditState(profile);
   return NextResponse.json({
     goalIds: profile.goalIds || [],
@@ -57,10 +56,9 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
   
-  // Check if this is a managed member
-  const assignedAudioOrder = await getMemberAudioOrder(email);
-  const isManaged = assignedAudioOrder.length > 0;
-  
+  // Managed = Platinum Managed tier only
+  const isManaged = profile.subscriptionTier === "platinum_managed";
+
   const body = await request.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {

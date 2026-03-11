@@ -87,9 +87,10 @@ export async function GET(request: Request) {
     filteredLibrary.find((item) => (item.allowedUserEmails || []).some((e) => e.toLowerCase() === emailLower)) ??
     null;
 
-  // Check if this is a managed member with assigned audios
-  const assignedAudioOrder = await getMemberAudioOrder(profile.email || "");
-  const isManagedMember = assignedAudioOrder.length > 0;
+  // Only Platinum Managed use assigned-audio schedule; Platinum = goal-based
+  const isPlatinumManaged = profile.subscriptionTier === "platinum_managed";
+  const assignedAudioOrder = isPlatinumManaged ? await getMemberAudioOrder(profile.email || "") : [];
+  const assignedAudioIds = isPlatinumManaged && assignedAudioOrder.length > 0 ? assignedAudioOrder : undefined;
 
   const schedule = buildSchedulePreview({
     interests: profile.goalIds || [],
@@ -100,7 +101,7 @@ export async function GET(request: Request) {
     nights,
     playsPerNight: profile.playsPerNight === 1 ? 1 : 2,
     userAssignedTrack: userAssignedTrack ?? undefined,
-    assignedAudioIds: isManagedMember ? assignedAudioOrder : undefined
+    assignedAudioIds
   });
 
   // Advance "tonight" by day: use schedule_started_at (UTC) so night 1 = start date, night 2 = next day, etc.

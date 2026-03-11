@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getMemberAudioOrder, getMemberProfileByUserId, getUserProfile } from "@/lib/db";
+import { getMemberProfileByUserId, getUserProfile } from "@/lib/db";
 
 export async function GET() {
   try {
@@ -34,9 +34,8 @@ export async function GET() {
     const firstName = memberProfile?.firstName ?? null;
     const lastName = memberProfile?.lastName ?? null;
     
-    // Check if this is a managed member
-    const assignedAudioOrder = await getMemberAudioOrder(email);
-    const isManaged = assignedAudioOrder.length > 0;
+    // Managed = Platinum Managed tier only (goal-based Platinum members always see goals)
+    const isManaged = profile.subscriptionTier === "platinum_managed";
     
     const res = NextResponse.json({
       profile: {
