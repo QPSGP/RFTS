@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  let profile: Awaited<ReturnType<typeof getUserProfile>> = null;
+  let profile: Awaited<ReturnType<typeof getUserProfile>> | null = null;
   if (email) {
     profile = await getUserProfile(email);
     if (!profile) {
