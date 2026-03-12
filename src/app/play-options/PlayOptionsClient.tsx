@@ -26,7 +26,7 @@ export default function PlayOptionsClient({
   const [currentNight, setCurrentNight] = useState(1);
   const [prepAudio, setPrepAudio] = useState<{ title: string; url: string } | null>(null);
   const [gapHours, setGapHours] = useState(2.5);
-  const [autoStart, setAutoStart] = useState(false);
+  const [autoStart, setAutoStart] = useState(true);
   const [personalizedAudios, setPersonalizedAudios] = useState<
     { id: string; title: string }[]
   >([]);
@@ -62,7 +62,7 @@ export default function PlayOptionsClient({
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setAutoStart(params.get("autoplay") === "1");
+    if (params.get("autoplay") === "0") setAutoStart(false);
     if (status === "active") {
       fetch("/api/user/activity", {
         method: "POST",

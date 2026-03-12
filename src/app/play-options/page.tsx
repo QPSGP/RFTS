@@ -26,7 +26,7 @@ export default function PlayOptionsPage() {
     null
   );
   const [gapHours, setGapHours] = useState(2.5);
-  const [autoStart, setAutoStart] = useState(false);
+  const [autoStart, setAutoStart] = useState(true);
   const [personalizedAudios, setPersonalizedAudios] = useState<
     { id: string; title: string }[]
   >([]);
@@ -62,7 +62,7 @@ export default function PlayOptionsPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setAutoStart(params.get("autoplay") === "1");
+    if (params.get("autoplay") === "0") setAutoStart(false);
     fetch("/api/user/me", { credentials: "include" })
       .then((res) => {
         if (!res.ok) {
