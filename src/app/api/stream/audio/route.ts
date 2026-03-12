@@ -64,11 +64,6 @@ export async function GET(request: Request) {
     if (!item || !item.audioUrl) {
       return NextResponse.json({ error: "Not found." }, { status: 404 });
     }
-    const isCgmr =
-      (item.categories || []).some((c) => c.toLowerCase() === "cgmr") ?? false;
-    if (isCgmr) {
-      return NextResponse.json({ error: "Access denied." }, { status: 403 });
-    }
     if (isAdmin) {
       audioUrl = item.audioUrl;
     } else {
