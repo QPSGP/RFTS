@@ -35,6 +35,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const secondStartAtRef = useRef<number>(0);
   const skipEffectPlayRef = useRef(false);
+  const hasAutoStartedRef = useRef(false);
 
   const [queue, setQueue] = useState<SessionTrack[]>([]);
   const [current, setCurrent] = useState<SessionTrack | null>(null);
@@ -123,7 +124,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   }, [current]);
 
   useEffect(() => {
-    if (autoStart && firstTrack) {
+    if (autoStart && firstTrack && !hasAutoStartedRef.current) {
+      hasAutoStartedRef.current = true;
       startSession();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
