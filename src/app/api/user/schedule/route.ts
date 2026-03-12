@@ -123,28 +123,12 @@ export async function GET(request: Request) {
     await setScheduleStartedToToday(profile.id);
   }
 
-  // One session = 2 audios (whether 2 per night or 1 per night over two nights). Build enough nights for 60 sessions.
-  const playsPerNight = profile.playsPerNight === 1 ? 1 : 2;
-  const cueSessions = 60;
-  const cueNights = playsPerNight === 2 ? cueSessions : cueSessions * 2;
-  const scheduleForCue = buildSchedulePreview({
-    interests: profile.goalIds || [],
-    library: filteredLibrary,
-    interestRecords,
-    settings,
-    tier: profile.subscriptionTier || "platinum",
-    nights: cueNights,
-    playsPerNight,
-    userAssignedTrack: userAssignedTrack ?? undefined,
-    assignedAudioIds,
-    initialTracksOverride: 11
-  });
-  const cueStartIndex = scheduleForCue.findIndex((n) => n.night === Math.min(currentNight, cueNights));
+  // Next 10 plays in order from the same schedule as tonight's session (so session lineup is always in the list)
+  const cueStartIndex = schedule.findIndex((n) => n.night === Math.min(currentNight, nights));
   const cueFromTonight =
     cueStartIndex >= 0
-      ? [...scheduleForCue.slice(cueStartIndex), ...scheduleForCue.slice(0, cueStartIndex)]
-      : scheduleForCue;
-  // Next 10 plays in order (so T-18/CGMR appears in 4th and 8th slot, etc.)
+      ? [...schedule.slice(cueStartIndex), ...schedule.slice(0, cueStartIndex)]
+      : schedule;
   const nextInCue: { id: string; title: string; skuCode?: string }[] = [];
   for (const night of cueFromTonight) {
     for (const track of night.tracks) {
