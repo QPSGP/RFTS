@@ -124,6 +124,72 @@ describe("SessionPlayer", () => {
     });
   });
 
+  it("when first track loads after advance, play() is called (autoplay path)", async () => {
+    render(
+      <SessionPlayer
+        prepAudio={PREP}
+        firstTrack={FIRST_TRACK}
+        gapHours={2.5}
+        playsPerNight={2}
+        autoStart={true}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(PREP.title);
+    });
+
+    const audio = document.querySelector("audio");
+    await act(async () => {
+      audio?.dispatchEvent(new Event("ended"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(FIRST_TRACK.title);
+    });
+
+    mockAudio.play.mockClear();
+    await act(async () => {
+      audio?.dispatchEvent(new Event("canplaythrough"));
+    });
+
+    expect(mockAudio.play).toHaveBeenCalled();
+  });
+
+  it("when first track is cued, Start Session plays first track instead of restarting prep", async () => {
+    render(
+      <SessionPlayer
+        prepAudio={PREP}
+        firstTrack={FIRST_TRACK}
+        gapHours={2.5}
+        playsPerNight={2}
+        autoStart={true}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(PREP.title);
+    });
+
+    const audio = document.querySelector("audio");
+    await act(async () => {
+      audio?.dispatchEvent(new Event("ended"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(FIRST_TRACK.title);
+    });
+
+    mockAudio.play.mockClear();
+    mockAudio.src = "";
+    const startButton = screen.getByRole("button", { name: /Start Session/i });
+    await userEvent.click(startButton);
+
+    expect(mockAudio.src).toBe(FIRST_TRACK.url);
+    expect(mockAudio.play).toHaveBeenCalled();
+    expect(screen.getByText(/Now Playing:/)).toHaveTextContent(FIRST_TRACK.title);
+  });
+
   it("shows message when Start Session is clicked with no firstTrack", async () => {
     render(
       <SessionPlayer

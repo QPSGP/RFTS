@@ -69,11 +69,15 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   };
 
   const startSession = useCallback(() => {
-    pendingNextTrackRef.current = null;
     if (!firstTrack) {
       setMessage("Select goals to build your session lineup.");
       return;
     }
+    if (phase === "first" && current && prepAudio?.url && current.url !== prepAudio.url) {
+      attemptPlay(current);
+      return;
+    }
+    pendingNextTrackRef.current = null;
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("rfts-session-start"));
     }
@@ -88,7 +92,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     setMessage(null);
     setNeedsUserPlay(false);
     attemptPlay(nextQueue[0]);
-  }, [firstTrack, prepAudio, onSessionStart]);
+  }, [firstTrack, prepAudio, onSessionStart, phase, current]);
 
   const playSecond = useCallback(() => {
     if (!secondTrack) {
