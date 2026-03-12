@@ -30,9 +30,10 @@ export default function PlayOptionsPage() {
   const [personalizedAudios, setPersonalizedAudios] = useState<
     { id: string; title: string }[]
   >([]);
+  const [nextInCue, setNextInCue] = useState<{ id: string; title: string; skuCode?: string }[]>([]);
   const sessionRef = useRef<SessionPlayerHandle | null>(null);
 
-  const currentPlaylist = useMemo(() => {
+  const currentPlaylistFallback = useMemo(() => {
     if (!schedule.length) return [];
     const startIndex = schedule.findIndex((n) => n.night === currentNight);
     const fromTonight = startIndex >= 0
@@ -51,6 +52,8 @@ export default function PlayOptionsPage() {
     }
     return cue;
   }, [schedule, currentNight]);
+
+  const currentPlaylist = nextInCue.length > 0 ? nextInCue : currentPlaylistFallback;
 
   const logout = async () => {
     await fetch("/api/user/logout", { method: "POST", credentials: "include" });
@@ -79,13 +82,14 @@ export default function PlayOptionsPage() {
             body: JSON.stringify({ action: "viewed_console" }),
             credentials: "include"
           }).catch(() => {});
-          fetch("/api/user/schedule?nights=7", { credentials: "include" })
+          fetch("/api/user/schedule?nights=21", { credentials: "include" })
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
               setSchedule(data?.schedule || []);
               setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
               setPrepAudio(data?.prepAudio || null);
               setGapHours(data?.gapHours || 2.5);
+              setNextInCue(Array.isArray(data?.nextInCue) ? data.nextInCue : []);
             })
             .catch(() => setSchedule([]));
           fetch("/api/user/personalized-audios", { credentials: "include" })
@@ -356,11 +360,12 @@ export default function PlayOptionsPage() {
                     });
                     if (res.ok && profile) {
                       setProfile({ ...profile, playsPerNight: 2 });
-                      const scheduleRes = await fetch("/api/user/schedule?nights=7", { credentials: "include" });
+                      const scheduleRes = await fetch("/api/user/schedule?nights=21", { credentials: "include" });
                       if (scheduleRes.ok) {
                         const data = await scheduleRes.json();
                         setSchedule(data?.schedule || []);
                         setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
+                        setNextInCue(Array.isArray(data?.nextInCue) ? data.nextInCue : []);
                       }
                     }
                   }}
@@ -381,11 +386,12 @@ export default function PlayOptionsPage() {
                     });
                     if (res.ok && profile) {
                       setProfile({ ...profile, playsPerNight: 1 });
-                      const scheduleRes = await fetch("/api/user/schedule?nights=7", { credentials: "include" });
+                      const scheduleRes = await fetch("/api/user/schedule?nights=21", { credentials: "include" });
                       if (scheduleRes.ok) {
                         const data = await scheduleRes.json();
                         setSchedule(data?.schedule || []);
                         setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
+                        setNextInCue(Array.isArray(data?.nextInCue) ? data.nextInCue : []);
                       }
                     }
                   }}

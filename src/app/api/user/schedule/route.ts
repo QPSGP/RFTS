@@ -123,6 +123,44 @@ export async function GET(request: Request) {
     await setScheduleStartedToToday(profile.id);
   }
 
+  // One session = 2 audios (whether 2 per night or 1 per night over two nights). Build enough nights for 60 sessions.
+  const playsPerNight = profile.playsPerNight === 1 ? 1 : 2;
+  const cueSessions = 60;
+  const cueNights = playsPerNight === 2 ? cueSessions : cueSessions * 2;
+  const scheduleForCue = buildSchedulePreview({
+    interests: profile.goalIds || [],
+    library: filteredLibrary,
+    interestRecords,
+    settings,
+    tier: profile.subscriptionTier || "platinum",
+    nights: cueNights,
+    playsPerNight,
+    userAssignedTrack: userAssignedTrack ?? undefined,
+    assignedAudioIds,
+    initialTracksOverride: 11
+  });
+  const cueStartIndex = scheduleForCue.findIndex((n) => n.night === Math.min(currentNight, cueNights));
+  const cueFromTonight =
+    cueStartIndex >= 0
+      ? [...scheduleForCue.slice(cueStartIndex), ...scheduleForCue.slice(0, cueStartIndex)]
+      : scheduleForCue;
+  const nextInCue: { id: string; title: string; skuCode?: string }[] = [];
+  const seenCueIds = new Set<string>();
+  for (const night of cueFromTonight) {
+    for (const track of night.tracks) {
+      if (!seenCueIds.has(track.id)) {
+        seenCueIds.add(track.id);
+        nextInCue.push({
+          id: track.id,
+          title: track.title,
+          skuCode: track.skuCode ?? undefined
+        });
+      }
+      if (nextInCue.length >= 10) break;
+    }
+    if (nextInCue.length >= 10) break;
+  }
+
   const blobAssets = readJson<{ audios?: Record<string, string> }>(
     "blob-assets.json",
     {}
@@ -164,6 +202,7 @@ export async function GET(request: Request) {
     playsPerNight: profile.playsPerNight === 1 ? 1 : 2,
     gapHours: settings.nightlyGapHours,
     prepAudio,
-    fallbackTrack: fallbackTrackSummary
+    fallbackTrack: fallbackTrackSummary,
+    nextInCue
   });
 }

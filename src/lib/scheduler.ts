@@ -24,6 +24,8 @@ type ScheduleInput = {
   userAssignedTrack?: LibraryItem | null;
   /** For managed members: ordered list of assigned audio IDs (replaces goals-based scheduling). */
   assignedAudioIds?: string[];
+  /** When building e.g. "next 10 in cue", use this so enough tracks are in rotation (e.g. 11 => up to 10 in initial set). */
+  initialTracksOverride?: number;
 };
 
 const libraryById = (library: LibraryItem[]) => {
@@ -97,7 +99,8 @@ export const buildSchedulePreview = ({
   nights,
   playsPerNight = 2,
   userAssignedTrack = null,
-  assignedAudioIds = undefined
+  assignedAudioIds = undefined,
+  initialTracksOverride
 }: ScheduleInput): ScheduleNight[] => {
   const libraryByIdMap = libraryById(library);
   const isManagedMember = assignedAudioIds && assignedAudioIds.length > 0;
@@ -126,9 +129,10 @@ export const buildSchedulePreview = ({
   const playCounts = new Map<string, number>();
   
   // For managed members: use assigned audios; for regular members: use goals
+  const initialMax = initialTracksOverride ?? settings.initialTracks;
   const goalCount = isManagedMember
-    ? Math.max(1, Math.min(assignedAudios.length, settings.initialTracks - 1))
-    : Math.max(1, Math.min(orderedGoals.length, settings.initialTracks - 1));
+    ? Math.max(1, Math.min(assignedAudios.length, initialMax - 1))
+    : Math.max(1, Math.min(orderedGoals.length, initialMax - 1));
   const activeGoals = isManagedMember ? [] : orderedGoals.slice(0, goalCount);
   const activeAssignedAudios = isManagedMember ? assignedAudios.slice(0, goalCount) : [];
   let nextIndex = isManagedMember ? activeAssignedAudios.length : activeGoals.length;
