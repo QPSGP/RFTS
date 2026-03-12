@@ -202,6 +202,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           },
           { once: true }
         );
+        audio.play().catch(() => {});
       }
       return;
     }
@@ -283,6 +284,12 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       };
       audio.addEventListener("canplaythrough", onCanPlay, { once: true });
       audio.addEventListener("error", onError, { once: true });
+      audio.play()
+        .then(() => {
+          setNeedsUserPlay(false);
+          setMessage(null);
+        })
+        .catch(() => {});
       return;
     }
     const playPromise = audio.play();
