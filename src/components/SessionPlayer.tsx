@@ -232,7 +232,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
 
   return (
     <div className="card">
-      <h3>Tonight's session</h3>
+      <h3>Tonight&apos;s Audio</h3>
       <p style={{ color: "#4b5563" }}>
         Plays a short preparation audio, then your first goal recording. The second
         recording is scheduled {gapHours} hours later.
