@@ -1,3 +1,9 @@
+/**
+ * Stream audio by id or prep=1. Access for members:
+ * - Managed (platinum_managed): allowedEmailsMatch (track's allowedUserEmails contains member email).
+ * - Gold (platinum): allowedEmailsMatch OR goalMatch (item.interestIds ∩ profile.goalIds) OR isCgmrFallback (category cgmr).
+ * Response headers: X-Stream-Access-Reason (allowedEmailsMatch | goalMatch | isCgmrFallback), X-Stream-Tier, or on deny X-Stream-Deny-Reason.
+ */
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
@@ -33,7 +39,10 @@ export async function GET(request: Request) {
   const isAdmin = await isAdminSession();
   const email = await getUserSessionEmail();
   if (!isAdmin && !email) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    return NextResponse.json(
+      { error: "Unauthorized." },
+      { status: 401, headers: { "X-Stream-Deny-Reason": "no-session" } }
+    );
   }
 
   let profile: Awaited<ReturnType<typeof getUserProfile>> | null = null;
@@ -50,6 +59,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
   const prep = searchParams.get("prep") === "1";
+  const streamDebugHeaders: Record<string, string> = {};
 
   let audioUrl: string | null = null;
 
@@ -62,7 +72,11 @@ export async function GET(request: Request) {
   } else if (id) {
     const item = await getLibraryItem(id);
     if (!item || !item.audioUrl) {
-      return NextResponse.json({ error: "Not found." }, { status: 404 });
+      const reason = !item ? "item-not-found" : "item-has-no-audio-url";
+      return NextResponse.json(
+        { error: "Not found.", debug: reason },
+        { status: 404, headers: { "X-Stream-Deny-Reason": reason } }
+      );
     }
     if (isAdmin) {
       audioUrl = item.audioUrl;
@@ -115,22 +129,47 @@ export async function GET(request: Request) {
     const isCgmrFallback = (item.categories || []).some(
       (c) => c.toLowerCase() === "cgmr"
     );
+    const tier = profile.subscriptionTier ?? "";
+
     if (!allowedEmailsMatch && !goalMatch && !isCgmrFallback) {
-      return NextResponse.json({ error: "Access denied." }, { status: 403 });
+      const denyReason = `allowedEmailsMatch=${allowedEmailsMatch} goalMatch=${goalMatch} isCgmrFallback=${isCgmrFallback} tier=${tier}`;
+      return NextResponse.json(
+        { error: "Access denied.", debug: denyReason },
+        {
+          status: 403,
+          headers: { "X-Stream-Deny-Reason": denyReason },
+        }
+      );
     }
+    const accessReason = allowedEmailsMatch
+      ? "allowedEmailsMatch"
+      : goalMatch
+        ? "goalMatch"
+        : "isCgmrFallback";
     audioUrl = item.audioUrl;
+    if (audioUrl) {
+      streamDebugHeaders["X-Stream-Access-Reason"] = accessReason;
+      streamDebugHeaders["X-Stream-Tier"] = tier;
+    }
     }
   }
 
   if (!audioUrl) {
-    return NextResponse.json({ error: "Not found." }, { status: 404 });
+    return NextResponse.json(
+      { error: "Not found.", debug: "no-audio-url-or-missing-item" },
+      {
+        status: 404,
+        headers: { "X-Stream-Deny-Reason": "no-audio-url" },
+      }
+    );
   }
 
   const range = request.headers.get("range");
   const headers: Record<string, string> = {
     "Content-Type": getContentType(audioUrl),
     "Cache-Control": "private, no-store",
-    "X-Content-Type-Options": "nosniff"
+    "X-Content-Type-Options": "nosniff",
+    ...streamDebugHeaders,
   };
 
   if (audioUrl.startsWith("http://") || audioUrl.startsWith("https://")) {
@@ -158,7 +197,7 @@ export async function GET(request: Request) {
     }
     return new NextResponse(body as unknown as ReadableStream<Uint8Array>, {
       status,
-      headers
+      headers,
     });
   }
 
@@ -196,6 +235,6 @@ export async function GET(request: Request) {
 
   return new NextResponse(stream as unknown as BodyInit, {
     status: 206,
-    headers: { ...headers, "Content-Type": contentType }
+    headers: { ...headers, "Content-Type": contentType },
   });
 }
