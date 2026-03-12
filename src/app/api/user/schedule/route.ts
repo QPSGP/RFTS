@@ -144,18 +144,15 @@ export async function GET(request: Request) {
     cueStartIndex >= 0
       ? [...scheduleForCue.slice(cueStartIndex), ...scheduleForCue.slice(0, cueStartIndex)]
       : scheduleForCue;
+  // Next 10 plays in order (so T-18/CGMR appears in 4th and 8th slot, etc.)
   const nextInCue: { id: string; title: string; skuCode?: string }[] = [];
-  const seenCueIds = new Set<string>();
   for (const night of cueFromTonight) {
     for (const track of night.tracks) {
-      if (!seenCueIds.has(track.id)) {
-        seenCueIds.add(track.id);
-        nextInCue.push({
-          id: track.id,
-          title: track.title,
-          skuCode: track.skuCode ?? undefined
-        });
-      }
+      nextInCue.push({
+        id: track.id,
+        title: track.title,
+        skuCode: track.skuCode ?? undefined
+      });
       if (nextInCue.length >= 10) break;
     }
     if (nextInCue.length >= 10) break;
