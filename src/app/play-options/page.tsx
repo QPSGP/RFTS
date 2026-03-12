@@ -33,16 +33,24 @@ export default function PlayOptionsPage() {
   const sessionRef = useRef<SessionPlayerHandle | null>(null);
 
   const currentPlaylist = useMemo(() => {
-    const map = new Map<string, { id: string; title: string; skuCode?: string }>();
-    schedule.forEach((night) => {
-      night.tracks.forEach((track) => {
-        if (!map.has(track.id)) {
-          map.set(track.id, { id: track.id, title: track.title, skuCode: track.skuCode });
+    if (!schedule.length) return [];
+    const startIndex = schedule.findIndex((n) => n.night === currentNight);
+    const fromTonight = startIndex >= 0
+      ? [...schedule.slice(startIndex), ...schedule.slice(0, startIndex)]
+      : schedule;
+    const cue: { id: string; title: string; skuCode?: string }[] = [];
+    const seen = new Set<string>();
+    for (const night of fromTonight) {
+      for (const track of night.tracks) {
+        if (!seen.has(track.id)) {
+          seen.add(track.id);
+          cue.push({ id: track.id, title: track.title, skuCode: track.skuCode });
         }
-      });
-    });
-    return Array.from(map.values()).slice(0, 10);
-  }, [schedule]);
+        if (cue.length >= 10) return cue;
+      }
+    }
+    return cue;
+  }, [schedule, currentNight]);
 
   const logout = async () => {
     await fetch("/api/user/logout", { method: "POST", credentials: "include" });
@@ -235,7 +243,7 @@ export default function PlayOptionsPage() {
         )}
         <div className="card">
           <h3>Current audios play list</h3>
-          <p>Up to 10 audios in your current rotation (from your goals or assigned by your administrator).</p>
+          <p>The next 10 audios in your cue (starting from tonight), by SKU and title.</p>
           {currentPlaylist.length === 0 ? (
             <p style={{ color: "#6b7280" }}>No audios in your play list yet.</p>
           ) : (
