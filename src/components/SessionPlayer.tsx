@@ -43,6 +43,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const [needsUserPlay, setNeedsUserPlay] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
   const [remainingSeconds, setRemainingSeconds] = useState<number>(0);
+  const [onePerNightComplete, setOnePerNightComplete] = useState(false);
 
   secondTrackRef.current = secondTrack ?? null;
 
@@ -72,6 +73,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       window.dispatchEvent(new Event("rfts-session-start"));
     }
     onSessionStart?.();
+    setOnePerNightComplete(false);
     setPhase("first");
     const nextQueue = [prepAudio, firstTrack].filter(
       (track): track is SessionTrack => !!track
@@ -192,9 +194,19 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         }
       }, gapMs);
     } else {
+      // Single track (or last of queue) ended — stop and clear so it doesn't repeat; 1 per night = cued for next night
+      const audio = audioRef.current;
+      if (audio) {
+        audio.pause();
+        audio.removeAttribute("src");
+        audio.load();
+      }
       setPhase("idle");
       setQueue([]);
       setCurrent(null);
+      if (playsPerNight === 1) {
+        setOnePerNightComplete(true);
+      }
     }
   }, [phase, gapHours, playsPerNight, queue, clearWaitTimers]);
 
@@ -236,6 +248,14 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         )}
       </div>
       {message && <p style={{ marginTop: 12 }}>{message}</p>}
+      {onePerNightComplete && playsPerNight === 1 && (
+        <div className="card" style={{ marginTop: 16, background: "#f0fdf4", borderColor: "#22c55e" }}>
+          <p style={{ margin: 0, fontWeight: 600, color: "#166534" }}>Session complete.</p>
+          <p style={{ margin: "8px 0 0", color: "#15803d" }}>
+            Your next audio is cued for tomorrow. Start Session when you&apos;re ready.
+          </p>
+        </div>
+      )}
       {phase === "waiting" && (
         <div className="card" style={{ marginTop: 16, background: "#f0fdf4", borderColor: "#22c55e" }}>
           <p style={{ margin: 0, fontWeight: 600, color: "#166534" }}>First session complete.</p>
