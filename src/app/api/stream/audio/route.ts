@@ -100,13 +100,21 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Adult content requires birthdate and 18+ age verification." }, { status: 403 });
       }
     }
-    if (
-      item.allowedUserEmails &&
-      item.allowedUserEmails.length > 0 &&
-      !item.allowedUserEmails.some(
+    const allowedEmailsMatch =
+      !item.allowedUserEmails ||
+      item.allowedUserEmails.length === 0 ||
+      item.allowedUserEmails.some(
         (e) => e.trim().toLowerCase() === email.trim().toLowerCase()
-      )
-    ) {
+      );
+    const goalMatch =
+      profile.goalIds &&
+      profile.goalIds.length > 0 &&
+      item.interestIds &&
+      item.interestIds.some((gid) => profile.goalIds?.includes(gid));
+    const isCgmrFallback = (item.categories || []).some(
+      (c) => c.toLowerCase() === "cgmr"
+    );
+    if (!allowedEmailsMatch && !goalMatch && !isCgmrFallback) {
       return NextResponse.json({ error: "Access denied." }, { status: 403 });
     }
     audioUrl = item.audioUrl;
