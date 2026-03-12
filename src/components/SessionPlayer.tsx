@@ -112,6 +112,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     if (playPromise && typeof playPromise.catch === "function") {
       playPromise.catch(() => {
         setMessage("Tap play to start the session.");
+        setNeedsUserPlay(true);
       });
     }
   }, [current]);
@@ -156,8 +157,13 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const handleEnded = useCallback(() => {
     if (queue.length > 1) {
       const [, ...rest] = queue;
+      const nextTrack = rest[0] || null;
       setQueue(rest);
-      setCurrent(rest[0] || null);
+      setCurrent(nextTrack);
+      if (nextTrack && audioRef.current) {
+        audioRef.current.src = nextTrack.url;
+        audioRef.current.load();
+      }
       return;
     }
     // Last track in queue just ended — close and optionally queue second (only when 2 per night)
@@ -215,7 +221,13 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   };
 
   const handlePlay = () => {
-    const playPromise = audioRef.current?.play();
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (current && audio.src !== current.url) {
+      audio.src = current.url;
+      audio.load();
+    }
+    const playPromise = audio.play();
     if (playPromise && typeof playPromise.then === "function") {
       playPromise
         .then(() => setNeedsUserPlay(false))
