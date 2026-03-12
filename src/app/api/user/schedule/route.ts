@@ -123,14 +123,12 @@ export async function GET(request: Request) {
     await setScheduleStartedToToday(profile.id);
   }
 
-  // Next 10 plays in order from the same schedule as tonight's session (so session lineup is always in the list)
-  const cueStartIndex = schedule.findIndex((n) => n.night === Math.min(currentNight, nights));
-  const cueFromTonight =
-    cueStartIndex >= 0
-      ? [...schedule.slice(cueStartIndex), ...schedule.slice(0, cueStartIndex)]
-      : schedule;
+  // Next 10 plays: start with tonight's two (same index the client uses: currentNight - 1), then continue in order
+  const tonightIndex = Math.max(0, Math.min(currentNight - 1, schedule.length - 1));
   const nextInCue: { id: string; title: string; skuCode?: string }[] = [];
-  for (const night of cueFromTonight) {
+  for (let i = 0; i < schedule.length && nextInCue.length < 10; i++) {
+    const nightIndex = (tonightIndex + i) % schedule.length;
+    const night = schedule[nightIndex];
     for (const track of night.tracks) {
       nextInCue.push({
         id: track.id,
@@ -139,7 +137,6 @@ export async function GET(request: Request) {
       });
       if (nextInCue.length >= 10) break;
     }
-    if (nextInCue.length >= 10) break;
   }
 
   const blobAssets = readJson<{ audios?: Record<string, string> }>(
