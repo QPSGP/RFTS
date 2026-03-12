@@ -106,11 +106,12 @@ export async function GET(request: Request) {
       item.allowedUserEmails.some(
         (e) => e.trim().toLowerCase() === email.trim().toLowerCase()
       );
+    const profileGoalIds = (profile.goalIds || []).map((id) => String(id).trim().toLowerCase());
+    const itemInterestIds = (item.interestIds || []).map((id) => String(id).trim().toLowerCase());
     const goalMatch =
-      profile.goalIds &&
-      profile.goalIds.length > 0 &&
-      item.interestIds &&
-      item.interestIds.some((gid) => profile.goalIds?.includes(gid));
+      profileGoalIds.length > 0 &&
+      itemInterestIds.length > 0 &&
+      itemInterestIds.some((gid) => profileGoalIds.includes(gid));
     const isCgmrFallback = (item.categories || []).some(
       (c) => c.toLowerCase() === "cgmr"
     );
