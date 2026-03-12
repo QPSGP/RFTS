@@ -186,7 +186,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           "error",
           () => {
             clearTimeout(fallbackId);
-            setMessage("Track could not load. Tap play to try again.");
+            setMessage("Tap play to start playback.");
             setNeedsUserPlay(true);
           },
           { once: true }
@@ -251,14 +251,17 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const handlePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (current && audio.src !== current.url) {
+    if (current) {
       audio.src = current.url;
       audio.load();
     }
     const playPromise = audio.play();
     if (playPromise && typeof playPromise.then === "function") {
       playPromise
-        .then(() => setNeedsUserPlay(false))
+        .then(() => {
+          setNeedsUserPlay(false);
+          setMessage(null);
+        })
         .catch(() => setNeedsUserPlay(true));
     }
   };
