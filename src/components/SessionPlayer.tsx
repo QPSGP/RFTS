@@ -34,6 +34,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const waitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const secondStartAtRef = useRef<number>(0);
+  const skipEffectPlayRef = useRef(false);
 
   const [queue, setQueue] = useState<SessionTrack[]>([]);
   const [current, setCurrent] = useState<SessionTrack | null>(null);
@@ -101,6 +102,10 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   useImperativeHandle(ref, () => ({ startSession }), [startSession]);
 
   useEffect(() => {
+    if (skipEffectPlayRef.current) {
+      skipEffectPlayRef.current = false;
+      return;
+    }
     const audio = audioRef.current;
     if (!audio || !current) {
       return;
@@ -160,9 +165,32 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       const nextTrack = rest[0] || null;
       setQueue(rest);
       setCurrent(nextTrack);
-      if (nextTrack && audioRef.current) {
-        audioRef.current.src = nextTrack.url;
-        audioRef.current.load();
+      skipEffectPlayRef.current = true;
+      const audio = audioRef.current;
+      if (nextTrack && audio) {
+        audio.src = nextTrack.url;
+        audio.load();
+        const playWhenReady = () => {
+          clearTimeout(fallbackId);
+          audio.play().catch(() => {
+            setMessage("Tap play to start the session.");
+            setNeedsUserPlay(true);
+          });
+        };
+        const fallbackId = setTimeout(() => {
+          setNeedsUserPlay(true);
+          setMessage("Tap play to start the session.");
+        }, 3000);
+        audio.addEventListener("canplaythrough", playWhenReady, { once: true });
+        audio.addEventListener(
+          "error",
+          () => {
+            clearTimeout(fallbackId);
+            setMessage("Track could not load. Tap play to try again.");
+            setNeedsUserPlay(true);
+          },
+          { once: true }
+        );
       }
       return;
     }
