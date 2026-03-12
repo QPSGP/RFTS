@@ -36,6 +36,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const secondStartAtRef = useRef<number>(0);
   const skipEffectPlayRef = useRef(false);
   const hasAutoStartedRef = useRef(false);
+  /** When we advance from prep to first track, store the track we're loading so "Tap play" uses it (avoids replaying prep if state is stale). */
+  const pendingNextTrackRef = useRef<SessionTrack | null>(null);
 
   const [queue, setQueue] = useState<SessionTrack[]>([]);
   const [current, setCurrent] = useState<SessionTrack | null>(null);
@@ -67,6 +69,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   };
 
   const startSession = useCallback(() => {
+    pendingNextTrackRef.current = null;
     if (!firstTrack) {
       setMessage("Select goals to build your session lineup.");
       return;
@@ -167,6 +170,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       const nextTrack = rest[0] || null;
       setQueue(rest);
       setCurrent(nextTrack);
+      pendingNextTrackRef.current = nextTrack;
       skipEffectPlayRef.current = true;
       const audio = audioRef.current;
       if (nextTrack && audio) {
@@ -174,6 +178,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         audio.load();
         const playWhenReady = () => {
           clearTimeout(fallbackId);
+          pendingNextTrackRef.current = null;
           audio.play().catch(() => {
             setMessage("Tap play to start the session.");
             setNeedsUserPlay(true);
@@ -253,9 +258,11 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const handlePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (current) {
-      audio.src = current.url;
+    const toPlay = pendingNextTrackRef.current || current;
+    if (toPlay) {
+      audio.src = toPlay.url;
       audio.load();
+      if (pendingNextTrackRef.current) pendingNextTrackRef.current = null;
     }
     const playPromise = audio.play();
     if (playPromise && typeof playPromise.then === "function") {
