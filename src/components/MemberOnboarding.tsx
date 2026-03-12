@@ -411,7 +411,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
               }}
             >
               <p style={{ margin: 0, fontWeight: 600, color: "#0f766e" }}>
-                ✓ Selected plan: <strong>{selectedPlan.id === "platinum" ? "Membership" : selectedPlan.name}</strong>
+                ✓ Selected plan: <strong>{selectedPlan.id === "platinum" ? "Gold Member" : selectedPlan.name}</strong>
               </p>
               <p style={{ margin: "4px 0 0", fontSize: 14, color: "#4b5563" }}>
                 {selectedPlan.trialDays}-Day Free Trial · $29.95/mo.
@@ -561,7 +561,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
           <div className="section-heading">Review & Payment</div>
           <div className="card">
             <p>
-              <strong>Plan:</strong> {selectedPlan ? (selectedPlan.id === "platinum" ? "Membership" : selectedPlan.name) : ""}
+              <strong>Plan:</strong> {selectedPlan ? (selectedPlan.id === "platinum" ? "Gold Member" : selectedPlan.name) : ""}
             </p>
             <p>
               <strong>Goals:</strong> {goalIds.length} selected

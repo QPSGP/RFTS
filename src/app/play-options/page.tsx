@@ -19,7 +19,7 @@ export default function PlayOptionsPage() {
     isManaged?: boolean;
   } | null>(null);
   const [schedule, setSchedule] = useState<
-    { night: number; tracks: { id: string; title: string; audioUrl: string }[]; note?: string }[]
+    { night: number; tracks: { id: string; title: string; skuCode?: string; audioUrl: string }[]; note?: string }[]
   >([]);
   const [currentNight, setCurrentNight] = useState(1);
   const [prepAudio, setPrepAudio] = useState<{ title: string; url: string } | null>(
@@ -32,16 +32,16 @@ export default function PlayOptionsPage() {
   >([]);
   const sessionRef = useRef<SessionPlayerHandle | null>(null);
 
-  const derivedTracks = useMemo(() => {
-    const map = new Map<string, { id: string; title: string }>();
+  const currentPlaylist = useMemo(() => {
+    const map = new Map<string, { id: string; title: string; skuCode?: string }>();
     schedule.forEach((night) => {
       night.tracks.forEach((track) => {
         if (!map.has(track.id)) {
-          map.set(track.id, { id: track.id, title: track.title });
+          map.set(track.id, { id: track.id, title: track.title, skuCode: track.skuCode });
         }
       });
     });
-    return Array.from(map.values());
+    return Array.from(map.values()).slice(0, 10);
   }, [schedule]);
 
   const logout = async () => {
@@ -145,8 +145,8 @@ export default function PlayOptionsPage() {
       ? [profile?.firstName, profile?.lastName].filter(Boolean).join(" ").trim()
       : profile?.email ?? "";
   const getTierLabel = (tier: string | null) => {
-    if (tier === "platinum_managed") return "Platinum Managed";
-    if (tier === "platinum") return "Platinum";
+    if (tier === "platinum_managed") return "Platinum Managed Member";
+    if (tier === "platinum") return "Gold Member";
     return tier || "Membership";
   };
   const membershipLabel =
@@ -233,23 +233,21 @@ export default function PlayOptionsPage() {
             </a>
           </div>
         )}
-        {!profile?.isManaged && (
-          <div className="card">
-            <h3>Audios from your goals</h3>
-            <p>These audios are automatically included based on your goal selections.</p>
-            {derivedTracks.length === 0 ? (
-              <p style={{ color: "#6b7280" }}>No goal-based audios listed yet.</p>
-            ) : (
-              <div className="goal-list" style={{ marginTop: 8 }}>
-                {derivedTracks.map((track) => (
-                  <div key={track.id} className="goal-item">
-                    {track.title}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <div className="card">
+          <h3>Current audios play list</h3>
+          <p>Up to 10 audios in your current rotation (from your goals or assigned by your administrator).</p>
+          {currentPlaylist.length === 0 ? (
+            <p style={{ color: "#6b7280" }}>No audios in your play list yet.</p>
+          ) : (
+            <div className="goal-list" style={{ marginTop: 8 }}>
+              {currentPlaylist.map((track) => (
+                <div key={track.id} className="goal-item">
+                  {[track.skuCode, track.title].filter(Boolean).join(" – ")}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="card" id="meditation-library">
           <h3>Meditation Library</h3>
           <p>Browse the full audio library and play any track on demand. This will not affect your sessions!</p>
@@ -333,7 +331,7 @@ export default function PlayOptionsPage() {
           <div className="card">
             <h3>Sessions per night</h3>
             <p style={{ color: "#4b5563", marginBottom: 12 }}>
-              Choose 1 or 2 recordings each night (default is 2). You can change this anytime.
+              A session is two audios — you can play both in one night or one per night over two nights. Choose 1 or 2 recordings per night (default is 2). You can change this anytime.
             </p>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -386,29 +384,6 @@ export default function PlayOptionsPage() {
                 />
                 1 per night
               </label>
-            </div>
-          </div>
-        )}
-        {schedule.length > 0 && (
-          <div className="card">
-            <h3>Session Cycle</h3>
-            <p>
-              {profile?.isManaged
-                ? "Your sessions use the audios assigned by your administrator. Each night lists the recordings scheduled to play. You can change your sessions-per-night setting above."
-                : "Your sessions rotate through the goals you selected. Each night lists the recordings scheduled to play. You can change your sessions-per-night setting above and your goals anytime."}
-            </p>
-            <div className="grid" style={{ marginTop: 12 }}>
-              {schedule.map((night) => (
-                <div key={night.night} className="card" style={night.night === currentNight ? { borderColor: "var(--color-primary, #6366f1)", borderWidth: 2 } : undefined}>
-                  <strong>Night {night.night}{night.night === currentNight ? " (tonight)" : ""}</strong>
-                  {night.note && <p style={{ color: "#4b5563" }}>{night.note}</p>}
-                  <div className="stack">
-                    {night.tracks.map((track) => (
-                      <span key={track.id}>{track.title}</span>
-                    ))}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         )}

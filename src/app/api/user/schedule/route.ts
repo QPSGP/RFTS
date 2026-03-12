@@ -136,15 +136,34 @@ export async function GET(request: Request) {
     tracks: night.tracks.map((track) => ({
       id: track.id,
       title: track.title,
+      skuCode: track.skuCode ?? undefined,
       audioUrl: `/api/stream/audio?id=${track.id}`
     }))
   }));
+
+  // For non-managed members, include default fallback (e.g. T-18) so the weekly lineup UI can show it
+  const isPlatinumNonManaged = profile.subscriptionTier !== "platinum_managed";
+  const fallbackCode = (settings.fallbackTrackId || "T-18").trim().toUpperCase();
+  const fallbackTrack =
+    isPlatinumNonManaged && fallbackCode
+      ? filteredLibrary.find(
+          (item) =>
+            (item.skuCode || "").toUpperCase().includes(fallbackCode) ||
+            (item.title || "").toUpperCase().includes(fallbackCode)
+        ) ?? null
+      : null;
+  const fallbackTrackSummary =
+    fallbackTrack ?
+      { id: fallbackTrack.id, title: fallbackTrack.title, skuCode: fallbackTrack.skuCode ?? undefined }
+      : undefined;
+
   return NextResponse.json({
     schedule: scheduleWithStreamUrls,
     currentNight,
     nights,
     playsPerNight: profile.playsPerNight === 1 ? 1 : 2,
     gapHours: settings.nightlyGapHours,
-    prepAudio
+    prepAudio,
+    fallbackTrack: fallbackTrackSummary
   });
 }

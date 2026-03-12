@@ -78,10 +78,13 @@ type NewAudioDraft = {
   categories: string;
 };
 
+type PlaybackSettingsState = { fallbackTrackId: string } | null;
+
 export default function AdminUsers() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [interests, setInterests] = useState<Interest[]>([]);
   const [library, setLibrary] = useState<LibraryItem[]>([]);
+  const [playbackSettings, setPlaybackSettings] = useState<PlaybackSettingsState>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [createEmail, setCreateEmail] = useState("");
   const [createPassword, setCreatePassword] = useState("");
@@ -142,10 +145,11 @@ export default function AdminUsers() {
 
 
   const load = async () => {
-    const [usersRes, interestsRes, libraryRes] = await Promise.all([
+    const [usersRes, interestsRes, libraryRes, settingsRes] = await Promise.all([
       fetch("/api/admin/users"),
       fetch("/api/interests"),
-      fetch("/api/library")
+      fetch("/api/library"),
+      fetch("/api/playback-settings")
     ]);
     if (!usersRes.ok || !interestsRes.ok || !libraryRes.ok) {
       setStatus("Admin session required.");
@@ -157,6 +161,13 @@ export default function AdminUsers() {
     setUsers(usersData.users || []);
     setInterests(interestsData.interests || []);
     setLibrary(libraryData.library || []);
+    if (settingsRes.ok) {
+      const settingsData = await settingsRes.json();
+      const fallback = settingsData.settings?.fallbackTrackId ?? "T-18";
+      setPlaybackSettings({ fallbackTrackId: fallback });
+    } else {
+      setPlaybackSettings({ fallbackTrackId: "T-18" });
+    }
   };
 
   useEffect(() => {
@@ -731,8 +742,8 @@ export default function AdminUsers() {
                 setCreateTier(event.target.value as UserRow["subscriptionTier"])
               }
             >
-              <option value="platinum">Platinum ($19.95/mo)</option>
-              <option value="platinum_managed">Platinum Managed ($39.95/mo)</option>
+              <option value="platinum">Gold Member ($19.95/mo)</option>
+              <option value="platinum_managed">Platinum Managed Member ($39.95/mo)</option>
             </select>
             <select
               style={inputStyle}
@@ -783,8 +794,8 @@ export default function AdminUsers() {
                   onChange={(event) => setMemberTierFilter(event.target.value as "all" | "platinum" | "platinum_managed")}
                 >
                   <option value="all">All Memberships</option>
-                  <option value="platinum">Platinum</option>
-                  <option value="platinum_managed">Platinum Managed</option>
+                  <option value="platinum">Gold Member</option>
+                  <option value="platinum_managed">Platinum Managed Member</option>
                 </select>
                 {filteredUsers.length !== users.length && (
                   <span style={{ fontSize: 12, color: "#64748b" }}>
@@ -810,7 +821,7 @@ export default function AdminUsers() {
                   ) : null}
                   {!profileOpen[user.email] && (
                     <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
-                      Goals: {user.goalIds?.length || 0} · {user.subscriptionTier === "platinum_managed" ? "Platinum Managed" : "Platinum"} · {user.subscriptionStatus ?? "inactive"} · {user.playsPerNight ?? 2}/night
+                      Goals: {user.goalIds?.length || 0} · {user.subscriptionTier === "platinum_managed" ? "Platinum Managed Member" : "Gold Member"} · {user.subscriptionStatus ?? "inactive"} · {user.playsPerNight ?? 2}/night
                     </p>
                   )}
                   {!profileOpen[user.email] && (
@@ -1228,29 +1239,39 @@ export default function AdminUsers() {
                               })}
                             </div>
                             <div style={{ marginTop: 12 }}>
-                              <label style={{ fontSize: 12 }}>Audios from goals (read-only)</label>
+                              <label style={{ fontSize: 12 }}>Current audios play list</label>
                               <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
-                                These are automatically included based on the member&apos;s goal selections.
+                                Up to 10 audios in this member&apos;s rotation (from goals or assigned).
                               </p>
                               <div className="goal-list">
-                                {getDerivedAudios(user.goalIds || []).length === 0 ? (
-                                  <span style={{ color: "#6b7280", fontSize: 12 }}>
-                                    No goal-based audios assigned yet.
-                                  </span>
-                                ) : (
-                                  getDerivedAudios(user.goalIds || []).map((item) => (
-                                    <div
-                                      key={item.id}
-                                      className="goal-item"
-                                      style={{ display: "flex", gap: 8, alignItems: "center" }}
-                                    >
-                                      <span style={{ flex: 1 }}>
-                                        {item.skuCode ? `${item.skuCode} - ` : ""}
-                                        {item.title}
-                                      </span>
-                                    </div>
-                                  ))
-                                )}
+                                {(() => {
+                                  const isManaged = user.subscriptionTier === "platinum_managed";
+                                  const assignedForPlaylist = isManaged
+                                    ? library.filter((item) =>
+                                        (item.allowedUserEmails || []).some((e) => e.toLowerCase() === user.email.toLowerCase())
+                                      ).slice(0, 10)
+                                    : [];
+                                  const goalAudios = getDerivedAudios(user.goalIds || []).slice(0, 10);
+                                  const list = isManaged ? assignedForPlaylist : goalAudios;
+                                  return list.length === 0 ? (
+                                    <span style={{ color: "#6b7280", fontSize: 12 }}>
+                                      No audios in play list yet.
+                                    </span>
+                                  ) : (
+                                    list.map((item) => (
+                                      <div
+                                        key={item.id}
+                                        className="goal-item"
+                                        style={{ display: "flex", gap: 8, alignItems: "center" }}
+                                      >
+                                        <span style={{ flex: 1 }}>
+                                          {item.skuCode ? `${item.skuCode} – ` : ""}
+                                          {item.title}
+                                        </span>
+                                      </div>
+                                    ))
+                                  );
+                                })()}
                               </div>
                             </div>
                           </>
@@ -1279,8 +1300,8 @@ export default function AdminUsers() {
                             })
                           }
                         >
-                          <option value="platinum">Platinum ($19.95/mo)</option>
-                          <option value="platinum_managed">Platinum Managed ($39.95/mo)</option>
+                          <option value="platinum">Gold Member ($19.95/mo)</option>
+                          <option value="platinum_managed">Platinum Managed Member ($39.95/mo)</option>
                         </select>
                         <select
                           style={inputStyle}
@@ -1385,22 +1406,44 @@ export default function AdminUsers() {
                           const hasCat = (item: LibraryItem, cat: string) =>
                             (item.categories || []).some((c) => c.toLowerCase() === cat.toLowerCase());
                           const cgmrTrack = assignedOrdered.find((item) => hasCat(item, "cgmr")) ?? assignedOrdered[0] ?? null;
+                          // For non-managed (Platinum) members, show default fallback (e.g. T-18) in the list so it's visible
+                          const isNonManaged = user.subscriptionTier !== "platinum_managed";
+                          const fallbackCode = (playbackSettings?.fallbackTrackId || "T-18").trim().toUpperCase();
+                          const fallbackItem = isNonManaged && fallbackCode
+                            ? library.find(
+                                (item) =>
+                                  (item.skuCode || "").toUpperCase().includes(fallbackCode) ||
+                                  (item.title || "").toUpperCase().includes(fallbackCode)
+                              ) ?? null
+                            : null;
+                          const displayList =
+                            fallbackItem && isNonManaged
+                              ? [fallbackItem, ...assignedOrdered.filter((a) => a.id !== fallbackItem.id)]
+                              : assignedOrdered;
                           return (
                             <div style={{ marginTop: 8, marginBottom: 8, padding: 10, background: "#f0fdf4", borderRadius: 8, border: "1px solid #bbf7d0" }}>
                               <strong style={{ fontSize: 12 }}>Assigned to this member (in selection order):</strong>{" "}
-                              {assignedOrdered.length === 0 ? (
+                              {displayList.length === 0 ? (
                                 <span style={{ color: "#6b7280" }}>None. Their schedule will use T-18 for the CGMR slot.</span>
                               ) : (
                                 <>
                                   <div style={{ marginTop: 6 }}>
-                                    {assignedOrdered.map((item, index) => (
-                                      <div key={item.id} style={{ marginBottom: 4, fontSize: 12 }}>
-                                        <strong>{index + 1}.</strong> {item.skuCode || item.title || "No SKU/Title"}
-                                      </div>
-                                    ))}
+                                    {displayList.map((item, index) => {
+                                      const isDefault = isNonManaged && fallbackItem?.id === item.id;
+                                      return (
+                                        <div key={item.id} style={{ marginBottom: 4, fontSize: 12 }}>
+                                          <strong>{index + 1}.</strong> {item.skuCode || item.title || "No SKU/Title"}
+                                          {isDefault && (
+                                            <span style={{ color: "#047857", marginLeft: 6 }}>
+                                              (default – used for CGMR slot)
+                                            </span>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   <div style={{ marginTop: 6, fontSize: 12, color: "#047857" }}>
-                                    <strong>Schedule uses as CGMR slot:</strong> {cgmrTrack ? `${cgmrTrack.skuCode ? cgmrTrack.skuCode + " – " : ""}${cgmrTrack.title}` : "T-18 (default)"}
+                                    <strong>Schedule uses as CGMR slot:</strong> {cgmrTrack ? `${cgmrTrack.skuCode ? cgmrTrack.skuCode + " – " : ""}${cgmrTrack.title}` : (fallbackItem ? `${fallbackItem.skuCode || fallbackItem.title} (default)` : "T-18 (default)")}
                                   </div>
                                 </>
                               )}
@@ -1626,11 +1669,11 @@ export default function AdminUsers() {
                       <div className="card" style={{ marginTop: 12, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
                         <h4 style={{ marginBottom: 6 }}>6. Billing &amp; rate</h4>
                         <p style={{ fontSize: 12, color: "#475569", marginBottom: 8 }}>
-                          <strong>Platinum:</strong> $19.95/mo — Regular membership with goal-based scheduling.<br />
-                          <strong>Platinum Managed:</strong> $39.95/mo — Managed membership with admin-assigned audios (no goals).
+                          <strong>Gold Member:</strong> $19.95/mo — Regular membership with goal-based scheduling.<br />
+                          <strong>Platinum Managed Member:</strong> $39.95/mo — Managed membership with admin-assigned audios (no goals).
                         </p>
                         <p style={{ fontSize: 12, margin: 0 }}>
-                          Current tier: <strong>{user.subscriptionTier === "platinum_managed" ? "Platinum Managed ($39.95/mo)" : "Platinum ($19.95/mo)"}</strong> — use subscription controls above to activate and charge.
+                          Current tier: <strong>{user.subscriptionTier === "platinum_managed" ? "Platinum Managed Member ($39.95/mo)" : "Gold Member ($19.95/mo)"}</strong> — use subscription controls above to activate and charge.
                         </p>
                       </div>
                     </>

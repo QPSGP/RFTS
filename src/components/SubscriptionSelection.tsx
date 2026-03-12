@@ -88,7 +88,7 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
         <div className="plan-grid">
         {visiblePlans.map((plan) => {
           const displayName =
-            plan.id === "platinum" ? "Membership" : plan.name;
+            plan.id === "platinum" ? "Gold Member" : plan.name;
           return (
           <button
             key={plan.id}

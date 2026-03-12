@@ -9,7 +9,7 @@ export type ScheduleNight = {
 /**
  * Schedule is session-based (plays), not night-based. One play = one session.
  * playsPerNight 2 = two sessions per night; playsPerNight 1 = one session per night (same rotation, double the nights).
- * Add-new-track and T18/CGMR special slot are keyed off session index; goal drops are by session count.
+ * Add-new-track and goal drops are by session count. T18/CGMR plays every 4th session (play).
  */
 type ScheduleInput = {
   interests: string[];
@@ -20,7 +20,7 @@ type ScheduleInput = {
   nights: number;
   /** 2 = one full session (two plays) per night; 1 = half a session (one play) per night. */
   playsPerNight?: 1 | 2;
-  /** When set, used as the special/CGMR track (e.g. every 4th night) instead of global cgmr/fallback. */
+  /** When set, used as the special/CGMR track (every 4th play) instead of global cgmr/fallback. */
   userAssignedTrack?: LibraryItem | null;
   /** For managed members: ordered list of assigned audio IDs (replaces goals-based scheduling). */
   assignedAudioIds?: string[];
@@ -222,11 +222,11 @@ export const buildSchedulePreview = ({
       }
     }
 
-    // Session-based rotation: same sequence of plays whether 1 or 2 per night (1 per night = double the nights)
+    // T-18/CGMR plays every 4th session (play), regardless of 1 or 2 per night
     const sessionIndexFirst = (night - 1) * playsPerNight + 1;
     const sessionIndexSecond = (night - 1) * playsPerNight + 2;
-    const isSpecialSessionFirst = sessionIndexFirst % 8 === 0;
-    const isSpecialSessionSecond = sessionIndexSecond % 8 === 0;
+    const isSpecialSessionFirst = sessionIndexFirst % 4 === 0;
+    const isSpecialSessionSecond = sessionIndexSecond % 4 === 0;
 
     const first = isManagedMember
       ? takeNextAssignedAudio()
