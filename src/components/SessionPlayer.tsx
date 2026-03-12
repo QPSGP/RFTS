@@ -263,6 +263,23 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       audio.src = toPlay.url;
       audio.load();
       if (pendingNextTrackRef.current) pendingNextTrackRef.current = null;
+      const onCanPlay = () => {
+        audio.removeEventListener("error", onError);
+        audio.play()
+          .then(() => {
+            setNeedsUserPlay(false);
+            setMessage(null);
+          })
+          .catch(() => setNeedsUserPlay(true));
+      };
+      const onError = () => {
+        audio.removeEventListener("canplaythrough", onCanPlay);
+        setMessage("Tap play to start playback.");
+        setNeedsUserPlay(true);
+      };
+      audio.addEventListener("canplaythrough", onCanPlay, { once: true });
+      audio.addEventListener("error", onError, { once: true });
+      return;
     }
     const playPromise = audio.play();
     if (playPromise && typeof playPromise.then === "function") {
@@ -352,7 +369,6 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
             style={{ width: "100%", marginTop: 8, display: current ? "block" : "none" }}
-            src={current?.url || undefined}
           />
           {needsUserPlay && (
             <>
