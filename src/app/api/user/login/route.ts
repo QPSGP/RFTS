@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { apiError } from "@/lib/api-utils";
 import { getUserByEmail, recordMemberActivity } from "@/lib/db";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import { createUserSessionToken, setUserSessionCookieOnResponse } from "@/lib/user-auth";
+
+const LOGIN_MAX_PER_MINUTE = 10;
 
 export async function POST(request: Request) {
   try {
@@ -9,11 +13,16 @@ export async function POST(request: Request) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[POST /api/user/login]", message);
-    return NextResponse.json({ error: "Server error.", detail: message }, { status: 500 });
+    return apiError("Server error.", 500, message);
   }
 }
 
 async function doPost(request: Request) {
+  const ip = getClientIp(request);
+  if (!rateLimit(`login:${ip}`, LOGIN_MAX_PER_MINUTE)) {
+    return apiError("Too many login attempts. Please try again in a minute.", 429);
+  }
+
   const baseUrl = new URL(request.url).origin;
   const loginErrorUrl = `${baseUrl}/member/login?error=invalid`;
   const successUrl = `${baseUrl}/play-options`;

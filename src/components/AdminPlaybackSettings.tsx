@@ -13,6 +13,7 @@ const inputStyle = {
 export default function AdminPlaybackSettings() {
   const [settings, setSettings] = useState<PlaybackSettings | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [statusType, setStatusType] = useState<"success" | "error" | null>(null);
 
   useEffect(() => {
     fetch("/api/playback-settings")
@@ -34,6 +35,7 @@ export default function AdminPlaybackSettings() {
       body: JSON.stringify(settings)
     });
     setStatus(response.ok ? "Playback settings saved." : "Save failed.");
+    setStatusType(response.ok ? "success" : "error");
   };
 
   if (!settings) {
@@ -122,7 +124,11 @@ export default function AdminPlaybackSettings() {
       <button className="button" style={{ marginTop: 12 }} onClick={save}>
         Save Playback Settings
       </button>
-      {status && <p style={{ marginTop: 12 }}>{status}</p>}
+      {status && (
+        <p className={`status-message status-message--${statusType ?? "error"}`} style={{ marginTop: 12 }} role="status" aria-live="polite">
+          {status}
+        </p>
+      )}
     </div>
   );
 }

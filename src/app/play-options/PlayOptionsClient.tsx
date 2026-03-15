@@ -136,6 +136,9 @@ export default function PlayOptionsClient({
           <a className="button button-secondary" href="/library">
             Open Library
           </a>
+          <a className="button button-secondary" href="/member/report-issue">
+            Report an issue
+          </a>
           <button className="button button-secondary" type="button" onClick={logout}>
             Log Out
           </button>

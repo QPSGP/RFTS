@@ -28,7 +28,7 @@ export default function SiteFooter({ showCta = true, showStartJourney = true }: 
               <a href="https://www.reachforthestars.today/privacy-policy#">
                 Privacy Policy
               </a>
-              <a href="https://www.reachforthestars.today/terms-and-condition#">
+              <a href="/terms-and-conditions">
                 Terms and Conditions
               </a>
               <a href="https://www.acesuccess.com/" target="_blank" rel="noreferrer">

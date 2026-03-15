@@ -4,6 +4,7 @@ import { useState } from "react";
 
 export default function LoginForm() {
   const [status, setStatus] = useState<string | null>(null);
+  const [statusType, setStatusType] = useState<"success" | "error" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -31,6 +32,7 @@ export default function LoginForm() {
       return;
     } else {
       setStatus("Login failed.");
+      setStatusType("error");
     }
     setIsSubmitting(false);
   };
@@ -38,6 +40,7 @@ export default function LoginForm() {
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setStatus("Logged out.");
+    setStatusType("success");
   };
 
   return (
@@ -99,7 +102,7 @@ export default function LoginForm() {
             Forgot password?
           </a>
         </p>
-        <button className="button" disabled={isSubmitting} type="submit">
+        <button className="button" disabled={isSubmitting} type="submit" aria-busy={isSubmitting}>
           {isSubmitting ? "Signing in..." : "Sign In"}
         </button>
       </form>
@@ -110,7 +113,11 @@ export default function LoginForm() {
       >
         Log Out
       </button>
-      {status && <p style={{ marginTop: 12 }}>{status}</p>}
+      {status && (
+        <p className={`status-message status-message--${statusType ?? "error"}`} style={{ marginTop: 12 }} role="status" aria-live="polite">
+          {status}
+        </p>
+      )}
     </div>
   );
 }

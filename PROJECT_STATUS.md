@@ -26,6 +26,16 @@ Use this file to get up to speed when opening the project in the **rfts-platform
   - **Access:** `/affiliates` is admin-only. Page uses `isAdminSession()`; non-admins redirect to `/login`. **`src/components/SiteHeader.tsx`:** "Affiliates" link shown only when `consoleType === "admin"` (mobile and desktop nav). Affiliate Section remains in Admin Content Console (`/admin/content` → Affiliate Section).
   - **Rate:** **25% ongoing** — affiliates earn 25% of subscription revenue for as long as the referred member stays subscribed. **`src/app/affiliates/page.tsx`:** Hero and "Earn" card copy updated to "25% ongoing" (no first/recurring split). **`PRICING_REFERENCE.md`:** Section 4 and summary table updated to current rate: 25% ongoing; operational notes (monthly payout, threshold ~$25–50, cookie 30–60 days) kept.
   - **API:** `GET` and `PATCH` `/api/affiliates` require admin; `POST` (create affiliate) remains open for future public signup if needed.
+- **Improvements and Report an issue (this session):**
+  - **Member login:** `UserAuth` uses fetch + JSON; loading state ("Signing in…"), disabled submit, `?next=` redirect support (e.g. `/member/login?next=/member/report-issue`).
+  - **Admin Subscription Plans:** Save button shows "Saving…" and is disabled while saving; success/error status styling.
+  - **Status messages:** `.status-message`, `.status-message--success`, `.status-message--error` in `globals.css`; `.sr-only` for labels. Used in UserAuth, AdminSubscriptions, LoginForm, AdminPlaybackSettings, ReportIssueForm.
+  - **Terms:** Route renamed to `/terms-and-conditions`; footer link updated; `/terms-and-condition` redirects to new URL.
+  - **ModerationQueue:** Uses `ModerationItem` from `@/lib/types`.
+  - **API helpers:** `src/lib/api-utils.ts` — `apiError()`, `requireAdmin()`; subscriptions route uses them. Rate limiting: `src/lib/rate-limit.ts`; applied to member login (10/min), forgot-password (5/min), signup (5/min), report-issue (5/min per user).
+  - **.env.example:** Added BLOB_READ_WRITE_TOKEN, SUBMISSION_KEY, STRIPE_WEBHOOK_SECRET, DEMO_SKIP_STRIPE, POSTGRES_URL_NON_POOLING, REPORT_ISSUE_EMAIL.
+  - **STRIPE_SETUP.md:** Note that Stripe Price ID is entered in Admin → Content → Subscription Plans.
+  - **Report an issue:** Members can report issues from Play Options, header (when logged in as member), or `/member/report-issue`. `POST /api/member/report-issue` (auth required) sends email to REPORT_ISSUE_EMAIL or ADMIN_EMAIL or customerservice@reachforthestars.today. Form: category, subject, message; success/error styling and aria.
 
 ---
 
@@ -220,3 +230,5 @@ So any chat can take over from the current codebase state:
 - **Admin members:** `src/components/AdminUsers.tsx` — list with search (name/email), filter by tier; managed members: goals hidden, audio order via `POST /api/admin/member-audio-order` and schema (member_audio_order). Play Options / SessionPlayer: `src/app/play-options/PlayOptionsClient.tsx`, `src/components/SessionPlayer.tsx` (1 vs 2 per night).
 - **Admin Subscription Plans:** `src/components/AdminSubscriptions.tsx` — edit both plans (Platinum + Platinum Managed). Defaults in `src/lib/content-seed.ts` (`defaultSubscriptionPlans`); seeding in `src/lib/db.ts` (`ensureSubscriptionPlansSeeded` inserts each default if missing). API: GET/POST `/api/subscriptions`.
 - **Affiliates:** `src/app/affiliates/page.tsx` — admin-only (server check, redirect to `/login`). Rate: 25% ongoing (copy + `PRICING_REFERENCE.md`). Header: `SiteHeader.tsx` shows "Affiliates" when `consoleType === "admin"`. API: `GET`/`PATCH` `/api/affiliates` require admin; `POST` open. Also in Admin Content Console → Affiliate Section.
+- **Report an issue:** `POST /api/member/report-issue` (member auth); page `/member/report-issue`; link in header (when member) and on Play Options. Email to REPORT_ISSUE_EMAIL or ADMIN_EMAIL. Rate limit: 5/min per user.
+- **API helpers:** `src/lib/api-utils.ts` — `apiError()`, `requireAdmin()`. Rate limit: `src/lib/rate-limit.ts` — login, forgot-password, signup, report-issue.

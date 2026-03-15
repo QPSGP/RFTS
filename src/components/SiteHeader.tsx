@@ -24,6 +24,7 @@ export default async function SiteHeader() {
                 {consoleType === "admin" && <a href="/facilitator">Facilitators</a>}
                 {consoleType === "admin" && <a href="/affiliates">Affiliates</a>}
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
+                {memberConsoleLink && <a href="/member/report-issue">Report an issue</a>}
               </div>
             </details>
             <a href="/" className="brand">
@@ -45,6 +46,7 @@ export default async function SiteHeader() {
             {consoleType === "admin" && <a href="/facilitator">Facilitators</a>}
             {consoleType === "admin" && <a href="/affiliates">Affiliates</a>}
             {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
+            {memberConsoleLink && <a href="/member/report-issue">Report an issue</a>}
           </nav>
           <div className="header-actions">
             <a className="button header-cta header-start-btn" href="/signup/step-1-subscription-selection">
@@ -59,6 +61,7 @@ export default async function SiteHeader() {
                 <a href="/login">Administrator</a>
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
                 {memberConsoleLink && <a href={memberConsoleLink.href}>{memberConsoleLink.label}</a>}
+                {memberConsoleLink && <a href="/member/report-issue">Report an issue</a>}
               </div>
             </details>
           </div>

@@ -13,6 +13,8 @@ const inputStyle = {
 export default function AdminSubscriptions() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [status, setStatus] = useState<string | null>(null);
+  const [statusType, setStatusType] = useState<"success" | "error" | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const load = async () => {
     const response = await fetch("/api/subscriptions");
@@ -44,20 +46,28 @@ export default function AdminSubscriptions() {
 
   const savePlans = async () => {
     setStatus(null);
-    const response = await fetch("/api/subscriptions", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plans: visiblePlans })
-    });
-    if (response.ok) {
-      setStatus("Plans saved.");
-    } else {
-      const data = await response.json().catch(() => ({}));
-      setStatus(
-        data?.error ||
-          `Unable to save plans. Admin login required. (status ${response.status})`
-      );
+    setStatusType(null);
+    setIsSaving(true);
+    try {
+      const response = await fetch("/api/subscriptions", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plans: visiblePlans })
+      });
+      if (response.ok) {
+        setStatus("Plans saved.");
+        setStatusType("success");
+      } else {
+        const data = await response.json().catch(() => ({}));
+        setStatus(
+          data?.error ||
+            `Unable to save plans. Admin login required. (status ${response.status})`
+        );
+        setStatusType("error");
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -102,10 +112,20 @@ export default function AdminSubscriptions() {
           </div>
         ))}
       </div>
-      <button className="button" style={{ marginTop: 12 }} onClick={savePlans}>
-        Save Plans
+      <button
+        className="button"
+        style={{ marginTop: 12 }}
+        onClick={savePlans}
+        disabled={isSaving}
+        aria-busy={isSaving}
+      >
+        {isSaving ? "Saving…" : "Save Plans"}
       </button>
-      {status && <p style={{ marginTop: 12 }}>{status}</p>}
+      {status && (
+        <p className={`status-message status-message--${statusType ?? "error"}`} style={{ marginTop: 12 }} role="status" aria-live="polite">
+          {status}
+        </p>
+      )}
     </div>
   );
 }

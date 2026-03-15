@@ -17,7 +17,7 @@
 
 ## Linking subscription plans to Stripe
 
-Plans are stored in the `subscription_plans` table. The **Stripe Price ID** links each plan to a Stripe product/price so checkout works correctly.
+Plans are stored in the `subscription_plans` table. The **Stripe Price ID** links each plan to a Stripe product/price so checkout works correctly. You paste each Price ID in **Admin → Content → Subscription Plans** (Stripe Price ID field).
 
 ### 1. Create a product and price in Stripe
 

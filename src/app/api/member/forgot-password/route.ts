@@ -1,19 +1,26 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { z } from "zod";
+import { apiError } from "@/lib/api-utils";
 import {
   getUserByEmail,
   createPasswordResetToken
 } from "@/lib/db";
 import { sendEmail, getBaseUrl } from "@/lib/email";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
   email: z.string().email()
 });
 
 const TOKEN_EXPIRY_HOURS = 1;
+const FORGOT_PASSWORD_MAX_PER_MINUTE = 5;
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  if (!rateLimit(`forgot-password:${ip}`, FORGOT_PASSWORD_MAX_PER_MINUTE)) {
+    return apiError("Too many requests. Please try again in a minute.", 429);
+  }
   const body = await request.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {

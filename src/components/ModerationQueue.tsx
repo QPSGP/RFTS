@@ -1,15 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-type ModerationItem = {
-  id: string;
-  title: string;
-  creator: string;
-  submittedAt: string;
-  status: "pending" | "approved" | "rejected";
-  notes?: string;
-};
+import type { ModerationItem } from "@/lib/types";
 
 export default function ModerationQueue() {
   const [queue, setQueue] = useState<ModerationItem[]>([]);

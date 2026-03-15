@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { apiError } from "@/lib/api-utils";
 import { createUserSessionToken, setUserSessionCookieOnResponse } from "@/lib/user-auth";
 import { getStripe, getStripeMode } from "@/lib/stripe";
 import {
@@ -21,6 +22,9 @@ import {
   getLgdInterestEmailContent,
   getTherapistHealerCoachEmailContent
 } from "@/lib/email-templates";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
+
+const SIGNUP_MAX_PER_MINUTE = 5;
 
 const schema = z.object({
   planId: z.string(),
@@ -51,6 +55,10 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  if (!rateLimit(`signup:${ip}`, SIGNUP_MAX_PER_MINUTE)) {
+    return apiError("Too many signup attempts. Please try again in a minute.", 429);
+  }
   const body = await request.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
