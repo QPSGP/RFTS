@@ -154,9 +154,9 @@ export default function PlayOptionsPage() {
   }
 
   const displayName =
-    profile?.firstName || profile?.lastName
-      ? [profile?.firstName, profile?.lastName].filter(Boolean).join(" ").trim()
-      : profile?.email ?? "";
+    [profile?.firstName, profile?.lastName].filter(Boolean).join(" ").trim() ||
+    profile?.email ||
+    "";
   const getTierLabel = (tier: string | null) => {
     if (tier === "platinum_managed") return "Platinum Managed Member";
     if (tier === "platinum") return "Gold Member";

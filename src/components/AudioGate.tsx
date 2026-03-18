@@ -48,6 +48,7 @@ export default function AudioGate({ item, isFallbackTrack = false }: AudioGatePr
     profileGoalIds.length > 0 &&
     itemInterestIds.length > 0 &&
     itemInterestIds.some((gid) => profileGoalIds.includes(gid));
+  const isGoalBasedTrack = itemInterestIds.length > 0;
   const inAllowedList =
     item.allowedUserEmails?.some(
       (e) => e.trim().toLowerCase() === userEmail.trim().toLowerCase()
@@ -58,6 +59,7 @@ export default function AudioGate({ item, isFallbackTrack = false }: AudioGatePr
     isAdmin ||
     isFallbackTrack ||
     goalMatch ||
+    isGoalBasedTrack ||
     hasNoAllowList ||
     inAllowedList;
   const isCgmr =

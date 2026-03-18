@@ -127,6 +127,7 @@ export async function GET(request: Request) {
       profileGoalIds.length > 0 &&
       itemInterestIds.length > 0 &&
       itemInterestIds.some((gid) => profileGoalIds.includes(gid));
+    const isGoalBasedTrack = itemInterestIds.length > 0;
     const isCgmrFallback = (item.categories || []).some(
       (c) => c.toLowerCase() === "cgmr"
     );
@@ -138,8 +139,8 @@ export async function GET(request: Request) {
         (item.title || "").toUpperCase().includes(fallbackCode));
     const tier = profile.subscriptionTier ?? "";
 
-    if (!allowedEmailsMatch && !goalMatch && !isCgmrFallback && !isAppFallbackTrack) {
-      const denyReason = `allowedEmailsMatch=${allowedEmailsMatch} goalMatch=${goalMatch} isCgmrFallback=${isCgmrFallback} isAppFallbackTrack=${isAppFallbackTrack} tier=${tier}`;
+    if (!allowedEmailsMatch && !goalMatch && !isGoalBasedTrack && !isCgmrFallback && !isAppFallbackTrack) {
+      const denyReason = `allowedEmailsMatch=${allowedEmailsMatch} goalMatch=${goalMatch} isGoalBasedTrack=${isGoalBasedTrack} isCgmrFallback=${isCgmrFallback} isAppFallbackTrack=${isAppFallbackTrack} tier=${tier}`;
       return NextResponse.json(
         { error: "Access denied.", debug: denyReason },
         {
@@ -152,9 +153,11 @@ export async function GET(request: Request) {
       ? "allowedEmailsMatch"
       : goalMatch
         ? "goalMatch"
-        : isAppFallbackTrack
-          ? "isAppFallbackTrack"
-          : "isCgmrFallback";
+        : isGoalBasedTrack
+          ? "goalBasedTrack"
+          : isAppFallbackTrack
+            ? "isAppFallbackTrack"
+            : "isCgmrFallback";
     audioUrl = item.audioUrl;
     if (audioUrl) {
       streamDebugHeaders["X-Stream-Access-Reason"] = accessReason;
