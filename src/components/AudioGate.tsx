@@ -6,9 +6,11 @@ import type { LibraryItem } from "@/lib/types";
 
 type AudioGateProps = {
   item: LibraryItem;
+  /** When true, this item is the app fallback track (e.g. T-18) and any active member can play it. */
+  isFallbackTrack?: boolean;
 };
 
-export default function AudioGate({ item }: AudioGateProps) {
+export default function AudioGate({ item, isFallbackTrack = false }: AudioGateProps) {
   const [status, setStatus] = useState<"loading" | "loggedOut" | "inactive" | "active">(
     "loading"
   );
@@ -38,6 +40,7 @@ export default function AudioGate({ item }: AudioGateProps) {
 
   const isUserAllowed =
     isAdmin ||
+    isFallbackTrack ||
     !item.allowedUserEmails ||
     item.allowedUserEmails.length === 0
       ? true

@@ -292,8 +292,8 @@ export const getMemberProfileByUserId = async (userId: string): Promise<MemberPr
       ? null
       : typeof bd === "string"
         ? bd.trim().slice(0, 10)
-        : bd instanceof Date
-          ? bd.toISOString().slice(0, 10)
+        : (bd as unknown) instanceof Date
+          ? (bd as Date).toISOString().slice(0, 10)
           : /^\d{4}-\d{2}-\d{2}/.test(String(bd))
             ? String(bd).slice(0, 10)
             : null;
