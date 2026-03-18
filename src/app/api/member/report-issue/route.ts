@@ -43,7 +43,11 @@ export async function POST(request: Request) {
   const text = `Report from: ${email}\nCategory: ${categoryLabel}\nSubject: ${parsed.data.subject}\n\n${parsed.data.message}`;
   const { ok, error } = await sendEmail({ to, subject, html, text });
   if (!ok) {
-    return apiError(error || "Could not send report. Please try again or email us directly.", 500);
+    const isNotConfigured = error?.includes("RESEND_API_KEY");
+    const message = isNotConfigured
+      ? "We're temporarily unable to send your report by email. Please contact us at Richard@richardleeweatherman.com."
+      : error || "Could not send report. Please try again or email us at Richard@richardleeweatherman.com.";
+    return apiError(message, isNotConfigured ? 503 : 500);
   }
   // Send confirmation to the member
   let firstName: string | null = null;
