@@ -372,7 +372,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
               </button>
             </div>
           )}
-          {isMobile && <div style={{ height: 88 }} />}
+          {isMobile && <div style={{ height: 200 }} />}
           <audio
             ref={audioRef}
             controls={!!current}
@@ -447,59 +447,95 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
                 left: 0,
                 right: 0,
                 bottom: 0,
-                padding: "12px 16px",
+                zIndex: 50,
                 background: "#ffffff",
                 boxShadow: "0 -6px 18px rgba(15, 23, 42, 0.12)",
-                display: "flex",
-                gap: 12,
-                flexWrap: "wrap",
-                justifyContent: "center",
-                zIndex: 50
+                padding: "12px 16px 16px"
               }}
             >
-              <button
-                className="button button-secondary"
-                onClick={handlePause}
-                type="button"
+              <div
                 style={{
-                  padding: "18px 24px",
-                  fontSize: 18,
-                  minHeight: 56,
-                  flex: 1,
-                  minWidth: 120
+                  marginBottom: 12,
+                  paddingBottom: 12,
+                  borderBottom: "1px solid #e5e7eb",
+                  fontSize: 14,
+                  color: "#4b5563"
                 }}
               >
-                Pause
-              </button>
-              <button
-                className="button button-secondary"
-                onClick={handlePlay}
-                type="button"
-                disabled={isPlaying}
+                <strong style={{ display: "block", marginBottom: 6, color: "#111827" }}>
+                  Meditation session
+                </strong>
+                {prepAudio && (
+                  <div style={{ marginBottom: 2 }}>
+                    Prep: {prepAudio.title}
+                    {current?.url === prepAudio.url && " (now playing)"}
+                  </div>
+                )}
+                {firstTrack && (
+                  <div style={{ marginBottom: 2 }}>
+                    First: {firstTrack.title}
+                    {current?.url === firstTrack.url && " (now playing)"}
+                  </div>
+                )}
+                {secondTrack && playsPerNight === 2 && (
+                  <div>
+                    Second: {secondTrack.title}
+                    {current?.url === secondTrack.url && " (now playing)"}
+                  </div>
+                )}
+              </div>
+              <div
                 style={{
-                  padding: "18px 24px",
-                  fontSize: 18,
-                  minHeight: 56,
-                  flex: 1,
-                  minWidth: 120
+                  display: "flex",
+                  gap: 12,
+                  flexWrap: "wrap",
+                  justifyContent: "center"
                 }}
               >
-                Play
-              </button>
-              <button
-                className="button button-secondary"
-                onClick={handleRestart}
-                type="button"
-                style={{
-                  padding: "18px 24px",
-                  fontSize: 18,
-                  minHeight: 56,
-                  flex: 1,
-                  minWidth: 120
-                }}
-              >
-                Restart
-              </button>
+                <button
+                  className="button button-secondary"
+                  onClick={handlePause}
+                  type="button"
+                  style={{
+                    padding: "18px 24px",
+                    fontSize: 18,
+                    minHeight: 56,
+                    flex: 1,
+                    minWidth: 120
+                  }}
+                >
+                  Pause
+                </button>
+                <button
+                  className="button button-secondary"
+                  onClick={handlePlay}
+                  type="button"
+                  disabled={isPlaying}
+                  style={{
+                    padding: "18px 24px",
+                    fontSize: 18,
+                    minHeight: 56,
+                    flex: 1,
+                    minWidth: 120
+                  }}
+                >
+                  Play
+                </button>
+                <button
+                  className="button button-secondary"
+                  onClick={handleRestart}
+                  type="button"
+                  style={{
+                    padding: "18px 24px",
+                    fontSize: 18,
+                    minHeight: 56,
+                    flex: 1,
+                    minWidth: 120
+                  }}
+                >
+                  Restart
+                </button>
+              </div>
             </div>
           )}
         </div>
