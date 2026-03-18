@@ -280,7 +280,10 @@ export default function PlayOptionsClient({
                     });
                     if (res.ok && profile) {
                       setProfile({ ...profile, playsPerNight: 2 });
-                      const scheduleRes = await fetch("/api/user/schedule?nights=21", { credentials: "include" });
+                      const scheduleRes = await fetch(
+                        `/api/user/schedule?nights=21&_t=${Date.now()}`,
+                        { credentials: "include", cache: "no-store" }
+                      );
                       if (scheduleRes.ok) {
                         const data = await scheduleRes.json();
                         setSchedule(data?.schedule || []);
@@ -306,7 +309,10 @@ export default function PlayOptionsClient({
                     });
                     if (res.ok && profile) {
                       setProfile({ ...profile, playsPerNight: 1 });
-                      const scheduleRes = await fetch("/api/user/schedule?nights=21", { credentials: "include" });
+                      const scheduleRes = await fetch(
+                        `/api/user/schedule?nights=21&_t=${Date.now()}`,
+                        { credentials: "include", cache: "no-store" }
+                      );
                       if (scheduleRes.ok) {
                         const data = await scheduleRes.json();
                         setSchedule(data?.schedule || []);

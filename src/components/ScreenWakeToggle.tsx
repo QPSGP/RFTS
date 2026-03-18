@@ -3,6 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const buttonStyle = { marginTop: 12 };
+const MOBILE_MAX_WIDTH = 768;
+
+function isMobileViewport(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.innerWidth <= MOBILE_MAX_WIDTH;
+}
 
 type ScreenWakeToggleProps = {
   title?: string;
@@ -19,6 +25,7 @@ export default function ScreenWakeToggle({
   const userWantsWakeLockRef = useRef(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const hasAutoEnabledRef = useRef(false);
 
   const releaseWakeLock = useCallback(async () => {
     userWantsWakeLockRef.current = false;
@@ -65,6 +72,19 @@ export default function ScreenWakeToggle({
       setIsLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (hasAutoEnabledRef.current) return;
+    if (!isMobileViewport() || !("wakeLock" in navigator)) return;
+    hasAutoEnabledRef.current = true;
+    userWantsWakeLockRef.current = true;
+    const t = setTimeout(() => {
+      if (document.visibilityState === "visible") {
+        requestWakeLock();
+      }
+    }, 100);
+    return () => clearTimeout(t);
+  }, [requestWakeLock]);
 
   useEffect(() => {
     const handleVisibility = () => {
