@@ -356,7 +356,12 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           <strong>Now Playing: {current.title}</strong>
           {!isMobile && (
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
-              <button className="button button-secondary" onClick={handlePause} type="button">
+              <button
+                className="button button-secondary"
+                onClick={handlePause}
+                type="button"
+                style={{ background: "#dc2626", color: "#fff", borderColor: "#dc2626" }}
+              >
                 Pause
               </button>
               <button
@@ -364,10 +369,16 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
                 onClick={handlePlay}
                 type="button"
                 disabled={isPlaying}
+                style={{ background: "#16a34a", color: "#fff", borderColor: "#16a34a" }}
               >
                 Play
               </button>
-              <button className="button button-secondary" onClick={handleRestart} type="button">
+              <button
+                className="button button-secondary"
+                onClick={handleRestart}
+                type="button"
+                style={{ background: "#eab308", color: "#1f2937", borderColor: "#eab308" }}
+              >
                 Restart
               </button>
             </div>
@@ -501,7 +512,10 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
                     fontSize: 18,
                     minHeight: 56,
                     flex: 1,
-                    minWidth: 120
+                    minWidth: 120,
+                    background: "#dc2626",
+                    color: "#fff",
+                    borderColor: "#dc2626"
                   }}
                 >
                   Pause
@@ -516,7 +530,10 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
                     fontSize: 18,
                     minHeight: 56,
                     flex: 1,
-                    minWidth: 120
+                    minWidth: 120,
+                    background: "#16a34a",
+                    color: "#fff",
+                    borderColor: "#16a34a"
                   }}
                 >
                   Play
@@ -530,7 +547,10 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
                     fontSize: 18,
                     minHeight: 56,
                     flex: 1,
-                    minWidth: 120
+                    minWidth: 120,
+                    background: "#eab308",
+                    color: "#1f2937",
+                    borderColor: "#eab308"
                   }}
                 >
                   Restart
