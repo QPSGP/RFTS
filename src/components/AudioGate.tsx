@@ -17,7 +17,9 @@ export default function AudioGate({ item, isFallbackTrack = false }: AudioGatePr
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasAdultConsent, setHasAdultConsent] = useState(false);
   const [hasVerifiedAge, setHasVerifiedAge] = useState(false);
+  const [wantsPracticeGrowth, setWantsPracticeGrowth] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [goalIds, setGoalIds] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/user/me", { credentials: "include" })
@@ -32,23 +34,36 @@ export default function AudioGate({ item, isFallbackTrack = false }: AudioGatePr
         setUserEmail(data.profile?.email || "");
         setHasAdultConsent(!!data.profile?.adultConsent);
         setHasVerifiedAge(!!data.profile?.hasVerifiedAge);
+        setWantsPracticeGrowth(!!data.profile?.wantsPracticeGrowth);
+        setGoalIds(Array.isArray(data.profile?.goalIds) ? data.profile.goalIds : []);
         const subscriptionStatus = data.profile?.subscriptionStatus;
         setStatus(subscriptionStatus === "active" ? "active" : "inactive");
       })
       .catch(() => setStatus("loggedOut"));
   }, []);
 
+  const profileGoalIds = goalIds.map((id) => String(id).trim().toLowerCase());
+  const itemInterestIds = (item.interestIds || []).map((id) => String(id).trim().toLowerCase());
+  const goalMatch =
+    profileGoalIds.length > 0 &&
+    itemInterestIds.length > 0 &&
+    itemInterestIds.some((gid) => profileGoalIds.includes(gid));
+  const inAllowedList =
+    item.allowedUserEmails?.some(
+      (e) => e.trim().toLowerCase() === userEmail.trim().toLowerCase()
+    ) ?? false;
+  const hasNoAllowList =
+    !item.allowedUserEmails || item.allowedUserEmails.length === 0;
   const isUserAllowed =
     isAdmin ||
     isFallbackTrack ||
-    !item.allowedUserEmails ||
-    item.allowedUserEmails.length === 0
-      ? true
-      : item.allowedUserEmails.some(
-          (e) => e.trim().toLowerCase() === userEmail.trim().toLowerCase()
-        );
+    goalMatch ||
+    hasNoAllowList ||
+    inAllowedList;
   const isCgmr =
     item.categories?.some((category) => category.toLowerCase() === "cgmr") ?? false;
+  const isSpecial =
+    item.categories?.some((category) => category.toLowerCase() === "special") ?? false;
 
   if (status === "loading") {
     return null;
@@ -89,6 +104,18 @@ export default function AudioGate({ item, isFallbackTrack = false }: AudioGatePr
         <p>
           This recording is a custom CGMR track assigned by your admin. Playback is
           unavailable in the member library.
+        </p>
+      </div>
+    );
+  }
+
+  if (isSpecial && !wantsPracticeGrowth) {
+    return (
+      <div className="card">
+        <h2>Build Practice</h2>
+        <p>
+          This audio is for therapists, healers, and coaches. Update your profile
+          to indicate you are or would like to be one to access it.
         </p>
       </div>
     );
