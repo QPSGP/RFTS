@@ -528,9 +528,9 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
             </div>
           </div>
           <div className="card" style={{ marginTop: 16 }}>
-            <h3>Sessions per night</h3>
+            <h3>Audios per night</h3>
             <p style={{ color: "#4b5563" }}>
-              Choose to play 1 or 2 recordings each night (default is 2).
+              Choose to play 1 or 2 audios each night (default is 2).
             </p>
             <div style={{ display: "flex", gap: 12 }}>
               <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -567,7 +567,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
               <strong>Goals:</strong> {goalIds.length} selected
             </p>
             <p>
-              <strong>Sessions per night:</strong> {playsPerNight}
+              <strong>Audios per night:</strong> {playsPerNight}
             </p>
             <p>
               <strong>Member:</strong> {profile.firstName} {profile.lastName}

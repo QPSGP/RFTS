@@ -314,8 +314,9 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     <div className="card">
       <h3>Tonight&apos;s Audio</h3>
       <p style={{ color: "#4b5563" }}>
-        Plays a short preparation audio, then your first goal recording. The second
-        recording is scheduled {gapHours} hours later.
+        {playsPerNight === 1
+          ? "Plays a short preparation audio, then your goal recording for tonight. Your next audio is scheduled for tomorrow."
+          : `Plays a short preparation audio, then your first goal recording. The second recording is scheduled ${gapHours} hours later.`}
       </p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <button className="button" onClick={startSession}>

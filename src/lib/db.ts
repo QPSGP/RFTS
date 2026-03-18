@@ -287,7 +287,16 @@ export const getMemberProfileByUserId = async (userId: string): Promise<MemberPr
   const row = rows[0];
   if (!row) return null;
   const { birth_date: bd, ...rest } = row;
-  const birthDate = bd ? String(bd).slice(0, 10) : null;
+  const birthDate =
+    bd == null
+      ? null
+      : typeof bd === "string"
+        ? bd.trim().slice(0, 10)
+        : bd instanceof Date
+          ? bd.toISOString().slice(0, 10)
+          : /^\d{4}-\d{2}-\d{2}/.test(String(bd))
+            ? String(bd).slice(0, 10)
+            : null;
   const yearBorn =
     birthDate != null
       ? (() => {

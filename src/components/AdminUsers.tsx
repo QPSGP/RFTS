@@ -766,8 +766,8 @@ export default function AdminUsers() {
                 setCreatePlaysPerNight(Number(event.target.value) as 1 | 2)
               }
             >
-              <option value={2}>2 sessions per night (default)</option>
-              <option value={1}>1 session per night</option>
+              <option value={2}>2 audios per night (default)</option>
+              <option value={1}>1 audio per night</option>
             </select>
             <button className="button" onClick={createUser}>
               Create Member
@@ -1278,9 +1278,9 @@ export default function AdminUsers() {
                         )}
                       </div>
                       <div style={{ marginTop: 12 }}>
-                        <h4 style={{ marginBottom: 8 }}>3. Membership, Active, sessions, Reset password</h4>
+                        <h4 style={{ marginBottom: 8 }}>3. Membership, Active, audios per night, Reset password</h4>
                         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
-                          Tier, status, sessions per night, and reset password. Click Save to apply.
+                          Tier, status, audios per night, and reset password. Click Save to apply.
                         </p>
                         <select
                           style={inputStyle}
@@ -1339,8 +1339,8 @@ export default function AdminUsers() {
                             })
                           }
                         >
-                          <option value={2}>2 sessions per night</option>
-                          <option value={1}>1 session per night</option>
+                          <option value={2}>2 audios per night</option>
+                          <option value={1}>1 audio per night</option>
                         </select>
                         <input
                           style={inputStyle}

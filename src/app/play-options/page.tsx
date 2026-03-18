@@ -26,7 +26,7 @@ export default function PlayOptionsPage() {
     null
   );
   const [gapHours, setGapHours] = useState(2.5);
-  const [autoStart, setAutoStart] = useState(true);
+  const [autoStart, setAutoStart] = useState(false);
   const [personalizedAudios, setPersonalizedAudios] = useState<
     { id: string; title: string }[]
   >([]);
@@ -62,6 +62,7 @@ export default function PlayOptionsPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    if (params.get("autoplay") === "1") setAutoStart(true);
     if (params.get("autoplay") === "0") setAutoStart(false);
     fetch("/api/user/me", { credentials: "include" })
       .then((res) => {
@@ -118,7 +119,7 @@ export default function PlayOptionsPage() {
         ? [profile?.firstName, profile?.lastName].filter(Boolean).join(" ").trim()
         : profile?.email ?? "";
     return (
-      <main>
+      <main className="play-options-main">
         <section className="hero section">
           <span className="pill">Subscription Required</span>
           {inactiveName && (
@@ -169,7 +170,7 @@ export default function PlayOptionsPage() {
       : "Membership: Inactive";
 
   return (
-    <main>
+    <main className="play-options-main">
       <section className="hero section">
         <span className="pill">Nightly Sessions</span>
         {displayName && (
@@ -247,7 +248,7 @@ export default function PlayOptionsPage() {
         )}
         <div className="card">
           <h3>Current audios play list</h3>
-          <p>The next 10 audios in your cue (starting from tonight), by SKU and title.</p>
+          <p>The next 10 audios in your queue (starting from tonight), by SKU and title.</p>
           {currentPlaylist.length === 0 ? (
             <p style={{ color: "#6b7280" }}>No audios in your play list yet.</p>
           ) : (
@@ -341,9 +342,9 @@ export default function PlayOptionsPage() {
         })() }
         {status === "active" && profile && (
           <div className="card">
-            <h3>Sessions per night</h3>
+            <h3>Audios per night</h3>
             <p style={{ color: "#4b5563", marginBottom: 12 }}>
-              A session is two audios — you can play both in one night or one per night over two nights. Choose 1 or 2 recordings per night (default is 2). You can change this anytime.
+              A session is two audios — you can play both in one night or one per night over two nights. Choose 1 or 2 audios per night (default is 2). You can change this anytime.
             </p>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               <label style={{ display: "flex", gap: 8, alignItems: "center" }}>

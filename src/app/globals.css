@@ -25,6 +25,13 @@ main {
   overflow-wrap: break-word;
 }
 
+/* Play Options: extra bottom padding on narrow viewports so the fixed Pause/Play bar doesn't cover "Audios per night" */
+@media (max-width: 768px) {
+  .play-options-main {
+    padding-bottom: 100px;
+  }
+}
+
 /* Screen-reader only; visible for focus */
 .sr-only {
   position: absolute;
