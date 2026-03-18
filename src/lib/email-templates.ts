@@ -61,6 +61,54 @@ Reach For The Stars
   return { subject, html, text };
 }
 
+export type ReportIssueConfirmationOptions = {
+  firstName?: string | null;
+  subject: string;
+  categoryLabel: string;
+};
+
+/**
+ * Confirmation email to the member after they submit "Report an issue".
+ */
+export function getReportIssueConfirmationContent(
+  opts: ReportIssueConfirmationOptions
+): TemplateContent {
+  const { firstName, subject, categoryLabel } = opts;
+  const baseUrl = getBaseUrl();
+  const subj = "We received your report — Reach For The Stars";
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1f2937; max-width: 560px; margin: 0 auto; padding: 24px;">
+  <p>${greeting(firstName)}</p>
+  <p>We’ve received your report and will look into it.</p>
+  <p><strong>Category:</strong> ${categoryLabel}</p>
+  <p><strong>Subject:</strong> ${subject}</p>
+  <p style="margin-top: 24px;">Our team will get back to you if we need more information. You can also reach us anytime at 800-GOAL-NOW (462-5669) or <a href="mailto:customerservice@reachforthestars.today">customerservice@reachforthestars.today</a>.</p>
+  <p style="margin-top: 24px;">
+    <a href="${baseUrl}/play-options" style="display: inline-block; padding: 12px 20px; background: #0f766e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Back to your console</a>
+  </p>
+  <p style="margin-top: 16px; font-size: 13px; color: #9ca3af;">Reach For The Stars</p>
+</body>
+</html>`;
+  const text = `
+${greeting(firstName)}
+
+We've received your report and will look into it.
+
+Category: ${categoryLabel}
+Subject: ${subject}
+
+Our team will get back to you if we need more information. You can also reach us at 800-GOAL-NOW (462-5669) or customerservice@reachforthestars.today.
+
+Back to your console: ${baseUrl}/play-options
+
+Reach For The Stars
+`.trim();
+  return { subject: subj, html, text };
+}
+
 /**
  * Email when they check "I am interested in a Life Guidance Discovery Session": explains the process.
  */

@@ -6,6 +6,11 @@ import {
   getUserProfile,
   upsertMemberProfile
 } from "@/lib/db";
+import { sendEmail } from "@/lib/email";
+import {
+  getLgdInterestEmailContent,
+  getTherapistHealerCoachEmailContent
+} from "@/lib/email-templates";
 
 const yearSchema = z
   .union([z.number(), z.string()])
@@ -181,5 +186,40 @@ export async function PATCH(request: Request) {
     }
     return NextResponse.json({ error: "Save failed." }, { status: 500 });
   }
+
+  const newHadLgd =
+    parsed.data.hadLgdSession ?? existing?.hadLgdSession ?? false;
+  const newWantsPracticeGrowth =
+    parsed.data.wantsPracticeGrowth ?? existing?.wantsPracticeGrowth ?? false;
+  const prevHadLgd = existing?.hadLgdSession ?? false;
+  const prevWantsPracticeGrowth = existing?.wantsPracticeGrowth ?? false;
+  const firstName =
+    parsed.data.firstName ?? existing?.firstName ?? null;
+
+  if (newHadLgd && !prevHadLgd) {
+    const lgd = getLgdInterestEmailContent(firstName);
+    const lgdResult = await sendEmail({
+      to: email,
+      subject: lgd.subject,
+      html: lgd.html,
+      text: lgd.text
+    });
+    if (!lgdResult.ok) {
+      console.error("[PATCH /api/member/profile] LGD interest email failed:", lgdResult.error);
+    }
+  }
+  if (newWantsPracticeGrowth && !prevWantsPracticeGrowth) {
+    const thc = getTherapistHealerCoachEmailContent(firstName);
+    const thcResult = await sendEmail({
+      to: email,
+      subject: thc.subject,
+      html: thc.html,
+      text: thc.text
+    });
+    if (!thcResult.ok) {
+      console.error("[PATCH /api/member/profile] Therapist/healer/coach email failed:", thcResult.error);
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }

@@ -3,7 +3,9 @@ import { z } from "zod";
 import { apiError } from "@/lib/api-utils";
 import { getUserSessionEmail } from "@/lib/user-auth";
 import { sendEmail } from "@/lib/email";
+import { getReportIssueConfirmationContent } from "@/lib/email-templates";
 import { rateLimit } from "@/lib/rate-limit";
+import { getMemberProfileByUserId, getUserByEmail } from "@/lib/db";
 
 const schema = z.object({
   subject: z.string().min(1).max(200),
@@ -28,8 +30,7 @@ export async function POST(request: Request) {
   }
   const to =
     process.env.REPORT_ISSUE_EMAIL ||
-    process.env.ADMIN_EMAIL ||
-    "customerservice@reachforthestars.today";
+    "Richard@richardleeweatherman.com";
   const categoryLabel = parsed.data.category || "General";
   const subject = `[RFTS Report] ${parsed.data.subject}`;
   const html = `
@@ -43,6 +44,31 @@ export async function POST(request: Request) {
   const { ok, error } = await sendEmail({ to, subject, html, text });
   if (!ok) {
     return apiError(error || "Could not send report. Please try again or email us directly.", 500);
+  }
+  // Send confirmation to the member
+  let firstName: string | null = null;
+  try {
+    const user = await getUserByEmail(email);
+    if (user) {
+      const profile = await getMemberProfileByUserId(user.id);
+      firstName = profile?.firstName ?? null;
+    }
+  } catch {
+    // non-fatal
+  }
+  const confirmation = getReportIssueConfirmationContent({
+    firstName,
+    subject: parsed.data.subject,
+    categoryLabel
+  });
+  const confirmResult = await sendEmail({
+    to: email,
+    subject: confirmation.subject,
+    html: confirmation.html,
+    text: confirmation.text
+  });
+  if (!confirmResult.ok) {
+    console.error("[report-issue] Confirmation email failed:", confirmResult.error);
   }
   return NextResponse.json({ message: "Thank you. We received your report and will look into it." });
 }

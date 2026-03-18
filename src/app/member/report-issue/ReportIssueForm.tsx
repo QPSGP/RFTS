@@ -11,6 +11,7 @@ const inputStyle = {
 
 const CATEGORIES = [
   { value: "", label: "— Select category (optional) —" },
+  { value: "support", label: "Support" },
   { value: "technical", label: "Technical / Website" },
   { value: "playback", label: "Playback / Audio" },
   { value: "billing", label: "Billing / Subscription" },
