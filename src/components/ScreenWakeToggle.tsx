@@ -27,6 +27,12 @@ export default function ScreenWakeToggle({
   const [isLoading, setIsLoading] = useState(false);
   const hasAutoEnabledRef = useRef(false);
 
+  useEffect(() => {
+    if (typeof navigator !== "undefined" && !("wakeLock" in navigator)) {
+      setWakeLockSupported(false);
+    }
+  }, []);
+
   const releaseWakeLock = useCallback(async () => {
     userWantsWakeLockRef.current = false;
     try {
@@ -66,8 +72,7 @@ export default function ScreenWakeToggle({
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Request failed";
-      setWakeLockSupported(false);
-      setFeedback(`Could not enable screen wake: ${msg}`);
+      setFeedback(`Could not enable screen wake: ${msg}. Try again when this tab is in the foreground.`);
     } finally {
       setIsLoading(false);
     }
@@ -137,9 +142,10 @@ export default function ScreenWakeToggle({
           )}
         </>
       ) : (
-        <p style={{ color: "#b45309", marginTop: 12 }}>
-          Your browser does not support screen wake lock. Keep the app open while
-          listening.
+        <p style={{ color: "#4b5563", marginTop: 12 }}>
+          Your browser does not support screen wake lock. To keep your phone awake
+          while listening, set your device&apos;s auto-lock to &quot;Never&quot; (e.g.
+          Settings → Display → Sleep), or keep this app in the foreground.
         </p>
       )}
     </section>

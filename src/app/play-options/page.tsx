@@ -273,8 +273,7 @@ export default function PlayOptionsPage() {
           <p>
             Start a guided session tailored to your goals. Each session plays your
             preparation audio, then your first goal recording. A second recording
-            is scheduled {gapHours} hours later if the admin has enabled 2 sessions
-            per night for your account.
+            is scheduled {gapHours} hours later if you have enabled 2 sessions per night.
           </p>
           {schedule.length > 0 && (() => {
             const tonightIndex = Math.max(0, Math.min(currentNight - 1, schedule.length - 1));
