@@ -37,6 +37,37 @@ Use this file to get up to speed when opening the project in the **rfts-platform
   - **STRIPE_SETUP.md:** Note that Stripe Price ID is entered in Admin → Content → Subscription Plans.
   - **Report an issue:** Members can report issues from Play Options, header (when logged in as member), or `/member/report-issue`. `POST /api/member/report-issue` (auth required) sends email to REPORT_ISSUE_EMAIL or ADMIN_EMAIL or customerservice@reachforthestars.today. Form: category, subject, message; success/error styling and aria.
 
+### Report an issue (complete flow) — session summary
+- **Recipient:** All reports go to **REPORT_ISSUE_EMAIL** (optional env); if unset, default **Richard@richardleeweatherman.com**. No separate support vs general routing.
+- **Confirmation email:** After a report is sent to the team, the member receives a confirmation email (template: `getReportIssueConfirmationContent` in `src/lib/email-templates.ts`) with subject/message summary and link back to console.
+- **When email not configured:** If RESEND_API_KEY is missing, the API returns a friendly message (503): "We're temporarily unable to send your report by email. Please contact us at Richard@richardleeweatherman.com" instead of the raw error.
+- **Categories:** Form includes Support, Technical/Website, Playback/Audio, Billing, Content/Library, Other — all are delivered to the same inbox; category is shown in the email body.
+- **.env.example:** `REPORT_ISSUE_EMAIL=Richard@richardleeweatherman.com` (optional).
+
+### Email when member checks key profile checkboxes
+- **PATCH /api/member/profile:** When the member saves their profile and **newly** checks:
+  - **"I am interested in a Life Guidance Discovery Session"** (`hadLgdSession` false → true) → send **LGD interest email** (next steps, how to schedule).
+  - **"I am or would like to be a therapist, healer, or coach"** (`wantsPracticeGrowth` false → true) → send **therapist/healer/coach email** (Build Practice, console link).
+- Emails sent only on **transition to true** (not on every save when already checked). Uses existing templates in `src/lib/email-templates.ts`. Signup already sent these when checked at registration; profile save now does the same when toggled later.
+
+### Deploy workflow
+- **Push to git (main)** → **Vercel auto-deploys** from the connected repo. No separate deploy step; agent commits and pushes from rfts-platform. Set **RESEND_API_KEY** (and optional REPORT_ISSUE_EMAIL, EMAIL_FROM, NEXT_PUBLIC_APP_URL) in Vercel → Project → Settings → Environment Variables so email works in production. See README "Email on Vercel (deployments)."
+
+### Play Options copy
+- Meditation session description: "A second recording is scheduled X hours later **if you have enabled** 2 sessions per night" (was "if the admin has enabled …"). Updated in `src/app/play-options/page.tsx` and `PlayOptionsClient.tsx`.
+
+### Keep Screen Awake (ScreenWakeToggle)
+- **Unsupported only when API missing:** `wakeLockSupported` is set to false only when `!("wakeLock" in navigator)`. If `navigator.wakeLock.request()` fails (e.g. tab not visible), we show an error but keep the button so the user can retry.
+- **Detect on load:** Effect on mount sets `wakeLockSupported` to false when Wake Lock is not in navigator, so the fallback message shows immediately on unsupported browsers.
+- **Fallback message:** When unsupported: "Set your device's auto-lock to 'Never' (e.g. Settings → Display → Sleep), or keep this app in the foreground."
+
+### SessionPlayer — mobile and button colors
+- **Mobile (≤768px):** When a session is playing, the **fixed bar at the bottom** includes:
+  1. **Meditation session** block: Prep, First, Second (when 2 per night) with "(now playing)" beside the current track.
+  2. **Pause, Play, Restart** buttons below.
+- **Spacer:** Height 200px above the bar so content isn’t hidden behind it.
+- **Button colors (desktop and mobile):** Pause = **red** (#dc2626), Play = **green** (#16a34a), Restart = **yellow** (#eab308, dark text for contrast). Applied in `src/components/SessionPlayer.tsx`.
+
 ---
 
 ## Moving to another computer
@@ -188,8 +219,13 @@ So any chat can take over from the current codebase state:
 
 | Commit   | What changed |
 |----------|--------------|
-| **(latest)** | Affiliates: 25% ongoing rate copy; PRICING_REFERENCE updated; PROJECT_STATUS handoff. Files: `src/app/affiliates/page.tsx`, `PRICING_REFERENCE.md`, `PROJECT_STATUS.md`. |
-| **a745f31** | Affiliates: admin-only page (redirect to `/login` if not admin), header link for admins only, initial rate copy. Files: `src/app/affiliates/page.tsx`, `src/components/SiteHeader.tsx`. |
+| **(latest) 72f9c97** | SessionPlayer: Pause red, Play green, Restart yellow. File: `src/components/SessionPlayer.tsx`. |
+| **7699ff4** | Mobile: meditation session lineup (Prep/First/Second + now playing) above Pause/Play/Restart bar. File: `SessionPlayer.tsx`. |
+| **f3e5206** | Email: README "Email on Vercel"; report-issue friendly message when RESEND_API_KEY missing. Files: README, report-issue route, .env.example. |
+| **31b43f0** | Report issue: confirmation email to member; all reports to Richard; profile checkmark emails (LGD, therapist/healer/coach when toggled on); Support category. Files: email-templates, report-issue route, member profile route, ReportIssueForm, .env.example. |
+| **ee50d26** | Copy/UX: screen wake fallback message and retry logic; play-options "if you have enabled 2 sessions per night." Files: ScreenWakeToggle, PlayOptionsClient, page. |
+| **1098df4** | (Earlier) Affiliates 25% ongoing; PRICING_REFERENCE; PROJECT_STATUS. |
+| **a745f31** | Affiliates: admin-only page (redirect to `/login` if not admin), header link for admins only. Files: `src/app/affiliates/page.tsx`, `src/components/SiteHeader.tsx`. |
 | **3252ad3** | Subscription plans: Platinum + Platinum Managed; seed both; AdminSubscriptions UI; PROJECT_STATUS. Files: `content-seed.ts`, `AdminSubscriptions.tsx`, `db.ts`, `PROJECT_STATUS.md`. |
 | **a178500** | Admin member list: search by name/email, filter by membership tier. File: `src/components/AdminUsers.tsx`. |
 | **64daea8** | TypeScript: `DbSubscription` tier type includes `platinum_managed`. File: `src/lib/db.ts`. |
@@ -206,6 +242,9 @@ So any chat can take over from the current codebase state:
 
 ## Where We Left Off
 
+- **Deploy:** Push to **main** → Vercel auto-deploys. Set **RESEND_API_KEY** in Vercel Environment Variables for email. See README "Email on Vercel (deployments)."
+- **Report an issue:** All reports to **Richard@richardleeweatherman.com** (or REPORT_ISSUE_EMAIL). Member gets confirmation email; friendly message when email not configured. Profile checkmark emails (LGD, therapist/healer/coach) when member toggles on in profile. See Summary above.
+- **SessionPlayer:** Mobile: meditation lineup above Pause/Play/Restart; buttons: Pause red, Play green, Restart yellow. **Keep Screen Awake:** Fallback message and retry; "if you have enabled 2 sessions per night" copy.
 - **Affiliates:** Admin-only. `/affiliates` redirects non-admins to `/login`. Header shows "Affiliates" only for admins. Rate on site and in `PRICING_REFERENCE.md`: **25% ongoing**. API: GET/PATCH admin-only; POST open. See "Summary of changes (for the day)" for details.
 - **Member login (working):** Form POST to `/api/user/login` returns **200 + Set-Cookie + HTML** (meta refresh to `/play-options`) so the cookie is stored reliably. Play-options uses the cookie and shows the console. **`ClearSessionOnEnter`** on `/member/login` clears any stale member session when you open the login page so the header doesn’t show “Members Console” until you’ve logged in. Test user for E2E: `node scripts/seed-test-user.js` then `node scripts/test-login-e2e.js` (dev server must be running).
 - **Handoff:** Read this file and **README.md** for env. Run schema with `npm run db:schema` if DB is new or after schema changes.
@@ -225,10 +264,10 @@ So any chat can take over from the current codebase state:
 - **Member registration/onboarding:** `POST /api/member/onboarding` — creates user, profile, subscription; assigns fallback track (T-18) via `addEmailToLibraryItemAllowedList` in `src/lib/db.ts`. Fallback track is looked up by playback settings `fallbackTrackId` and library item title match.
 - **Schedule / T-18 / CGMR:** `src/lib/scheduler.ts` (`buildSchedulePreview`); schedule API `src/app/api/user/schedule/route.ts` picks `userAssignedTrack` (member in allowedUserEmails + CGMR category, else first with their email). Playback settings: `src/lib/db.ts` `getPlaybackSettings`, `fallbackTrackId` default "T-18".
 - **DB/schema:** `scripts/schema.sql` for Vercel Postgres; run with `node scripts/run-schema.js`; env in `.env.local` (see README).
-- **Email:** `src/lib/email.ts` (Resend); templates in `src/lib/email-templates.ts`. Env: RESEND_API_KEY, EMAIL_FROM, NEXT_PUBLIC_APP_URL.
+- **Email:** `src/lib/email.ts` (Resend); templates in `src/lib/email-templates.ts` (welcome, LGD, therapist/healer/coach, report-issue confirmation). Env: RESEND_API_KEY, EMAIL_FROM, NEXT_PUBLIC_APP_URL. Profile PATCH sends LGD/therapist emails when checkboxes newly turned on.
 - **Upload audio:** `POST /api/admin/upload-audio` → Vercel Blob; client large uploads via `POST /api/admin/upload-audio-handler` + `@vercel/blob/client`; env: BLOB_READ_WRITE_TOKEN.
-- **Admin members:** `src/components/AdminUsers.tsx` — list with search (name/email), filter by tier; managed members: goals hidden, audio order via `POST /api/admin/member-audio-order` and schema (member_audio_order). Play Options / SessionPlayer: `src/app/play-options/PlayOptionsClient.tsx`, `src/components/SessionPlayer.tsx` (1 vs 2 per night).
+- **Admin members:** `src/components/AdminUsers.tsx` — list with search (name/email), filter by tier; managed members: goals hidden, audio order via `POST /api/admin/member-audio-order` and schema (member_audio_order). Play Options / SessionPlayer: `src/app/play-options/PlayOptionsClient.tsx`, `src/components/SessionPlayer.tsx` (1 vs 2 per night). SessionPlayer: mobile fixed bar has meditation lineup + Pause red / Play green / Restart yellow.
 - **Admin Subscription Plans:** `src/components/AdminSubscriptions.tsx` — edit both plans (Platinum + Platinum Managed). Defaults in `src/lib/content-seed.ts` (`defaultSubscriptionPlans`); seeding in `src/lib/db.ts` (`ensureSubscriptionPlansSeeded` inserts each default if missing). API: GET/POST `/api/subscriptions`.
 - **Affiliates:** `src/app/affiliates/page.tsx` — admin-only (server check, redirect to `/login`). Rate: 25% ongoing (copy + `PRICING_REFERENCE.md`). Header: `SiteHeader.tsx` shows "Affiliates" when `consoleType === "admin"`. API: `GET`/`PATCH` `/api/affiliates` require admin; `POST` open. Also in Admin Content Console → Affiliate Section.
-- **Report an issue:** `POST /api/member/report-issue` (member auth); page `/member/report-issue`; link in header (when member) and on Play Options. Email to REPORT_ISSUE_EMAIL or ADMIN_EMAIL. Rate limit: 5/min per user.
+- **Report an issue:** `POST /api/member/report-issue` (member auth); page `/member/report-issue`; link in header (when member) and on Play Options. All reports to **REPORT_ISSUE_EMAIL** or default **Richard@richardleeweatherman.com**. Member gets confirmation email. When RESEND_API_KEY missing, API returns friendly message with Richard’s email. Rate limit: 5/min per user. Categories: Support, Technical, Playback, Billing, Content, Other (all same inbox).
 - **API helpers:** `src/lib/api-utils.ts` — `apiError()`, `requireAdmin()`. Rate limit: `src/lib/rate-limit.ts` — login, forgot-password, signup, report-issue.
