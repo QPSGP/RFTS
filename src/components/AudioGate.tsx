@@ -6,20 +6,15 @@ import type { LibraryItem } from "@/lib/types";
 
 type AudioGateProps = {
   item: LibraryItem;
-  /** When true, this item is the app fallback track (e.g. T-18) and any active member can play it. */
-  isFallbackTrack?: boolean;
 };
 
-export default function AudioGate({ item, isFallbackTrack = false }: AudioGateProps) {
+export default function AudioGate({ item }: AudioGateProps) {
   const [status, setStatus] = useState<"loading" | "loggedOut" | "inactive" | "active">(
     "loading"
   );
-  const [isAdmin, setIsAdmin] = useState(false);
   const [hasAdultConsent, setHasAdultConsent] = useState(false);
   const [hasVerifiedAge, setHasVerifiedAge] = useState(false);
   const [wantsPracticeGrowth, setWantsPracticeGrowth] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const [goalIds, setGoalIds] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/user/me", { credentials: "include" })
@@ -30,38 +25,15 @@ export default function AudioGate({ item, isFallbackTrack = false }: AudioGatePr
         return res.json();
       })
       .then((data) => {
-        setIsAdmin(!!data.isAdmin);
-        setUserEmail(data.profile?.email || "");
         setHasAdultConsent(!!data.profile?.adultConsent);
         setHasVerifiedAge(!!data.profile?.hasVerifiedAge);
         setWantsPracticeGrowth(!!data.profile?.wantsPracticeGrowth);
-        setGoalIds(Array.isArray(data.profile?.goalIds) ? data.profile.goalIds : []);
         const subscriptionStatus = data.profile?.subscriptionStatus;
         setStatus(subscriptionStatus === "active" ? "active" : "inactive");
       })
       .catch(() => setStatus("loggedOut"));
   }, []);
 
-  const profileGoalIds = goalIds.map((id) => String(id).trim().toLowerCase());
-  const itemInterestIds = (item.interestIds || []).map((id) => String(id).trim().toLowerCase());
-  const goalMatch =
-    profileGoalIds.length > 0 &&
-    itemInterestIds.length > 0 &&
-    itemInterestIds.some((gid) => profileGoalIds.includes(gid));
-  const isGoalBasedTrack = itemInterestIds.length > 0;
-  const inAllowedList =
-    item.allowedUserEmails?.some(
-      (e) => e.trim().toLowerCase() === userEmail.trim().toLowerCase()
-    ) ?? false;
-  const hasNoAllowList =
-    !item.allowedUserEmails || item.allowedUserEmails.length === 0;
-  const isUserAllowed =
-    isAdmin ||
-    isFallbackTrack ||
-    goalMatch ||
-    isGoalBasedTrack ||
-    hasNoAllowList ||
-    inAllowedList;
   const isCgmr =
     item.categories?.some((category) => category.toLowerCase() === "cgmr") ?? false;
   const isSpecial =
@@ -133,15 +105,6 @@ export default function AudioGate({ item, isFallbackTrack = false }: AudioGatePr
           birthdate, adult content is not available. Contact your admin to add or
           update your profile.
         </p>
-      </div>
-    );
-  }
-
-  if (!isUserAllowed) {
-    return (
-      <div className="card">
-        <h2>Access Restricted</h2>
-        <p>This audio is assigned to specific users only.</p>
       </div>
     );
   }

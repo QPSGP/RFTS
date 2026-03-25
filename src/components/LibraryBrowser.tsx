@@ -13,11 +13,9 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
   const [status, setStatus] = useState<"loading" | "loggedOut" | "inactive" | "active">(
     "loading"
   );
-  const [isAdmin, setIsAdmin] = useState(false);
   const [adultConsent, setAdultConsent] = useState(false);
   const [hasVerifiedAge, setHasVerifiedAge] = useState(false);
   const [wantsPracticeGrowth, setWantsPracticeGrowth] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedGoalId, setExpandedGoalId] = useState<string | null>(null);
 
@@ -30,8 +28,6 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
         return res.json();
       })
       .then((data) => {
-        setIsAdmin(!!data.isAdmin);
-        setUserEmail(data.profile?.email || "");
         setAdultConsent(!!data.profile?.adultConsent);
         setHasVerifiedAge(!!data.profile?.hasVerifiedAge);
         setWantsPracticeGrowth(!!data.profile?.wantsPracticeGrowth);
@@ -104,14 +100,6 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
 
   const renderCard = (item: LibraryItem) => {
     const isLocked = status !== "active";
-    const isUserLocked =
-      !isAdmin &&
-      item.allowedUserEmails &&
-      item.allowedUserEmails.length > 0
-        ? !item.allowedUserEmails.some(
-            (e) => e.trim().toLowerCase() === userEmail.trim().toLowerCase()
-          )
-        : false;
     const content = (
       <div className="card">
         <strong>{displayTitle(item)}</strong>
@@ -120,11 +108,10 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
         </p>
         {item.isAdult && <span className="badge">Adult</span>}
         {isLocked && <p style={{ color: "#b91c1c" }}>Subscriber access required</p>}
-        {isUserLocked && <p style={{ color: "#b91c1c" }}>Assigned user only</p>}
       </div>
     );
 
-    if (isLocked || isUserLocked || !item.audioUrl) {
+    if (isLocked || !item.audioUrl) {
       return <div key={item.id}>{content}</div>;
     }
 

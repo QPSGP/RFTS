@@ -1,8 +1,9 @@
 /**
- * Stream audio by id or prep=1. Access for members:
- * - Managed (platinum_managed): allowedEmailsMatch (track's allowedUserEmails contains member email).
- * - Gold (platinum): allowedEmailsMatch OR goalMatch (item.interestIds ∩ profile.goalIds) OR isCgmrFallback (category cgmr).
- * Response headers: X-Stream-Access-Reason (allowedEmailsMatch | goalMatch | isCgmrFallback), X-Stream-Tier, or on deny X-Stream-Deny-Reason.
+ * Stream audio by id or prep=1. Access for members (active subscription):
+ * - Non-CGMR catalog: stream allowed (after Special + Adult checks). allowedUserEmails does not restrict library playback.
+ * - CGMR category: only if member's email is on allowedUserEmails (personalized assignment).
+ * Admin: always allowed.
+ * Response headers: X-Stream-Access-Reason, X-Stream-Tier, or X-Stream-Deny-Reason.
  */
 import { NextResponse } from "next/server";
 import fs from "fs";
@@ -12,7 +13,6 @@ import { getUserSessionEmail } from "@/lib/user-auth";
 import {
   getLibraryItem,
   getMemberProfileByUserId,
-  getPlaybackSettings,
   getUserProfile
 } from "@/lib/db";
 
@@ -115,54 +115,29 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Adult content requires birthdate and 18+ age verification." }, { status: 403 });
       }
     }
-    const allowedEmailsMatch =
-      !item.allowedUserEmails ||
-      item.allowedUserEmails.length === 0 ||
-      item.allowedUserEmails.some(
+    const isCgmr = (item.categories || []).some((c) => c.toLowerCase() === "cgmr");
+    const onCgmrAllowList =
+      (item.allowedUserEmails || []).some(
         (e) => e.trim().toLowerCase() === email.trim().toLowerCase()
-      );
-    const profileGoalIds = (profile.goalIds || []).map((id) => String(id).trim().toLowerCase());
-    const itemInterestIds = (item.interestIds || []).map((id) => String(id).trim().toLowerCase());
-    const goalMatch =
-      profileGoalIds.length > 0 &&
-      itemInterestIds.length > 0 &&
-      itemInterestIds.some((gid) => profileGoalIds.includes(gid));
-    const isGoalBasedTrack = itemInterestIds.length > 0;
-    const isCgmrFallback = (item.categories || []).some(
-      (c) => c.toLowerCase() === "cgmr"
-    );
-    const settings = await getPlaybackSettings();
-    const fallbackCode = (settings.fallbackTrackId || "T-18").trim().toUpperCase();
-    const isAppFallbackTrack =
-      !!fallbackCode &&
-      ((item.skuCode || "").toUpperCase().includes(fallbackCode) ||
-        (item.title || "").toUpperCase().includes(fallbackCode));
+      ) ?? false;
     const tier = profile.subscriptionTier ?? "";
 
-    if (!allowedEmailsMatch && !goalMatch && !isGoalBasedTrack && !isCgmrFallback && !isAppFallbackTrack) {
-      const denyReason = `allowedEmailsMatch=${allowedEmailsMatch} goalMatch=${goalMatch} isGoalBasedTrack=${isGoalBasedTrack} isCgmrFallback=${isCgmrFallback} isAppFallbackTrack=${isAppFallbackTrack} tier=${tier}`;
-      return NextResponse.json(
-        { error: "Access denied.", debug: denyReason },
-        {
-          status: 403,
-          headers: { "X-Stream-Deny-Reason": denyReason },
-        }
-      );
+    if (isCgmr) {
+      if (!onCgmrAllowList) {
+        return NextResponse.json(
+          { error: "This personalized track is not assigned to your account." },
+          {
+            status: 403,
+            headers: { "X-Stream-Deny-Reason": "cgmr-not-assigned" },
+          }
+        );
+      }
+      streamDebugHeaders["X-Stream-Access-Reason"] = "cgmrAssigned";
+    } else {
+      streamDebugHeaders["X-Stream-Access-Reason"] = "libraryCatalog";
     }
-    const accessReason = allowedEmailsMatch
-      ? "allowedEmailsMatch"
-      : goalMatch
-        ? "goalMatch"
-        : isGoalBasedTrack
-          ? "goalBasedTrack"
-          : isAppFallbackTrack
-            ? "isAppFallbackTrack"
-            : "isCgmrFallback";
+    streamDebugHeaders["X-Stream-Tier"] = tier;
     audioUrl = item.audioUrl;
-    if (audioUrl) {
-      streamDebugHeaders["X-Stream-Access-Reason"] = accessReason;
-      streamDebugHeaders["X-Stream-Tier"] = tier;
-    }
     }
   }
 
