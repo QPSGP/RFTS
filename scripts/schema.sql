@@ -210,3 +210,7 @@ CREATE TABLE IF NOT EXISTS member_audio_assignments (
 );
 CREATE INDEX IF NOT EXISTS member_audio_assignments_user_email
   ON member_audio_assignments (user_email, assignment_order);
+
+-- Admin display profile (optional; safe on existing DBs)
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS first_name text;
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS last_name text;

@@ -20,6 +20,8 @@ export async function GET() {
   const adminsWithLastLogin = admins.map((a) => ({
     id: a.id,
     email: a.email,
+    firstName: a.firstName ?? null,
+    lastName: a.lastName ?? null,
     status: a.status,
     createdAt: a.createdAt,
     lastLoginAt: lastLogins.get(a.email.toLowerCase()) ?? null

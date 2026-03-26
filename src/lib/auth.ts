@@ -12,7 +12,7 @@ export const verifyAdminCredentials = async (
   password: string
 ) => {
   const dbAdmin = await getAdminByEmail(email);
-  if (dbAdmin && dbAdmin.status === "active") {
+  if (dbAdmin && dbAdmin.status === "active" && dbAdmin.passwordHash) {
     return bcrypt.compare(password, dbAdmin.passwordHash);
   }
   const adminEmail = process.env.ADMIN_EMAIL;

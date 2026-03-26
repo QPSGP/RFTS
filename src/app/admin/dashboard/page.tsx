@@ -60,6 +60,8 @@ function formatDateTime(iso: string | null): string {
 type AdminWithLogin = {
   id: string;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
   status: string;
   createdAt: string;
   lastLoginAt: string | null;
@@ -321,6 +323,7 @@ export default function AdminDashboardPage() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
+                  <th style={{ padding: "8px 10px", fontWeight: 600 }}>Name</th>
                   <th style={{ padding: "8px 10px", fontWeight: 600 }}>Email</th>
                   <th style={{ padding: "8px 10px", fontWeight: 600 }}>Status</th>
                   <th style={{ padding: "8px 10px", fontWeight: 600 }}>Last login</th>
@@ -329,6 +332,9 @@ export default function AdminDashboardPage() {
               <tbody>
                 {admins.map((a) => (
                   <tr key={a.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                    <td style={{ padding: "8px 10px" }}>
+                      {[a.firstName, a.lastName].filter(Boolean).join(" ") || "—"}
+                    </td>
                     <td style={{ padding: "8px 10px" }}>{a.email}</td>
                     <td style={{ padding: "8px 10px" }}>{a.status}</td>
                     <td style={{ padding: "8px 10px", color: "#4b5563" }}>{formatDateTime(a.lastLoginAt)}</td>

@@ -488,23 +488,52 @@ export const getFirstAdminEmail = async (): Promise<string | null> => {
   return process.env.ADMIN_EMAIL || null;
 };
 
+const ensureAdminsProfileColumns = async () => {
+  try {
+    await sql`ALTER TABLE admins ADD COLUMN IF NOT EXISTS first_name text`;
+  } catch {
+    // ignore
+  }
+  try {
+    await sql`ALTER TABLE admins ADD COLUMN IF NOT EXISTS last_name text`;
+  } catch {
+    // ignore
+  }
+};
+
+/** List admins for UI — no password hash. */
 export const listAdmins = async () => {
-  const { rows } = await sql<AdminAccount>`
-    SELECT id, email, password_hash as "passwordHash", status, created_at as "createdAt"
+  await ensureAdminsProfileColumns();
+  const { rows } = await sql<
+    Omit<AdminAccount, "passwordHash"> & { status: string }
+  >`
+    SELECT
+      id,
+      email,
+      status,
+      created_at as "createdAt",
+      first_name as "firstName",
+      last_name as "lastName"
     FROM admins
     ORDER BY created_at ASC
   `;
-  return rows;
+  return rows.map((r) => ({
+    ...r,
+    status: r.status as AdminAccount["status"]
+  }));
 };
 
 export const getAdminByEmail = async (email: string) => {
+  await ensureAdminsProfileColumns();
   const { rows } = await sql<AdminAccount>`
     SELECT
       id,
       email,
       password_hash as "passwordHash",
       status,
-      created_at as "createdAt"
+      created_at as "createdAt",
+      first_name as "firstName",
+      last_name as "lastName"
     FROM admins
     WHERE LOWER(email) = LOWER(${email})
     LIMIT 1
@@ -512,18 +541,66 @@ export const getAdminByEmail = async (email: string) => {
   return rows[0] || null;
 };
 
-export const createAdmin = async (email: string, passwordHash: string) => {
+export const createAdmin = async (
+  email: string,
+  passwordHash: string,
+  profile?: { firstName?: string | null; lastName?: string | null }
+) => {
+  await ensureAdminsProfileColumns();
+  const fn = profile?.firstName?.trim() || null;
+  const ln = profile?.lastName?.trim() || null;
   const { rows } = await sql<AdminAccount>`
-    INSERT INTO admins (email, password_hash, status)
-    VALUES (${email}, ${passwordHash}, 'active')
+    INSERT INTO admins (email, password_hash, status, first_name, last_name)
+    VALUES (${email}, ${passwordHash}, 'active', ${fn}, ${ln})
     RETURNING
       id,
       email,
       password_hash as "passwordHash",
       status,
-      created_at as "createdAt"
+      created_at as "createdAt",
+      first_name as "firstName",
+      last_name as "lastName"
   `;
   return rows[0];
+};
+
+export const updateAdminByEmail = async (
+  targetEmail: string,
+  payload: {
+    passwordHash?: string;
+    firstName?: string | null;
+    lastName?: string | null;
+  }
+): Promise<boolean> => {
+  await ensureAdminsProfileColumns();
+  const existing = await getAdminByEmail(targetEmail);
+  if (!existing || !existing.passwordHash) {
+    return false;
+  }
+  const nextHash =
+    payload.passwordHash !== undefined ? payload.passwordHash : existing.passwordHash;
+  const nextFn =
+    payload.firstName !== undefined
+      ? payload.firstName === null || payload.firstName === ""
+        ? null
+        : payload.firstName.trim()
+      : existing.firstName ?? null;
+  const nextLn =
+    payload.lastName !== undefined
+      ? payload.lastName === null || payload.lastName === ""
+        ? null
+        : payload.lastName.trim()
+      : existing.lastName ?? null;
+
+  await sql`
+    UPDATE admins
+    SET
+      password_hash = ${nextHash},
+      first_name = ${nextFn},
+      last_name = ${nextLn}
+    WHERE id = ${existing.id}
+  `;
+  return true;
 };
 
 const toPgArray = (values: string[]) => {

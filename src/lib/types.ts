@@ -10,9 +10,12 @@ export type AffiliateRecord = {
 export type AdminAccount = {
   id: string;
   email: string;
-  passwordHash: string;
+  /** Present when loading credentials for login only; omitted from list APIs. */
+  passwordHash?: string;
   status: "active" | "paused";
   createdAt: string;
+  firstName?: string | null;
+  lastName?: string | null;
 };
 
 export type ModerationItem = {
