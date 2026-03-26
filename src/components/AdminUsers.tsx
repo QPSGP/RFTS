@@ -248,24 +248,34 @@ export default function AdminUsers() {
   };
 
   const updateUser = async (email: string) => {
-    const update = updates[email];
-    if (!update) {
+    const user = users.find((u) => u.email === email);
+    if (!user) {
       return;
+    }
+    const update = updates[email];
+    const newPassword = (resetPasswords[email] || "").trim();
+    const hasPasswordChange = newPassword.length >= 6;
+    if (!update && !hasPasswordChange) {
+      setStatus("Change tier/status or enter a new password (6+ characters), then Save.");
+      return;
+    }
+    const body: Record<string, unknown> = {
+      email,
+      tier: update?.subscriptionTier ?? user.subscriptionTier ?? "platinum",
+      status: update?.subscriptionStatus ?? user.subscriptionStatus ?? "inactive",
+      goalIds: update?.goalIds ?? user.goalIds,
+      playsPerNight: update?.playsPerNight ?? user.playsPerNight ?? 2
+    };
+    if (hasPasswordChange) {
+      body.resetPassword = newPassword;
     }
     const response = await fetch("/api/admin/users", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email,
-        tier: update.subscriptionTier,
-        status: update.subscriptionStatus,
-        goalIds: update.goalIds,
-        playsPerNight: update.playsPerNight,
-        resetPassword: resetPasswords[email]
-      })
+      body: JSON.stringify(body)
     });
     if (response.ok) {
-      setStatus("User updated.");
+      setStatus(hasPasswordChange ? "Password updated (and membership saved)." : "User updated.");
       setResetPasswords((prev) => ({ ...prev, [email]: "" }));
       await load();
       return;
@@ -1278,9 +1288,10 @@ export default function AdminUsers() {
                         )}
                       </div>
                       <div style={{ marginTop: 12 }}>
-                        <h4 style={{ marginBottom: 8 }}>3. Membership, Active, audios per night, Reset password</h4>
+                        <h4 style={{ marginBottom: 8 }}>3. Membership, Active, audios per night, Change password</h4>
                         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
-                          Tier, status, audios per night, and reset password. Click Save to apply.
+                          Passwords are stored securely and cannot be viewed. Enter a new password (6+ characters)
+                          and click Save to set it for this member—you can change password only without changing tier.
                         </p>
                         <select
                           style={inputStyle}
@@ -1342,10 +1353,15 @@ export default function AdminUsers() {
                           <option value={2}>2 audios per night</option>
                           <option value={1}>1 audio per night</option>
                         </select>
+                        <label htmlFor={`member-pw-${user.email}`} className="sr-only">
+                          New password for {user.email}
+                        </label>
                         <input
+                          id={`member-pw-${user.email}`}
                           style={inputStyle}
-                          placeholder="Reset password (optional)"
+                          placeholder="New member password (optional, min 6 characters)"
                           type="password"
+                          autoComplete="new-password"
                           value={resetPasswords[user.email] || ""}
                           onChange={(event) =>
                             setResetPasswords({
