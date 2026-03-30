@@ -7,6 +7,7 @@ import {
   createPasswordResetToken
 } from "@/lib/db";
 import { sendEmail, getBaseUrl } from "@/lib/email";
+import { getForgotPasswordEmailContent } from "@/lib/email-templates";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
@@ -37,15 +38,12 @@ export async function POST(request: Request) {
   const origin = request.headers.get("origin") || request.headers.get("referer")?.replace(/\/[^/]*$/, "");
   const baseUrl = getBaseUrl(origin);
   const resetUrl = `${baseUrl}/member/reset-password?token=${token}`;
+  const tpl = getForgotPasswordEmailContent(resetUrl, TOKEN_EXPIRY_HOURS);
   const { ok, error } = await sendEmail({
     to: user.email,
-    subject: "Reset your Reach For The Stars password",
-    html: `
-      <p>You asked to reset your password.</p>
-      <p><a href="${resetUrl}">Reset password</a></p>
-      <p>This link expires in ${TOKEN_EXPIRY_HOURS} hour(s). If you didn’t request this, you can ignore this email.</p>
-    `,
-    text: `Reset your password: ${resetUrl}\n\nThis link expires in ${TOKEN_EXPIRY_HOURS} hour(s).`
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text
   });
   if (!ok) {
     return NextResponse.json({ error: error || "Could not send email." }, { status: 500 });

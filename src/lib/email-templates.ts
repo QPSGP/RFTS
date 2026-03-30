@@ -1,9 +1,75 @@
 import { getBaseUrl } from "./email";
 
+/**
+ * Transactional templates (HTML + text) sent via Resend from the app:
+ * - getForgotPasswordEmailContent — member forgot password
+ * - getWelcomeEmailContent — after signup / onboarding
+ * - getSubscriptionActiveEmailContent — Stripe checkout completed (subscription active)
+ * - getReportIssueConfirmationContent — member report / tech support acknowledgment
+ * - getLgdInterestEmailContent — Life Guidance checkbox
+ * - getTherapistHealerCoachEmailContent — Build Practice / therapist-healer-coach checkbox
+ *
+ * Staff BCC: set EMAIL_STAFF_BCC (comma-separated) for Terry, Richard, etc. Applied in sendEmail().
+ */
+
 export type TemplateContent = { subject: string; html: string; text: string };
 
 function greeting(firstName?: string | null): string {
   return firstName ? `Hi ${firstName},` : "Hi there,";
+}
+
+const emailWrapper = (inner: string) => `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1f2937; max-width: 560px; margin: 0 auto; padding: 24px;">
+${inner}
+  <p style="margin-top: 16px; font-size: 13px; color: #9ca3af;">Reach For The Stars</p>
+</body>
+</html>`;
+
+export function getForgotPasswordEmailContent(resetUrl: string, expiryHours: number): TemplateContent {
+  const subject = "Reset your Reach For The Stars password";
+  const html = emailWrapper(`
+  <p>You asked to reset your member password.</p>
+  <p style="margin-top: 24px;">
+    <a href="${resetUrl}" style="display: inline-block; padding: 12px 20px; background: #0f766e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Reset password</a>
+  </p>
+  <p style="margin-top: 24px; font-size: 14px; color: #6b7280;">This link expires in ${expiryHours} hour(s). If you didn’t request this, you can ignore this email.</p>
+  <p style="font-size: 14px; color: #6b7280;">Questions? Call 800-GOAL-NOW (462-5669) or reply if your mail client allows.</p>
+`);
+  const text = `Reset your Reach For The Stars password: ${resetUrl}\n\nThis link expires in ${expiryHours} hour(s).\n\nIf you didn't request this, ignore this email.`;
+  return { subject, html, text };
+}
+
+export function getSubscriptionActiveEmailContent(
+  firstName?: string | null,
+  tierLabel?: string | null
+): TemplateContent {
+  const baseUrl = getBaseUrl();
+  const tierLine =
+    tierLabel && tierLabel.trim()
+      ? `<p>Your plan: <strong>${tierLabel}</strong></p>`
+      : "";
+  const subject = "Your Reach For The Stars membership is active";
+  const html = emailWrapper(`
+  <p>${greeting(firstName)}</p>
+  <p>Thank you — your subscription payment went through and your membership is <strong>active</strong>.</p>
+  ${tierLine}
+  <p>You can open your member console anytime to manage sessions, goals, and the audio library.</p>
+  <p style="margin-top: 24px;">
+    <a href="${baseUrl}/play-options" style="display: inline-block; padding: 12px 20px; background: #0f766e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Go to your console</a>
+  </p>
+  <p style="margin-top: 24px; font-size: 14px; color: #6b7280;">We’re glad you’re here. Questions? 800-GOAL-NOW (462-5669) or customerservice@reachforthestars.today</p>
+`);
+  const text = `
+${greeting(firstName)}
+
+Your subscription is active. Open your console: ${baseUrl}/play-options
+
+Questions? 800-GOAL-NOW (462-5669)
+`.trim();
+  return { subject, html, text };
 }
 
 /**
@@ -65,46 +131,46 @@ export type ReportIssueConfirmationOptions = {
   firstName?: string | null;
   subject: string;
   categoryLabel: string;
+  /** Form value e.g. support, technical — triggers tech-support style acknowledgment. */
+  categoryValue?: string;
 };
 
 /**
- * Confirmation email to the member after they submit "Report an issue".
+ * Confirmation email to the member after they submit "Report an issue"
+ * (general or tech / support categories).
  */
 export function getReportIssueConfirmationContent(
   opts: ReportIssueConfirmationOptions
 ): TemplateContent {
-  const { firstName, subject, categoryLabel } = opts;
+  const { firstName, subject, categoryLabel, categoryValue } = opts;
   const baseUrl = getBaseUrl();
-  const subj = "We received your report — Reach For The Stars";
-  const html = `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1f2937; max-width: 560px; margin: 0 auto; padding: 24px;">
+  const cv = (categoryValue || "").toLowerCase().trim();
+  const isTechSupport = cv === "support" || cv === "technical";
+  const subj = isTechSupport
+    ? "We received your tech support request — Reach For The Stars"
+    : "We received your report — Reach For The Stars";
+  const lead = isTechSupport
+    ? `<p>We’ve received your <strong>tech support</strong> request and our team will review it. For website, playback, or login issues, we’ll follow up as soon as we can — often within one business day.</p>`
+    : `<p>We’ve received your report and will look into it.</p>`;
+  const html = emailWrapper(`
   <p>${greeting(firstName)}</p>
-  <p>We’ve received your report and will look into it.</p>
+  ${lead}
   <p><strong>Category:</strong> ${categoryLabel}</p>
   <p><strong>Subject:</strong> ${subject}</p>
   <p style="margin-top: 24px;">Our team will get back to you if we need more information. You can also reach us anytime at 800-GOAL-NOW (462-5669) or <a href="mailto:customerservice@reachforthestars.today">customerservice@reachforthestars.today</a>.</p>
   <p style="margin-top: 24px;">
     <a href="${baseUrl}/play-options" style="display: inline-block; padding: 12px 20px; background: #0f766e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Back to your console</a>
   </p>
-  <p style="margin-top: 16px; font-size: 13px; color: #9ca3af;">Reach For The Stars</p>
-</body>
-</html>`;
+`);
   const text = `
 ${greeting(firstName)}
 
-We've received your report and will look into it.
-
-Category: ${categoryLabel}
+${isTechSupport ? "We've received your tech support request and will review it.\n\n" : "We've received your report and will look into it.\n\n"}Category: ${categoryLabel}
 Subject: ${subject}
 
-Our team will get back to you if we need more information. You can also reach us at 800-GOAL-NOW (462-5669) or customerservice@reachforthestars.today.
+Our team will get back to you if we need more information. 800-GOAL-NOW (462-5669) or customerservice@reachforthestars.today.
 
 Back to your console: ${baseUrl}/play-options
-
-Reach For The Stars
 `.trim();
   return { subject: subj, html, text };
 }

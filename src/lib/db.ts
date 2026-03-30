@@ -84,6 +84,13 @@ export const getUserByEmail = async (email: string) => {
   return rows[0] || null;
 };
 
+export const getUserById = async (userId: string) => {
+  const { rows } = await sql<{ id: string; email: string }>`
+    SELECT id, email FROM users WHERE id = ${userId} LIMIT 1
+  `;
+  return rows[0] || null;
+};
+
 export const createUser = async (email: string, passwordHash: string) => {
   const { rows } = await sql<DbUser>`
     INSERT INTO users (email, password_hash)

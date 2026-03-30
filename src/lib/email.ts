@@ -11,11 +11,33 @@ export type SendEmailOptions = {
   html?: string;
   text?: string;
   from?: string;
+  cc?: string[];
+  bcc?: string[];
+  /** When true, do not append EMAIL_STAFF_BCC recipients (rare; default is staff get BCC on transactional mail). */
+  skipStaffBcc?: boolean;
 };
+
+/**
+ * Comma- or semicolon-separated list (e.g. Terry and Richard) for BCC on automated member emails.
+ * Addresses already in `to` are not duplicated on BCC.
+ */
+export function parseStaffBccEmails(): string[] {
+  const raw = process.env.EMAIL_STAFF_BCC || "";
+  return raw
+    .split(/[,;]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function staffBccExcludingRecipients(to: string[]): string[] {
+  const recipients = new Set(to.map((e) => e.trim().toLowerCase()));
+  return parseStaffBccEmails().filter((e) => !recipients.has(e.trim().toLowerCase()));
+}
 
 /**
  * Send an email via Resend. Used for password reset, welcome emails, and other automated mail.
  * Requires RESEND_API_KEY. Optional EMAIL_FROM overrides the sender.
+ * Appends EMAIL_STAFF_BCC to BCC unless skipStaffBcc is set (deduped against `to`).
  */
 export async function sendEmail(options: SendEmailOptions): Promise<{ ok: boolean; error?: string }> {
   if (!resend) {
@@ -25,13 +47,18 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ ok: boolea
   if (!to.length || !to[0]) {
     return { ok: false, error: "Missing recipient." };
   }
+  const staffBcc = options.skipStaffBcc ? [] : staffBccExcludingRecipients(to);
+  const mergedBcc = [...(options.bcc || []), ...staffBcc];
+  const uniqueBcc = [...new Set(mergedBcc.map((e) => e.trim()).filter(Boolean))];
   try {
     const payload = {
       from: options.from || defaultFrom,
       to,
       subject: options.subject,
       ...(options.html && { html: options.html }),
-      ...(options.text && { text: options.text })
+      ...(options.text && { text: options.text }),
+      ...(options.cc?.length ? { cc: options.cc } : {}),
+      ...(uniqueBcc.length ? { bcc: uniqueBcc } : {})
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Resend SDK union requires template/react; we use html/text.
     const { error } = await resend.emails.send(payload as any);

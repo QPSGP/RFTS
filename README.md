@@ -48,7 +48,8 @@ The same `sendEmail()` helper in `src/lib/email.ts` is used for member password 
    RESEND_API_KEY=re_xxxxxxxxxxxx
    ```
 4. Optional: set `EMAIL_FROM` (e.g. `Reach For The Stars <noreply@yourdomain.com>`) and `NEXT_PUBLIC_APP_URL` (e.g. `https://your-app.vercel.app`) for production.
-5. Restart the dev server so the new vars are picked up.
+5. Optional: `EMAIL_STAFF_BCC` — comma-separated emails (e.g. Terry, Richard) to BCC on automated member emails (welcome, password reset, Life Guidance / Build Practice flows, report confirmations, subscription-active after Stripe checkout). Internal “report an issue” messages still go to `REPORT_ISSUE_EMAIL`; staff BCC adds Terry without duplicating the primary `to` address.
+6. Restart the dev server so the new vars are picked up.
 
 ### Email on Vercel (deployments)
 
@@ -56,7 +57,7 @@ For email to work in production (report an issue, welcome emails, password reset
 
 1. Vercel Dashboard → your project → **Settings** → **Environment Variables**.
 2. Add `RESEND_API_KEY` with your Resend API key (e.g. `re_xxxxxxxxxxxx`).
-3. Optional: add `EMAIL_FROM`, `REPORT_ISSUE_EMAIL`, `NEXT_PUBLIC_APP_URL` for production.
+3. Optional: add `EMAIL_FROM`, `REPORT_ISSUE_EMAIL`, `NEXT_PUBLIC_APP_URL`, `EMAIL_STAFF_BCC` for production.
 4. Redeploy (or push to git so Vercel auto-deploys). Emails will work on the next deploy.
 
 ## Security Notes

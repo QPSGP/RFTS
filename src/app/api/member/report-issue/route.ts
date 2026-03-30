@@ -63,7 +63,8 @@ export async function POST(request: Request) {
   const confirmation = getReportIssueConfirmationContent({
     firstName,
     subject: parsed.data.subject,
-    categoryLabel
+    categoryLabel,
+    categoryValue: parsed.data.category
   });
   const confirmResult = await sendEmail({
     to: email,
