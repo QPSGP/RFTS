@@ -25,7 +25,7 @@ Plans are stored in the `subscription_plans` table. The **Stripe Price ID** link
 2. Click **Add product**.
 3. Set:
    - **Name:** e.g. "RFTS Membership"
-   - **Pricing:** Recurring (monthly), amount (e.g. $29.95)
+   - **Pricing:** Recurring (monthly), amount (e.g. $19.95)
    - **Free trial:** Optional (e.g. 14 days)
 4. Click **Save product**.
 5. Copy the **Price ID** (starts with `price_`).

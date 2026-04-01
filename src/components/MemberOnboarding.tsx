@@ -445,7 +445,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 ✓ Selected plan: <strong>{selectedPlan.id === "platinum" ? "Gold Member" : selectedPlan.name}</strong>
               </p>
               <p style={{ margin: "4px 0 0", fontSize: 14, color: "#4b5563" }}>
-                {selectedPlan.trialDays}-Day Free Trial · $29.95/mo.
+                {selectedPlan.trialDays}-Day Free Trial · $19.95/mo.
               </p>
             </div>
           )}
@@ -466,7 +466,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                   <div className="plan-trial plan-trial-emphasis">{plan.trialDays}-Day Free Trial</div>
                   <div style={{ marginTop: 8, fontSize: 12, color: "#4b5563" }}>
                     <div style={{ fontWeight: 600, color: "#0f172a", textAlign: "center" }}>
-                      $29.95/mo.
+                      $19.95/mo.
                     </div>
                     <div style={{ marginTop: 8, paddingLeft: 0 }}>
                       {membershipDetails.map((line) => (
