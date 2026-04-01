@@ -190,6 +190,96 @@ describe("SessionPlayer", () => {
     expect(screen.getByText(/Now Playing:/)).toHaveTextContent(FIRST_TRACK.title);
   });
 
+  it("hides Pause/Play/Restart after first segment ends (gap before second)", async () => {
+    jest.useFakeTimers();
+    const SECOND = { title: "Second Recording", url: "/api/stream/audio?id=second-456" };
+    render(
+      <SessionPlayer
+        firstTrack={FIRST_TRACK}
+        secondTrack={SECOND}
+        gapHours={2.5}
+        playsPerNight={2}
+        autoStart={true}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(FIRST_TRACK.title);
+    });
+
+    const audio = document.querySelector("audio");
+    await act(async () => {
+      audio?.dispatchEvent(new Event("ended"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/First session complete/i)).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("button", { name: /^Pause$/i })).not.toBeInTheDocument();
+
+    await act(async () => {
+      jest.advanceTimersByTime(2.5 * 60 * 60 * 1000);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(SECOND.title);
+    });
+
+    await act(async () => {
+      document.querySelector("audio")?.dispatchEvent(new Event("ended"));
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Now Playing:/)).not.toBeInTheDocument();
+    });
+    expect(screen.queryByRole("button", { name: /^Pause$/i })).not.toBeInTheDocument();
+
+    jest.useRealTimers();
+  });
+
+  it("hides transport after only nightly audio completes (1 per night)", async () => {
+    render(
+      <SessionPlayer
+        prepAudio={PREP}
+        firstTrack={FIRST_TRACK}
+        gapHours={2.5}
+        playsPerNight={1}
+        autoStart={true}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(PREP.title);
+    });
+
+    let audio = document.querySelector("audio");
+    await act(async () => {
+      audio?.dispatchEvent(new Event("ended"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(FIRST_TRACK.title);
+    });
+
+    audio = document.querySelector("audio");
+    await act(async () => {
+      audio?.dispatchEvent(new Event("ended"));
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: /^Pause$/i })).not.toBeInTheDocument();
+    });
+    expect(screen.getByText(/Session complete/i)).toBeInTheDocument();
+
+    const startAgain = screen.getByRole("button", { name: /Start Session/i });
+    await userEvent.click(startAgain);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(PREP.title);
+    });
+    expect(screen.getByRole("button", { name: /^Pause$/i })).toBeInTheDocument();
+  });
+
   it("shows message when Start Session is clicked with no firstTrack", async () => {
     render(
       <SessionPlayer

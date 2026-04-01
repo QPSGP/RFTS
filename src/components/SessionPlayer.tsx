@@ -51,6 +51,9 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
 
   secondTrackRef.current = secondTrack ?? null;
 
+  /** Pause/Play/Restart, native audio, and mobile fixed bar only while actively in first or second segment (not idle/waiting). */
+  const showActivePlaybackUi = Boolean(current && (phase === "first" || phase === "second"));
+
   const attemptPlay = (track?: SessionTrack | null) => {
     const audio = audioRef.current;
     if (!audio || !track) {
@@ -211,6 +214,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     const doSecondAfterGap = playsPerNight === 2 && phase === "first" && hasSecond;
     if (doSecondAfterGap) {
       clearWaitTimers();
+      setIsPlaying(false);
+      setNeedsUserPlay(false);
       setQueue([]);
       setCurrent(null);
       setPhase("waiting");
@@ -247,6 +252,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         audio.removeAttribute("src");
         audio.load();
       }
+      setIsPlaying(false);
+      setNeedsUserPlay(false);
       setPhase("idle");
       setQueue([]);
       setCurrent(null);
@@ -351,7 +358,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           </p>
         </div>
       )}
-      {current && (
+      {showActivePlaybackUi && current && (
         <div style={{ marginTop: 16 }}>
           <strong>Now Playing: {current.title}</strong>
           {!isMobile && (

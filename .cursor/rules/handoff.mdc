@@ -15,6 +15,12 @@ When the user asks where we left off, what we're doing, or for a summary of the 
 
 Use that file to give an accurate, up-to-date summary and to continue work in the right place.
 
+## Resend (email)
+
+When the user asks for **Resend** info, **Resend setup**, or **email env / BCC / templates**:
+
+1. **Read `RESEND.md`** in this folder and answer from that document (env vars, what is in code vs dashboard, flows, Vercel steps).
+
 ## Git: push after corrections
 
 After any code corrections or feature changes, **automatically commit and push** to `origin/main`. Do not wait for the user to ask. Run: stage all changes, commit with a clear message, then `git push origin main`.
