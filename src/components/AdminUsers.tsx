@@ -1036,7 +1036,7 @@ export default function AdminUsers() {
                                 }
                                 style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
                               />
-                              <span>I am interested in a Life Guidance Discovery Session?</span>
+                              <span>I am interested in a Life Guidance Discovery Session.</span>
                             </label>
                             {(() => {
                               const y = profileDrafts[user.email].yearBorn;

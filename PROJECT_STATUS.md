@@ -18,7 +18,7 @@ Use this file to get up to speed when opening the project in the **rfts-platform
 - **Member profile matches new-member onboarding (this session):**
   - **File:** `src/components/AdminUsers.tsx` — “1. Member Profile” card only (no API changes).
   - **Layout:** Intro line “Same fields as new member signup”; Admin notes at top; then **Personal details** in onboarding order: First name, Last name, Birth year (hint: mature content 18+), Gender (hint: helps with customization), Occupation, Best contact number, Best times, Timezone.
-  - **Then:** LGD checkbox (“I am interested in a Life Guidance Discovery Session?”), **Adult content** card (only when birth year implies 18+): “I consent to hear audios with mature content” + “I would like to hear audios related to polyamory”, then “I am or would like to be a therapist, healer, or coach”, then Referral (“How did you find us?…”).
+  - **Then:** LGD checkbox (“I am interested in a Life Guidance Discovery Session.”), **Adult content** card (only when birth year implies 18+): “I consent to hear audios with mature content” + “I would like to hear audios related to polyamory”, then “I am or would like to be a therapist, healer, or coach”, then Referral (“How did you find us?…”).
   - **Separate “Additional (admin)”:** Income goal, Goal year, Goal vs current income, First responder. Save Profile unchanged.
   - **Labels/copy** aligned with `MemberOnboarding.tsx` step 1 where applicable.
 - **Platinum Managed tier:** New tier `platinum_managed`; managed members use admin-assigned audios (no goal-based lineup). `DbSubscription` / types include `platinum_managed`. Signup page pricing updated (e.g. .95/mo Platinum). Admin member list: search by name/email, filter by membership tier (`AdminUsers.tsx`).

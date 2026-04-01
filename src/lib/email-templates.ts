@@ -176,7 +176,7 @@ Back to your console: ${baseUrl}/play-options
 }
 
 /**
- * Email when they check "I am interested in a Life Guidance Discovery Session": explains the process.
+ * Email when they check the Life Guidance Discovery Session interest option: explains the process.
  */
 export function getLgdInterestEmailContent(firstName?: string | null): TemplateContent {
   const subject = "Your Life Guidance Discovery Session — next steps";
