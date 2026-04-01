@@ -31,6 +31,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
   const [status, setStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(() => {
     const membershipOnly = plans.filter((p) => p.id === "platinum");
     const vp = membershipOnly.length > 0 ? membershipOnly : plans;
@@ -267,13 +268,43 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
               onChange={(event) => setProfile({ ...profile, email: event.target.value })}
               style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
             />
-            <input
-              placeholder="Password *"
-              type="password"
-              value={profile.password}
-              onChange={(event) => setProfile({ ...profile, password: event.target.value })}
-              style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
-            />
+            <div style={{ position: "relative", minWidth: 0 }}>
+              <input
+                placeholder="Password *"
+                type={showSignupPassword ? "text" : "password"}
+                value={profile.password}
+                onChange={(event) => setProfile({ ...profile, password: event.target.value })}
+                autoComplete="new-password"
+                style={{
+                  padding: 12,
+                  paddingRight: 56,
+                  borderRadius: 8,
+                  border: "1px solid #d1d5db",
+                  width: "100%",
+                  boxSizing: "border-box"
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowSignupPassword((prev) => !prev)}
+                style={{
+                  position: "absolute",
+                  right: 10,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  padding: 4,
+                  fontSize: 13,
+                  color: "#64748b",
+                  cursor: "pointer",
+                  textDecoration: "underline"
+                }}
+                aria-label={showSignupPassword ? "Hide password" : "Show password"}
+              >
+                {showSignupPassword ? "Hide" : "Show"}
+              </button>
+            </div>
             <div className="signup-form-field" style={{ minWidth: 0 }}>
               <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, marginBottom: 4 }}>
                 Birthdate (optional). Required for mature content access 18+.
@@ -386,7 +417,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
               <span style={{ minWidth: 0 }}>I am or would like to be a therapist, healer, or coach.</span>
             </label>
             <input
-              placeholder="How did you find us? If someone referred you, who? (optional)"
+              placeholder="How did you find us?"
               value={profile.referralSource}
               onChange={(event) =>
                 setProfile({ ...profile, referralSource: event.target.value })

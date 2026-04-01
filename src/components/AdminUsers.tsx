@@ -1097,7 +1097,7 @@ export default function AdminUsers() {
                             </label>
                             <input
                               style={inputStyle}
-                              placeholder="How did you find us? If someone referred you, who? (optional)"
+                              placeholder="How did you find us?"
                               value={profileDrafts[user.email].referralSource}
                               onChange={(event) =>
                                 setProfileDrafts({

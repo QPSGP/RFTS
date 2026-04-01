@@ -8,6 +8,7 @@ Use this file to get up to speed when opening the project in the **rfts-platform
 
 **Use this section to keep up to date and write your daily notes.**
 
+- **Member UX:** Signup (`MemberOnboarding`) and reset password show **Show/Hide** on password fields; member login already had it. **SiteHeader** hides Start Your Journey / Start when `consoleType === "member"`. Referral placeholder: **How did you find us?** (onboarding, member profile, admin member profile).
 - **Resend reference:** `RESEND.md` — full transactional email setup (env vars, flows, code vs dashboard). Handoff rule: when the user asks for **Resend** info, read `RESEND.md` and answer from it.
 - **SessionPlayer:** Pause/Play/Restart, native audio, and mobile fixed bar render only while `phase` is `first` or `second` (`showActivePlaybackUi`). When the second track finishes (2/night), or after the nightly half completes (1/night), or during the gap between first and second, controls are hidden; `isPlaying` / `needsUserPlay` reset when a segment ends. Tests in `SessionPlayer.test.tsx`.
 - **Admin → Members → Create member:** Form includes First name and Last name; list shows member name (or email). API: `POST /api/admin/users` and list use `upsertMemberProfile`; names stored on `member_profiles`.

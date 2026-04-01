@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState, Suspense } from "react";
+import { useState, Suspense, type CSSProperties } from "react";
 import SiteFooter from "@/components/SiteFooter";
 
 const inputStyle = {
@@ -10,7 +10,28 @@ const inputStyle = {
   borderRadius: 8,
   border: "1px solid #d1d5db",
   width: "100%",
+  maxWidth: 320,
+  boxSizing: "border-box" as const
+};
+
+const passwordFieldWrap: CSSProperties = {
+  position: "relative",
+  width: "100%",
   maxWidth: 320
+};
+
+const showHideBtn: CSSProperties = {
+  position: "absolute",
+  right: 10,
+  top: "50%",
+  transform: "translateY(-50%)",
+  background: "none",
+  border: "none",
+  padding: 4,
+  fontSize: 13,
+  color: "#64748b",
+  cursor: "pointer",
+  textDecoration: "underline"
 };
 
 function ResetPasswordForm() {
@@ -19,6 +40,8 @@ function ResetPasswordForm() {
   const [token, setToken] = useState(tokenFromUrl);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -94,26 +117,48 @@ function ResetPasswordForm() {
             />
           </label>
         )}
-        <input
-          type="password"
-          placeholder="New password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          minLength={6}
-          required
-          style={inputStyle}
-          disabled={status === "loading"}
-        />
-        <input
-          type="password"
-          placeholder="Confirm new password"
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-          minLength={6}
-          required
-          style={inputStyle}
-          disabled={status === "loading"}
-        />
+        <div style={passwordFieldWrap}>
+          <input
+            type={showNewPassword ? "text" : "password"}
+            placeholder="New password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={6}
+            required
+            autoComplete="new-password"
+            style={{ ...inputStyle, paddingRight: 56 }}
+            disabled={status === "loading"}
+          />
+          <button
+            type="button"
+            onClick={() => setShowNewPassword((v) => !v)}
+            style={showHideBtn}
+            aria-label={showNewPassword ? "Hide new password" : "Show new password"}
+          >
+            {showNewPassword ? "Hide" : "Show"}
+          </button>
+        </div>
+        <div style={passwordFieldWrap}>
+          <input
+            type={showConfirmPassword ? "text" : "password"}
+            placeholder="Confirm new password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            minLength={6}
+            required
+            autoComplete="new-password"
+            style={{ ...inputStyle, paddingRight: 56 }}
+            disabled={status === "loading"}
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword((v) => !v)}
+            style={showHideBtn}
+            aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+          >
+            {showConfirmPassword ? "Hide" : "Show"}
+          </button>
+        </div>
         <button className="button" type="submit" disabled={status === "loading"}>
           {status === "loading" ? "Updating…" : "Update password"}
         </button>

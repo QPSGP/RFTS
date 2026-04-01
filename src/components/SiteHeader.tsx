@@ -49,10 +49,12 @@ export default async function SiteHeader() {
             {memberConsoleLink && <a href="/member/report-issue">Report an issue</a>}
           </nav>
           <div className="header-actions">
-            <a className="button header-cta header-start-btn" href="/signup/step-1-subscription-selection">
-              <span className="header-btn-long">Start Your Journey</span>
-              <span className="header-btn-short">Start</span>
-            </a>
+            {consoleType !== "member" && (
+              <a className="button header-cta header-start-btn" href="/signup/step-1-subscription-selection">
+                <span className="header-btn-long">Start Your Journey</span>
+                <span className="header-btn-short">Start</span>
+              </a>
+            )}
             <details className="login-toggle">
               <summary className="button header-cta">Login</summary>
               <div className="menu-panel">

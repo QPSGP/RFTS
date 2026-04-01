@@ -385,7 +385,7 @@ export default function MemberProfilePage() {
           </label>
           <input
             style={inputStyle}
-            placeholder="How did you find us? If someone referred you, who? (optional)"
+            placeholder="How did you find us?"
             value={profile.referralSource ?? ""}
             onChange={(e) =>
               setProfile((p) => ({ ...p, referralSource: e.target.value || null }))
