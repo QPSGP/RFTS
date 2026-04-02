@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import AudioPlayer from "@/components/AudioPlayer";
+import { libraryItemCoverSrc } from "@/lib/library-display";
 import type { LibraryItem } from "@/lib/types";
 
 type AudioGateProps = {
@@ -120,9 +121,9 @@ export default function AudioGate({ item }: AudioGateProps) {
       title={displayTitle}
       description={item.description || "Description pending."}
       audioUrl={streamUrl}
-      coverUrl={item.coverUrl || "/covers/placeholder.png"}
+      coverUrl={libraryItemCoverSrc(item)}
       prepAudioUrl={prepAudioUrl}
-      showCover={false}
+      showCover
     />
   );
 }

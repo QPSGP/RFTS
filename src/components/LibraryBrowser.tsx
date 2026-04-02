@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { libraryItemCoverSrc } from "@/lib/library-display";
 import type { Interest, LibraryItem } from "@/lib/types";
 
 type LibraryBrowserProps = {
@@ -98,16 +99,38 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
     return { byInterest, unassigned };
   }, [interests, libraryFilteredByAccess, searchQuery]);
 
+  const coverImg = (item: LibraryItem, size: number) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={libraryItemCoverSrc(item)}
+      alt=""
+      width={size}
+      height={size}
+      style={{
+        width: size,
+        height: size,
+        objectFit: "cover",
+        borderRadius: 8,
+        flexShrink: 0,
+        border: "1px solid #e5e7eb",
+        background: "#f8fafc"
+      }}
+    />
+  );
+
   const renderCard = (item: LibraryItem) => {
     const isLocked = status !== "active";
     const content = (
-      <div className="card">
-        <strong>{displayTitle(item)}</strong>
-        <p style={{ color: "#4b5563", marginTop: 4, marginBottom: 0 }}>
-          {item.description || "Description pending."}
-        </p>
-        {item.isAdult && <span className="badge">Adult</span>}
-        {isLocked && <p style={{ color: "#b91c1c" }}>Subscriber access required</p>}
+      <div className="card" style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+        {coverImg(item, 96)}
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <strong>{displayTitle(item)}</strong>
+          <p style={{ color: "#4b5563", marginTop: 4, marginBottom: 0 }}>
+            {item.description || "Description pending."}
+          </p>
+          {item.isAdult && <span className="badge">Adult</span>}
+          {isLocked && <p style={{ color: "#b91c1c" }}>Subscriber access required</p>}
+        </div>
       </div>
     );
 
@@ -195,23 +218,28 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
                   key={item.id}
                   href={`/library/${item.id}`}
                   style={{
-                    display: "block",
-                    padding: "8px 12px",
+                    display: "flex",
+                    gap: 12,
+                    alignItems: "center",
+                    padding: "10px 12px",
                     textDecoration: "none",
                     color: "inherit",
                     borderBottom: "1px solid var(--border, #e5e7eb)"
                   }}
                 >
-                  <strong>{displayTitle(item)}</strong>
-                  <p style={{ color: "#4b5563", margin: "4px 0 0 0", fontSize: 14 }}>
-                    {item.description || "Description pending."}
-                  </p>
-                  {item.isAdult && (
-                    <>
-                      {" "}
-                      <span className="badge">Adult</span>
-                    </>
-                  )}
+                  {coverImg(item, 56)}
+                  <div style={{ minWidth: 0 }}>
+                    <strong>{displayTitle(item)}</strong>
+                    <p style={{ color: "#4b5563", margin: "4px 0 0 0", fontSize: 14 }}>
+                      {item.description || "Description pending."}
+                    </p>
+                    {item.isAdult && (
+                      <>
+                        {" "}
+                        <span className="badge">Adult</span>
+                      </>
+                    )}
+                  </div>
                 </Link>
               ))}
           </div>
