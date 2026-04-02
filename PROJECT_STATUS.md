@@ -8,6 +8,7 @@ Use this file to get up to speed when opening the project in the **rfts-platform
 
 **Use this section to keep up to date and write your daily notes.**
 
+- **Cover art (review queue):** `public/covers-review/` — SVG drafts for `data/library.json` rows with empty `coverUrl`, generated from titles + `recording-descriptions.json` + small curated blurbs (`scripts/generate-covers-review.js`, `npm run covers:review`). **Not** linked in the app; open `http://localhost:3000/covers-review/index.html` to review. Approve → upload to Blob / set Cover URL in admin. Production DB-only libraries need a JSON export or script tweak to target missing covers.
 - **Admin audio library:** Title list and each detail card include **Play preview** (`<audio controls>`) using `/api/stream/audio?id=…`. Stream API skips member subscription check when `isAdminSession()` so admins can preview even without an active member sub.
 - **SessionPlayer:** **End session** — members can stop playback manually (desktop + mobile bar + tap-to-play overlays). Clears audio and timers; during gap before second, **End session — cancel second recording** skips auto second. Message: “Session ended…”
 - **Audio library covers:** Member `/library` shows each item’s `coverUrl` (96px in “By goal” cards, 56px in “All Audios” list). `libraryItemCoverSrc` + `public/covers/placeholder.svg` when empty. Library detail (`AudioGate` / `AudioPlayer`) shows cover above title (`showCover` on).

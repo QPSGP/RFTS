@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f766e"/>
+      <stop offset="55%" style="stop-color:#115e59"/>
+      <stop offset="100%" style="stop-color:#042f2e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#d1fae5;stop-opacity:0.35"/>
+      <stop offset="100%" style="stop-color:#d1fae5;stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#bg)"/>
+  <rect x="0" y="420" width="600" height="180" fill="url(#accent)"/>
+  <circle cx="300" cy="88" r="36" fill="none" stroke="#99f6e4" stroke-width="2" opacity="0.5"/>
+  <path d="M288 70v40c0 6-5 11-11 11s-11-5-11-11 5-11 11-11c1 0 3 0 4 1V58h32v22h-10V70h-16z" fill="#99f6e4" opacity="0.45"/>
+  
+  <text fill="#ecfdf5" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="700"><tspan x="300" y="120" text-anchor="middle">Interval music 2hr30mins</tspan><tspan x="300" y="154" text-anchor="middle">ramp out ramp in</tspan></text>
+  <text fill="#d1fae5" font-family="system-ui, Segoe UI, sans-serif" font-size="15" opacity="0.92"><tspan x="300" y="230" text-anchor="middle">Interval and transition music for structured</tspan><tspan x="300" y="256" text-anchor="middle">meditation sessions (ramp in / ramp out).</tspan></text>
+  <text x="300" y="556" text-anchor="middle" fill="#5eead4" font-family="system-ui, sans-serif" font-size="11" letter-spacing="0.2em" font-weight="600">REACH FOR THE STARS</text>
+  <text x="300" y="578" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Review draft — not in production library</text>
+</svg>

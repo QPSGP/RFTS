@@ -1,0 +1,102 @@
+{
+  "generatedAt": "2026-04-02T17:21:33.279Z",
+  "count": 12,
+  "items": [
+    {
+      "libraryJsonId": "track-1",
+      "title": "Accepting the Passing of a Beloved Pet with Serenity CD RFTS!",
+      "skuGuess": null,
+      "descriptionSource": "generate-covers-review.js (curated blurb)",
+      "reviewFile": "/covers-review/track-1-accepting-the-passing-of-a-beloved-pet-with-sere.svg",
+      "isAdult": false
+    },
+    {
+      "libraryJsonId": "track-2",
+      "title": "Interval music 2hr30mins ramp out ramp in",
+      "skuGuess": null,
+      "descriptionSource": "generate-covers-review.js (curated blurb)",
+      "reviewFile": "/covers-review/track-2-interval-music-2hr30mins-ramp-out-ramp-in.svg",
+      "isAdult": false
+    },
+    {
+      "libraryJsonId": "track-3",
+      "title": "Positive Stress Management & Recovery from Fires & Natural Disasters RFTS",
+      "skuGuess": null,
+      "descriptionSource": "generate-covers-review.js (curated blurb)",
+      "reviewFile": "/covers-review/track-3-positive-stress-management-recovery-from-fires-n.svg",
+      "isAdult": false
+    },
+    {
+      "libraryJsonId": "track-4",
+      "title": "Abundance for Success Center Asssociates R",
+      "skuGuess": "T-20",
+      "descriptionSource": "recording-descriptions.json (T-20)",
+      "reviewFile": "/covers-review/track-4-abundance-for-success-center-asssociates-r.svg",
+      "isAdult": false
+    },
+    {
+      "libraryJsonId": "track-11",
+      "title": "From Stress to Success R",
+      "skuGuess": "T-03",
+      "descriptionSource": "library.json",
+      "reviewFile": "/covers-review/track-11-from-stress-to-success-r.svg",
+      "isAdult": false
+    },
+    {
+      "libraryJsonId": "track-48",
+      "title": "Harmony with your children Breaking the chain",
+      "skuGuess": "T-46",
+      "descriptionSource": "generate-covers-review.js (curated blurb)",
+      "reviewFile": "/covers-review/track-48-harmony-with-your-children-breaking-the-chain.svg",
+      "isAdult": false
+    },
+    {
+      "libraryJsonId": "track-51",
+      "title": "Hypnotic Natural Hair Growth",
+      "skuGuess": "T-55",
+      "descriptionSource": "library.json",
+      "reviewFile": "/covers-review/track-51-hypnotic-natural-hair-growth.svg",
+      "isAdult": false
+    },
+    {
+      "libraryJsonId": "track-52",
+      "title": "Stop Drinking And Start Living",
+      "skuGuess": "T-57",
+      "descriptionSource": "library.json",
+      "reviewFile": "/covers-review/track-52-stop-drinking-and-start-living.svg",
+      "isAdult": false
+    },
+    {
+      "libraryJsonId": "track-53",
+      "title": "Health Rejuvenation & Physical Balance CD",
+      "skuGuess": "T-58",
+      "descriptionSource": "library.json",
+      "reviewFile": "/covers-review/track-53-health-rejuvenation-physical-balance-cd.svg",
+      "isAdult": false
+    },
+    {
+      "libraryJsonId": "track-54",
+      "title": "Stop Smoking & Positive Stress Management",
+      "skuGuess": "T-59",
+      "descriptionSource": "generate-covers-review.js (curated blurb)",
+      "reviewFile": "/covers-review/track-54-stop-smoking-positive-stress-management.svg",
+      "isAdult": false
+    },
+    {
+      "libraryJsonId": "track-55",
+      "title": "starting music",
+      "skuGuess": null,
+      "descriptionSource": "generate-covers-review.js (curated blurb)",
+      "reviewFile": "/covers-review/track-55-starting-music.svg",
+      "isAdult": false
+    },
+    {
+      "libraryJsonId": "track-58",
+      "title": "Female Orgasmic Delights mix 3",
+      "skuGuess": "T-69",
+      "descriptionSource": "library.json",
+      "reviewFile": "/covers-review/track-58-female-orgasmic-delights-mix-3.svg",
+      "isAdult": true
+    }
+  ]
+}

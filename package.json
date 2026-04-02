@@ -13,7 +13,8 @@
     "test:watch": "jest --watch",
     "test:login": "node scripts/test-login-flow.js http://localhost:3000",
     "deploy": "vercel --prod",
-    "push-deploy": "node scripts/push-and-deploy.js"
+    "push-deploy": "node scripts/push-and-deploy.js",
+    "covers:review": "node scripts/generate-covers-review.js"
   },
   "dependencies": {
     "@vercel/blob": "^2.0.1",
