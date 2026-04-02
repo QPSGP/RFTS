@@ -49,10 +49,14 @@ export async function GET(request: Request) {
   let profile: Awaited<ReturnType<typeof getUserProfile>> | null = null;
   if (email) {
     profile = await getUserProfile(email);
-    if (!profile) {
+    if (!profile && !isAdmin) {
       return NextResponse.json({ error: "Not found." }, { status: 404 });
     }
-    if (profile.subscriptionStatus !== "active") {
+    if (
+      profile &&
+      profile.subscriptionStatus !== "active" &&
+      !isAdmin
+    ) {
       return NextResponse.json({ error: "Subscription required." }, { status: 403 });
     }
   }
