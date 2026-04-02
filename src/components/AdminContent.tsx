@@ -835,7 +835,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
               </label>
             </div>
             <div className="card" style={{ marginTop: 0 }}>
-            <h3>Audio Title List. Click a title for full details, or use Play below.</h3>
+            <h3>Audio Title List. Click a title for complete details and preview playback.</h3>
             <div
               style={{
                 display: "grid",
@@ -844,22 +844,22 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
               }}
             >
               {searchFilteredLibrary.map((item) => (
-                <div key={item.id} style={{ minWidth: 0, borderBottom: "1px solid #e5e7eb", paddingBottom: 10 }}>
-                  <a href={`#audio-${item.id}`} style={{ fontWeight: 600, display: "block", marginBottom: 6 }}>
+                <div key={item.id} style={{ minWidth: 0 }}>
+                  <a href={`#audio-${item.id}`} style={{ fontWeight: 600 }}>
                     {(item.skuCode || "SKU?") + " - " + item.title}
                   </a>
-                  {item.audioUrl ? (
-                    <audio
-                      controls
-                      controlsList="nodownload"
-                      preload="none"
-                      src={`/api/stream/audio?id=${encodeURIComponent(item.id)}`}
-                      style={{ width: "100%", maxWidth: 320 }}
-                    >
-                      Your browser does not support audio.
-                    </audio>
-                  ) : (
-                    <span style={{ fontSize: 12, color: "#9ca3af" }}>No audio URL</span>
+                  <p
+                    style={{
+                      margin: "6px 0 0",
+                      fontSize: 13,
+                      color: "#4b5563",
+                      lineHeight: 1.45
+                    }}
+                  >
+                    {item.description?.trim() || "Description pending."}
+                  </p>
+                  {!item.audioUrl?.trim() && (
+                    <p style={{ margin: "4px 0 0", fontSize: 12, color: "#9ca3af" }}>No audio URL</p>
                   )}
                 </div>
               ))}
