@@ -92,9 +92,143 @@ function slug(s) {
     .slice(0, 48);
 }
 
-function buildSvg({ title, sku, bodyLines, isAdult }) {
+/** Pick a visual metaphor from title + full description text. */
+function pickVisualTheme({ title, rawDesc, isAdult }) {
+  const t = `${title} ${rawDesc}`.toLowerCase();
+  if (isAdult) return "abstract-warm";
+  if (/pet|beloved|companion|passing|serenity|animal/.test(t)) return "gentle-memorial";
+  if (/interval|starting music|ramp|2hr/.test(t)) return "sound-flow";
+  if (/fire|disaster|natural/.test(t)) return "horizon-calm";
+  if (/abundance|money|magnet|associate/.test(t)) return "radiance";
+  if (/from stress to success|stress to success/.test(t)) return "path-up";
+  if (/harmony|children|breaking/.test(t)) return "connection";
+  if (/hair growth|hair/.test(t)) return "growth-flow";
+  if (/drinking|alcohol|sober|stop drinking/.test(t)) return "new-dawn";
+  if (/smoking|smoke/.test(t)) return "clear-breath";
+  if (/health|rejuvenation|physical balance/.test(t)) return "life-rhythm";
+  return "starglow";
+}
+
+/**
+ * Large decorative vector layer (not a photo — SVG shapes) suggesting the session theme.
+ * Placed behind text; readability handled by fade overlay.
+ */
+function renderThemedBackground(theme) {
+  const mint = "#99f6e4";
+  const aqua = "#5eead4";
+  const deep = "#134e4a";
+  const g = (inner) => `<g opacity="0.5" fill="none" stroke="${mint}" stroke-width="1.5">${inner}</g>`;
+
+  switch (theme) {
+    case "gentle-memorial":
+      return `<g opacity="0.45">
+        <path fill="${aqua}" fill-opacity="0.12" stroke="none" d="M300 520 C220 440 160 360 200 300 C220 260 270 270 300 310 C330 270 380 260 400 300 C440 360 380 440 300 520Z"/>
+        <path fill="none" stroke="${mint}" stroke-width="2" d="M140 180l-8 24 22-16h-28l22 16z"/>
+        <ellipse cx="460" cy="200" rx="70" ry="90" fill="${deep}" fill-opacity="0.35" stroke="${mint}" stroke-width="1.5" transform="rotate(-12 460 200)"/>
+        <path fill="${aqua}" fill-opacity="0.15" stroke="none" d="M80 340 Q120 300 100 260 Q140 280 160 240 Q180 300 140 340 Q100 360 80 340"/>
+      </g>`;
+    case "sound-flow":
+      return `<g opacity="0.5">
+        ${[0, 1, 2, 3, 4, 5, 6, 7]
+          .map(
+            (i) =>
+              `<rect x="${60 + i * 55}" y="${320 - (i % 5) * 28 - 40}" width="28" height="${80 + (i * 12) % 100}" rx="6" fill="${aqua}" fill-opacity="0.2" stroke="${mint}" stroke-width="1"/>`
+          )
+          .join("")}
+        <path fill="none" stroke="${mint}" stroke-width="2" opacity="0.7" d="M40 480 Q150 400 300 420 T560 380"/>
+        <path fill="none" stroke="${aqua}" stroke-width="1.5" opacity="0.5" d="M40 500 Q200 440 300 460 T560 420"/>
+      </g>`;
+    case "horizon-calm":
+      return `<g opacity="0.5">
+        <circle cx="300" cy="520" r="120" fill="#fbbf24" fill-opacity="0.12" stroke="${mint}" stroke-width="2"/>
+        <path fill="${deep}" fill-opacity="0.5" stroke="none" d="M0 380 L120 340 L200 360 L300 320 L420 350 L520 330 L600 360 L600 600 L0 600Z"/>
+        <path fill="none" stroke="${mint}" stroke-width="2" d="M0 400 Q300 360 600 395"/>
+      </g>`;
+    case "radiance":
+      return `<g opacity="0.45">
+        ${Array.from({ length: 14 }, (_, i) => {
+          const a = (i * Math.PI * 2) / 14;
+          const x2 = 300 + Math.cos(a) * 220;
+          const y2 = 300 + Math.sin(a) * 220;
+          return `<line x1="300" y1="380" x2="${x2.toFixed(0)}" y2="${y2.toFixed(0)}" stroke="${mint}" stroke-width="2" opacity="0.6"/>`;
+        }).join("")}
+        <circle cx="300" cy="380" r="48" fill="${aqua}" fill-opacity="0.2" stroke="${mint}" stroke-width="2"/>
+        <circle cx="300" cy="380" r="22" fill="#fef3c7" fill-opacity="0.15" stroke="none"/>
+      </g>`;
+    case "path-up":
+      return `<g opacity="0.5">
+        <path fill="none" stroke="${aqua}" stroke-width="4" stroke-linecap="round" d="M120 520 Q180 420 200 360 Q240 280 280 240 Q320 200 300 160"/>
+        ${[0, 1, 2, 3].map(
+          (i) =>
+            `<circle cx="${140 + i * 90}" cy="${480 - i * 70}" r="14" fill="${aqua}" fill-opacity="0.18" stroke="${mint}" stroke-width="1.5"/>`
+        ).join("")}
+        <path fill="none" stroke="${mint}" stroke-width="1.5" opacity="0.6" d="M280 140 L300 110 L320 140"/>
+      </g>`;
+    case "connection":
+      return `<g opacity="0.5">
+        <circle cx="200" cy="400" r="55" fill="${aqua}" fill-opacity="0.12" stroke="${mint}" stroke-width="2"/>
+        <circle cx="400" cy="400" r="55" fill="${aqua}" fill-opacity="0.12" stroke="${mint}" stroke-width="2"/>
+        <circle cx="300" cy="280" r="55" fill="${aqua}" fill-opacity="0.15" stroke="${mint}" stroke-width="2"/>
+        <path fill="none" stroke="${mint}" stroke-width="2" d="M248 360 Q300 320 352 360 M300 335 L300 400"/>
+      </g>`;
+    case "growth-flow":
+      return `<g opacity="0.45">
+        ${[-80, -40, 0, 40, 80].map(
+          (dx, i) =>
+            `<path fill="none" stroke="${i % 2 ? aqua : mint}" stroke-width="2.5" opacity="0.7" d="M${300 + dx} 560 Q${280 + dx} 400 ${300 + dx * 0.3} 220 Q${320 + dx} 140 300 80"/>`
+        ).join("")}
+        <ellipse cx="300" cy="70" rx="40" ry="16" fill="${aqua}" fill-opacity="0.2" stroke="none"/>
+      </g>`;
+    case "new-dawn":
+      return `<g opacity="0.5">
+        <path fill="#fbbf24" fill-opacity="0.18" stroke="none" d="M0 520 A300 200 0 0 1 600 520 L600 600 L0 600Z"/>
+        ${[0, 1, 2, 3, 4].map(
+          (i) =>
+            `<path fill="none" stroke="${mint}" stroke-width="1.2" opacity="0.5" d="M${50 + i * 120} 500 Q${110 + i * 120} 480 ${170 + i * 120} 500"/>`
+        ).join("")}
+        <circle cx="300" cy="520" r="90" fill="#fef3c7" fill-opacity="0.08" stroke="${mint}" stroke-width="2"/>
+      </g>`;
+    case "clear-breath":
+      return `<g opacity="0.5">
+        <path fill="none" stroke="${aqua}" stroke-width="2" d="M300 520 C220 480 180 400 200 320 C220 260 280 240 300 280 C320 240 380 260 400 320 C420 400 380 480 300 520"/>
+        ${[0, 1, 2, 3, 4].map(
+          (i) =>
+            `<path fill="none" stroke="${mint}" stroke-width="1.5" opacity="0.6" d="M${120 + i * 90} 200 Q${150 + i * 90} 160 ${180 + i * 90} 200"/>`
+        ).join("")}
+      </g>`;
+    case "life-rhythm":
+      return g(
+        `<path d="M40 400 L80 400 L100 340 L130 460 L160 320 L190 440 L220 360 L250 420 L280 380 L310 430 L340 350 L370 410 L400 370 L430 400 L560 400" stroke="${aqua}" stroke-width="3" fill="none" stroke-linejoin="round"/>`
+      );
+    case "abstract-warm":
+      return `<g opacity="0.4">
+        <ellipse cx="380" cy="320" rx="140" ry="180" fill="#fda4af" fill-opacity="0.14" stroke="#fda4af" stroke-width="1" transform="rotate(-25 380 320)"/>
+        <ellipse cx="200" cy="420" rx="100" ry="130" fill="${aqua}" fill-opacity="0.1" stroke="${mint}" transform="rotate(15 200 420)"/>
+        <circle cx="300" cy="260" r="90" fill="none" stroke="${mint}" stroke-width="1.5" opacity="0.5"/>
+      </g>`;
+    case "starglow":
+    default:
+      return `<g opacity="0.55" fill="${mint}">
+        ${Array.from({ length: 28 }, (_, i) => {
+          const x = 40 + (i * 73) % 520;
+          const y = 200 + (i * 97) % 320;
+          const r = 1.5 + (i % 4);
+          return `<circle cx="${x}" cy="${y}" r="${r}" opacity="0.35"/>`;
+        }).join("")}
+        <path fill="none" stroke="${aqua}" stroke-width="1.2" opacity="0.45" d="M120 280 L140 320 L180 300 L160 340 L200 360 L150 370 L130 400"/>
+        <path fill="none" stroke="${aqua}" stroke-width="1.2" opacity="0.35" d="M400 240 L430 280 L470 250 L450 300"/>
+      </g>`;
+  }
+}
+
+function buildSvg({ title, sku, bodyLines, isAdult, rawDescForTheme }) {
   const W = 600;
   const H = 600;
+  const theme = pickVisualTheme({
+    title,
+    rawDesc: rawDescForTheme || "",
+    isAdult
+  });
   const titleLines = wrapLines(cleanTitle(title), 26, 3);
   const body = isAdult
     ? ["Private wellness session · Mature audiences", "Reach For The Stars Meditation"]
@@ -119,6 +253,7 @@ function buildSvg({ title, sku, bodyLines, isAdult }) {
     .join("");
 
   const skuText = sku ? escapeXml(sku) : "";
+  const themedBg = renderThemedBackground(theme);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
@@ -132,8 +267,16 @@ function buildSvg({ title, sku, bodyLines, isAdult }) {
       <stop offset="0%" style="stop-color:#d1fae5;stop-opacity:0.35"/>
       <stop offset="100%" style="stop-color:#d1fae5;stop-opacity:0"/>
     </linearGradient>
+    <linearGradient id="textFade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" style="stop-color:#042f2e;stop-opacity:0.92"/>
+      <stop offset="42%" style="stop-color:#042f2e;stop-opacity:0.55"/>
+      <stop offset="72%" style="stop-color:#042f2e;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#042f2e;stop-opacity:0"/>
+    </linearGradient>
   </defs>
   <rect width="100%" height="100%" fill="url(#bg)"/>
+  ${themedBg}
+  <rect x="0" y="0" width="600" height="340" fill="url(#textFade)"/>
   <rect x="0" y="420" width="600" height="180" fill="url(#accent)"/>
   <circle cx="300" cy="88" r="36" fill="none" stroke="#99f6e4" stroke-width="2" opacity="0.5"/>
   <path d="M288 70v40c0 6-5 11-11 11s-11-5-11-11 5-11 11-11c1 0 3 0 4 1V58h32v22h-10V70h-16z" fill="#99f6e4" opacity="0.45"/>
@@ -185,11 +328,17 @@ function main() {
     const bodyLines = wrapLines(excerpt, 44, 5);
 
     const isAdult = !!item.isAdult;
+    const visualTheme = pickVisualTheme({
+      title: item.title,
+      rawDesc,
+      isAdult
+    });
     const svg = buildSvg({
       title: item.title,
       sku,
       bodyLines,
-      isAdult
+      isAdult,
+      rawDescForTheme: rawDesc
     });
 
     const fileBase = `${item.id}-${slug(item.title)}`;
@@ -201,6 +350,7 @@ function main() {
       libraryJsonId: item.id,
       title: item.title,
       skuGuess: sku,
+      visualTheme,
       descriptionSource: descSource,
       fileName: outFile,
       /** Use with dev server: e.g. http://localhost:3000/covers-review/… */
@@ -214,7 +364,7 @@ function main() {
   const rows = manifest
     .map((m) => {
       const rel = `./${m.fileName}`;
-      return `<tr><td><img src="${rel}" width="120" height="120" alt="" style="object-fit:cover;border-radius:8px;border:1px solid #e5e7eb"/></td><td><code>${escapeHtml(m.libraryJsonId)}</code></td><td>${escapeHtml(m.title)}</td><td>${escapeHtml(m.skuGuess || "—")}</td><td>${escapeHtml(m.descriptionSource)}</td><td><a href="${rel}">SVG</a></td></tr>`;
+      return `<tr><td><img src="${rel}" width="120" height="120" alt="" style="object-fit:cover;border-radius:8px;border:1px solid #e5e7eb"/></td><td><code>${escapeHtml(m.libraryJsonId)}</code></td><td>${escapeHtml(m.title)}</td><td>${escapeHtml(m.skuGuess || "—")}</td><td><code>${escapeHtml(m.visualTheme || "")}</code></td><td>${escapeHtml(m.descriptionSource)}</td><td><a href="${rel}">SVG</a></td></tr>`;
     })
     .join("\n");
 
@@ -237,8 +387,9 @@ function main() {
   <h1>Generated cover drafts (review only)</h1>
   <p class="note">These files are <strong>not</strong> linked from the app or database. After you approve, upload PNG/SVG to Blob (or paste URL in Admin → library) and set <strong>Cover URL</strong> per item. Regenerate with <code>npm run covers:review</code> after updating <code>data/library.json</code> or descriptions.</p>
   <p class="note">You can open this <code>index.html</code> directly from the folder (double-click) — previews use <strong>relative</strong> paths so images work. Or use the dev server: <code>http://localhost:3000/covers-review/index.html</code></p>
+  <p class="note">Background art is <strong>SVG illustration</strong> (shapes, gradients) chosen from title + description — not stock photos. Edit themes in <code>scripts/generate-covers-review.js</code> (<code>pickVisualTheme</code> / <code>renderThemedBackground</code>).</p>
   <table>
-    <thead><tr><th>Preview</th><th>ID</th><th>Title</th><th>SKU</th><th>Description source</th><th>File</th></tr></thead>
+    <thead><tr><th>Preview</th><th>ID</th><th>Title</th><th>SKU</th><th>Visual theme</th><th>Description source</th><th>File</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>
 </body>

@@ -10,8 +10,20 @@
       <stop offset="0%" style="stop-color:#d1fae5;stop-opacity:0.35"/>
       <stop offset="100%" style="stop-color:#d1fae5;stop-opacity:0"/>
     </linearGradient>
+    <linearGradient id="textFade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" style="stop-color:#042f2e;stop-opacity:0.92"/>
+      <stop offset="42%" style="stop-color:#042f2e;stop-opacity:0.55"/>
+      <stop offset="72%" style="stop-color:#042f2e;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#042f2e;stop-opacity:0"/>
+    </linearGradient>
   </defs>
   <rect width="100%" height="100%" fill="url(#bg)"/>
+  <g opacity="0.5">
+        <rect x="60" y="280" width="28" height="80" rx="6" fill="#5eead4" fill-opacity="0.2" stroke="#99f6e4" stroke-width="1"/><rect x="115" y="252" width="28" height="92" rx="6" fill="#5eead4" fill-opacity="0.2" stroke="#99f6e4" stroke-width="1"/><rect x="170" y="224" width="28" height="104" rx="6" fill="#5eead4" fill-opacity="0.2" stroke="#99f6e4" stroke-width="1"/><rect x="225" y="196" width="28" height="116" rx="6" fill="#5eead4" fill-opacity="0.2" stroke="#99f6e4" stroke-width="1"/><rect x="280" y="168" width="28" height="128" rx="6" fill="#5eead4" fill-opacity="0.2" stroke="#99f6e4" stroke-width="1"/><rect x="335" y="280" width="28" height="140" rx="6" fill="#5eead4" fill-opacity="0.2" stroke="#99f6e4" stroke-width="1"/><rect x="390" y="252" width="28" height="152" rx="6" fill="#5eead4" fill-opacity="0.2" stroke="#99f6e4" stroke-width="1"/><rect x="445" y="224" width="28" height="164" rx="6" fill="#5eead4" fill-opacity="0.2" stroke="#99f6e4" stroke-width="1"/>
+        <path fill="none" stroke="#99f6e4" stroke-width="2" opacity="0.7" d="M40 480 Q150 400 300 420 T560 380"/>
+        <path fill="none" stroke="#5eead4" stroke-width="1.5" opacity="0.5" d="M40 500 Q200 440 300 460 T560 420"/>
+      </g>
+  <rect x="0" y="0" width="600" height="340" fill="url(#textFade)"/>
   <rect x="0" y="420" width="600" height="180" fill="url(#accent)"/>
   <circle cx="300" cy="88" r="36" fill="none" stroke="#99f6e4" stroke-width="2" opacity="0.5"/>
   <path d="M288 70v40c0 6-5 11-11 11s-11-5-11-11 5-11 11-11c1 0 3 0 4 1V58h32v22h-10V70h-16z" fill="#99f6e4" opacity="0.45"/>

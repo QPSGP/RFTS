@@ -10,8 +10,20 @@
       <stop offset="0%" style="stop-color:#d1fae5;stop-opacity:0.35"/>
       <stop offset="100%" style="stop-color:#d1fae5;stop-opacity:0"/>
     </linearGradient>
+    <linearGradient id="textFade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" style="stop-color:#042f2e;stop-opacity:0.92"/>
+      <stop offset="42%" style="stop-color:#042f2e;stop-opacity:0.55"/>
+      <stop offset="72%" style="stop-color:#042f2e;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#042f2e;stop-opacity:0"/>
+    </linearGradient>
   </defs>
   <rect width="100%" height="100%" fill="url(#bg)"/>
+  <g opacity="0.5">
+        <circle cx="300" cy="520" r="120" fill="#fbbf24" fill-opacity="0.12" stroke="#99f6e4" stroke-width="2"/>
+        <path fill="#134e4a" fill-opacity="0.5" stroke="none" d="M0 380 L120 340 L200 360 L300 320 L420 350 L520 330 L600 360 L600 600 L0 600Z"/>
+        <path fill="none" stroke="#99f6e4" stroke-width="2" d="M0 400 Q300 360 600 395"/>
+      </g>
+  <rect x="0" y="0" width="600" height="340" fill="url(#textFade)"/>
   <rect x="0" y="420" width="600" height="180" fill="url(#accent)"/>
   <circle cx="300" cy="88" r="36" fill="none" stroke="#99f6e4" stroke-width="2" opacity="0.5"/>
   <path d="M288 70v40c0 6-5 11-11 11s-11-5-11-11 5-11 11-11c1 0 3 0 4 1V58h32v22h-10V70h-16z" fill="#99f6e4" opacity="0.45"/>
