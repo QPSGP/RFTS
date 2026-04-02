@@ -8,7 +8,7 @@ Use this file to get up to speed when opening the project in the **rfts-platform
 
 **Use this section to keep up to date and write your daily notes.**
 
-- **Cover art (review queue):** `public/covers-review/` — SVG drafts for `data/library.json` rows with empty `coverUrl`, generated from titles + `recording-descriptions.json` + small curated blurbs (`scripts/generate-covers-review.js`, `npm run covers:review`). **Not** linked in the app; open `http://localhost:3000/covers-review/index.html` to review. Approve → upload to Blob / set Cover URL in admin. Production DB-only libraries need a JSON export or script tweak to target missing covers.
+- **Cover art (review queue):** `public/covers-review/` — SVG drafts for `data/library.json` rows with empty `coverUrl`, generated from titles + `recording-descriptions.json` + small curated blurbs (`scripts/generate-covers-review.js`, `npm run covers:review`). Each SVG includes a **themed vector background** (keywords → `pickVisualTheme` / `renderThemedBackground` in the script) plus a text-readability fade; `manifest.json` lists `visualTheme` per track; `index.html` gallery has a **Visual theme** column. **Not** linked in the app; open `http://localhost:3000/covers-review/index.html` (or dev server) to review. Approve → export/upload PNG or SVG to Blob / set Cover URL in admin. **Production catalog covers** in `data/blob-assets.json` are **PNG** album art on Vercel Blob (`SKU-*.png`), not the review SVGs. Production DB-only libraries need a JSON export or script tweak to target missing covers.
 - **Admin audio library:** Title list and each detail card include **Play preview** (`<audio controls>`) using `/api/stream/audio?id=…`. Stream API skips member subscription check when `isAdminSession()` so admins can preview even without an active member sub.
 - **SessionPlayer:** **End session** — members can stop playback manually (desktop + mobile bar + tap-to-play overlays). Clears audio and timers; during gap before second, **End session — cancel second recording** skips auto second. Message: “Session ended…”
 - **Audio library covers:** Member `/library` shows each item’s `coverUrl` (96px in “By goal” cards, 56px in “All Audios” list). `libraryItemCoverSrc` + `public/covers/placeholder.svg` when empty. Library detail (`AudioGate` / `AudioPlayer`) shows cover above title (`showCover` on).
@@ -226,7 +226,8 @@ So any chat can take over from the current codebase state:
 
 | Commit   | What changed |
 |----------|--------------|
-| **(latest) 72f9c97** | SessionPlayer: Pause red, Play green, Restart yellow. File: `src/components/SessionPlayer.tsx`. |
+| **f40878f** | Review covers: themed SVG backgrounds from title/description; `visualTheme` in manifest; gallery column + note. `scripts/generate-covers-review.js`, `public/covers-review/*`. |
+| **72f9c97** | SessionPlayer: Pause red, Play green, Restart yellow. File: `src/components/SessionPlayer.tsx`. |
 | **7699ff4** | Mobile: meditation session lineup (Prep/First/Second + now playing) above Pause/Play/Restart bar. File: `SessionPlayer.tsx`. |
 | **f3e5206** | Email: README "Email on Vercel"; report-issue friendly message when RESEND_API_KEY missing. Files: README, report-issue route, .env.example. |
 | **31b43f0** | Report issue: confirmation email to member; all reports to Richard; profile checkmark emails (LGD, therapist/healer/coach when toggled on); Support category. Files: email-templates, report-issue route, member profile route, ReportIssueForm, .env.example. |
@@ -249,6 +250,7 @@ So any chat can take over from the current codebase state:
 
 ## Where We Left Off
 
+- **Paused (Mar 30, 2026):** Cover-review work is in a good stopping place. Latest push: **`f40878f`** — themed SVG backgrounds for review covers, gallery shows theme id, regenerated `public/covers-review/*`. No open code tasks unless you want review drafts to **match legacy PNG album art** more closely (tweak themes or export workflow). Working tree should be clean; `origin/main` matches local `main` after pull.
 - **Deploy:** Push to **main** → Vercel auto-deploys. Set **RESEND_API_KEY** in Vercel Environment Variables for email. See README "Email on Vercel (deployments)."
 - **Report an issue:** All reports to **Richard@richardleeweatherman.com** (or REPORT_ISSUE_EMAIL). Member gets confirmation email; friendly message when email not configured. Profile checkmark emails (LGD, therapist/healer/coach) when member toggles on in profile. See Summary above.
 - **SessionPlayer:** Mobile: meditation lineup above Pause/Play/Restart; buttons: Pause red, Play green, Restart yellow. **Keep Screen Awake:** Fallback message and retry; "if you have enabled 2 sessions per night" copy.
@@ -276,5 +278,6 @@ So any chat can take over from the current codebase state:
 - **Admin members:** `src/components/AdminUsers.tsx` — list with search (name/email), filter by tier; managed members: goals hidden, audio order via `POST /api/admin/member-audio-order` and schema (member_audio_order). Play Options / SessionPlayer: `src/app/play-options/PlayOptionsClient.tsx`, `src/components/SessionPlayer.tsx` (1 vs 2 per night). SessionPlayer: mobile fixed bar has meditation lineup + Pause red / Play green / Restart yellow.
 - **Admin Subscription Plans:** `src/components/AdminSubscriptions.tsx` — edit both plans (Platinum + Platinum Managed). Defaults in `src/lib/content-seed.ts` (`defaultSubscriptionPlans`); seeding in `src/lib/db.ts` (`ensureSubscriptionPlansSeeded` inserts each default if missing). API: GET/POST `/api/subscriptions`.
 - **Affiliates:** `src/app/affiliates/page.tsx` — admin-only (server check, redirect to `/login`). Rate: 25% ongoing (copy + `PRICING_REFERENCE.md`). Header: `SiteHeader.tsx` shows "Affiliates" when `consoleType === "admin"`. API: `GET`/`PATCH` `/api/affiliates` require admin; `POST` open. Also in Admin Content Console → Affiliate Section.
+- **Review-only cover drafts:** `npm run covers:review` → `scripts/generate-covers-review.js` → `public/covers-review/` (SVGs, `index.html`, `manifest.json`). Themed backgrounds: `pickVisualTheme` / `renderThemedBackground` in that script.
 - **Report an issue:** `POST /api/member/report-issue` (member auth); page `/member/report-issue`; link in header (when member) and on Play Options. All reports to **REPORT_ISSUE_EMAIL** or default **Richard@richardleeweatherman.com**. Member gets confirmation email. When RESEND_API_KEY missing, API returns friendly message with Richard’s email. Rate limit: 5/min per user. Categories: Support, Technical, Playback, Billing, Content, Other (all same inbox).
 - **API helpers:** `src/lib/api-utils.ts` — `apiError()`, `requireAdmin()`. Rate limit: `src/lib/rate-limit.ts` — login, forgot-password, signup, report-issue.
