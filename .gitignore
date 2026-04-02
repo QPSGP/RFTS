@@ -6,5 +6,6 @@ dist/
 data/*.json
 !data/recording-descriptions.json
 !data/blob-assets.json
-Audios/
-Covers/
+# Local asset folders at repo root only (do not ignore public/covers for library placeholder SVG)
+/Audios/
+/Covers/
