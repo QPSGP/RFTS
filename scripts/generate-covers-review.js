@@ -202,7 +202,9 @@ function main() {
       title: item.title,
       skuGuess: sku,
       descriptionSource: descSource,
-      reviewFile: `/covers-review/${outFile}`,
+      fileName: outFile,
+      /** Use with dev server: e.g. http://localhost:3000/covers-review/… */
+      publicUrl: `/covers-review/${outFile}`,
       isAdult
     });
   }
@@ -210,10 +212,10 @@ function main() {
   fs.writeFileSync(path.join(outDir, "manifest.json"), JSON.stringify({ generatedAt: new Date().toISOString(), count: manifest.length, items: manifest }, null, 2));
 
   const rows = manifest
-    .map(
-      (m) =>
-        `<tr><td><img src="${m.reviewFile}" width="120" height="120" alt="" style="object-fit:cover;border-radius:8px;border:1px solid #e5e7eb"/></td><td><code>${escapeHtml(m.libraryJsonId)}</code></td><td>${escapeHtml(m.title)}</td><td>${escapeHtml(m.skuGuess || "—")}</td><td>${escapeHtml(m.descriptionSource)}</td><td><a href="${m.reviewFile}">SVG</a></td></tr>`
-    )
+    .map((m) => {
+      const rel = `./${m.fileName}`;
+      return `<tr><td><img src="${rel}" width="120" height="120" alt="" style="object-fit:cover;border-radius:8px;border:1px solid #e5e7eb"/></td><td><code>${escapeHtml(m.libraryJsonId)}</code></td><td>${escapeHtml(m.title)}</td><td>${escapeHtml(m.skuGuess || "—")}</td><td>${escapeHtml(m.descriptionSource)}</td><td><a href="${rel}">SVG</a></td></tr>`;
+    })
     .join("\n");
 
   const indexHtml = `<!DOCTYPE html>
@@ -233,8 +235,8 @@ function main() {
 </head>
 <body>
   <h1>Generated cover drafts (review only)</h1>
-  <p class="note">These files are <strong>not</strong> linked from the app or database. After you approve, upload PNG/SVG to Blob (or paste URL in Admin → library) and set <strong>Cover URL</strong> per item. Regenerate with <code>node scripts/generate-covers-review.js</code> after updating <code>data/library.json</code> or descriptions.</p>
-  <p class="note">Open this page from the dev server: <code>http://localhost:3000/covers-review/index.html</code></p>
+  <p class="note">These files are <strong>not</strong> linked from the app or database. After you approve, upload PNG/SVG to Blob (or paste URL in Admin → library) and set <strong>Cover URL</strong> per item. Regenerate with <code>npm run covers:review</code> after updating <code>data/library.json</code> or descriptions.</p>
+  <p class="note">You can open this <code>index.html</code> directly from the folder (double-click) — previews use <strong>relative</strong> paths so images work. Or use the dev server: <code>http://localhost:3000/covers-review/index.html</code></p>
   <table>
     <thead><tr><th>Preview</th><th>ID</th><th>Title</th><th>SKU</th><th>Description source</th><th>File</th></tr></thead>
     <tbody>${rows}</tbody>
