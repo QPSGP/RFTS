@@ -56,6 +56,7 @@ describe("SessionPlayer", () => {
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     jest.restoreAllMocks();
   });
 
@@ -278,6 +279,73 @@ describe("SessionPlayer", () => {
       expect(screen.getByText(/Now Playing:/)).toHaveTextContent(PREP.title);
     });
     expect(screen.getByRole("button", { name: /^Pause$/i })).toBeInTheDocument();
+  });
+
+  it("End session during gap cancels second recording", async () => {
+    const SECOND = { title: "Second Recording", url: "/api/stream/audio?id=second-456" };
+    render(
+      <SessionPlayer
+        firstTrack={FIRST_TRACK}
+        secondTrack={SECOND}
+        gapHours={1 / 3600}
+        playsPerNight={2}
+        autoStart={true}
+      />
+    );
+
+    await waitFor(
+      () => {
+        expect(screen.getByText(/Now Playing:/)).toHaveTextContent(FIRST_TRACK.title);
+      },
+      { timeout: 10000 }
+    );
+
+    const audio = document.querySelector("audio");
+    await act(async () => {
+      audio?.dispatchEvent(new Event("ended"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/First session complete/i)).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: /End session — cancel second recording/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByText(/First session complete/i)).not.toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 2000));
+    });
+
+    expect(screen.queryByText(/Now Playing:/)).not.toBeInTheDocument();
+  });
+
+  it("End session during playback clears Now Playing", async () => {
+    render(
+      <SessionPlayer
+        prepAudio={PREP}
+        firstTrack={FIRST_TRACK}
+        gapHours={2.5}
+        playsPerNight={2}
+        autoStart={true}
+      />
+    );
+
+    await waitFor(
+      () => {
+        expect(screen.getByText(/Now Playing:/)).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /^End session$/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Now Playing:/)).not.toBeInTheDocument();
+    });
+    expect(screen.getByText(/Session ended/i)).toBeInTheDocument();
   });
 
   it("shows message when Start Session is clicked with no firstTrack", async () => {

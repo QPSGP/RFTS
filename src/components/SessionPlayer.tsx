@@ -171,6 +171,25 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     return () => clearWaitTimers();
   }, [clearWaitTimers]);
 
+  /** Stop playback, clear UI, cancel gap countdown (so second track will not auto-start). */
+  const endSession = useCallback(() => {
+    clearWaitTimers();
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+    }
+    pendingNextTrackRef.current = null;
+    skipEffectPlayRef.current = false;
+    setIsPlaying(false);
+    setNeedsUserPlay(false);
+    setPhase("idle");
+    setQueue([]);
+    setCurrent(null);
+    setMessage("Session ended. You can start again when you’re ready.");
+  }, [clearWaitTimers]);
+
   const handleEnded = useCallback(() => {
     if (queue.length > 1) {
       const [, ...rest] = queue;
@@ -356,6 +375,14 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
                 : `${remainingSeconds}s`}
             . It will begin and close automatically.
           </p>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={endSession}
+            style={{ marginTop: 14, borderColor: "#64748b", color: "#334155" }}
+          >
+            End session — cancel second recording
+          </button>
         </div>
       )}
       {showActivePlaybackUi && current && (
@@ -388,9 +415,17 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
               >
                 Restart
               </button>
+              <button
+                className="button button-secondary"
+                onClick={endSession}
+                type="button"
+                style={{ borderColor: "#64748b", color: "#334155" }}
+              >
+                End session
+              </button>
             </div>
           )}
-          {isMobile && <div style={{ height: 200 }} />}
+          {isMobile && <div style={{ height: 280 }} />}
           <audio
             ref={audioRef}
             controls={!!current}
@@ -413,6 +448,14 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
                   style={{ padding: "18px 24px", fontSize: 18, minHeight: 56, width: "100%" }}
                 >
                   Play Session
+                </button>
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={endSession}
+                  style={{ marginTop: 10, width: "100%" }}
+                >
+                  End session
                 </button>
               </div>
               {isMobile && (
@@ -452,6 +495,14 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
                       }}
                     >
                       Start Playback
+                    </button>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={endSession}
+                      style={{ marginTop: 12, width: "100%" }}
+                    >
+                      End session
                     </button>
                   </div>
                 </div>
@@ -563,6 +614,21 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
                   Restart
                 </button>
               </div>
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={endSession}
+                style={{
+                  marginTop: 10,
+                  width: "100%",
+                  padding: "14px 16px",
+                  fontSize: 16,
+                  borderColor: "#64748b",
+                  color: "#334155"
+                }}
+              >
+                End session
+              </button>
             </div>
           )}
         </div>

@@ -8,6 +8,7 @@ Use this file to get up to speed when opening the project in the **rfts-platform
 
 **Use this section to keep up to date and write your daily notes.**
 
+- **SessionPlayer:** **End session** — members can stop playback manually (desktop + mobile bar + tap-to-play overlays). Clears audio and timers; during gap before second, **End session — cancel second recording** skips auto second. Message: “Session ended…”
 - **Audio library covers:** Member `/library` shows each item’s `coverUrl` (96px in “By goal” cards, 56px in “All Audios” list). `libraryItemCoverSrc` + `public/covers/placeholder.svg` when empty. Library detail (`AudioGate` / `AudioPlayer`) shows cover above title (`showCover` on).
 - **Member UX:** Signup (`MemberOnboarding`) and reset password show **Show/Hide** on password fields; member login already had it. **SiteHeader** hides Start Your Journey / Start when `consoleType === "member"`. Referral placeholder: **How did you find us?** (onboarding, member profile, admin member profile).
 - **Resend reference:** `RESEND.md` — full transactional email setup (env vars, flows, code vs dashboard). Handoff rule: when the user asks for **Resend** info, read `RESEND.md` and answer from it.
