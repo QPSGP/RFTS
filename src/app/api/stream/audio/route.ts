@@ -2,7 +2,7 @@
  * Stream audio by id or prep=1. Access for members (active subscription):
  * - Non-CGMR catalog: stream allowed (after Special + Adult checks). allowedUserEmails does not restrict library playback.
  * - CGMR category: only if member's email is on allowedUserEmails (personalized assignment).
- * Admin: always allowed.
+ * Admin: always allowed (subscription / member profile checks are skipped when isAdminSession()).
  * Response headers: X-Stream-Access-Reason, X-Stream-Tier, or X-Stream-Deny-Reason.
  */
 import { NextResponse } from "next/server";
