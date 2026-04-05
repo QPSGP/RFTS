@@ -7,6 +7,14 @@ import { createUserSessionToken, setUserSessionCookieOnResponse } from "@/lib/us
 
 const LOGIN_MAX_PER_MINUTE = 10;
 
+function safeMemberNextPath(raw: unknown): string | null {
+  if (typeof raw !== "string" || !raw.trim()) return null;
+  const p = raw.trim();
+  if (!p.startsWith("/") || p.startsWith("//")) return null;
+  if (p.includes("\n") || p.includes("\r") || p.includes("<")) return null;
+  return p.slice(0, 240);
+}
+
 export async function POST(request: Request) {
   try {
     return await doPost(request);
@@ -29,6 +37,7 @@ async function doPost(request: Request) {
 
   let email: string;
   let password: string;
+  let loginDetails: string | null = null;
 
   const contentType = request.headers.get("content-type") || "";
   if (contentType.includes("application/x-www-form-urlencoded")) {
@@ -55,6 +64,8 @@ async function doPost(request: Request) {
     }
     email = e.trim();
     password = p;
+    const nextPath = safeMemberNextPath(body?.next);
+    loginDetails = nextPath ? `to:${nextPath}` : null;
   }
 
   const user = await getUserByEmail(email);
@@ -67,7 +78,7 @@ async function doPost(request: Request) {
   }
 
   const token = createUserSessionToken(user.email);
-  await recordMemberActivity(user.id, "login");
+  await recordMemberActivity(user.id, "login", loginDetails);
 
   if (contentType.includes("application/x-www-form-urlencoded")) {
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=${successUrl}"></head><body>Signed in. Taking you to Play Options…</body></html>`;

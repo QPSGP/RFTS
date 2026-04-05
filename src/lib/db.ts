@@ -1037,6 +1037,42 @@ export const recordMemberActivity = async (
   }
 };
 
+export type MemberActivityLogEntry = {
+  id: string;
+  action: string;
+  details: string | null;
+  createdAt: string;
+};
+
+/** Recent activity rows for a single member (admin member detail view). */
+export const getMemberActivityLogForUser = async (
+  userId: string,
+  limit: number = 150
+): Promise<MemberActivityLogEntry[]> => {
+  try {
+    const { rows } = await sql<{
+      id: string;
+      action: string;
+      details: string | null;
+      created_at: string;
+    }>`
+      SELECT id, action, details, created_at
+      FROM member_activity_log
+      WHERE user_id = ${userId}
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `;
+    return rows.map((r) => ({
+      id: r.id,
+      action: r.action,
+      details: r.details ?? null,
+      createdAt: r.created_at
+    }));
+  } catch {
+    return [];
+  }
+};
+
 /** Get recent member activity for admin (with user name/email). */
 export const getMemberActivityLog = async (limit: number = 100): Promise<MemberActivityLogRow[]> => {
   try {

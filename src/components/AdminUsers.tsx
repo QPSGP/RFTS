@@ -78,6 +78,53 @@ type NewAudioDraft = {
   categories: string;
 };
 
+type MemberActivityRow = {
+  id: string;
+  action: string;
+  details: string | null;
+  createdAt: string;
+};
+
+function formatActivityAction(action: string): string {
+  switch (action) {
+    case "login":
+      return "Signed in";
+    case "logout":
+      return "Signed out";
+    case "page_view":
+      return "Page view";
+    case "viewed_console":
+      return "Opened Play Options";
+    case "viewed_library":
+      return "Opened Audio Library";
+    case "updated_goals":
+      return "Updated goals";
+    case "updated_plays_per_night":
+      return "Updated sessions per night";
+    default:
+      return action.replace(/_/g, " ");
+  }
+}
+
+function formatActivityDetails(action: string, details: string | null): string {
+  if (!details) return "—";
+  if (action === "login" && details.startsWith("to:")) {
+    return `First destination: ${details.slice(3)}`;
+  }
+  return details;
+}
+
+function formatActivityTime(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short"
+    });
+  } catch {
+    return iso;
+  }
+}
+
 type PlaybackSettingsState = { fallbackTrackId: string } | null;
 
 export default function AdminUsers() {
@@ -107,6 +154,8 @@ export default function AdminUsers() {
   const [newAudioDrafts, setNewAudioDrafts] = useState<Record<string, NewAudioDraft>>({});
   const [memberSearchTerm, setMemberSearchTerm] = useState("");
   const [memberTierFilter, setMemberTierFilter] = useState<"all" | "platinum" | "platinum_managed">("all");
+  const [memberActivity, setMemberActivity] = useState<Record<string, MemberActivityRow[]>>({});
+  const [memberActivityLoading, setMemberActivityLoading] = useState<Record<string, boolean>>({});
 
   const sortedInterests = useMemo(
     () => interests.slice().sort((a, b) => a.name.localeCompare(b.name)),
@@ -317,6 +366,27 @@ export default function AdminUsers() {
         notes: profile.notes ?? ""
       }
     }));
+  };
+
+  const loadMemberActivity = async (email: string) => {
+    setMemberActivityLoading((prev) => ({ ...prev, [email]: true }));
+    try {
+      const res = await fetch(
+        `/api/admin/member-activity?email=${encodeURIComponent(email)}`,
+        { credentials: "include" }
+      );
+      if (!res.ok) {
+        setMemberActivity((prev) => ({ ...prev, [email]: [] }));
+        return;
+      }
+      const data = await res.json();
+      setMemberActivity((prev) => ({
+        ...prev,
+        [email]: Array.isArray(data.activityLog) ? data.activityLog : []
+      }));
+    } finally {
+      setMemberActivityLoading((prev) => ({ ...prev, [email]: false }));
+    }
   };
 
   const buildAudioAssignment = (email: string) => {
@@ -844,6 +914,7 @@ export default function AdminUsers() {
                           if (!profileDrafts[user.email]) {
                             await loadProfile(user.email);
                           }
+                          void loadMemberActivity(user.email);
                           // Load audio assignments and order
                           const assignments = buildAudioAssignment(user.email);
                           setAudioAssignments((prev) => ({
@@ -873,6 +944,7 @@ export default function AdminUsers() {
                             await loadProfile(user.email);
                           }
                           if (next) {
+                            void loadMemberActivity(user.email);
                             // Load audio assignments and order
                             const assignments = buildAudioAssignment(user.email);
                             setAudioAssignments((prev) => ({
@@ -891,6 +963,78 @@ export default function AdminUsers() {
                       </button>
                       {profileDrafts[user.email] && (
                         <div className="card" style={{ marginTop: 12 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 8,
+                              marginBottom: 8
+                            }}
+                          >
+                            <h4 style={{ margin: 0 }}>Member activity</h4>
+                            <button
+                              type="button"
+                              className="button button-secondary"
+                              style={{ fontSize: 13, padding: "6px 12px" }}
+                              disabled={!!memberActivityLoading[user.email]}
+                              onClick={() => void loadMemberActivity(user.email)}
+                            >
+                              {memberActivityLoading[user.email] ? "Loading…" : "Refresh activity"}
+                            </button>
+                          </div>
+                          <p style={{ color: "#64748b", fontSize: 13, marginTop: 0, marginBottom: 12 }}>
+                            Sign-ins (with first page they head to), sign-outs, page views on Play Options,
+                            Library, Goals, Profile, and Report issue, plus goal and console actions.
+                          </p>
+                          {(memberActivity[user.email] || []).length > 0 ? (
+                            <div style={{ overflowX: "auto", marginBottom: 16 }}>
+                              <table
+                                style={{
+                                  width: "100%",
+                                  borderCollapse: "collapse",
+                                  fontSize: 13
+                                }}
+                              >
+                                <thead>
+                                  <tr style={{ borderBottom: "1px solid #e5e7eb", textAlign: "left" }}>
+                                    <th style={{ padding: "8px 6px", color: "#64748b" }}>When</th>
+                                    <th style={{ padding: "8px 6px", color: "#64748b" }}>What</th>
+                                    <th style={{ padding: "8px 6px", color: "#64748b" }}>Detail</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {(memberActivity[user.email] || []).map((row: MemberActivityRow) => (
+                                    <tr key={row.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                                      <td style={{ padding: "8px 6px", whiteSpace: "nowrap", color: "#374151" }}>
+                                        {formatActivityTime(row.createdAt)}
+                                      </td>
+                                      <td style={{ padding: "8px 6px", color: "#111827" }}>
+                                        {formatActivityAction(row.action)}
+                                      </td>
+                                      <td
+                                        style={{
+                                          padding: "8px 6px",
+                                          color: "#4b5563",
+                                          wordBreak: "break-word",
+                                          maxWidth: 280
+                                        }}
+                                      >
+                                        {formatActivityDetails(row.action, row.details)}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 16 }}>
+                              {memberActivityLoading[user.email]
+                                ? "Loading activity…"
+                                : "No activity logged yet for this member (they need to sign in after this feature ships)."}
+                            </p>
+                          )}
                           <h4>1. Member Profile</h4>
                           <p style={{ color: "#4b5563", marginTop: 4 }}>
                             Same fields and order as new member signup (Personal Details step).

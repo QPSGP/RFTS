@@ -40,11 +40,16 @@ export default function UserAuth() {
     }
     setIsSubmitting(true);
     try {
+      const nextParam = searchParams.get("next");
+      const nextForLog =
+        nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
+          ? nextParam
+          : "/play-options";
       const response = await fetch("/api/user/login", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, next: nextForLog })
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
