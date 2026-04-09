@@ -156,6 +156,8 @@ export default function AdminUsers() {
   const [memberTierFilter, setMemberTierFilter] = useState<"all" | "platinum" | "platinum_managed">("all");
   const [memberActivity, setMemberActivity] = useState<Record<string, MemberActivityRow[]>>({});
   const [memberActivityLoading, setMemberActivityLoading] = useState<Record<string, boolean>>({});
+  /** Non-fatal: interests/library failed but member list may still have loaded */
+  const [dataLoadNotice, setDataLoadNotice] = useState<string | null>(null);
 
   const sortedInterests = useMemo(
     () => interests.slice().sort((a, b) => a.name.localeCompare(b.name)),
@@ -194,22 +196,53 @@ export default function AdminUsers() {
 
 
   const load = async () => {
+    setDataLoadNotice(null);
+    const fetchOpts = { credentials: "include" as const };
     const [usersRes, interestsRes, libraryRes, settingsRes] = await Promise.all([
-      fetch("/api/admin/users"),
-      fetch("/api/interests"),
-      fetch("/api/library"),
-      fetch("/api/playback-settings")
+      fetch("/api/admin/users", fetchOpts),
+      fetch("/api/interests", fetchOpts),
+      fetch("/api/library", fetchOpts),
+      fetch("/api/playback-settings", fetchOpts)
     ]);
-    if (!usersRes.ok || !interestsRes.ok || !libraryRes.ok) {
-      setStatus("Admin session required.");
+
+    if (!usersRes.ok) {
+      setUsers([]);
+      setInterests([]);
+      setLibrary([]);
+      setStatus(
+        usersRes.status === 401
+          ? "Admin session required. Sign in again at /login."
+          : `Could not load member list (HTTP ${usersRes.status}).`
+      );
       return;
     }
+
     const usersData = await usersRes.json();
-    const interestsData = await interestsRes.json();
-    const libraryData = await libraryRes.json();
-    setUsers(usersData.users || []);
-    setInterests(interestsData.interests || []);
-    setLibrary(libraryData.library || []);
+    setUsers(Array.isArray(usersData.users) ? usersData.users : []);
+
+    const partial: string[] = [];
+    if (!interestsRes.ok) {
+      setInterests([]);
+      partial.push("goals list");
+    } else {
+      const interestsData = await interestsRes.json();
+      setInterests(Array.isArray(interestsData.interests) ? interestsData.interests : []);
+    }
+
+    if (!libraryRes.ok) {
+      setLibrary([]);
+      partial.push("audio library");
+    } else {
+      const libraryData = await libraryRes.json();
+      setLibrary(Array.isArray(libraryData.library) ? libraryData.library : []);
+    }
+
+    if (partial.length > 0) {
+      setDataLoadNotice(
+        `Could not load ${partial.join(" and ")}. Member accounts are still listed below; refresh the page or try again. If this persists, check server logs.`
+      );
+    }
+
     if (settingsRes.ok) {
       const settingsData = await settingsRes.json();
       const fallback = settingsData.settings?.fallbackTrackId ?? "T-18";
@@ -227,6 +260,7 @@ export default function AdminUsers() {
     setStatus(null);
     const response = await fetch("/api/admin/users", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: createEmail,
@@ -260,6 +294,7 @@ export default function AdminUsers() {
     if (!user) return;
     const response = await fetch("/api/admin/users", {
       method: "PATCH",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email,
@@ -284,6 +319,7 @@ export default function AdminUsers() {
     }
     const response = await fetch("/api/admin/users", {
       method: "DELETE",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email })
     });
@@ -320,6 +356,7 @@ export default function AdminUsers() {
     }
     const response = await fetch("/api/admin/users", {
       method: "PATCH",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
@@ -334,7 +371,9 @@ export default function AdminUsers() {
   };
 
   const loadProfile = async (email: string) => {
-    const response = await fetch(`/api/admin/member-profile?email=${encodeURIComponent(email)}`);
+    const response = await fetch(`/api/admin/member-profile?email=${encodeURIComponent(email)}`, {
+      credentials: "include"
+    });
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
       setStatus(data?.error || `Unable to load profile. (status ${response.status})`);
@@ -400,7 +439,9 @@ export default function AdminUsers() {
   };
 
   const buildAudioOrder = async (email: string) => {
-    const response = await fetch(`/api/admin/member-audio-order?email=${encodeURIComponent(email)}`);
+    const response = await fetch(`/api/admin/member-audio-order?email=${encodeURIComponent(email)}`, {
+      credentials: "include"
+    });
     if (response.ok) {
       const data = await response.json();
       return data.order || [];
@@ -505,6 +546,7 @@ export default function AdminUsers() {
           : allowed.filter((allowedEmail) => allowedEmail.toLowerCase() !== emailLower);
         return fetch("/api/library", {
           method: "PATCH",
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             id: item.id,
@@ -527,6 +569,7 @@ export default function AdminUsers() {
     if (order.length > 0) {
       const orderResponse = await fetch("/api/admin/member-audio-order", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
@@ -585,6 +628,7 @@ export default function AdminUsers() {
       .filter(Boolean);
     const response = await fetch("/api/library", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: draft.title,
@@ -699,6 +743,7 @@ export default function AdminUsers() {
     }
     const response = await fetch("/api/admin/member-profile", {
       method: "PATCH",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email,
@@ -785,6 +830,11 @@ export default function AdminUsers() {
       <p style={{ color: "#4b5563" }}>
         Create member accounts, assign tiers, and activate subscriptions.
       </p>
+      {dataLoadNotice && (
+        <p style={{ color: "#b45309", marginTop: 8, marginBottom: 0 }} role="status">
+          {dataLoadNotice}
+        </p>
+      )}
       {status && <p>{status}</p>}
       <div className="grid" style={{ marginTop: 16 }}>
         <div className="card">
@@ -884,7 +934,10 @@ export default function AdminUsers() {
                 )}
               </div>
               {filteredUsers.length === 0 ? (
-                <p style={{ color: "#64748b" }}>No members match your search criteria.</p>
+                <p style={{ color: "#64748b" }}>
+                  No members match your search or membership filter. Try clearing the search box or
+                  setting membership to &quot;All Memberships.&quot;
+                </p>
               ) : (
                 <div className="grid">
                   {filteredUsers.map((user) => (

@@ -38,8 +38,14 @@ export async function GET() {
   if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-  const users = await listUsers();
-  return NextResponse.json({ users });
+  try {
+    const users = await listUsers();
+    return NextResponse.json({ users });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[GET /api/admin/users]", message);
+    return NextResponse.json({ error: "Failed to list members.", detail: message }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
