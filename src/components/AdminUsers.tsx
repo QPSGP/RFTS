@@ -125,7 +125,7 @@ function formatActivityTime(iso: string): string {
   }
 }
 
-type PlaybackSettingsState = { fallbackTrackId: string } | null;
+type PlaybackSettingsState = { fallbackTrackId: string; cgmrTrackId?: string } | null;
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<UserRow[]>([]);
@@ -245,10 +245,13 @@ export default function AdminUsers() {
 
     if (settingsRes.ok) {
       const settingsData = await settingsRes.json();
-      const fallback = settingsData.settings?.fallbackTrackId ?? "T-18";
-      setPlaybackSettings({ fallbackTrackId: fallback });
+      const s = settingsData.settings;
+      setPlaybackSettings({
+        fallbackTrackId: s?.fallbackTrackId ?? "T-18",
+        cgmrTrackId: typeof s?.cgmrTrackId === "string" ? s.cgmrTrackId : ""
+      });
     } else {
-      setPlaybackSettings({ fallbackTrackId: "T-18" });
+      setPlaybackSettings({ fallbackTrackId: "T-18", cgmrTrackId: "" });
     }
   };
 
@@ -1618,7 +1621,31 @@ export default function AdminUsers() {
                           });
                           const hasCat = (item: LibraryItem, cat: string) =>
                             (item.categories || []).some((c) => c.toLowerCase() === cat.toLowerCase());
-                          const cgmrTrack = assignedOrdered.find((item) => hasCat(item, "cgmr")) ?? assignedOrdered[0] ?? null;
+                          /** Personalized CGMR only — matches member schedule API (not first assigned track). */
+                          const cgmrTrack = assignedOrdered.find((item) => hasCat(item, "cgmr")) ?? null;
+                          const pickByCode = (code: string) => {
+                            const upper = code.trim().toUpperCase();
+                            if (!upper) return null;
+                            return (
+                              library.find(
+                                (item) =>
+                                  (item.skuCode || "").toUpperCase().includes(upper) ||
+                                  (item.title || "").toUpperCase().includes(upper)
+                              ) ?? null
+                            );
+                          };
+                          // Same default special track as buildSchedulePreview for platinum / platinum_managed
+                          const tier = user.subscriptionTier || "platinum";
+                          const cgmrGlobal = playbackSettings?.cgmrTrackId?.trim()
+                            ? pickByCode(playbackSettings.cgmrTrackId)
+                            : null;
+                          const fallbackGlobal = playbackSettings?.fallbackTrackId?.trim()
+                            ? pickByCode(playbackSettings.fallbackTrackId)
+                            : null;
+                          const defaultSpecialTrack =
+                            tier === "platinum" || tier === "platinum_managed"
+                              ? cgmrGlobal || fallbackGlobal
+                              : fallbackGlobal || cgmrGlobal;
                           // For non-managed (Platinum) members, show default fallback (e.g. T-18) in the list so it's visible
                           const isNonManaged = user.subscriptionTier !== "platinum_managed";
                           const fallbackCode = (playbackSettings?.fallbackTrackId || "T-18").trim().toUpperCase();
@@ -1656,7 +1683,14 @@ export default function AdminUsers() {
                                     })}
                                   </div>
                                   <div style={{ marginTop: 6, fontSize: 12, color: "#047857" }}>
-                                    <strong>Schedule uses as CGMR slot:</strong> {cgmrTrack ? `${cgmrTrack.skuCode ? cgmrTrack.skuCode + " – " : ""}${cgmrTrack.title}` : (fallbackItem ? `${fallbackItem.skuCode || fallbackItem.title} (default)` : "T-18 (default)")}
+                                    <strong>Schedule uses as CGMR slot:</strong>{" "}
+                                    {cgmrTrack
+                                      ? `${cgmrTrack.skuCode ? cgmrTrack.skuCode + " – " : ""}${cgmrTrack.title}`
+                                      : fallbackItem
+                                        ? `${fallbackItem.skuCode || fallbackItem.title} (default)`
+                                        : defaultSpecialTrack
+                                          ? `${defaultSpecialTrack.skuCode ? defaultSpecialTrack.skuCode + " – " : ""}${defaultSpecialTrack.title} (global playback)`
+                                          : `${playbackSettings?.fallbackTrackId || "T-18"} (global playback)`}
                                   </div>
                                 </>
                               )}
