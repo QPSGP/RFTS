@@ -26,6 +26,8 @@ export default function AudioPlayer({
   const [wakeLockSupported, setWakeLockSupported] = useState(true);
   const [wakeLockActive, setWakeLockActive] = useState(false);
   const [isPlayingPrep, setIsPlayingPrep] = useState(!!prepAudioUrl);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const releaseWakeLock = async () => {
     try {
@@ -57,6 +59,21 @@ export default function AudioPlayer({
   };
 
   useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const media = window.matchMedia("(max-width: 768px)");
+    const onChange = () => setIsMobile(media.matches);
+    onChange();
+    if (media.addEventListener) {
+      media.addEventListener("change", onChange);
+      return () => media.removeEventListener("change", onChange);
+    }
+    media.addListener(onChange);
+    return () => media.removeListener(onChange);
+  }, []);
+
+  useEffect(() => {
     const audio = audioRef.current;
     if (!audio) {
       return;
@@ -64,10 +81,12 @@ export default function AudioPlayer({
 
     const handlePlay = () => {
       requestWakeLock();
+      setIsPlaying(true);
     };
 
     const handlePause = () => {
       releaseWakeLock();
+      setIsPlaying(false);
     };
 
     audio.addEventListener("play", handlePlay);
@@ -126,6 +145,26 @@ export default function AudioPlayer({
     };
   }, [prepAudioUrl, audioUrl, isPlayingPrep]);
 
+  const handleLibraryPause = () => {
+    audioRef.current?.pause();
+  };
+
+  const handleLibraryPlay = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    void audio.play().catch(() => {});
+  };
+
+  const handleLibraryRestart = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.currentTime = 0;
+    void audio.play().catch(() => {});
+  };
+
+  const nowPlayingLabel =
+    prepAudioUrl && isPlayingPrep ? "Starting music" : title;
+
   return (
     <div className="card">
       <div
@@ -171,11 +210,111 @@ export default function AudioPlayer({
             </p>
           )}
         </div>
+        {isMobile && <div style={{ height: 220 }} aria-hidden />}
         <audio ref={audioRef} controls controlsList="nodownload" style={{ width: "100%" }}>
           {!prepAudioUrl && <source src={audioUrl} />}
           Your browser does not support the audio element.
         </audio>
       </div>
+      {isMobile && (
+        <div
+          style={{
+            position: "fixed",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 50,
+            background: "#ffffff",
+            boxShadow: "0 -6px 18px rgba(15, 23, 42, 0.12)",
+            padding: "12px 16px 16px"
+          }}
+        >
+          <div
+            style={{
+              marginBottom: 12,
+              paddingBottom: 12,
+              borderBottom: "1px solid #e5e7eb",
+              fontSize: 14,
+              color: "#4b5563"
+            }}
+          >
+            <strong style={{ display: "block", marginBottom: 6, color: "#111827" }}>
+              Library
+            </strong>
+            <div style={{ marginBottom: 2 }}>
+              Now playing: <span style={{ color: "#111827" }}>{nowPlayingLabel}</span>
+            </div>
+            {prepAudioUrl && (
+              <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
+                {isPlayingPrep
+                  ? "Then your selected audio will play."
+                  : "Main recording."}
+              </div>
+            )}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              flexWrap: "wrap",
+              justifyContent: "center"
+            }}
+          >
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={handleLibraryPause}
+              style={{
+                padding: "18px 24px",
+                fontSize: 18,
+                minHeight: 56,
+                flex: 1,
+                minWidth: 120,
+                background: "#dc2626",
+                color: "#fff",
+                borderColor: "#dc2626"
+              }}
+            >
+              Pause
+            </button>
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={handleLibraryPlay}
+              disabled={isPlaying}
+              style={{
+                padding: "18px 24px",
+                fontSize: 18,
+                minHeight: 56,
+                flex: 1,
+                minWidth: 120,
+                background: "#16a34a",
+                color: "#fff",
+                borderColor: "#16a34a"
+              }}
+            >
+              Play
+            </button>
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={handleLibraryRestart}
+              style={{
+                padding: "18px 24px",
+                fontSize: 18,
+                minHeight: 56,
+                flex: 1,
+                minWidth: 120,
+                background: "#eab308",
+                color: "#1f2937",
+                borderColor: "#eab308"
+              }}
+            >
+              Restart
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
