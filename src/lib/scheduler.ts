@@ -232,23 +232,57 @@ export const buildSchedulePreview = ({
     const isSpecialSessionFirst = sessionIndexFirst % 4 === 0;
     const isSpecialSessionSecond = sessionIndexSecond % 4 === 0;
 
-    const first = isManagedMember
-      ? takeNextAssignedAudio()
-      : (() => {
+    /**
+     * When the CGMR/T-18 slot replaces a normal play, we still consume one step in the rotation.
+     * Otherwise the pointer never advances for that session and the first assigned goal repeats too often.
+     */
+    const advanceAssignedSlotForSpecialSecond = () => {
+      if (!activeAssignedAudios.length) return;
+      assignedAudioPointer += 1;
+    };
+    const advanceGoalSlotForSpecialSecond = () => {
+      if (!activeGoals.length) return;
+      goalPointer += 1;
+    };
+
+    let first: LibraryItem | null = null;
+    let second: LibraryItem | null = null;
+
+    if (playsPerNight === 1) {
+      const skipTakeFirst =
+        isSpecialSessionFirst && !!specialTrack;
+      if (isManagedMember) {
+        first = skipTakeFirst ? null : takeNextAssignedAudio();
+      } else {
+        if (skipTakeFirst) {
+          first = null;
+        } else {
           const firstGoal = takeNextGoal();
-          return firstGoal ? takeNextTrackForGoal(firstGoal) : null;
-        })();
-    const second =
-      playsPerNight === 2
-        ? isSpecialSessionSecond
-          ? specialTrack
-          : isManagedMember
-            ? takeNextAssignedAudio()
-            : (() => {
-                const secondGoal = takeNextGoal();
-                return secondGoal ? takeNextTrackForGoal(secondGoal) : null;
-              })()
-        : null;
+          first = firstGoal ? takeNextTrackForGoal(firstGoal) : null;
+        }
+      }
+    } else {
+      first = isManagedMember
+        ? takeNextAssignedAudio()
+        : (() => {
+            const firstGoal = takeNextGoal();
+            return firstGoal ? takeNextTrackForGoal(firstGoal) : null;
+          })();
+      if (isSpecialSessionSecond && specialTrack) {
+        second = specialTrack;
+        if (isManagedMember) {
+          advanceAssignedSlotForSpecialSecond();
+        } else {
+          advanceGoalSlotForSpecialSecond();
+        }
+      } else if (isManagedMember) {
+        second = takeNextAssignedAudio();
+      } else {
+        const secondGoal = takeNextGoal();
+        second = secondGoal ? takeNextTrackForGoal(secondGoal) : null;
+      }
+    }
+
     const singleTrack =
       playsPerNight === 1 && isSpecialSessionFirst && specialTrack
         ? specialTrack
