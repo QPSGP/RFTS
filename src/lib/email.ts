@@ -29,6 +29,21 @@ export function parseStaffBccEmails(): string[] {
     .filter(Boolean);
 }
 
+/**
+ * CC recipients for the new-member welcome email (onboarding).
+ * Override with WELCOME_EMAIL_CC (comma-separated); defaults to Terry and Richard.
+ */
+export function getWelcomeEmailCcRecipients(): string[] {
+  const raw = process.env.WELCOME_EMAIL_CC?.trim();
+  if (raw) {
+    return raw
+      .split(/[,;]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return ["terry_bg@msn.com", "Richard@richardleeweatherman.com"];
+}
+
 function staffBccExcludingRecipients(to: string[]): string[] {
   const recipients = new Set(to.map((e) => e.trim().toLowerCase()));
   return parseStaffBccEmails().filter((e) => !recipients.has(e.trim().toLowerCase()));
@@ -50,6 +65,15 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ ok: boolea
   const staffBcc = options.skipStaffBcc ? [] : staffBccExcludingRecipients(to);
   const mergedBcc = [...(options.bcc || []), ...staffBcc];
   const uniqueBcc = [...new Set(mergedBcc.map((e) => e.trim()).filter(Boolean))];
+  const recipientSet = new Set(to.map((e) => e.trim().toLowerCase()));
+  const uniqueCc = [
+    ...new Set(
+      (options.cc || [])
+        .map((e) => e.trim())
+        .filter(Boolean)
+        .filter((e) => !recipientSet.has(e.toLowerCase()))
+    )
+  ];
   try {
     const payload = {
       from: options.from || defaultFrom,
@@ -57,7 +81,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ ok: boolea
       subject: options.subject,
       ...(options.html && { html: options.html }),
       ...(options.text && { text: options.text }),
-      ...(options.cc?.length ? { cc: options.cc } : {}),
+      ...(uniqueCc.length ? { cc: uniqueCc } : {}),
       ...(uniqueBcc.length ? { bcc: uniqueBcc } : {})
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Resend SDK union requires template/react; we use html/text.

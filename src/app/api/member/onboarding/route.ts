@@ -16,7 +16,7 @@ import {
   setUserPlaysPerNight,
   upsertMemberProfile
 } from "@/lib/db";
-import { sendEmail } from "@/lib/email";
+import { getWelcomeEmailCcRecipients, sendEmail } from "@/lib/email";
 import {
   getWelcomeEmailContent,
   getLgdInterestEmailContent,
@@ -139,7 +139,7 @@ export async function POST(request: Request) {
           (item.title || "").toUpperCase().includes(fallbackCode)
       );
       if (fallbackItem) {
-        await addEmailToLibraryItemAllowedList(fallbackItem.id, parsed.data.email);
+        await addEmailToLibraryItemAllowedList(fallbackItem.id, user.email);
       }
     }
   } catch (e) {
@@ -147,9 +147,18 @@ export async function POST(request: Request) {
   }
 
   const firstName = parsed.data.profile.firstName || null;
-  const emailTo = parsed.data.email;
-  const welcome = getWelcomeEmailContent(firstName);
-  const welcomeResult = await sendEmail({ to: emailTo, subject: welcome.subject, html: welcome.html, text: welcome.text });
+  const lastName = parsed.data.profile.lastName || null;
+  const emailTo = user.email;
+  const welcome = getWelcomeEmailContent(firstName, lastName);
+  const welcomeCc = getWelcomeEmailCcRecipients();
+  const welcomeResult = await sendEmail({
+    to: emailTo,
+    cc: welcomeCc,
+    subject: welcome.subject,
+    html: welcome.html,
+    text: welcome.text,
+    skipStaffBcc: true
+  });
   if (!welcomeResult.ok) console.error("[onboarding] Welcome email failed:", welcomeResult.error);
   if (parsed.data.profile.hadLgdSession) {
     const lgd = getLgdInterestEmailContent(firstName);
@@ -162,7 +171,7 @@ export async function POST(request: Request) {
     if (!thcResult.ok) console.error("[onboarding] Therapist/healer/coach email failed:", thcResult.error);
   }
 
-  const token = createUserSessionToken(parsed.data.email);
+  const token = createUserSessionToken(user.email);
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
   if (isDemoSkip) {

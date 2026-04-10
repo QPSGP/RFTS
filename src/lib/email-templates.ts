@@ -3,7 +3,7 @@ import { getBaseUrl } from "./email";
 /**
  * Transactional templates (HTML + text) sent via Resend from the app:
  * - getForgotPasswordEmailContent — member forgot password
- * - getWelcomeEmailContent — after signup / onboarding
+ * - getWelcomeEmailContent — after full signup / onboarding (member + CC to staff)
  * - getSubscriptionActiveEmailContent — Stripe checkout completed (subscription active)
  * - getReportIssueConfirmationContent — member report / tech support acknowledgment
  * - getLgdInterestEmailContent — Life Guidance checkbox
@@ -72,58 +72,110 @@ Questions? 800-GOAL-NOW (462-5669)
   return { subject, html, text };
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function memberDisplayName(firstName?: string | null, lastName?: string | null): string {
+  const parts = [firstName?.trim(), lastName?.trim()].filter(Boolean) as string[];
+  return parts.join(" ").trim();
+}
+
 /**
- * Welcome email after signup: how to use the console and inspiration to use it.
+ * Welcome email after full onboarding signup (Resend + CC to Terry & Richard by default).
  */
-export function getWelcomeEmailContent(firstName?: string | null): TemplateContent {
+export function getWelcomeEmailContent(
+  firstName?: string | null,
+  lastName?: string | null
+): TemplateContent {
   const baseUrl = getBaseUrl();
-  const subject = "Welcome to Reach For The Stars — here’s how to get started";
+  const name = memberDisplayName(firstName, lastName);
+  const dearLine = name ? `Dear ${escapeHtml(name)},` : "Dear Member,";
+  const subject = "Welcome New Member";
+
   const html = `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1f2937; max-width: 560px; margin: 0 auto; padding: 24px;">
-  <p>${greeting(firstName)}</p>
-  <p>Welcome to Reach For The Stars. You’re in the right place to start reprogramming your subconscious with guided audio — tailored to your goals and designed to support you while you sleep.</p>
+<body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 24px;">
+  <p style="margin-bottom: 16px;">${dearLine}</p>
+  <p>By becoming a member of <strong>ReachForTheStars.Today</strong>, you have made a valuable investment in your personal development. We would like to acknowledge and congratulate you for making that commitment to yourself!</p>
+  <p>We welcome you here and want to support you on your commitment to grow! Our “ReachForTheStars.Today” system is specifically designed to maximize the effectiveness of changing your subconscious programming in alignment with your chosen goals. <strong>The “Key” to your success is repetition</strong> so stick to the program.</p>
+  <p>When you log in it opens you to your member <strong>“Console”</strong>. Everything is accessible and explained from within the console. Scroll through your console to quickly familiarize yourself with your options and features.</p>
+  <p>If you are having any technical issues go to the menu and click on <strong>“Report an issue”</strong>.</p>
 
-  <h2 style="font-size: 1.1em; margin-top: 24px;">How to use your member console</h2>
-  <ul style="margin: 12px 0; padding-left: 20px;">
-    <li><strong>Console (Play Options)</strong> — Your nightly sessions are built here. Choose how many sessions per night and your “session cycle” (how often new tracks are added). This is your control center.</li>
-    <li><strong>Goals</strong> — The goals you picked during signup shape which audios are scheduled. You can update them anytime so your sessions stay aligned with what matters to you.</li>
-    <li><strong>Library</strong> — Browse and stream the full Success Center library. You can listen to any track on demand in addition to your scheduled nightly lineup.</li>
+  <h2 style="font-size: 1.05em; margin-top: 28px; margin-bottom: 8px;">Recommendations</h2>
+  <ul style="margin: 8px 0; padding-left: 22px;">
+    <li>Two Sessions Per night (repetition)</li>
+    <li>Comfortable headset with mask (when listening while sleeping)</li>
+    <li>Using ReachForTheStars.Today is one of the easiest ways to overcome present challenges and make your goals a reality, all while falling asleep and during sleep!</li>
   </ul>
-  <p style="margin-top: 16px;">Bookmark your console and make it part of your routine: a few minutes to check your schedule, then press play when it’s time to rest.</p>
 
-  <h2 style="font-size: 1.1em; margin-top: 24px;">A little inspiration</h2>
-  <p>Our system works best when you use it consistently. Listen as you fall asleep; let the recordings do the work. Many members report clearer focus, better sleep, and progress toward their goals within the first weeks. You’ve already taken the first step — now let the nightly sessions support you.</p>
+  <p style="margin-top: 20px;">Have any questions or concerns?<br />
+  We’d love to help. Call the Success Center, Inc. office at <strong>(800) GOAL NOW (462-5669)</strong>, internationally: <strong>+1 818-989-2923</strong>, or send an email to <a href="mailto:customerservice@reachforthestars.today">customerservice@reachforthestars.today</a></p>
 
+  <h2 style="font-size: 1.05em; margin-top: 28px; margin-bottom: 8px;">Payment and Cancellation</h2>
+  <p>The Platinum Package has a <strong>14-day free trial</strong> period, after which <strong>$39.95 per month</strong> will be charged to the payment card you entered. To make changes to your plan, update your credit card or billing information, and see your payment history please go to your profile in your console.</p>
+  <p>You can cancel at any time, being responsible only for the current month you signed up for. Please see the ReachForTheStars.Today Terms and Conditions for details. If you wish to talk to someone directly, feel free to call <strong>(818) 264-9760</strong>.</p>
+
+  <h2 style="font-size: 1.05em; margin-top: 28px; margin-bottom: 8px;">Technical Support</h2>
+  <p>For any challenges with the ReachForTheStars.Today website itself, you may submit an issue from the menu bar under <strong>“Report an Issue”</strong> or call tech support at <strong>(520) 302-4471</strong> or text us with your name, a brief description of the issue, and the best way/time for us to get back to you.</p>
+
+  <p style="margin-top: 32px; font-size: 14px; color: #374151;"><strong>Facilitating Goal Manifestation &amp; Self-Actualization Since 1969</strong></p>
+  <p style="font-size: 14px; color: #374151;">Hypnosis &amp; Coaching In-Person, by Phone, and on Zoom,</p>
+  <p style="font-size: 14px; color: #374151;">USA &amp; Canada: <strong>(800) GOAL NOW (462-5669)</strong> | International: <strong>+1 818-989-2923</strong><br />
+  Visit <a href="https://acesuccess.com">AceSuccess.com</a></p>
   <p style="margin-top: 24px;">
-    <a href="${baseUrl}/play-options" style="display: inline-block; padding: 12px 20px; background: #0f766e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Go to your console</a>
+    <a href="${baseUrl}/play-options" style="display: inline-block; padding: 12px 20px; background: #0f766e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Open your member console</a>
   </p>
-  <p style="margin-top: 24px; font-size: 14px; color: #6b7280;">Questions? Reply to this email or call 800-GOAL-NOW (462-5669). We’re here for you.</p>
   <p style="margin-top: 16px; font-size: 13px; color: #9ca3af;">Reach For The Stars</p>
 </body>
 </html>`;
+
+  const dearPlain = name ? `Dear ${name},` : "Dear Member,";
   const text = `
-${greeting(firstName)}
+${dearPlain}
 
-Welcome to Reach For The Stars. You're in the right place to start reprogramming your subconscious with guided audio — tailored to your goals and designed to support you while you sleep.
+By becoming a member of ReachForTheStars.Today, you have made a valuable investment in your personal development. We would like to acknowledge and congratulate you for making that commitment to yourself!
 
-How to use your member console:
-- Console (Play Options): Your nightly sessions are built here. Choose how many sessions per night and your session cycle. This is your control center.
-- Goals: The goals you picked during signup shape which audios are scheduled. You can update them anytime.
-- Library: Browse and stream the full Success Center library and listen to any track on demand.
+We welcome you here and want to support you on your commitment to grow! Our "ReachForTheStars.Today" system is specifically designed to maximize the effectiveness of changing your subconscious programming in alignment with your chosen goals. The "Key" to your success is repetition so stick to the program.
 
-Bookmark your console and make it part of your routine.
+When you log in it opens you to your member "Console". Everything is accessible and explained from within the console. Scroll through your console to quickly familiarize yourself with your options and features.
 
-A little inspiration: Our system works best when you use it consistently. Listen as you fall asleep; let the recordings do the work. Many members report clearer focus, better sleep, and progress toward their goals within the first weeks.
+If you are having any technical issues go to the menu and click on "Report an issue".
 
-Go to your console: ${baseUrl}/play-options
+Recommendations:
+- Two Sessions Per night (repetition)
+- Comfortable headset with mask (when listening while sleeping)
+- Using ReachForTheStars.Today is one of the easiest ways to overcome present challenges and make your goals a reality, all while falling asleep and during sleep!
 
-Questions? Reply to this email or call 800-GOAL-NOW (462-5669).
+Have any questions or concerns?
+We'd love to help. Call the Success Center, Inc. office at (800) GOAL NOW (462-5669), internationally: +1 818-989-2923, or send an email to customerservice@reachforthestars.today
+
+Payment and Cancellation
+The Platinum Package has a 14-day free trial period, after which $39.95 per month will be charged to the payment card you entered. To make changes to your plan, update your credit card or billing information, and see your payment history please go to your profile in your console.
+
+You can cancel at any time, being responsible only for the current month you signed up for. Please see the ReachForTheStars.Today Terms and Conditions for details. If you wish to talk to someone directly, feel free to call (818) 264-9760.
+
+Technical Support
+For any challenges with the ReachForTheStars.Today website itself, you may submit an issue from the menu bar under "Report an Issue" or call tech support at (520) 302-4471 or text us with your name, a brief description of the issue, and the best way/time for us to get back to you.
+
+Facilitating Goal Manifestation & Self-Actualization Since 1969
+
+Hypnosis & Coaching In-Person, by Phone, and on Zoom,
+
+USA & Canada:(800) GOAL NOW (462-5669) | International: +1 818-989-2923
+Visit AceSuccess.com — https://acesuccess.com
+
+Open your console: ${baseUrl}/play-options
 
 Reach For The Stars
 `.trim();
+
   return { subject, html, text };
 }
 
