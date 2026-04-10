@@ -261,6 +261,14 @@ export const buildSchedulePreview = ({
           first = firstGoal ? takeNextTrackForGoal(firstGoal) : null;
         }
       }
+      /** One session still consumes one rotation step when the whole night is CGMR/T-18 (same as 2-play fix). */
+      if (skipTakeFirst && specialTrack) {
+        if (isManagedMember) {
+          advanceAssignedSlotForSpecialSecond();
+        } else {
+          advanceGoalSlotForSpecialSecond();
+        }
+      }
     } else {
       first = isManagedMember
         ? takeNextAssignedAudio()
