@@ -6,7 +6,7 @@ import { getBaseUrl } from "./email";
  * - getWelcomeEmailContent — after full signup / onboarding (member + CC to staff)
  * - getSubscriptionActiveEmailContent — Stripe checkout completed (subscription active)
  * - getReportIssueConfirmationContent — member report / tech support acknowledgment
- * - getLgdInterestEmailContent — Life Guidance checkbox
+ * - getLgdInterestEmailContent — Life Guidance Discovery Session interest (onboarding or profile)
  * - getTherapistHealerCoachEmailContent — Build Practice / therapist-healer-coach checkbox
  *
  * Staff BCC: set EMAIL_STAFF_BCC (comma-separated) for Terry, Richard, etc. Applied in sendEmail().
@@ -228,58 +228,71 @@ Back to your console: ${baseUrl}/play-options
 }
 
 /**
- * Email when they check the Life Guidance Discovery Session interest option: explains the process.
+ * Follow-up when a member indicates interest in a Life Guidance Discovery Session (Gold / profile checkbox).
  */
 export function getLgdInterestEmailContent(firstName?: string | null): TemplateContent {
-  const subject = "Your Life Guidance Discovery Session — next steps";
+  const baseUrl = getBaseUrl();
+  const subject = "Life Guidance Discovery Session — follow-up";
+  const fn = firstName?.trim() ?? "";
+  const hi =
+    fn.length > 0 ? `<p>Hi ${escapeHtml(fn)},</p>` : `<p>Hi there,</p>`;
+
   const html = `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1f2937; max-width: 560px; margin: 0 auto; padding: 24px;">
-  <p>${greeting(firstName)}</p>
-  <p>Thank you for your interest in a <strong>Life Guidance Discovery Session</strong>. Here’s how the process works so you know what to expect.</p>
+<body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 24px;">
+  ${hi}
+  <p>Thank you for letting us know through <a href="${baseUrl}">ReachForTheStars.Today</a> that you are interested in a <strong>Life Guidance Discovery Session</strong>. <strong>Terry Brussel-Rogers</strong> will contact you for more information on this or do feel free to call her at <strong>800-GOAL-NOW (800-462-5669)</strong> to make your goals a reality.</p>
 
-  <h2 style="font-size: 1.1em; margin-top: 24px;">What is a Life Guidance Discovery Session?</h2>
-  <p>It’s a private session (in person or by phone/video) designed to clarify where you are now, where you want to go, and how to get there. We then use that insight to shape your experience — including the option of a customized audio designed by you, for you.</p>
+  <p>This session entitles you to the following <strong>Platinum Membership Benefits</strong>: Guided meditations programmed by your hypnotherapist to reinforce your exact priorities in terms of challenge resolution and personal/professional growth desires. Platinum membership also gives you access to our complete library of guided meditations. Finally, you get a <strong>15 minute private consultation</strong> with your hypnotherapist every 90 days to reassess your goals and their ranking which your hypnotherapist will program into ReachForTheStars.Today for your use.</p>
 
-  <h2 style="font-size: 1.1em; margin-top: 24px;">What happens next?</h2>
-  <ol style="margin: 12px 0; padding-left: 20px;">
-    <li><strong>We reach out</strong> — Our team will contact you to schedule your session at a time that works for you.</li>
-    <li><strong>Your session</strong> — You’ll work with a trained professional to explore your goals and what you want from the program. There’s no pressure; it’s a conversation focused on you.</li>
-    <li><strong>Your customized path</strong> — Based on the session, we can recommend or create content that fits you — including a personalized recording when appropriate.</li>
-  </ol>
+  <h2 style="font-size: 1.05em; margin-top: 26px; margin-bottom: 8px;">Here is what the session itself includes</h2>
+  <p>We set your goals in order of priority, based on a very in-depth Client Intake Form that our director has developed since 1969, always updating it. We figure out exactly what steps are necessary to accomplish those goals in terms of Hypnosis Sessions, Books, Recordings, Coaching, whatever it is you need to get from where you are to where you want to be.</p>
+  <p><strong>It’s like a road map. You get it in writing.</strong></p>
+  <p>Then, through a private hypnosis session based on your individual Road Map, we instill in your subconscious mind the clarity of purpose, the intense desire, the determination, and the absolute confidence in yourself necessary to make your goals a reality.</p>
+  <p><strong>It’s a very empowering session.</strong> It takes about 2 and a half hours. The cost is <strong>$397</strong>, the value Unlimited. If you decide to go ahead with anything else at Success Center, we just apply that to your program.</p>
 
-  <p style="margin-top: 16px;">You can reach us directly to schedule or ask questions:</p>
-  <ul style="margin: 8px 0; padding-left: 20px;">
-    <li><strong>Phone:</strong> 800-GOAL-NOW (462-5669)</li>
-    <li><strong>Email:</strong> <a href="mailto:customerservice@reachforthestars.today">customerservice@reachforthestars.today</a></li>
-  </ul>
-  <p style="margin-top: 24px;">We look forward to supporting you.</p>
-  <p style="margin-top: 16px; font-size: 13px; color: #9ca3af;">Reach For The Stars</p>
+  <h2 style="font-size: 1.05em; margin-top: 26px; margin-bottom: 8px;">How we meet</h2>
+  <p>It’s very convenient. We do it by phone, Zoom or in person if you happen to be near one of the hypnotherapists trained in the use of the <strong>Seven Keys to Self-Actualization</strong>. Terry Brussel-Rogers pioneered telephone hypnosis in 1995. It had nothing to do with Covid; we simply found that doing the session at home in your own space was more comfortable and productive for you, the client. Instead of having to drive there and back at an expense of gas money and your valuable time (not to mention effect on our environment), you do it from home and can use the energy of the session for accomplishing things after it or enjoy a relaxed, healing night’s sleep afterward if it is an evening session. Since that is where you are likely to be practicing your self-hypnosis, it also works better to learn it in that environment.</p>
+
+  <h2 style="font-size: 1.05em; margin-top: 26px; margin-bottom: 8px;">Customized Goal Manifestation Recording</h2>
+  <p>The Life Guidance Discovery Session is the only way to arrange for the creation of a <strong>Customized Goal Manifestation Recording</strong> which includes the exact suggestions you and your hypnotherapist created together during the consultation and educational portions of that session. That professionally done recording suitable for listening to while going to sleep and during sleep is produced by your hypnotherapist and our audio engineer with as many takes as needed, music added, deepening suggestions and post production to make it exactly right for you. It plays automatically on Reach for the Stars program whether that is the 2nd play every other night at two meditations per night or every 4th play with one meditation per night. It is an integral part of manifesting your goals into reality!</p>
+  <p>This costs <strong>$200</strong> at the time of your session, <strong>$250</strong> later. It is a gift if you sign up for more private sessions at the time of your session or decide to purchase an annual membership in Reach for the Stars for <strong>$390</strong>—a $78 savings over the $39 a month price.</p>
+
+  <p style="margin-top: 28px;">
+    <a href="${baseUrl}/play-options" style="display: inline-block; padding: 12px 20px; background: #0f766e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Back to your member console</a>
+  </p>
+  <p style="margin-top: 20px; font-size: 13px; color: #9ca3af;">Reach For The Stars</p>
 </body>
 </html>`;
+
   const text = `
 ${greeting(firstName)}
 
-Thank you for your interest in a Life Guidance Discovery Session. Here's how the process works.
+Thank you for letting us know through ReachForTheStars.Today that you are interested in a Life Guidance Discovery Session. Terry Brussel-Rogers will contact you for more information on this or do feel free to call her at 800-GOAL-NOW (800-462-5669) to make your goals a reality.
 
-What is a Life Guidance Discovery Session?
-It's a private session (in person or by phone/video) designed to clarify where you are now, where you want to go, and how to get there. We then use that insight to shape your experience — including the option of a customized audio designed by you, for you.
+This session entitles you to the following Platinum Membership Benefits: Guided meditations programmed by your hypnotherapist to reinforce your exact priorities in terms of challenge resolution and personal/professional growth desires. Platinum membership also gives you access to our complete library of guided meditations. Finally, you get a 15 minute private consultation with your hypnotherapist every 90 days to reassess your goals and their ranking which your hypnotherapist will program into ReachForTheStars.Today for your use.
 
-What happens next?
-1. We reach out — Our team will contact you to schedule your session at a time that works for you.
-2. Your session — You'll work with a trained professional to explore your goals and what you want from the program.
-3. Your customized path — Based on the session, we can recommend or create content that fits you — including a personalized recording when appropriate.
+Here is what the session itself includes: we set your goals in order of priority, based on a very in-depth Client Intake Form that our director has developed since 1969, always updating it. We figure out exactly what steps are necessary to accomplish those goals in terms of Hypnosis Sessions, Books, Recordings, Coaching, whatever it is you need to get from where you are to where you want to be.
 
-To schedule or ask questions:
-- Phone: 800-GOAL-NOW (462-5669)
-- Email: customerservice@reachforthestars.today
+It's like a road map. You get it in writing.
 
-We look forward to supporting you.
+Then, through a private hypnosis session based on your individual Road Map, we instill in your subconscious mind the clarity of purpose, the intense desire, the determination, and the absolute confidence in yourself necessary to make your goals a reality.
+
+It's a very empowering session. It takes about 2 and a half hours. The cost is $397, the value Unlimited. If you decide to go ahead with anything else at Success Center, we just apply that to your program.
+
+It's very convenient. We do it by phone, Zoom or in person if you happen to be near one of the hypnotherapists trained in the use of the Seven Keys to Self-Actualization. Terry Brussel-Rogers pioneered telephone hypnosis in 1995. It had nothing to do with Covid; we simply found that doing the session at home in your own space was more comfortable and productive for you, the client. Instead of having to drive there and back at an expense of gas money and your valuable time (not to mention effect on our environment), you do it from home and can use the energy of the session for accomplishing things after it or enjoy a relaxed, healing night's sleep afterward if it is an evening session. Since that is where you are likely to be practicing your self-hypnosis, it also works better to learn it in that environment.
+
+The Life Guidance Discovery Session is the only way to arrange for the creation of a Customized Goal Manifestation Recording which includes the exact suggestions you and your hypnotherapist created together during the consultation and educational portions of that session. That professionally done recording suitable for listening to while going to sleep and during sleep is produced by your hypnotherapist and our audio engineer with as many takes as needed, music added, deepening suggestions and post production to make it exactly right for you. It plays automatically on Reach for the Stars program whether that is the 2nd play every other night at two meditations per night or every 4th play with one meditation per night. It is an integral part of manifesting your goals into reality!
+
+This costs $200 at the time of your session, $250 later. It is a gift if you sign up for more private sessions at the time of your session or decide to purchase an annual membership in Reach for the Stars for $390—a $78 savings over the $39 a month price.
+
+Back to your console: ${baseUrl}/play-options
 
 Reach For The Stars
 `.trim();
+
   return { subject, html, text };
 }
 
