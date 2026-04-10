@@ -214,9 +214,11 @@ export async function PATCH(request: Request) {
     const thc = getTherapistHealerCoachEmailContent(firstName);
     const thcResult = await sendEmail({
       to: email,
+      cc: getWelcomeEmailCcRecipients(),
       subject: thc.subject,
       html: thc.html,
-      text: thc.text
+      text: thc.text,
+      skipStaffBcc: true
     });
     if (!thcResult.ok) {
       console.error("[PATCH /api/member/profile] Therapist/healer/coach email failed:", thcResult.error);

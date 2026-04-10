@@ -7,7 +7,7 @@ import { getBaseUrl } from "./email";
  * - getSubscriptionActiveEmailContent — Stripe checkout completed (subscription active)
  * - getReportIssueConfirmationContent — member report / tech support acknowledgment
  * - getLgdInterestEmailContent — Life Guidance Discovery Session interest (onboarding or profile)
- * - getTherapistHealerCoachEmailContent — Build Practice / therapist-healer-coach checkbox
+ * - getTherapistHealerCoachEmailContent — therapist / healer / coach (Build Practice) interest
  *
  * Staff BCC: set EMAIL_STAFF_BCC (comma-separated) for Terry, Richard, etc. Applied in sendEmail().
  */
@@ -297,54 +297,52 @@ Reach For The Stars
 }
 
 /**
- * Email when they check "I am or would like to be a therapist, healer, or coach": response and next steps.
+ * Email when they check "I am or would like to be a therapist, healer, or coach" (Build Practice interest).
  */
 export function getTherapistHealerCoachEmailContent(firstName?: string | null): TemplateContent {
   const baseUrl = getBaseUrl();
-  const subject = "Therapist, healer & coach path — Reach For The Stars";
+  const giftsUrl = `${baseUrl}/goals`;
+  const subject = "Building your practice — thank you from Reach For The Stars";
+  const fn = firstName?.trim() ?? "";
+  const hi =
+    fn.length > 0 ? `<p>Hi ${escapeHtml(fn)},</p>` : `<p>Hi there,</p>`;
+
   const html = `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1f2937; max-width: 560px; margin: 0 auto; padding: 24px;">
-  <p>${greeting(firstName)}</p>
-  <p>Thank you for letting us know that you <strong>are or would like to be a therapist, healer, or coach</strong>. We’re glad you’re here.</p>
+<body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 24px;">
+  ${hi}
+  <p>Thank you for letting us know through <a href="${baseUrl}">ReachForTheStars.Today</a> that you want to learn more about <strong>building your practice</strong>.</p>
 
-  <h2 style="font-size: 1.1em; margin-top: 24px;">What this means for your membership</h2>
-  <p>Your member account now includes access to our <strong>Build Practice</strong> content — audios and resources designed to support practitioners in their own growth and in their work with clients. You’ll see these in your Goals and Library where applicable.</p>
+  <p>I am <strong>Terry Brussel-Rogers CCHt.</strong>, Director of Success Center Inc. and founder of Reach For the Stars. I will be in touch with you by phone, or feel free to call me at <strong>800-GOAL-NOW (800-462-5669)</strong>.</p>
 
-  <h2 style="font-size: 1.1em; margin-top: 24px;">What you can do next</h2>
-  <ul style="margin: 12px 0; padding-left: 20px;">
-    <li>Use your <strong>Console</strong> and <strong>Goals</strong> to include Build Practice goals so the right sessions are scheduled for you.</li>
-    <li>Browse the <strong>Library</strong> and explore the full catalog, including practitioner-focused material.</li>
-    <li>If you’re interested in how our system can support your practice or training, we’d love to hear from you.</li>
-  </ul>
+  <p>I have been doing hypnotherapy, coaching, and healing since 1969, helping others build their practices since 1995. I would like to help you build <strong>YOUR</strong> practice. Please click the link below for your practice building gifts.</p>
 
-  <p style="margin-top: 16px;">
-    <a href="${baseUrl}/play-options" style="display: inline-block; padding: 12px 20px; background: #0f766e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Go to your console</a>
+  <p style="margin-top: 28px;">
+    <a href="${giftsUrl}" style="display: inline-block; padding: 12px 20px; background: #0f766e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Practice building gifts</a>
   </p>
-  <p style="margin-top: 24px;">Questions about the practitioner path or Build Practice content? Reply to this email or call 800-GOAL-NOW (462-5669).</p>
-  <p style="margin-top: 16px; font-size: 13px; color: #9ca3af;">Reach For The Stars</p>
+  <p style="margin-top: 16px; font-size: 14px; color: #6b7280;">From there you can also open your <a href="${baseUrl}/play-options">member console</a> or browse the <a href="${baseUrl}/library">library</a> for Build Practice content.</p>
+  <p style="margin-top: 24px; font-size: 13px; color: #9ca3af;">Reach For The Stars</p>
 </body>
 </html>`;
+
   const text = `
 ${greeting(firstName)}
 
-Thank you for letting us know that you are or would like to be a therapist, healer, or coach. We're glad you're here.
+Thank you for letting us know through ReachForTheStars.Today that you want to learn more about building your practice.
 
-What this means for your membership:
-Your member account now includes access to our Build Practice content — audios and resources designed to support practitioners. You'll see these in your Goals and Library where applicable.
+I am Terry Brussel-Rogers CCHt. Director of Success Center Inc. and founder of Reach For the Stars. I will be in touch with you by phone, or feel free to call me at 800-GOAL-NOW (800-462-5669).
 
-What you can do next:
-- Use your Console and Goals to include Build Practice goals so the right sessions are scheduled.
-- Browse the Library and explore practitioner-focused material.
-- If you're interested in how our system can support your practice or training, we'd love to hear from you.
+I have been doing hypnotherapy, coaching, and healing since 1969, helping others build their practices since 1995. I would like to help you build YOUR practice. Please click the link below for your practice building gifts.
 
-Go to your console: ${baseUrl}/play-options
+${giftsUrl}
 
-Questions? Reply to this email or call 800-GOAL-NOW (462-5669).
+Member console: ${baseUrl}/play-options
+Library: ${baseUrl}/library
 
 Reach For The Stars
 `.trim();
+
   return { subject, html, text };
 }

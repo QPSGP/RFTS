@@ -174,7 +174,14 @@ export async function POST(request: Request) {
   }
   if (parsed.data.profile.wantsPracticeGrowth) {
     const thc = getTherapistHealerCoachEmailContent(firstName);
-    const thcResult = await sendEmail({ to: emailTo, subject: thc.subject, html: thc.html, text: thc.text });
+    const thcResult = await sendEmail({
+      to: emailTo,
+      cc: welcomeCc,
+      subject: thc.subject,
+      html: thc.html,
+      text: thc.text,
+      skipStaffBcc: true
+    });
     if (!thcResult.ok) console.error("[onboarding] Therapist/healer/coach email failed:", thcResult.error);
   }
 
