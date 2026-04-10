@@ -30,7 +30,7 @@ export function parseStaffBccEmails(): string[] {
 }
 
 /**
- * CC recipients for the new-member welcome email (onboarding).
+ * CC recipients for new-member welcome and Life Guidance Discovery follow-up (same list).
  * Override with WELCOME_EMAIL_CC (comma-separated); defaults to Terry and Richard.
  */
 export function getWelcomeEmailCcRecipients(): string[] {

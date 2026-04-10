@@ -6,7 +6,7 @@ import {
   getUserProfile,
   upsertMemberProfile
 } from "@/lib/db";
-import { sendEmail } from "@/lib/email";
+import { getWelcomeEmailCcRecipients, sendEmail } from "@/lib/email";
 import {
   getLgdInterestEmailContent,
   getTherapistHealerCoachEmailContent
@@ -200,9 +200,11 @@ export async function PATCH(request: Request) {
     const lgd = getLgdInterestEmailContent(firstName);
     const lgdResult = await sendEmail({
       to: email,
+      cc: getWelcomeEmailCcRecipients(),
       subject: lgd.subject,
       html: lgd.html,
-      text: lgd.text
+      text: lgd.text,
+      skipStaffBcc: true
     });
     if (!lgdResult.ok) {
       console.error("[PATCH /api/member/profile] LGD interest email failed:", lgdResult.error);

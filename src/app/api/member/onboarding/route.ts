@@ -162,7 +162,14 @@ export async function POST(request: Request) {
   if (!welcomeResult.ok) console.error("[onboarding] Welcome email failed:", welcomeResult.error);
   if (parsed.data.profile.hadLgdSession) {
     const lgd = getLgdInterestEmailContent(firstName);
-    const lgdResult = await sendEmail({ to: emailTo, subject: lgd.subject, html: lgd.html, text: lgd.text });
+    const lgdResult = await sendEmail({
+      to: emailTo,
+      cc: welcomeCc,
+      subject: lgd.subject,
+      html: lgd.html,
+      text: lgd.text,
+      skipStaffBcc: true
+    });
     if (!lgdResult.ok) console.error("[onboarding] LGD interest email failed:", lgdResult.error);
   }
   if (parsed.data.profile.wantsPracticeGrowth) {
