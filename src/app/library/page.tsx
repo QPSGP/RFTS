@@ -1,6 +1,7 @@
 import { getMemberProfileByUserId, getUserProfile, listInterests, listLibrary } from "@/lib/db";
 import { getUserSessionEmail } from "@/lib/user-auth";
 import LibraryBrowser from "@/components/LibraryBrowser";
+import PlaySecondRecordingCta from "@/components/PlaySecondRecordingCta";
 
 function filterInterestsByMemberAccess(
   interests: Awaited<ReturnType<typeof listInterests>>,
@@ -48,6 +49,7 @@ export default async function LibraryPage() {
           ← Back to Console
         </a>
       </section>
+      <PlaySecondRecordingCta />
       <LibraryBrowser interests={interests} library={libraryForMember} />
       <section style={{ textAlign: "center", paddingTop: 24, marginTop: 24, borderTop: "1px solid #e5e7eb" }}>
         <a className="button button-secondary" href="/play-options">

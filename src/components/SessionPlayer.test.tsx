@@ -238,6 +238,62 @@ describe("SessionPlayer", () => {
     jest.useRealTimers();
   });
 
+  it("after gap, second segment starts with prep when prepAudio is set", async () => {
+    jest.useFakeTimers();
+    const SECOND = { title: "Second Recording", url: "/api/stream/audio?id=second-456" };
+    render(
+      <SessionPlayer
+        prepAudio={PREP}
+        firstTrack={FIRST_TRACK}
+        secondTrack={SECOND}
+        gapHours={2.5}
+        playsPerNight={2}
+        autoStart={true}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(PREP.title);
+    });
+
+    let audio = document.querySelector("audio");
+    await act(async () => {
+      audio?.dispatchEvent(new Event("ended"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(FIRST_TRACK.title);
+    });
+
+    audio = document.querySelector("audio");
+    await act(async () => {
+      audio?.dispatchEvent(new Event("ended"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/First session complete/i)).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(2.5 * 60 * 60 * 1000);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(PREP.title);
+    });
+
+    audio = document.querySelector("audio");
+    await act(async () => {
+      audio?.dispatchEvent(new Event("ended"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(SECOND.title);
+    });
+
+    jest.useRealTimers();
+  });
+
   it("hides transport after only nightly audio completes (1 per night)", async () => {
     render(
       <SessionPlayer

@@ -32,6 +32,7 @@ export default function PlayOptionsPage() {
   >([]);
   const [nextInCue, setNextInCue] = useState<{ id: string; title: string; skuCode?: string }[]>([]);
   const sessionRef = useRef<SessionPlayerHandle | null>(null);
+  const playSecondFromUrlRef = useRef(false);
 
   const currentPlaylistFallback = useMemo(() => {
     if (!schedule.length) return [];
@@ -62,8 +63,12 @@ export default function PlayOptionsPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("autoplay") === "1") setAutoStart(true);
-    if (params.get("autoplay") === "0") setAutoStart(false);
+    if (params.get("playSecond") === "1") {
+      playSecondFromUrlRef.current = true;
+    } else {
+      if (params.get("autoplay") === "1") setAutoStart(true);
+      if (params.get("autoplay") === "0") setAutoStart(false);
+    }
     fetch("/api/user/me", { credentials: "include" })
       .then((res) => {
         if (!res.ok) {
@@ -101,6 +106,31 @@ export default function PlayOptionsPage() {
       })
       .catch(() => setStatus("loggedOut"));
   }, []);
+
+  useEffect(() => {
+    if (!playSecondFromUrlRef.current) return;
+    if (status !== "active" || !profile || schedule.length === 0) return;
+    if ((profile.playsPerNight ?? 2) === 1) {
+      playSecondFromUrlRef.current = false;
+      return;
+    }
+    const tonightIndex = Math.max(0, Math.min(currentNight - 1, schedule.length - 1));
+    const tonight = schedule[tonightIndex];
+    if (!tonight?.tracks?.[1]) {
+      playSecondFromUrlRef.current = false;
+      return;
+    }
+    playSecondFromUrlRef.current = false;
+    requestAnimationFrame(() => {
+      sessionRef.current?.playSecond();
+      document.getElementById("meditation-session")?.scrollIntoView({ behavior: "smooth" });
+      const u = new URL(window.location.href);
+      if (u.searchParams.get("playSecond") === "1") {
+        u.searchParams.delete("playSecond");
+        window.history.replaceState({}, "", `${u.pathname}${u.search}${u.hash}`);
+      }
+    });
+  }, [status, profile, schedule, currentNight]);
 
   if (status === "loading") {
     return null;
@@ -169,6 +199,15 @@ export default function PlayOptionsPage() {
         : "Membership: Active"
       : "Membership: Inactive";
 
+  const tonightForCta =
+    schedule.length > 0
+      ? schedule[Math.max(0, Math.min(currentNight - 1, schedule.length - 1))]
+      : null;
+  const showPlaySecondHero =
+    status === "active" &&
+    !!tonightForCta?.tracks?.[1] &&
+    (profile?.playsPerNight ?? 2) === 2;
+
   return (
     <main className="play-options-main">
       <section className="hero section">
@@ -198,6 +237,19 @@ export default function PlayOptionsPage() {
             >
               Start Session
           </button>
+          {showPlaySecondHero && (
+            <button
+              className="button button-secondary"
+              type="button"
+              style={{ padding: "14px 22px", fontSize: 16 }}
+              onClick={() => {
+                sessionRef.current?.playSecond();
+                document.getElementById("meditation-session")?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              Play Second Recording
+            </button>
+          )}
           <a className="button button-secondary" href="/library">
             Open Library
           </a>
@@ -273,7 +325,8 @@ export default function PlayOptionsPage() {
           <p>
             Start a guided session tailored to your goals. Each session plays your
             preparation audio, then your first goal recording. A second recording
-            is scheduled {gapHours} hours later if you have enabled 2 sessions per night.
+            is scheduled {gapHours} hours later if you have enabled 2 sessions per night
+            (it also uses preparation audio when it starts).
           </p>
           {schedule.length > 0 && (() => {
             const tonightIndex = Math.max(0, Math.min(currentNight - 1, schedule.length - 1));

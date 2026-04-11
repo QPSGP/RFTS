@@ -21,6 +21,8 @@ type SessionPlayerProps = {
 
 export type SessionPlayerHandle = {
   startSession: () => void;
+  /** Start tonight’s second recording (preparation audio first when configured). */
+  playSecond: () => void;
 };
 
 type Phase = "idle" | "first" | "waiting" | "second";
@@ -102,15 +104,27 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       setMessage("No second recording scheduled tonight.");
       return;
     }
+    if (waitTimeoutRef.current) {
+      clearTimeout(waitTimeoutRef.current);
+      waitTimeoutRef.current = null;
+    }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+    pendingNextTrackRef.current = null;
     setPhase("second");
-    setQueue([secondTrack]);
-    setCurrent(secondTrack);
+    const nextQueue = [prepAudio, secondTrack].filter(
+      (track): track is SessionTrack => !!track
+    );
+    setQueue(nextQueue);
+    setCurrent(nextQueue[0] || null);
     setMessage(null);
     setNeedsUserPlay(false);
-    attemptPlay(secondTrack);
-  }, [secondTrack]);
+    attemptPlay(nextQueue[0]);
+  }, [secondTrack, prepAudio]);
 
-  useImperativeHandle(ref, () => ({ startSession }), [startSession]);
+  useImperativeHandle(ref, () => ({ startSession, playSecond }), [startSession, playSecond]);
 
   useEffect(() => {
     if (skipEffectPlayRef.current) {
@@ -249,14 +263,18 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         clearWaitTimers();
         const tr = secondTrackRef.current;
         if (tr) {
+          const nextQueue = [prepAudio, tr].filter(
+            (track): track is SessionTrack => !!track
+          );
           setPhase("second");
-          setQueue([tr]);
-          setCurrent(tr);
+          setQueue(nextQueue);
+          setCurrent(nextQueue[0] || null);
           setMessage(null);
           setNeedsUserPlay(false);
           const audio = audioRef.current;
-          if (audio) {
-            audio.src = tr.url;
+          const first = nextQueue[0];
+          if (audio && first) {
+            audio.src = first.url;
             audio.play().catch(() => setNeedsUserPlay(true));
           }
         } else {
@@ -280,7 +298,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         setOnePerNightComplete(true);
       }
     }
-  }, [phase, gapHours, playsPerNight, queue, clearWaitTimers]);
+  }, [phase, gapHours, playsPerNight, queue, clearWaitTimers, prepAudio]);
 
   const handlePause = () => {
     audioRef.current?.pause();
@@ -342,7 +360,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       <p style={{ color: "#4b5563" }}>
         {playsPerNight === 1
           ? "Plays a short preparation audio, then your goal recording for tonight. Your next audio is scheduled for tomorrow."
-          : `Plays a short preparation audio, then your first goal recording. The second recording is scheduled ${gapHours} hours later.`}
+          : `Plays a short preparation audio, then your first goal recording. The second recording is scheduled ${gapHours} hours later and also begins with preparation audio when you play it.`}
       </p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <button className="button" onClick={startSession}>

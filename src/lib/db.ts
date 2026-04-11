@@ -74,6 +74,9 @@ export type UserProfile = {
   subscriptionTier: DbSubscription["tier"] | null;
 };
 
+/** Canonical form for member emails in `users` and matching related data. */
+export const normalizeMemberEmail = (email: string) => email.trim().toLowerCase();
+
 export const getUserByEmail = async (email: string) => {
   const { rows } = await sql<DbUser>`
     SELECT id, email, password_hash, goal_ids, goal_updated_at, plays_per_night, created_at
@@ -92,9 +95,10 @@ export const getUserById = async (userId: string) => {
 };
 
 export const createUser = async (email: string, passwordHash: string) => {
+  const canonical = normalizeMemberEmail(email);
   const { rows } = await sql<DbUser>`
     INSERT INTO users (email, password_hash)
-    VALUES (${email}, ${passwordHash})
+    VALUES (${canonical}, ${passwordHash})
     RETURNING id, email, password_hash, goal_ids, goal_updated_at, plays_per_night, created_at
   `;
   return rows[0];
@@ -135,6 +139,15 @@ export const deletePasswordResetToken = async (token: string) => {
 export const updateUserPassword = async (userId: string, passwordHash: string) => {
   await sql`
     UPDATE users SET password_hash = ${passwordHash} WHERE id = ${userId}
+  `;
+};
+
+/** Set `users.email` to lowercase trimmed form (fixes legacy ALL-CAPS rows; safe if already normalized). */
+export const canonicalizeUserEmail = async (userId: string) => {
+  await sql`
+    UPDATE users
+    SET email = LOWER(TRIM(email))
+    WHERE id = ${userId}
   `;
 };
 
@@ -1227,7 +1240,7 @@ export const addEmailToLibraryItemAllowedList = async (
   if (!emailLower) return false;
   const { rowCount } = await sql`
     UPDATE library_items
-    SET allowed_user_emails = array_append(COALESCE(allowed_user_emails, ARRAY[]::text[]), ${email.trim()})
+    SET allowed_user_emails = array_append(COALESCE(allowed_user_emails, ARRAY[]::text[]), ${emailLower})
     WHERE id = ${libraryItemId}
       AND NOT EXISTS (
         SELECT 1 FROM unnest(COALESCE(allowed_user_emails, ARRAY[]::text[])) AS e

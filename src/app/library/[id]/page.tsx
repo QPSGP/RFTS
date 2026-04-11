@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AudioGate from "@/components/AudioGate";
+import PlaySecondRecordingCta from "@/components/PlaySecondRecordingCta";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import { getLibraryItem } from "@/lib/db";
 
@@ -17,6 +18,7 @@ export default async function LibraryItemPage({ params }: PageProps) {
 
   return (
     <main>
+      <PlaySecondRecordingCta />
       <AudioGate item={item} />
       <ScreenWakeToggle />
       <section style={{ textAlign: "center", paddingTop: 24, marginTop: 24, borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>

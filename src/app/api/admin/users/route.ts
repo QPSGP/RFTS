@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { sql } from "@vercel/postgres";
 import { isAdminSession } from "@/lib/auth";
 import {
+  canonicalizeUserEmail,
   createUser,
   deleteUserByEmail,
   ensureSubscription,
@@ -115,6 +116,7 @@ export async function PATCH(request: Request) {
       WHERE id = ${user.id}
     `;
   }
+  await canonicalizeUserEmail(user.id);
   return NextResponse.json({ ok: true });
 }
 
