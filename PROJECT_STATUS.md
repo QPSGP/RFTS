@@ -4,6 +4,19 @@ Use this file to get up to speed when opening the project in the **rfts-platform
 
 ---
 
+## Latest handoff — where we left off (scheduling, email, members)
+
+Use this block to resume the next session without re-reading the whole thread.
+
+- **Platinum Managed + custom list, no CGMR:** `src/app/api/user/schedule/route.ts` — special slot uses global T-18/fallback, not the first allow-listed track. **`src/components/AdminUsers.tsx`** — “Schedule uses as CGMR slot” matches that (not T-26 by mistake).
+- **Scheduler rotation:** `src/lib/scheduler.ts` — when CGMR/T-18 replaces the **second** play (2/night), advance assigned-audio / goal pointer; when **1 play/night** and the night is all CGMR, advance pointer too; **1 play** special nights no longer consume a throwaway assigned pick.
+- **Member emails:** `normalizeMemberEmail` + `createUser`; `canonicalizeUserEmail` on **admin PATCH** member save; allow-list appends lowercase. Onboarding uses `user.email` for mail + library.
+- **Transactional email (Resend):** `src/lib/email-templates.ts` + `src/lib/email.ts` — **Welcome** (new copy, subject “Welcome New Member”), **Life Guidance** (long follow-up), **Therapist/healer/coach** (Terry letter; “Practice building gifts” → `/goals`). All three **CC** Terry + Richard via **`getWelcomeEmailCcRecipients()`** / env **`WELCOME_EMAIL_CC`**; those sends use **`skipStaffBcc: true`**. **`README.md`** documents `WELCOME_EMAIL_CC`.
+- **Signup checkboxes:** Life Guidance + therapist/healer/coach are on **MemberOnboarding step 1 “Personal Details”** (`/signup/step-1-subscription-selection` — “Start Your Journey” entry). Same flags on **`/member/profile`**.
+- **Next when going live:** Set **`RESEND_API_KEY`**, verified **`EMAIL_FROM`**, **`NEXT_PUBLIC_APP_URL`** on Vercel. Optional: **`WELCOME_EMAIL_CC`**, **`EMAIL_STAFF_BCC`**. If “gifts” should not be `/goals`, add a dedicated URL (env) and wire the therapist email button.
+
+---
+
 ## Summary of changes (for the day)
 
 **Use this section to keep up to date and write your daily notes.**
