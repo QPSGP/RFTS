@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getSubscriptionStripeIdsForUser, getUserByEmail } from "@/lib/db";
+import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
 import { getStripe } from "@/lib/stripe";
+import { getUserSessionEmail } from "@/lib/user-auth";
 
 const schema = z.object({
   priceId: z.string().min(4),
@@ -26,6 +29,45 @@ export async function POST(request: Request) {
   }
   const { priceId, trialDays, successPath, cancelPath } = parsed.data;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+  const memberEmail = await getUserSessionEmail();
+  if (memberEmail) {
+    const user = await getUserByEmail(memberEmail);
+    if (user) {
+      const stripeRow = await getSubscriptionStripeIdsForUser(user.id);
+      const hasExistingStripe =
+        !!(stripeRow?.stripeSubscriptionId?.trim() || stripeRow?.stripeCustomerId?.trim());
+      if (hasExistingStripe) {
+        try {
+          const portalUrl = await createBillingPortalSessionUrl(stripe, {
+            stripeCustomerId: stripeRow?.stripeCustomerId,
+            stripeSubscriptionId: stripeRow?.stripeSubscriptionId,
+            baseUrl,
+            returnPath: successPath || "/play-options"
+          });
+          if (portalUrl) {
+            return NextResponse.json({ url: portalUrl, billingPortal: true });
+          }
+        } catch (e) {
+          console.error("[checkout] Billing portal:", e);
+          return NextResponse.json(
+            {
+              error:
+                "Could not open billing management. Try again or contact support if you already have a subscription."
+            },
+            { status: 503 }
+          );
+        }
+        return NextResponse.json(
+          {
+            error:
+              "This account already has Stripe billing on file. Use Manage billing from your console instead of starting a second checkout."
+          },
+          { status: 409 }
+        );
+      }
+    }
+  }
 
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",

@@ -4,7 +4,8 @@ import { getStripe } from "@/lib/stripe";
 import {
   ensureSubscription,
   getMemberProfileByUserId,
-  getUserById
+  getUserById,
+  setSubscriptionStripeIdsForUser
 } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { getSubscriptionActiveEmailContent } from "@/lib/email-templates";
@@ -41,12 +42,31 @@ export async function POST(request: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
     const userId = session.client_reference_id;
     const tier = session.metadata?.tier as string | undefined;
+    const subscriptionId =
+      typeof session.subscription === "string"
+        ? session.subscription
+        : session.subscription && typeof session.subscription === "object"
+          ? session.subscription.id
+          : null;
+    const customerId =
+      typeof session.customer === "string"
+        ? session.customer
+        : session.customer && typeof session.customer === "object" && "id" in session.customer
+          ? (session.customer as Stripe.Customer).id
+          : null;
     if (userId && (tier === "platinum" || tier === "platinum_managed")) {
       await ensureSubscription(
         userId,
         tier === "platinum_managed" ? "platinum_managed" : "platinum",
         "active"
       );
+      if (subscriptionId && customerId) {
+        try {
+          await setSubscriptionStripeIdsForUser(userId, customerId, subscriptionId);
+        } catch (e) {
+          console.error("[stripe webhook] Failed to store Stripe ids:", e);
+        }
+      }
       try {
         const user = await getUserById(userId);
         if (user?.email) {

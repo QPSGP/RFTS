@@ -166,6 +166,43 @@ export const ensureSubscription = async (
   return rows[0];
 };
 
+export type SubscriptionStripeIds = {
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
+};
+
+export const getSubscriptionStripeIdsForUser = async (
+  userId: string
+): Promise<SubscriptionStripeIds | null> => {
+  const { rows } = await sql<{ stripe_customer_id: string | null; stripe_subscription_id: string | null }>`
+    SELECT stripe_customer_id, stripe_subscription_id
+    FROM subscriptions
+    WHERE user_id = ${userId}
+    LIMIT 1
+  `;
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    stripeCustomerId: row.stripe_customer_id,
+    stripeSubscriptionId: row.stripe_subscription_id
+  };
+};
+
+/** Persist Stripe customer + subscription after Checkout completes (webhook). */
+export const setSubscriptionStripeIdsForUser = async (
+  userId: string,
+  stripeCustomerId: string,
+  stripeSubscriptionId: string
+) => {
+  await sql`
+    UPDATE subscriptions
+    SET
+      stripe_customer_id = ${stripeCustomerId},
+      stripe_subscription_id = ${stripeSubscriptionId}
+    WHERE user_id = ${userId}
+  `;
+};
+
 export const setUserGoals = async (userId: string, goalIds: string[]) => {
   const goalArray = toPgArray(goalIds);
   const { rows } = await sql<DbUser>`

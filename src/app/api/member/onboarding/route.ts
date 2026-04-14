@@ -9,6 +9,7 @@ import {
   createUser,
   ensureSubscription,
   getPlaybackSettings,
+  getSubscriptionStripeIdsForUser,
   getUserByEmail,
   listLibrary,
   listSubscriptionPlans,
@@ -16,6 +17,7 @@ import {
   setUserPlaysPerNight,
   upsertMemberProfile
 } from "@/lib/db";
+import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
 import { getWelcomeEmailCcRecipients, sendEmail } from "@/lib/email";
 import {
   getWelcomeEmailContent,
@@ -196,6 +198,41 @@ export async function POST(request: Request) {
 
   try {
     const stripe = getStripe();
+    const stripeRow = await getSubscriptionStripeIdsForUser(user.id);
+    const hasExistingStripe =
+      !!(stripeRow?.stripeSubscriptionId?.trim() || stripeRow?.stripeCustomerId?.trim());
+    if (hasExistingStripe) {
+      try {
+        const portalUrl = await createBillingPortalSessionUrl(stripe, {
+          stripeCustomerId: stripeRow?.stripeCustomerId,
+          stripeSubscriptionId: stripeRow?.stripeSubscriptionId,
+          baseUrl,
+          returnPath: "/play-options"
+        });
+        if (portalUrl) {
+          const res = NextResponse.json({ url: portalUrl, billingPortal: true });
+          setUserSessionCookieOnResponse(res, token);
+          return res;
+        }
+      } catch (portalErr) {
+        console.error("[onboarding] Billing portal:", portalErr);
+        return NextResponse.json(
+          {
+            error:
+              "We could not open your billing page. If you already pay through Stripe, use the billing link from your email or contact support."
+          },
+          { status: 503 }
+        );
+      }
+      return NextResponse.json(
+        {
+          error:
+            "This account already has Stripe billing on file. Please use Manage billing in your profile or contact support so we do not create a duplicate subscription."
+        },
+        { status: 409 }
+      );
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       client_reference_id: user.id,

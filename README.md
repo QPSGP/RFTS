@@ -25,6 +25,7 @@ to the configured `NEXT_PUBLIC_TREASURY_ADDRESS`.
 ## Fiat Payments (Stripe)
 
 - Set `STRIPE_SECRET_KEY` and plan price IDs.
+- **Stripe Customer Billing Portal:** In [Stripe Dashboard → Settings → Billing → Customer portal](https://dashboard.stripe.com/settings/billing/portal), enable and save the portal. Logged-in members who already have `stripe_customer_id` / `stripe_subscription_id` (after a completed checkout) are sent to the portal instead of starting a second Checkout from `/api/checkout` or member onboarding when those IDs are present.
 - Set `STRIPE_MODE=demo` for test keys (guardrail against live keys).
 - Set `NEXT_PUBLIC_STRIPE_MODE=demo` to show a demo banner in the UI.
 - Plans support trials via `NEXT_PUBLIC_STRIPE_TRIAL_*`.
