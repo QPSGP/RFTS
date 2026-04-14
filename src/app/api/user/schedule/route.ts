@@ -7,7 +7,8 @@ import { getMemberAudioOrder, getMemberProfileByUserId, getPlaybackSettings, get
 import { buildSchedulePreview } from "@/lib/scheduler";
 
 const schema = z.object({
-  nights: z.number().int().min(1).max(30).optional()
+  /** Preview length; server extends this when the member has passed more nights than requested (see currentNight). */
+  nights: z.number().int().min(1).max(366).optional()
 });
 
 const dataDir = path.join(process.cwd(), "data");
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const nights = parsed.data.nights ?? 7;
+  const requestedNights = parsed.data.nights ?? 7;
   const [library, settings, interestRecords, memberProfile] = await Promise.all([
     listLibrary(),
     getPlaybackSettings(),
@@ -103,19 +104,7 @@ export async function GET(request: Request) {
     cgmrForMember ??
     (assignedAudioIds?.length ? null : anyAllowListMatch);
 
-  const schedule = buildSchedulePreview({
-    interests: profile.goalIds || [],
-    library: filteredLibrary,
-    interestRecords,
-    settings,
-    tier: profile.subscriptionTier || "platinum",
-    nights,
-    playsPerNight: profile.playsPerNight === 1 ? 1 : 2,
-    userAssignedTrack: userAssignedTrack ?? undefined,
-    assignedAudioIds
-  });
-
-  // Advance "tonight" by day: use schedule_started_at (UTC) so night 1 = start date, night 2 = next day, etc.
+  // Advance "tonight" by calendar day since schedule_started_at (night 1 = start date).
   let currentNight = 1;
   const startedAtRaw = memberProfile?.scheduleStartedAt;
   if (startedAtRaw) {
@@ -127,9 +116,25 @@ export async function GET(request: Request) {
       const todayDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
       const diffMs = todayDate.getTime() - startedDate.getTime();
       const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-      currentNight = Math.max(1, Math.min(nights, days + 1));
+      // Do not cap by preview length — clients often pass ?nights=21 which used to freeze "tonight" at 21 forever.
+      currentNight = Math.max(1, days + 1);
     }
   }
+
+  const maxBuildNights = 366;
+  const nights = Math.min(maxBuildNights, Math.max(requestedNights, currentNight));
+
+  const schedule = buildSchedulePreview({
+    interests: profile.goalIds || [],
+    library: filteredLibrary,
+    interestRecords,
+    settings,
+    tier: profile.subscriptionTier || "platinum",
+    nights,
+    playsPerNight: profile.playsPerNight === 1 ? 1 : 2,
+    userAssignedTrack: userAssignedTrack ?? undefined,
+    assignedAudioIds
+  });
   if (currentNight === 1 && !startedAtRaw) {
     await setScheduleStartedToToday(profile.id);
   }
