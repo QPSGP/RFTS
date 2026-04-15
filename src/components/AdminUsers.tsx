@@ -103,13 +103,43 @@ function formatActivityAction(action: string): string {
       return "Updated sessions per night";
     case "played_audio":
       return "Played audio";
+    case "admin_schedule_adjusted":
+      return "Admin: schedule progress";
     default:
       return action.replace(/_/g, " ");
   }
 }
 
+/** Track / recording title for activity table (from `played_audio` details). */
+function formatPlayedAudioTitle(action: string, details: string | null): string {
+  if (action !== "played_audio" || !details) return "";
+  const d = details.trim();
+  const lib = /^Library — (.+)$/.exec(d);
+  if (lib) return lib[1].trim();
+  if (/^Play Options — Preparation audio$/i.test(d)) return "Preparation audio";
+  const po = /^Play Options — (First|Second):\s*(.+)$/i.exec(d);
+  if (po) return po[2].trim();
+  return d;
+}
+
+/** Where they played (library vs Play Options, first/second/prep). */
+function formatPlayedAudioContext(action: string, details: string | null): string {
+  if (action !== "played_audio" || !details) return "";
+  const d = details.trim();
+  if (d.startsWith("Library —")) return "Audio library";
+  if (/^Play Options — Preparation audio$/i.test(d)) return "Play Options · preparation";
+  const po = /^Play Options — (First|Second):/i.exec(d);
+  if (po) return `Play Options · ${po[1].toLowerCase()} recording`;
+  if (d.startsWith("Play Options —")) return "Play Options";
+  return "";
+}
+
 function formatActivityDetails(action: string, details: string | null): string {
   if (!details) return "—";
+  if (action === "played_audio") {
+    const ctx = formatPlayedAudioContext(action, details);
+    return ctx || "—";
+  }
   if (action === "login" && details.startsWith("to:")) {
     return `First destination: ${details.slice(3)}`;
   }
@@ -159,6 +189,19 @@ export default function AdminUsers() {
   const [memberActivity, setMemberActivity] = useState<Record<string, MemberActivityRow[]>>({});
   const [memberActivityLoading, setMemberActivityLoading] = useState<Record<string, boolean>>({});
   const [memberActivityError, setMemberActivityError] = useState<Record<string, string | null>>({});
+  const [memberScheduleProgress, setMemberScheduleProgress] = useState<
+    Record<
+      string,
+      | {
+          completedScheduleNights: number;
+          scheduleStartedAt: string | null;
+          currentNight: number;
+        }
+      | undefined
+    >
+  >({});
+  const [memberScheduleDraft, setMemberScheduleDraft] = useState<Record<string, string>>({});
+  const [memberScheduleSaving, setMemberScheduleSaving] = useState<Record<string, boolean>>({});
   /** Non-fatal: interests/library failed but member list may still have loaded */
   const [dataLoadNotice, setDataLoadNotice] = useState<string | null>(null);
 
@@ -439,8 +482,55 @@ export default function AdminUsers() {
         ...prev,
         [email]: Array.isArray(data.activityLog) ? data.activityLog : []
       }));
+      const sp = data.scheduleProgress;
+      if (
+        sp &&
+        typeof sp.completedScheduleNights === "number" &&
+        typeof sp.currentNight === "number"
+      ) {
+        setMemberScheduleProgress((prev) => ({
+          ...prev,
+          [email]: {
+            completedScheduleNights: sp.completedScheduleNights,
+            scheduleStartedAt:
+              typeof sp.scheduleStartedAt === "string" || sp.scheduleStartedAt === null
+                ? sp.scheduleStartedAt
+                : sp.scheduleStartedAt != null
+                  ? String(sp.scheduleStartedAt).slice(0, 10)
+                  : null,
+            currentNight: sp.currentNight
+          }
+        }));
+        setMemberScheduleDraft((prev) => ({
+          ...prev,
+          [email]: String(sp.completedScheduleNights)
+        }));
+      }
     } finally {
       setMemberActivityLoading((prev) => ({ ...prev, [email]: false }));
+    }
+  };
+
+  const saveMemberScheduleProgress = async (email: string, completedScheduleNights: number) => {
+    const clamped = Math.max(0, Math.min(366, Math.floor(completedScheduleNights)));
+    setMemberScheduleSaving((prev) => ({ ...prev, [email]: true }));
+    setStatus(null);
+    try {
+      const res = await fetch("/api/admin/member-schedule-progress", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, completedScheduleNights: clamped })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStatus(typeof data?.error === "string" ? data.error : "Could not update schedule progress.");
+        return;
+      }
+      setStatus(`Schedule updated for ${email}: completed nights = ${clamped} (tonight = night ${Math.min(366, Math.max(1, clamped + 1))}).`);
+      await loadMemberActivity(email);
+    } finally {
+      setMemberScheduleSaving((prev) => ({ ...prev, [email]: false }));
     }
   };
 
@@ -1054,8 +1144,109 @@ export default function AdminUsers() {
                           </div>
                           <p style={{ color: "#64748b", fontSize: 13, marginTop: 0, marginBottom: 12 }}>
                             Sign-ins (with first page they head to), sign-outs, page views, played audio (library
-                            and Play Options), goal and console updates, and related actions.
+                            and Play Options — each row lists the recording name), goal and console updates, and
+                            admin schedule changes.
                           </p>
+                          {memberScheduleProgress[user.email] != null && (
+                            <div
+                              style={{
+                                marginBottom: 16,
+                                padding: 12,
+                                background: "#f8fafc",
+                                borderRadius: 8,
+                                border: "1px solid #e2e8f0"
+                              }}
+                            >
+                              <h5 style={{ margin: "0 0 8px", fontSize: 14 }}>Listening schedule (manual)</h5>
+                              <p style={{ margin: "0 0 10px", fontSize: 13, color: "#475569" }}>
+                                <strong>Completed nights:</strong>{" "}
+                                {memberScheduleProgress[user.email]!.completedScheduleNights} ·{" "}
+                                <strong>Tonight (next night):</strong> night{" "}
+                                {memberScheduleProgress[user.email]!.currentNight}
+                                {memberScheduleProgress[user.email]!.scheduleStartedAt ? (
+                                  <>
+                                    {" "}
+                                    · <strong>Rotation anchor (UTC):</strong>{" "}
+                                    {String(memberScheduleProgress[user.email]!.scheduleStartedAt).slice(0, 10)}
+                                  </>
+                                ) : null}
+                              </p>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  gap: 8,
+                                  alignItems: "center"
+                                }}
+                              >
+                                <button
+                                  type="button"
+                                  className="button button-secondary"
+                                  style={{ fontSize: 13, padding: "6px 12px" }}
+                                  disabled={!!memberScheduleSaving[user.email]}
+                                  onClick={() =>
+                                    void saveMemberScheduleProgress(
+                                      user.email,
+                                      memberScheduleProgress[user.email]!.completedScheduleNights - 1
+                                    )
+                                  }
+                                >
+                                  −1 night
+                                </button>
+                                <button
+                                  type="button"
+                                  className="button button-secondary"
+                                  style={{ fontSize: 13, padding: "6px 12px" }}
+                                  disabled={!!memberScheduleSaving[user.email]}
+                                  onClick={() =>
+                                    void saveMemberScheduleProgress(
+                                      user.email,
+                                      memberScheduleProgress[user.email]!.completedScheduleNights + 1
+                                    )
+                                  }
+                                >
+                                  +1 night
+                                </button>
+                                <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+                                  Set completed nights (0–366)
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    max={366}
+                                    style={{ width: 72, padding: 6, borderRadius: 6, border: "1px solid #cbd5e1" }}
+                                    value={memberScheduleDraft[user.email] ?? ""}
+                                    onChange={(e) =>
+                                      setMemberScheduleDraft((prev) => ({
+                                        ...prev,
+                                        [user.email]: e.target.value
+                                      }))
+                                    }
+                                  />
+                                </label>
+                                <button
+                                  type="button"
+                                  className="button"
+                                  style={{ fontSize: 13, padding: "6px 12px" }}
+                                  disabled={!!memberScheduleSaving[user.email]}
+                                  onClick={() => {
+                                    const raw = memberScheduleDraft[user.email] ?? "0";
+                                    const n = parseInt(raw, 10);
+                                    if (Number.isNaN(n)) {
+                                      setStatus("Enter a number between 0 and 366 for completed nights.");
+                                      return;
+                                    }
+                                    void saveMemberScheduleProgress(user.email, n);
+                                  }}
+                                >
+                                  {memberScheduleSaving[user.email] ? "Saving…" : "Apply"}
+                                </button>
+                              </div>
+                              <p style={{ margin: "10px 0 0", fontSize: 12, color: "#64748b" }}>
+                                This sets how many schedule nights they have fully finished. It does not change
+                                their goals or rotation start date. Use for support / corrections.
+                              </p>
+                            </div>
+                          )}
                           {(memberActivity[user.email] || []).length > 0 ? (
                             <div style={{ overflowX: "auto", marginBottom: 16 }}>
                               <table
@@ -1069,6 +1260,7 @@ export default function AdminUsers() {
                                   <tr style={{ borderBottom: "1px solid #e5e7eb", textAlign: "left" }}>
                                     <th style={{ padding: "8px 6px", color: "#64748b" }}>When</th>
                                     <th style={{ padding: "8px 6px", color: "#64748b" }}>What</th>
+                                    <th style={{ padding: "8px 6px", color: "#64748b" }}>Audio</th>
                                     <th style={{ padding: "8px 6px", color: "#64748b" }}>Detail</th>
                                   </tr>
                                 </thead>
@@ -1084,9 +1276,22 @@ export default function AdminUsers() {
                                       <td
                                         style={{
                                           padding: "8px 6px",
+                                          color: "#111827",
+                                          wordBreak: "break-word",
+                                          maxWidth: 220,
+                                          fontWeight: row.action === "played_audio" ? 500 : 400
+                                        }}
+                                      >
+                                        {row.action === "played_audio"
+                                          ? formatPlayedAudioTitle(row.action, row.details) || "—"
+                                          : "—"}
+                                      </td>
+                                      <td
+                                        style={{
+                                          padding: "8px 6px",
                                           color: "#4b5563",
                                           wordBreak: "break-word",
-                                          maxWidth: 280
+                                          maxWidth: 260
                                         }}
                                       >
                                         {formatActivityDetails(row.action, row.details)}

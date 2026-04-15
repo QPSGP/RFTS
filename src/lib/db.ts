@@ -490,6 +490,31 @@ export const recordScheduleNightCompleted = async (
   }
 };
 
+/** Admin: set completed schedule nights directly (0–366). Does not change schedule_started_at. */
+export const adminSetMemberCompletedScheduleNights = async (
+  userId: string,
+  completedScheduleNights: number
+): Promise<{ ok: true; completedScheduleNights: number } | { ok: false; error: string }> => {
+  const n = Math.floor(completedScheduleNights);
+  if (!Number.isFinite(n) || n < 0 || n > 366) {
+    return { ok: false, error: "Completed nights must be between 0 and 366." };
+  }
+  try {
+    const { rowCount } = await sql`
+      UPDATE member_profiles
+      SET completed_schedule_nights = ${n},
+          updated_at = now()
+      WHERE user_id = ${userId}
+    `;
+    if (!rowCount) {
+      return { ok: false, error: "Member profile not found." };
+    }
+    return { ok: true, completedScheduleNights: n };
+  } catch {
+    return { ok: false, error: "Could not update schedule progress." };
+  }
+};
+
 export const getUserProfile = async (email: string) => {
   const { rows } = await sql<UserProfile>`
     SELECT

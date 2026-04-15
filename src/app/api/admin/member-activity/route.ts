@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { isAdminSession } from "@/lib/auth";
-import { getMemberActivityLog, getMemberActivityLogForUser, getUserByEmail } from "@/lib/db";
+import {
+  getMemberActivityLog,
+  getMemberActivityLogForUser,
+  getMemberProfileByUserId,
+  getUserByEmail
+} from "@/lib/db";
 
 export async function GET(request: Request) {
   if (!(await isAdminSession())) {
@@ -13,7 +18,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Member not found." }, { status: 404 });
     }
     const activityLog = await getMemberActivityLogForUser(user.id, 150);
-    return NextResponse.json({ activityLog });
+    const mp = await getMemberProfileByUserId(user.id);
+    const completed = Math.max(0, Math.min(366, mp?.completedScheduleNights ?? 0));
+    const scheduleProgress = {
+      completedScheduleNights: completed,
+      scheduleStartedAt: mp?.scheduleStartedAt ?? null,
+      currentNight: Math.min(366, Math.max(1, completed + 1))
+    };
+    return NextResponse.json({ activityLog, scheduleProgress });
   }
   const activityLog = await getMemberActivityLog(100);
   return NextResponse.json({ activityLog });
