@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   }
   const sessionToken = createUserSessionToken(email);
   const response = NextResponse.json({ ok: true });
-  response.headers.set("Set-Cookie", buildMemberSessionSetCookieHeader(sessionToken, request));
+  response.headers.set("Set-Cookie", buildMemberSessionSetCookieHeader(sessionToken));
   response.headers.set("Cache-Control", "no-store");
   return response;
 }

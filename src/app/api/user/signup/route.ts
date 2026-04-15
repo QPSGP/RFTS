@@ -24,6 +24,6 @@ export async function POST(request: Request) {
   await ensureSubscription(user.id, "platinum", "inactive");
   const token = createUserSessionToken(user.email);
   const response = NextResponse.json({ ok: true });
-  setUserSessionCookieOnResponse(response, token, request);
+  setUserSessionCookieOnResponse(response, token);
   return response;
 }

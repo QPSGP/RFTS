@@ -20,7 +20,7 @@ export default function UserAuth() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const logout = async () => {
-    await fetch("/api/user/logout", { method: "POST", credentials: "include" });
+    await fetch("/api/user/logout", { method: "POST" });
     setStatus("Logged out.");
     setStatusType("success");
     setLoggedIn(false);
@@ -48,7 +48,6 @@ export default function UserAuth() {
       const response = await fetch("/api/user/login", {
         method: "POST",
         credentials: "include",
-        redirect: "manual",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, next: nextForLog })
       });

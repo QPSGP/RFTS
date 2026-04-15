@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { apiError } from "@/lib/api-utils";
-import { getUserByEmail, normalizeMemberEmail, recordMemberActivity } from "@/lib/db";
+import { getUserByEmail, recordMemberActivity } from "@/lib/db";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import { createUserSessionToken, setUserSessionCookieOnResponse } from "@/lib/user-auth";
 
@@ -40,9 +40,7 @@ async function doPost(request: Request) {
   let loginDetails: string | null = null;
 
   const contentType = request.headers.get("content-type") || "";
-  const isFormLogin = contentType.includes("application/x-www-form-urlencoded");
-
-  if (isFormLogin) {
+  if (contentType.includes("application/x-www-form-urlencoded")) {
     const formData = await request.formData();
     const e = formData.get("email");
     const p = formData.get("password");
@@ -72,25 +70,17 @@ async function doPost(request: Request) {
 
   const user = await getUserByEmail(email);
   if (!user) {
-    if (isFormLogin) {
-      return NextResponse.redirect(loginErrorUrl, 302);
-    }
-    return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
+    return NextResponse.redirect(loginErrorUrl, 302);
   }
   const isValid = await bcrypt.compare(password, user.password_hash);
   if (!isValid) {
-    if (isFormLogin) {
-      return NextResponse.redirect(loginErrorUrl, 302);
-    }
-    return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
+    return NextResponse.redirect(loginErrorUrl, 302);
   }
 
-  const token = createUserSessionToken(normalizeMemberEmail(user.email));
-  void recordMemberActivity(user.id, "login", loginDetails).catch((err) => {
-    console.error("[POST /api/user/login] recordMemberActivity:", err);
-  });
+  const token = createUserSessionToken(user.email);
+  await recordMemberActivity(user.id, "login", loginDetails);
 
-  if (isFormLogin) {
+  if (contentType.includes("application/x-www-form-urlencoded")) {
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=${successUrl}"></head><body>Signed in. Taking you to Play Options…</body></html>`;
     const response = new NextResponse(html, {
       status: 200,
@@ -99,12 +89,12 @@ async function doPost(request: Request) {
         "Cache-Control": "no-store, no-cache, must-revalidate"
       }
     });
-    setUserSessionCookieOnResponse(response, token, request);
+    setUserSessionCookieOnResponse(response, token);
     return response;
   }
 
   const response = NextResponse.json({ ok: true });
-  setUserSessionCookieOnResponse(response, token, request);
+  setUserSessionCookieOnResponse(response, token);
   response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
   return response;
 }
