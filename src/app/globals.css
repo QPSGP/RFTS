@@ -971,3 +971,8 @@ button.section-title {
     grid-template-columns: 1fr;
   }
 }
+
+/* Member login: hide “Members Console” in Login menu (body class from MemberLoginShell). */
+body.member-login .site-header a[data-rfts="member-console"] {
+  display: none !important;
+}

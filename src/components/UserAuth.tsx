@@ -9,12 +9,6 @@ const inputStyle = {
   width: "100%"
 };
 
-function firstQueryString(v: string | string[] | undefined): string | undefined {
-  if (typeof v === "string") return v;
-  if (Array.isArray(v) && typeof v[0] === "string") return v[0];
-  return undefined;
-}
-
 export type UserAuthProps = {
   /** From server `searchParams` — avoids useSearchParams (blank page / stuck Suspense on login). */
   initialErrorInvalid?: boolean;
