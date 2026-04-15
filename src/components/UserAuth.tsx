@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 const inputStyle = {
@@ -10,7 +10,7 @@ const inputStyle = {
   width: "100%"
 };
 
-export default function UserAuth() {
+function UserAuthForm() {
   const searchParams = useSearchParams();
   const errorFromUrl = searchParams.get("error") === "invalid";
   const [status, setStatus] = useState<string | null>(errorFromUrl ? "Invalid credentials. Try again." : null);
@@ -20,7 +20,7 @@ export default function UserAuth() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const logout = async () => {
-    await fetch("/api/user/logout", { method: "POST" });
+    await fetch("/api/user/logout", { method: "POST", credentials: "include" });
     setStatus("Logged out.");
     setStatusType("success");
     setLoggedIn(false);
@@ -48,12 +48,23 @@ export default function UserAuth() {
       const response = await fetch("/api/user/login", {
         method: "POST",
         credentials: "include",
+        redirect: "manual",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, next: nextForLog })
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        setStatus(data?.error || "Invalid credentials. Try again.");
+        setStatus(
+          data?.error ||
+            (response.status === 429
+              ? "Too many attempts. Wait a minute and try again."
+              : "Invalid credentials. Try again.")
+        );
+        setStatusType("error");
+        return;
+      }
+      if (!data?.ok) {
+        setStatus("Sign-in did not complete. Please try again.");
         setStatusType("error");
         return;
       }
@@ -61,7 +72,7 @@ export default function UserAuth() {
       const safeNext = nextUrl && nextUrl.startsWith("/") && !nextUrl.startsWith("//") ? nextUrl : "/play-options";
       setStatus("Signed in. Taking you there…");
       setStatusType("success");
-      window.location.href = safeNext;
+      window.location.href = new URL(safeNext, window.location.origin).href;
       return;
     } catch {
       setStatus("Something went wrong. Please try again.");
@@ -185,5 +196,20 @@ export default function UserAuth() {
         </p>
       )}
     </div>
+  );
+}
+
+export default function UserAuth() {
+  return (
+    <Suspense
+      fallback={
+        <div className="card" style={{ maxWidth: 520, margin: "0 auto" }}>
+          <h2 style={{ marginTop: 0 }}>Member Login</h2>
+          <p style={{ color: "#64748b", marginBottom: 0 }}>Loading…</p>
+        </div>
+      }
+    >
+      <UserAuthForm />
+    </Suspense>
   );
 }

@@ -52,22 +52,47 @@ export function verifyOneTimeSessionToken(tokenEnc: string): string | null {
   return email;
 }
 
-const sessionCookieOptions = () => ({
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  path: "/",
-  maxAge: SESSION_MAX_AGE_SECONDS
-});
+type CookieRequestHint = Pick<Request, "headers" | "url"> | null | undefined;
+
+function memberCookieSecure(request?: CookieRequestHint): boolean {
+  if (process.env.COOKIE_INSECURE === "1" || process.env.COOKIE_SECURE === "0") return false;
+  if (process.env.NODE_ENV !== "production") return false;
+  if (request) {
+    const xf = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+    if (xf === "http") return false;
+    try {
+      if (new URL(request.url).protocol === "http:") return false;
+    } catch {
+      /* ignore */
+    }
+  }
+  return true;
+}
+
+function memberSessionCookieOptions(request?: CookieRequestHint) {
+  const domain = process.env.MEMBER_SESSION_COOKIE_DOMAIN?.trim();
+  return {
+    httpOnly: true,
+    secure: memberCookieSecure(request),
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: SESSION_MAX_AGE_SECONDS,
+    ...(domain ? { domain } : {})
+  };
+}
 
 /** Set session cookie on a response (use in route handlers so Set-Cookie is on the returned response). */
-export function setUserSessionCookieOnResponse(response: NextResponse, token: string): void {
-  response.cookies.set(sessionCookie, token, sessionCookieOptions());
+export function setUserSessionCookieOnResponse(
+  response: NextResponse,
+  token: string,
+  request?: CookieRequestHint
+): void {
+  response.cookies.set(sessionCookie, token, memberSessionCookieOptions(request));
 }
 
 /** Build Set-Cookie header value (value in quotes so characters like | don't break parsing). */
-export function buildMemberSessionSetCookieHeader(token: string): string {
-  const opts = sessionCookieOptions();
+export function buildMemberSessionSetCookieHeader(token: string, request?: CookieRequestHint): string {
+  const opts = memberSessionCookieOptions(request);
   const value = `"${token.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
   const parts = [
     `${sessionCookie}=${value}`,
@@ -76,18 +101,19 @@ export function buildMemberSessionSetCookieHeader(token: string): string {
     `HttpOnly`,
     `SameSite=${opts.sameSite}`
   ];
+  if ("domain" in opts && opts.domain) parts.push(`Domain=${opts.domain}`);
   if (opts.secure) parts.push("Secure");
   return parts.join("; ");
 }
 
-export async function setUserSession(token: string): Promise<void> {
+export async function setUserSession(token: string, request?: CookieRequestHint): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.set(sessionCookie, token, sessionCookieOptions());
+  cookieStore.set(sessionCookie, token, memberSessionCookieOptions(request));
 }
 
-export async function clearUserSession(): Promise<void> {
+export async function clearUserSession(request?: CookieRequestHint): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.set(sessionCookie, "", { ...sessionCookieOptions(), maxAge: 0 });
+  cookieStore.set(sessionCookie, "", { ...memberSessionCookieOptions(request), maxAge: 0 });
 }
 
 export async function getUserSessionEmail(): Promise<string | null> {

@@ -192,7 +192,7 @@ export async function POST(request: Request) {
 
   if (isDemoSkip) {
     const res = NextResponse.json({ url: "/play-options" });
-    setUserSessionCookieOnResponse(res, token);
+    setUserSessionCookieOnResponse(res, token, request);
     return res;
   }
 
@@ -211,7 +211,7 @@ export async function POST(request: Request) {
         });
         if (portalUrl) {
           const res = NextResponse.json({ url: portalUrl, billingPortal: true });
-          setUserSessionCookieOnResponse(res, token);
+          setUserSessionCookieOnResponse(res, token, request);
           return res;
         }
       } catch (portalErr) {
@@ -250,7 +250,7 @@ export async function POST(request: Request) {
   } catch (err) {
     // Member already saved; redirect to portal so they can complete payment later
     const res = NextResponse.json({ url: "/play-options" });
-    setUserSessionCookieOnResponse(res, token);
+    setUserSessionCookieOnResponse(res, token, request);
     return res;
   }
 }
