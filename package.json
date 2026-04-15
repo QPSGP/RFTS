@@ -12,6 +12,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:login": "node scripts/test-login-flow.js http://localhost:3000",
+    "test:login:json": "node scripts/test-member-login-json.js http://localhost:3000",
     "deploy": "vercel --prod",
     "push-deploy": "node scripts/push-and-deploy.js",
     "covers:review": "node scripts/generate-covers-review.js"

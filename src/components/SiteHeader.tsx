@@ -1,6 +1,10 @@
+import { headers } from "next/headers";
 import { getSessionConsoleType } from "@/lib/auth";
 
 export default async function SiteHeader() {
+  const pathname = (await headers()).get("x-rfts-pathname") ?? "";
+  const onMemberLoginPage = pathname === "/member/login";
+
   const consoleType = await getSessionConsoleType();
   const consoleLink =
     consoleType === "admin"
@@ -8,7 +12,11 @@ export default async function SiteHeader() {
       : consoleType === "moderator"
         ? { label: "Facilitators Console", href: "/moderator/console" }
         : null;
-  const memberConsoleLink = consoleType === "member" ? { label: "Members Console", href: "/play-options" } : null;
+  const memberConsoleLink =
+    consoleType === "member" && !onMemberLoginPage
+      ? { label: "Members Console", href: "/play-options" }
+      : null;
+  const showMemberReportIssue = consoleType === "member";
   return (
     <header id="page-top" className="site-header">
       <div className="site-header-inner">
@@ -24,7 +32,7 @@ export default async function SiteHeader() {
                 {consoleType === "admin" && <a href="/facilitator">Facilitators</a>}
                 {consoleType === "admin" && <a href="/affiliates">Affiliates</a>}
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
-                {memberConsoleLink && <a href="/member/report-issue">Report an issue</a>}
+                {showMemberReportIssue && <a href="/member/report-issue">Report an issue</a>}
               </div>
             </details>
             <a href="/" className="brand">
@@ -46,7 +54,7 @@ export default async function SiteHeader() {
             {consoleType === "admin" && <a href="/facilitator">Facilitators</a>}
             {consoleType === "admin" && <a href="/affiliates">Affiliates</a>}
             {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
-            {memberConsoleLink && <a href="/member/report-issue">Report an issue</a>}
+            {showMemberReportIssue && <a href="/member/report-issue">Report an issue</a>}
           </nav>
           <div className="header-actions">
             {consoleType !== "member" && (
@@ -62,12 +70,8 @@ export default async function SiteHeader() {
                 <a href="/moderator/console">Facilitators</a>
                 <a href="/login">Administrator</a>
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
-                {memberConsoleLink && (
-                  <a href={memberConsoleLink.href} data-rfts="member-console">
-                    {memberConsoleLink.label}
-                  </a>
-                )}
-                {memberConsoleLink && <a href="/member/report-issue">Report an issue</a>}
+                {memberConsoleLink && <a href={memberConsoleLink.href}>{memberConsoleLink.label}</a>}
+                {showMemberReportIssue && <a href="/member/report-issue">Report an issue</a>}
               </div>
             </details>
           </div>

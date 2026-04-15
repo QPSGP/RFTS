@@ -51,7 +51,7 @@ async function doPost(request: Request) {
     if (p.length < 6) {
       return NextResponse.redirect(loginErrorUrl, 302);
     }
-    email = e.trim();
+    email = normalizeMemberEmail(e.trim());
     password = p;
   } else {
     const body = await request.json().catch(() => ({}));
@@ -63,7 +63,7 @@ async function doPost(request: Request) {
     if (p.length < 6) {
       return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
     }
-    email = e.trim();
+    email = normalizeMemberEmail(e.trim());
     password = p;
     const nextPath = safeMemberNextPath(body?.next);
     loginDetails = nextPath ? `to:${nextPath}` : null;

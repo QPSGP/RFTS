@@ -1,6 +1,5 @@
 import UserAuth from "@/components/UserAuth";
 import SiteFooter from "@/components/SiteFooter";
-import MemberLoginShell from "./MemberLoginShell";
 
 function firstQuery(v: string | string[] | undefined): string | undefined {
   if (typeof v === "string") return v;
@@ -20,19 +19,17 @@ export default function MemberLoginPage({ searchParams = {} }: MemberLoginPagePr
     nextRaw && nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : undefined;
 
   return (
-    <MemberLoginShell>
-      <main>
-        <section className="hero section">
-          <span className="pill">Member Access</span>
-          <h1>Log in to start your nightly sessions</h1>
-          <p>
-            Sign in to access your personalized sessions, goal settings, and subscription
-            status.
-          </p>
-        </section>
-        <UserAuth initialErrorInvalid={initialErrorInvalid} initialNextPath={initialNextPath} />
-        <SiteFooter showCta={false} />
-      </main>
-    </MemberLoginShell>
+    <main>
+      <section className="hero section">
+        <span className="pill">Member Access</span>
+        <h1>Log in to start your nightly sessions</h1>
+        <p>
+          Sign in to access your personalized sessions, goal settings, and subscription
+          status.
+        </p>
+      </section>
+      <UserAuth initialErrorInvalid={initialErrorInvalid} initialNextPath={initialNextPath} />
+      <SiteFooter showCta={false} />
+    </main>
   );
 }
