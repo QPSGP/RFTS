@@ -6,6 +6,7 @@ import { getBaseUrl } from "./email";
  * - getWelcomeEmailContent — after full signup / onboarding (member + CC to staff)
  * - getSubscriptionActiveEmailContent — Stripe checkout completed (subscription active)
  * - getReportIssueConfirmationContent — member report / tech support acknowledgment
+ * - getIssueResolvedEmailContent — admin marked report resolved; notify member
  * - getLgdInterestEmailContent — Life Guidance Discovery Session interest (onboarding or profile)
  * - getTherapistHealerCoachEmailContent — therapist / healer / coach (Build Practice) interest
  *
@@ -224,6 +225,46 @@ Our team will get back to you if we need more information. 800-GOAL-NOW (462-566
 
 Back to your console: ${baseUrl}/play-options
 `.trim();
+  return { subject: subj, html, text };
+}
+
+export type IssueResolvedEmailOptions = {
+  firstName?: string | null;
+  reportSubject: string;
+  categoryLabel: string;
+  /** Admin resolution notes (optional); shown to member when non-empty. */
+  resolutionNotes?: string | null;
+};
+
+/** Member-facing email when an admin sets their issue report to Resolved. */
+export function getIssueResolvedEmailContent(opts: IssueResolvedEmailOptions): TemplateContent {
+  const { firstName, reportSubject, categoryLabel, resolutionNotes } = opts;
+  const baseUrl = getBaseUrl();
+  const subj = "Your report has been resolved — Reach For The Stars";
+  const notes = (resolutionNotes || "").trim();
+  const notesBlock =
+    notes.length > 0
+      ? `<p><strong>Message from our team:</strong></p><p style="white-space: pre-wrap; background: #f9fafb; padding: 12px; border-radius: 8px;">${escapeHtml(notes).replace(/\n/g, "<br />")}</p>`
+      : `<p>Our team has marked your report as <strong>resolved</strong>. If anything else comes up, you can submit another report anytime from your member console.</p>`;
+  const html = emailWrapper(`
+  <p>${firstName?.trim() ? `Hi ${escapeHtml(firstName.trim())},` : "Hi there,"}</p>
+  <p>Thank you for reaching out. Your report has been <strong>resolved</strong>.</p>
+  <p><strong>Category:</strong> ${escapeHtml(categoryLabel)}</p>
+  <p><strong>Subject you reported:</strong> ${escapeHtml(reportSubject)}</p>
+  ${notesBlock}
+  <p style="margin-top: 24px;">
+    <a href="${baseUrl}/play-options" style="display: inline-block; padding: 12px 20px; background: #0f766e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Back to your console</a>
+  </p>
+`);
+  const hiText = firstName?.trim() ? `Hi ${firstName.trim()},` : "Hi there,";
+  const text = `${hiText}
+
+Thank you for reaching out. Your report has been resolved.
+
+Category: ${categoryLabel}
+Subject: ${reportSubject}
+${notes.length > 0 ? `\nMessage from our team:\n${notes}\n` : ""}
+Back to your console: ${baseUrl}/play-options`;
   return { subject: subj, html, text };
 }
 

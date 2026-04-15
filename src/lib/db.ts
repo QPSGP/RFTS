@@ -1341,11 +1341,95 @@ export const insertMemberIssueReport = async (params: {
   }
 };
 
-export const listMemberIssueReportsForAdmin = async (
-  limit: number = 200
-): Promise<MemberIssueReportAdmin[]> => {
+const mapIssueReportRow = (r: {
+  id: string;
+  user_id: string;
+  member_email: string;
+  category: string;
+  subject: string;
+  message: string;
+  status: string;
+  resolution_notes: string | null;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  created_at: string;
+}): MemberIssueReportAdmin => ({
+  id: r.id,
+  userId: r.user_id,
+  memberEmail: r.member_email,
+  category: r.category,
+  subject: r.subject,
+  message: r.message,
+  status: r.status,
+  resolutionNotes: r.resolution_notes ?? null,
+  resolvedAt: r.resolved_at ?? null,
+  resolvedBy: r.resolved_by ?? null,
+  createdAt: r.created_at
+});
+
+export const countMemberIssueReports = async (
+  statusFilter: "all" | MemberIssueReportStatus
+): Promise<number> => {
   try {
-    const lim = Math.min(500, Math.max(1, Math.floor(limit)));
+    if (statusFilter === "all") {
+      const { rows } = await sql<{ c: string }>`
+        SELECT COUNT(*)::text AS c FROM member_issue_reports
+      `;
+      return parseInt(rows[0]?.c || "0", 10) || 0;
+    }
+    const { rows } = await sql<{ c: string }>`
+      SELECT COUNT(*)::text AS c
+      FROM member_issue_reports
+      WHERE status = ${statusFilter}
+    `;
+    return parseInt(rows[0]?.c || "0", 10) || 0;
+  } catch {
+    return 0;
+  }
+};
+
+export const listMemberIssueReportsAdminPaged = async (params: {
+  page: number;
+  pageSize: number;
+  statusFilter: "all" | MemberIssueReportStatus;
+}): Promise<MemberIssueReportAdmin[]> => {
+  const pageSize = Math.min(100, Math.max(1, Math.floor(params.pageSize)));
+  const page = Math.max(1, Math.floor(params.page));
+  const offset = (page - 1) * pageSize;
+  try {
+    if (params.statusFilter === "all") {
+      const { rows } = await sql<{
+        id: string;
+        user_id: string;
+        member_email: string;
+        category: string;
+        subject: string;
+        message: string;
+        status: string;
+        resolution_notes: string | null;
+        resolved_at: string | null;
+        resolved_by: string | null;
+        created_at: string;
+      }>`
+        SELECT
+          id,
+          user_id,
+          member_email,
+          category,
+          subject,
+          message,
+          status,
+          resolution_notes,
+          resolved_at,
+          resolved_by,
+          created_at
+        FROM member_issue_reports
+        ORDER BY created_at DESC
+        LIMIT ${pageSize}
+        OFFSET ${offset}
+      `;
+      return rows.map(mapIssueReportRow);
+    }
     const { rows } = await sql<{
       id: string;
       user_id: string;
@@ -1372,24 +1456,54 @@ export const listMemberIssueReportsForAdmin = async (
         resolved_by,
         created_at
       FROM member_issue_reports
+      WHERE status = ${params.statusFilter}
       ORDER BY created_at DESC
-      LIMIT ${lim}
+      LIMIT ${pageSize}
+      OFFSET ${offset}
     `;
-    return rows.map((r) => ({
-      id: r.id,
-      userId: r.user_id,
-      memberEmail: r.member_email,
-      category: r.category,
-      subject: r.subject,
-      message: r.message,
-      status: r.status,
-      resolutionNotes: r.resolution_notes ?? null,
-      resolvedAt: r.resolved_at ?? null,
-      resolvedBy: r.resolved_by ?? null,
-      createdAt: r.created_at
-    }));
+    return rows.map(mapIssueReportRow);
   } catch {
     return [];
+  }
+};
+
+export const getMemberIssueReportById = async (
+  reportId: string
+): Promise<MemberIssueReportAdmin | null> => {
+  try {
+    const { rows } = await sql<{
+      id: string;
+      user_id: string;
+      member_email: string;
+      category: string;
+      subject: string;
+      message: string;
+      status: string;
+      resolution_notes: string | null;
+      resolved_at: string | null;
+      resolved_by: string | null;
+      created_at: string;
+    }>`
+      SELECT
+        id,
+        user_id,
+        member_email,
+        category,
+        subject,
+        message,
+        status,
+        resolution_notes,
+        resolved_at,
+        resolved_by,
+        created_at
+      FROM member_issue_reports
+      WHERE id = ${reportId}::uuid
+      LIMIT 1
+    `;
+    const r = rows[0];
+    return r ? mapIssueReportRow(r) : null;
+  } catch {
+    return null;
   }
 };
 

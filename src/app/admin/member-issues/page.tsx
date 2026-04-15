@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AdminLogoutButton from "@/components/AdminLogoutButton";
 
 type Report = {
@@ -45,6 +45,10 @@ export default function AdminMemberIssuesPage() {
   >({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [filter, setFilter] = useState<StatusFilter>("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -53,15 +57,32 @@ export default function AdminMemberIssuesPage() {
   const load = useCallback(async () => {
     setLoading(true);
     setStatusMsg(null);
-    const res = await fetch("/api/admin/member-issue-reports", { credentials: "include" });
+    const params = new URLSearchParams({
+      page: String(page),
+      pageSize: String(pageSize),
+      status: filter
+    });
+    const res = await fetch(`/api/admin/member-issue-reports?${params.toString()}`, {
+      credentials: "include"
+    });
     if (res.status === 401) {
       setUnauthorized(true);
       setReports([]);
+      setTotal(0);
       setLoading(false);
       return;
     }
     const data = await res.json().catch(() => ({}));
     const list: Report[] = Array.isArray(data.reports) ? data.reports : [];
+    const t = typeof data.total === "number" ? data.total : 0;
+    const tp = Math.max(1, typeof data.totalPages === "number" ? data.totalPages : Math.ceil(t / pageSize) || 1);
+    setTotal(t);
+    setTotalPages(tp);
+    if (t > 0 && page > tp) {
+      setPage(tp);
+      setLoading(false);
+      return;
+    }
     setReports(list);
     const nextDrafts: Record<string, { status: string; resolutionNotes: string }> = {};
     for (const r of list) {
@@ -72,22 +93,20 @@ export default function AdminMemberIssuesPage() {
     }
     setDrafts(nextDrafts);
     setLoading(false);
-  }, []);
+  }, [page, pageSize, filter]);
 
   useEffect(() => {
-    void load();
     fetch("/api/admin/activity", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "viewed_member_issue_reports" }),
       credentials: "include"
     }).catch(() => {});
-  }, [load]);
+  }, []);
 
-  const filtered = useMemo(() => {
-    if (filter === "all") return reports;
-    return reports.filter((r) => r.status === filter);
-  }, [reports, filter]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const save = async (id: string) => {
     const d = drafts[id];
@@ -110,7 +129,14 @@ export default function AdminMemberIssuesPage() {
       setStatusMsg(typeof data?.error === "string" ? data.error : "Save failed.");
       return;
     }
-    setStatusMsg("Saved.");
+    let msg = "Saved.";
+    if (data.resolutionEmailSent === true) {
+      msg += " Member was emailed that the report is resolved.";
+    } else if (data.resolutionEmailSent === false) {
+      msg +=
+        " Report marked Resolved, but the member email did not send (check RESEND_API_KEY / Resend dashboard and server logs).";
+    }
+    setStatusMsg(msg);
     await load();
   };
 
@@ -142,7 +168,8 @@ export default function AdminMemberIssuesPage() {
           <h1>Member issue reports</h1>
           <p style={{ color: "#4b5563", maxWidth: 640 }}>
             Reports submitted from <strong>Report an issue</strong> (after email to the team succeeds). Update
-            status and resolution notes so everyone knows how each item was handled.
+            status and resolution notes. When you set status to <strong>Resolved</strong>, the member receives an
+            email (if Resend is configured) with your resolution message when provided.
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -174,11 +201,37 @@ export default function AdminMemberIssuesPage() {
             type="button"
             className={filter === key ? "button" : "button button-secondary"}
             style={{ fontSize: 13 }}
-            onClick={() => setFilter(key)}
+            onClick={() => {
+              setFilter(key);
+              setPage(1);
+            }}
           >
             {label}
           </button>
         ))}
+      </div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 16 }}>
+        <label style={{ fontSize: 14, color: "#374151", display: "flex", alignItems: "center", gap: 8 }}>
+          Per page
+          <select
+            style={{ padding: 6, borderRadius: 6, border: "1px solid #d1d5db" }}
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setPage(1);
+            }}
+          >
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+        </label>
+        {!loading && total > 0 ? (
+          <span style={{ fontSize: 14, color: "#64748b" }}>
+            {total} report{total === 1 ? "" : "s"} · Page {page} of {totalPages}
+          </span>
+        ) : null}
       </div>
 
       {statusMsg && (
@@ -189,10 +242,10 @@ export default function AdminMemberIssuesPage() {
 
       {loading ? (
         <p>Loading…</p>
-      ) : filtered.length === 0 ? (
+      ) : total === 0 ? (
         <div className="card">
           <p style={{ margin: 0, color: "#6b7280" }}>
-            {reports.length === 0
+            {filter === "all"
               ? "No reports stored yet. Run the latest database schema (member_issue_reports table), then new member reports will appear here after email sends successfully."
               : "No reports match this filter."}
           </p>
@@ -211,7 +264,7 @@ export default function AdminMemberIssuesPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r) => (
+              {reports.map((r) => (
                 <tr key={r.id} style={{ borderBottom: "1px solid #e5e7eb", verticalAlign: "top" }}>
                   <td style={{ padding: "10px 8px", color: "#4b5563", whiteSpace: "nowrap" }}>
                     {formatWhen(r.createdAt)}
@@ -277,7 +330,7 @@ export default function AdminMemberIssuesPage() {
                     </label>
                     <textarea
                       id={`res-${r.id}`}
-                      placeholder="How it was resolved (visible to admins on this page)"
+                      placeholder="How it was resolved (included in member email when you set status to Resolved)"
                       style={{
                         width: "100%",
                         minHeight: 72,
@@ -315,6 +368,41 @@ export default function AdminMemberIssuesPage() {
               ))}
             </tbody>
           </table>
+          {totalPages > 1 ? (
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 8,
+                alignItems: "center",
+                marginTop: 16,
+                paddingTop: 16,
+                borderTop: "1px solid #e5e7eb"
+              }}
+            >
+              <button
+                type="button"
+                className="button button-secondary"
+                style={{ fontSize: 13 }}
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Previous
+              </button>
+              <span style={{ fontSize: 14, color: "#64748b" }}>
+                Page {page} of {totalPages}
+              </span>
+              <button
+                type="button"
+                className="button button-secondary"
+                style={{ fontSize: 13 }}
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              >
+                Next
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
     </main>
