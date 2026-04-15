@@ -1302,6 +1302,142 @@ export const getMemberActivityLog = async (limit: number = 100): Promise<MemberA
   }
 };
 
+export type MemberIssueReportStatus = "open" | "in_progress" | "resolved" | "closed";
+
+export type MemberIssueReportAdmin = {
+  id: string;
+  userId: string;
+  memberEmail: string;
+  category: string;
+  subject: string;
+  message: string;
+  status: string;
+  resolutionNotes: string | null;
+  resolvedAt: string | null;
+  resolvedBy: string | null;
+  createdAt: string;
+};
+
+export const insertMemberIssueReport = async (params: {
+  userId: string;
+  memberEmail: string;
+  category: string;
+  subject: string;
+  message: string;
+}): Promise<void> => {
+  try {
+    await sql`
+      INSERT INTO member_issue_reports (user_id, member_email, category, subject, message)
+      VALUES (
+        ${params.userId},
+        ${params.memberEmail},
+        ${params.category},
+        ${params.subject},
+        ${params.message}
+      )
+    `;
+  } catch (err) {
+    console.error("[insertMemberIssueReport]", err);
+  }
+};
+
+export const listMemberIssueReportsForAdmin = async (
+  limit: number = 200
+): Promise<MemberIssueReportAdmin[]> => {
+  try {
+    const lim = Math.min(500, Math.max(1, Math.floor(limit)));
+    const { rows } = await sql<{
+      id: string;
+      user_id: string;
+      member_email: string;
+      category: string;
+      subject: string;
+      message: string;
+      status: string;
+      resolution_notes: string | null;
+      resolved_at: string | null;
+      resolved_by: string | null;
+      created_at: string;
+    }>`
+      SELECT
+        id,
+        user_id,
+        member_email,
+        category,
+        subject,
+        message,
+        status,
+        resolution_notes,
+        resolved_at,
+        resolved_by,
+        created_at
+      FROM member_issue_reports
+      ORDER BY created_at DESC
+      LIMIT ${lim}
+    `;
+    return rows.map((r) => ({
+      id: r.id,
+      userId: r.user_id,
+      memberEmail: r.member_email,
+      category: r.category,
+      subject: r.subject,
+      message: r.message,
+      status: r.status,
+      resolutionNotes: r.resolution_notes ?? null,
+      resolvedAt: r.resolved_at ?? null,
+      resolvedBy: r.resolved_by ?? null,
+      createdAt: r.created_at
+    }));
+  } catch {
+    return [];
+  }
+};
+
+export const updateMemberIssueReportAdmin = async (
+  reportId: string,
+  input: {
+    status: MemberIssueReportStatus;
+    /** Omit to leave existing resolution text unchanged. */
+    resolutionNotes?: string | null;
+    resolvedByEmail: string | null;
+  }
+): Promise<{ ok: true } | { ok: false; error: string }> => {
+  const terminal = input.status === "resolved" || input.status === "closed";
+  const resolvedAt = terminal ? new Date().toISOString() : null;
+  const resolvedBy = terminal ? input.resolvedByEmail : null;
+  try {
+    let rowCount: number | null | undefined;
+    if (input.resolutionNotes === undefined) {
+      const r = await sql`
+        UPDATE member_issue_reports
+        SET
+          status = ${input.status},
+          resolved_at = ${resolvedAt},
+          resolved_by = ${resolvedBy}
+        WHERE id = ${reportId}::uuid
+      `;
+      rowCount = r.rowCount;
+    } else {
+      const r = await sql`
+        UPDATE member_issue_reports
+        SET
+          status = ${input.status},
+          resolution_notes = ${input.resolutionNotes},
+          resolved_at = ${resolvedAt},
+          resolved_by = ${resolvedBy}
+        WHERE id = ${reportId}::uuid
+      `;
+      rowCount = r.rowCount;
+    }
+    if ((rowCount ?? 0) < 1) {
+      return { ok: false, error: "Report not found." };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Could not update report." };
+  }
+};
+
 export const createLibraryItem = async (payload: {
   title: string;
   description: string;

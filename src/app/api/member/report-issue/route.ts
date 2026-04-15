@@ -5,7 +5,7 @@ import { getUserSessionEmail } from "@/lib/user-auth";
 import { sendEmail } from "@/lib/email";
 import { getReportIssueConfirmationContent } from "@/lib/email-templates";
 import { rateLimit } from "@/lib/rate-limit";
-import { getMemberProfileByUserId, getUserByEmail } from "@/lib/db";
+import { getMemberProfileByUserId, getUserByEmail, insertMemberIssueReport } from "@/lib/db";
 
 const schema = z.object({
   subject: z.string().min(1).max(200),
@@ -22,6 +22,10 @@ export async function POST(request: Request) {
   }
   if (!rateLimit(`report-issue:${email}`, REPORT_ISSUE_MAX_PER_MINUTE)) {
     return apiError("Too many reports. Please try again in a minute.", 429);
+  }
+  const user = await getUserByEmail(email);
+  if (!user) {
+    return apiError("Account not found.", 404);
   }
   const body = await request.json();
   const parsed = schema.safeParse(body);
@@ -42,6 +46,15 @@ export async function POST(request: Request) {
   `;
   const text = `Report from: ${email}\nCategory: ${categoryLabel}\nSubject: ${parsed.data.subject}\n\n${parsed.data.message}`;
   const { ok, error } = await sendEmail({ to, subject, html, text });
+  if (ok) {
+    await insertMemberIssueReport({
+      userId: user.id,
+      memberEmail: user.email,
+      category: categoryLabel,
+      subject: parsed.data.subject,
+      message: parsed.data.message
+    });
+  }
   if (!ok) {
     const isNotConfigured = error?.includes("RESEND_API_KEY");
     const message = isNotConfigured
@@ -52,11 +65,8 @@ export async function POST(request: Request) {
   // Send confirmation to the member
   let firstName: string | null = null;
   try {
-    const user = await getUserByEmail(email);
-    if (user) {
-      const profile = await getMemberProfileByUserId(user.id);
-      firstName = profile?.firstName ?? null;
-    }
+    const profile = await getMemberProfileByUserId(user.id);
+    firstName = profile?.firstName ?? null;
   } catch {
     // non-fatal
   }

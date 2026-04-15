@@ -61,9 +61,12 @@ export default function AdminContentPage() {
           <h1>Admin Content Console</h1>
           <p>Manage goals, audio library items, and ordering.</p>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <Link href="/admin/dashboard" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
             Activity Dashboard
+          </Link>
+          <Link href="/admin/member-issues" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
+            Member issue reports
           </Link>
           <AdminLogoutButton />
         </div>

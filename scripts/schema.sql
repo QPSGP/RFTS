@@ -182,6 +182,29 @@ CREATE INDEX IF NOT EXISTS member_activity_log_created_at
 CREATE INDEX IF NOT EXISTS member_activity_log_user_id
   ON member_activity_log (user_id, created_at DESC);
 
+-- Member "report an issue" submissions (admin queue + resolution notes)
+CREATE TABLE IF NOT EXISTS member_issue_reports (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  member_email text NOT NULL,
+  category text NOT NULL DEFAULT '',
+  subject text NOT NULL,
+  message text NOT NULL,
+  status text NOT NULL DEFAULT 'open',
+  resolution_notes text,
+  resolved_at timestamptz,
+  resolved_by text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT member_issue_reports_status_check CHECK (
+    status = ANY (ARRAY['open'::text, 'in_progress'::text, 'resolved'::text, 'closed'::text])
+  )
+);
+
+CREATE INDEX IF NOT EXISTS member_issue_reports_created_at
+  ON member_issue_reports (created_at DESC);
+CREATE INDEX IF NOT EXISTS member_issue_reports_status_created
+  ON member_issue_reports (status, created_at DESC);
+
 -- Password reset tokens for member self-service (forgot password)
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
   token text PRIMARY KEY,

@@ -197,7 +197,10 @@ export default function AdminDashboardPage() {
           <h1>Member Activity Dashboard</h1>
           <p>Overview of member signups, subscriptions, and usage.</p>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <Link href="/admin/member-issues" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
+            Member issue reports
+          </Link>
           <Link href="/admin/content" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
             Content Console
           </Link>
