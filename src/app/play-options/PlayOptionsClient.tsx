@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import SessionPlayer, { SessionPlayerHandle } from "@/components/SessionPlayer";
+import { formatFullSessionsFraction } from "@/lib/session-progress-format";
 
 export type PlayOptionsProfile = {
   email: string;
@@ -210,6 +211,23 @@ export default function PlayOptionsClient({
             Your schedule night advances after you finish listening for that night — not by
             the calendar alone.
           </p>
+          {schedule.length > 0 && profile && (
+            <p style={{ marginTop: 12, fontSize: 16, color: "#0f172a" }}>
+              Full sessions complete so far:{" "}
+              <strong style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+                {formatFullSessionsFraction(
+                  Math.max(0, currentNight - 1),
+                  (profile.playsPerNight ?? 2) === 1 ? 1 : 2
+                )}
+              </strong>
+              {(profile.playsPerNight ?? 2) === 1 ? (
+                <span style={{ fontSize: 14, fontWeight: 400, color: "#64748b" }}>
+                  {" "}
+                  — half session: two steps = one full session
+                </span>
+              ) : null}
+            </p>
+          )}
           {schedule.length > 0 && (() => {
             const tonightIndex = Math.max(0, Math.min(currentNight - 1, schedule.length - 1));
             const tonight = schedule[tonightIndex];

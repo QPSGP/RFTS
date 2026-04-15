@@ -2,6 +2,7 @@
 
 import { put } from "@vercel/blob/client";
 import React, { useEffect, useMemo, useState } from "react";
+import { formatFullSessionsFraction } from "@/lib/session-progress-format";
 import type { LibraryItem } from "@/lib/types";
 
 
@@ -160,23 +161,6 @@ function formatActivityTime(iso: string): string {
 /** 1 or 2 — how many main rotation recordings count as one finished “schedule night”. */
 function memberPlaysPerNight(user: { playsPerNight?: number }): 1 | 2 {
   return user.playsPerNight === 1 ? 1 : 2;
-}
-
-/** One “full session” = first + second main audio. Full-session mode: 1 schedule night = 1 full session. Half-session mode: 2 steps = 1 full session. */
-function fullSessionsDecimal(completedScheduleSteps: number, playsPerNight: 1 | 2): number {
-  if (playsPerNight === 2) {
-    return completedScheduleSteps;
-  }
-  return completedScheduleSteps / 2;
-}
-
-function formatFullSessionsLabel(completedScheduleSteps: number, playsPerNight: 1 | 2): string {
-  const v = fullSessionsDecimal(completedScheduleSteps, playsPerNight);
-  if (playsPerNight === 2) {
-    return String(completedScheduleSteps);
-  }
-  if (completedScheduleSteps === 0) return "0";
-  return Number.isInteger(v) ? String(v) : v.toFixed(1);
 }
 
 type PlaybackSettingsState = { fallbackTrackId: string; cgmrTrackId?: string } | null;
@@ -552,7 +536,7 @@ export default function AdminUsers() {
       {
         const ppn = users.find((u) => u.email === email);
         const plays = memberPlaysPerNight(ppn ?? { playsPerNight: 2 });
-        const sessionsLabel = formatFullSessionsLabel(clamped, plays);
+        const sessionsLabel = formatFullSessionsFraction(clamped, plays);
         const nextStep = Math.min(366, Math.max(1, clamped + 1));
         setStatus(
           plays === 1
@@ -1203,7 +1187,7 @@ export default function AdminUsers() {
                                     <strong>Half session</strong> for this member: <strong>one</strong> main audio
                                     per schedule <strong>step</strong> in the rotation. Two completed steps ={" "}
                                     <strong>one</strong> full session (first main + second main). So progress often
-                                    reads as <strong>0.5, 1, 1.5…</strong> full sessions. Preparation audio is extra.
+                                    shows as <strong>½, 1, 1½…</strong> full sessions. Preparation audio is extra.
                                   </>
                                 )}
                               </p>
@@ -1216,15 +1200,16 @@ export default function AdminUsers() {
                                 }}
                               >
                                 Full sessions complete:{" "}
-                                {formatFullSessionsLabel(
-                                  memberScheduleProgress[user.email]!.completedScheduleNights,
-                                  memberPlaysPerNight(user)
-                                )}
+                                <span style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+                                  {formatFullSessionsFraction(
+                                    memberScheduleProgress[user.email]!.completedScheduleNights,
+                                    memberPlaysPerNight(user)
+                                  )}
+                                </span>
                                 {memberPlaysPerNight(user) === 1 ? (
                                   <span style={{ fontSize: 13, fontWeight: 400, color: "#64748b" }}>
                                     {" "}
-                                    (two steps = 1 session; each step ={" "}
-                                    <span style={{ fontFamily: "ui-monospace, monospace" }}>½</span> session)
+                                    (two steps = one full session)
                                   </span>
                                 ) : null}
                               </p>
