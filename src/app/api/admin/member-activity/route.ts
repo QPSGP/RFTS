@@ -12,21 +12,9 @@ export async function GET(request: Request) {
     if (!user) {
       return NextResponse.json({ error: "Member not found." }, { status: 404 });
     }
-    const result = await getMemberActivityLogForUser(user.id, 150);
-    if (!result.ok) {
-      return NextResponse.json(
-        { error: result.error, activityLog: [] },
-        { status: 503 }
-      );
-    }
-    return NextResponse.json({ activityLog: result.entries });
+    const activityLog = await getMemberActivityLogForUser(user.id, 150);
+    return NextResponse.json({ activityLog });
   }
-  const result = await getMemberActivityLog(100);
-  if (!result.ok) {
-    return NextResponse.json(
-      { error: result.error, activityLog: [] },
-      { status: 503 }
-    );
-  }
-  return NextResponse.json({ activityLog: result.entries });
+  const activityLog = await getMemberActivityLog(100);
+  return NextResponse.json({ activityLog });
 }

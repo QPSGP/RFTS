@@ -108,7 +108,6 @@ export default function AdminDashboardPage() {
   const [moderators, setModerators] = useState<ModeratorWithLogin[]>([]);
   const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([]);
   const [memberActivityLog, setMemberActivityLog] = useState<MemberActivityLogEntry[]>([]);
-  const [memberActivityLoadError, setMemberActivityLoadError] = useState<string | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "unauthorized">("loading");
 
   useEffect(() => {
@@ -142,25 +141,17 @@ export default function AdminDashboardPage() {
       fetch("/api/admin/staff-activity", { credentials: "include" }).then((res) =>
         res.ok ? res.json() : null
       ),
-      fetch("/api/admin/member-activity", { credentials: "include" })
-    ]).then(async ([staffData, memberRes]) => {
+      fetch("/api/admin/member-activity", { credentials: "include" }).then((res) =>
+        res.ok ? res.json() : null
+      )
+    ]).then(([staffData, memberData]) => {
       if (staffData) {
         setAdmins(staffData.admins || []);
         setModerators(staffData.moderators || []);
         setActivityLog(staffData.activityLog || []);
       }
-      setMemberActivityLoadError(null);
-      if (memberRes.ok) {
-        const memberData = await memberRes.json();
+      if (memberData) {
         setMemberActivityLog(memberData.activityLog || []);
-      } else {
-        const errBody = await memberRes.json().catch(() => ({} as { error?: string }));
-        setMemberActivityLog([]);
-        setMemberActivityLoadError(
-          typeof errBody?.error === "string"
-            ? errBody.error
-            : `Could not load member activity (HTTP ${memberRes.status}).`
-        );
       }
     });
   }, [status]);
@@ -295,11 +286,6 @@ export default function AdminDashboardPage() {
         <p style={{ color: "#4b5563", marginBottom: 12 }}>
           Logins, console and library playback, and other actions. Details show the audio or page when relevant.
         </p>
-        {memberActivityLoadError && (
-          <p style={{ color: "#b91c1c", marginBottom: 12, fontSize: 14 }} role="alert">
-            {memberActivityLoadError}
-          </p>
-        )}
         <div className="card" style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 500, fontSize: 14 }}>
             <thead>

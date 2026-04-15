@@ -11,7 +11,6 @@ import {
   getPlaybackSettings,
   getSubscriptionStripeIdsForUser,
   getUserByEmail,
-  normalizeMemberEmail,
   listLibrary,
   listSubscriptionPlans,
   setUserGoals,
@@ -188,12 +187,12 @@ export async function POST(request: Request) {
     if (!thcResult.ok) console.error("[onboarding] Therapist/healer/coach email failed:", thcResult.error);
   }
 
-  const token = createUserSessionToken(normalizeMemberEmail(user.email));
+  const token = createUserSessionToken(user.email);
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
   if (isDemoSkip) {
     const res = NextResponse.json({ url: "/play-options" });
-    setUserSessionCookieOnResponse(res, token, request);
+    setUserSessionCookieOnResponse(res, token);
     return res;
   }
 
@@ -212,7 +211,7 @@ export async function POST(request: Request) {
         });
         if (portalUrl) {
           const res = NextResponse.json({ url: portalUrl, billingPortal: true });
-          setUserSessionCookieOnResponse(res, token, request);
+          setUserSessionCookieOnResponse(res, token);
           return res;
         }
       } catch (portalErr) {
@@ -251,7 +250,7 @@ export async function POST(request: Request) {
   } catch (err) {
     // Member already saved; redirect to portal so they can complete payment later
     const res = NextResponse.json({ url: "/play-options" });
-    setUserSessionCookieOnResponse(res, token, request);
+    setUserSessionCookieOnResponse(res, token);
     return res;
   }
 }

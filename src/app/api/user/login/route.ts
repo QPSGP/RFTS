@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { apiError } from "@/lib/api-utils";
-import { getUserByEmail, normalizeMemberEmail, recordMemberActivity } from "@/lib/db";
+import { getUserByEmail, recordMemberActivity } from "@/lib/db";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import { createUserSessionToken, setUserSessionCookieOnResponse } from "@/lib/user-auth";
 
-const LOGIN_MAX_PER_MINUTE = 60;
+const LOGIN_MAX_PER_MINUTE = 10;
 
 function safeMemberNextPath(raw: unknown): string | null {
   if (typeof raw !== "string" || !raw.trim()) return null;
@@ -84,8 +84,8 @@ async function doPost(request: Request) {
     return NextResponse.redirect(loginErrorUrl, 302);
   }
 
-  const token = createUserSessionToken(normalizeMemberEmail(user.email));
-  void recordMemberActivity(user.id, "login", loginDetails);
+  const token = createUserSessionToken(user.email);
+  await recordMemberActivity(user.id, "login", loginDetails);
 
   if (isFormLogin) {
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=${successUrl}"></head><body>Signed in. Taking you to Play Options…</body></html>`;
@@ -96,12 +96,12 @@ async function doPost(request: Request) {
         "Cache-Control": "no-store, no-cache, must-revalidate"
       }
     });
-    setUserSessionCookieOnResponse(response, token, request);
+    setUserSessionCookieOnResponse(response, token);
     return response;
   }
 
   const response = NextResponse.json({ ok: true });
-  setUserSessionCookieOnResponse(response, token, request);
+  setUserSessionCookieOnResponse(response, token);
   response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
   return response;
 }

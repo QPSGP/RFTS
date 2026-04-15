@@ -53,11 +53,7 @@ export default function UserAuth() {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        if (response.status === 429) {
-          setStatus(data?.error || "Too many sign-in attempts. Please wait a minute and try again.");
-        } else {
-          setStatus(data?.error || "Invalid credentials. Try again.");
-        }
+        setStatus(data?.error || "Invalid credentials. Try again.");
         setStatusType("error");
         return;
       }

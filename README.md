@@ -65,7 +65,6 @@ For email to work in production (report an issue, welcome emails, password reset
 ## Security Notes
 
 - Sessions are signed with `SESSION_SECRET` and stored in HTTP-only cookies.
-- Member cookie `Secure` follows `x-forwarded-proto` / the request URL so logins work over HTTP when needed (e.g. local `next start`). Set `COOKIE_INSECURE=1` to force non-secure member cookies if a reverse proxy strips TLS headers.
 - Admin endpoints require a valid session.
 - Add rate limits to public/admin endpoints before production.
 
