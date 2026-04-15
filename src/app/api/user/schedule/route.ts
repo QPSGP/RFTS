@@ -3,7 +3,16 @@ import { z } from "zod";
 import fs from "fs";
 import path from "path";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getMemberAudioOrder, getMemberProfileByUserId, getPlaybackSettings, getUserProfile, listInterests, listLibrary, setScheduleStartedToToday } from "@/lib/db";
+import {
+  getMemberAudioOrder,
+  getMemberProfileByUserId,
+  getPlaybackSettings,
+  getUserProfile,
+  listInterests,
+  listLibrary,
+  setScheduleStartedToToday,
+  trySeedCompletedNightsFromLegacySessions
+} from "@/lib/db";
 import { buildSchedulePreview } from "@/lib/scheduler";
 
 const schema = z.object({
@@ -104,24 +113,18 @@ export async function GET(request: Request) {
     cgmrForMember ??
     (assignedAudioIds?.length ? null : anyAllowListMatch);
 
-  // Advance "tonight" by calendar day since schedule_started_at (night 1 = start date).
-  let currentNight = 1;
+  // "Tonight" = next night after fully completed listening nights (stored), not calendar days.
   const startedAtRaw = memberProfile?.scheduleStartedAt;
-  if (startedAtRaw) {
-    const str = String(startedAtRaw).trim();
-    const started = str.includes("T") ? new Date(str) : new Date(str + "T00:00:00Z");
-    if (!Number.isNaN(started.getTime())) {
-      const startedDate = new Date(Date.UTC(started.getUTCFullYear(), started.getUTCMonth(), started.getUTCDate()));
-      const now = new Date();
-      const todayDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-      const diffMs = todayDate.getTime() - startedDate.getTime();
-      const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-      // Do not cap by preview length — clients often pass ?nights=21 which used to freeze "tonight" at 21 forever.
-      currentNight = Math.max(1, days + 1);
+  let completedNights = Math.max(0, memberProfile?.completedScheduleNights ?? 0);
+  if (startedAtRaw && completedNights === 0) {
+    const dateStr = String(startedAtRaw).trim().slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      completedNights = await trySeedCompletedNightsFromLegacySessions(profile.id, dateStr);
     }
   }
-
   const maxBuildNights = 366;
+  const currentNight = Math.min(maxBuildNights, Math.max(1, completedNights + 1));
+
   const nights = Math.min(maxBuildNights, Math.max(requestedNights, currentNight));
 
   const schedule = buildSchedulePreview({

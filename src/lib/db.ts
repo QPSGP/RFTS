@@ -50,8 +50,10 @@ export type MemberProfile = {
   hadLgdSession?: boolean | null;
   referralSource?: string | null;
   notes?: string | null;
-  /** Date (YYYY-MM-DD) when the member's schedule "rotation" started; used to advance "tonight" each day. */
+  /** Date (YYYY-MM-DD) when the member's schedule rotation anchor started; used for legacy session backfill window. */
   scheduleStartedAt?: string | null;
+  /** Highest schedule night index (1-based) the member has fully completed by listening; drives "tonight". */
+  completedScheduleNights?: number | null;
 };
 
 export type DbSubscription = {
@@ -336,7 +338,8 @@ export const getMemberProfileByUserId = async (userId: string): Promise<MemberPr
       had_lgd_session as "hadLgdSession",
       referral_source as "referralSource",
       notes,
-      schedule_started_at as "scheduleStartedAt"
+      schedule_started_at as "scheduleStartedAt",
+      COALESCE(completed_schedule_nights, 0) AS "completedScheduleNights"
     FROM member_profiles
     WHERE user_id = ${userId}
     LIMIT 1
@@ -368,15 +371,123 @@ export const getMemberProfileByUserId = async (userId: string): Promise<MemberPr
   } as MemberProfile;
 };
 
-/** Set schedule start to today (UTC date). Used when first loading schedule or when goals/plays-per-night change so rotation restarts. Upserts so rotation works even if member_profiles row was missing. */
+/** Set schedule start to today (UTC date). Used when first loading schedule or when goals/plays-per-night change so rotation restarts. Resets play-based night progress. Upserts so rotation works even if member_profiles row was missing. */
 export const setScheduleStartedToToday = async (userId: string): Promise<void> => {
   await sql`
-    INSERT INTO member_profiles (user_id, schedule_started_at, updated_at)
-    VALUES (${userId}, (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date, now())
+    INSERT INTO member_profiles (user_id, schedule_started_at, completed_schedule_nights, updated_at)
+    VALUES (${userId}, (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date, 0, now())
     ON CONFLICT (user_id) DO UPDATE SET
       schedule_started_at = (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date,
+      completed_schedule_nights = 0,
       updated_at = now()
   `;
+};
+
+/** Count session starts since schedule_started_at (UTC midnight of that date). */
+export const getSessionCountSinceScheduleStart = async (
+  userId: string,
+  scheduleStartedAtYyyyMmDd: string
+): Promise<number> => {
+  try {
+    const trimmed = scheduleStartedAtYyyyMmDd.trim().slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return 0;
+    }
+    const startIso = `${trimmed}T00:00:00.000Z`;
+    const { rows } = await sql<{ count: string }>`
+      SELECT COUNT(*)::text AS count
+      FROM member_session_usage
+      WHERE user_id = ${userId}
+        AND used_at >= ${startIso}::timestamptz
+    `;
+    return parseInt(rows[0]?.count || "0", 10) || 0;
+  } catch {
+    return 0;
+  }
+};
+
+/**
+ * If the member has never stored play-based progress (0), seed completed nights from historical
+ * session starts since schedule_started_at (capped at 366). One-time alignment for existing members.
+ */
+export const trySeedCompletedNightsFromLegacySessions = async (
+  userId: string,
+  scheduleStartedAtYyyyMmDd: string
+): Promise<number> => {
+  try {
+    const sessionCount = await getSessionCountSinceScheduleStart(userId, scheduleStartedAtYyyyMmDd);
+    if (sessionCount <= 0) {
+      const { rows: cur } = await sql<{ c: string | null }>`
+        SELECT COALESCE(completed_schedule_nights, 0)::text AS c
+        FROM member_profiles
+        WHERE user_id = ${userId}
+        LIMIT 1
+      `;
+      return parseInt(cur[0]?.c || "0", 10) || 0;
+    }
+    const seeded = Math.min(366, sessionCount);
+    const { rows } = await sql<{ c: string | null }>`
+      UPDATE member_profiles
+      SET completed_schedule_nights = ${seeded},
+          updated_at = now()
+      WHERE user_id = ${userId}
+        AND COALESCE(completed_schedule_nights, 0) = 0
+      RETURNING completed_schedule_nights::text AS c
+    `;
+    if (rows[0]) {
+      return parseInt(rows[0].c || "0", 10) || 0;
+    }
+    const { rows: cur } = await sql<{ c: string | null }>`
+      SELECT COALESCE(completed_schedule_nights, 0)::text AS c
+      FROM member_profiles
+      WHERE user_id = ${userId}
+      LIMIT 1
+    `;
+    return parseInt(cur[0]?.c || "0", 10) || 0;
+  } catch {
+    return 0;
+  }
+};
+
+export type RecordScheduleNightResult =
+  | { ok: true; completedScheduleNights: number }
+  | { ok: false; error: string };
+
+/** Mark a schedule night as fully listened. Only accepts the next night in sequence (or repeats the same idempotently). */
+export const recordScheduleNightCompleted = async (
+  userId: string,
+  nightCompleted: number
+): Promise<RecordScheduleNightResult> => {
+  if (!Number.isFinite(nightCompleted) || nightCompleted < 1 || nightCompleted > 366) {
+    return { ok: false, error: "Invalid night." };
+  }
+  try {
+    const { rows: existing } = await sql<{ c: string | null }>`
+      SELECT COALESCE(completed_schedule_nights, 0)::text AS c
+      FROM member_profiles
+      WHERE user_id = ${userId}
+      LIMIT 1
+    `;
+    if (!existing[0]) {
+      return { ok: false, error: "Member profile not found." };
+    }
+    const completed = parseInt(existing[0].c || "0", 10) || 0;
+    if (nightCompleted <= completed) {
+      return { ok: true, completedScheduleNights: completed };
+    }
+    if (nightCompleted > completed + 1) {
+      return { ok: false, error: "Night is out of sequence." };
+    }
+    await sql`
+      UPDATE member_profiles
+      SET completed_schedule_nights = ${nightCompleted},
+          updated_at = now()
+      WHERE user_id = ${userId}
+    `;
+    return { ok: true, completedScheduleNights: nightCompleted };
+  } catch {
+    return { ok: false, error: "Could not save progress." };
+  }
 };
 
 export const getUserProfile = async (email: string) => {

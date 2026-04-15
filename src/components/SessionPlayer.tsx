@@ -17,6 +17,10 @@ type SessionPlayerProps = {
   autoStart?: boolean;
   /** Called when the member starts a session (for usage analytics). */
   onSessionStart?: () => void;
+  /** Schedule night index (1-based) for the lineup being played; used when a full night finishes. */
+  scheduleNightNumber?: number;
+  /** Fires after the member finishes listening for this schedule night (both tracks when 2/night, or the single track when 1/night). */
+  onScheduleNightComplete?: (nightNumber: number) => void;
 };
 
 export type SessionPlayerHandle = {
@@ -28,7 +32,17 @@ export type SessionPlayerHandle = {
 type Phase = "idle" | "first" | "waiting" | "second";
 
 const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(function SessionPlayer(
-  { prepAudio, firstTrack, secondTrack, gapHours, playsPerNight = 2, autoStart = false, onSessionStart },
+  {
+    prepAudio,
+    firstTrack,
+    secondTrack,
+    gapHours,
+    playsPerNight = 2,
+    autoStart = false,
+    onSessionStart,
+    scheduleNightNumber,
+    onScheduleNightComplete
+  },
   ref
 ) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -282,6 +296,18 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         }
       }, gapMs);
     } else {
+      const nightFullyListened =
+        playsPerNight === 1 ||
+        phase === "second" ||
+        (phase === "first" && !hasSecond);
+      if (
+        nightFullyListened &&
+        typeof scheduleNightNumber === "number" &&
+        scheduleNightNumber >= 1 &&
+        onScheduleNightComplete
+      ) {
+        onScheduleNightComplete(scheduleNightNumber);
+      }
       // Single track (or last of queue) ended — stop and clear so it doesn't repeat; 1 per night = cued for next night
       const audio = audioRef.current;
       if (audio) {
@@ -298,7 +324,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         setOnePerNightComplete(true);
       }
     }
-  }, [phase, gapHours, playsPerNight, queue, clearWaitTimers, prepAudio]);
+  }, [phase, gapHours, playsPerNight, queue, clearWaitTimers, prepAudio, scheduleNightNumber, onScheduleNightComplete]);
 
   const handlePause = () => {
     audioRef.current?.pause();

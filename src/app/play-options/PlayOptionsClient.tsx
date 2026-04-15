@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import SessionPlayer, { SessionPlayerHandle } from "@/components/SessionPlayer";
 
@@ -32,6 +32,20 @@ export default function PlayOptionsClient({
   >([]);
   const [nextInCue, setNextInCue] = useState<{ id: string; title: string; skuCode?: string }[]>([]);
   const sessionRef = useRef<SessionPlayerHandle | null>(null);
+
+  const loadSchedule = useCallback(async () => {
+    const scheduleRes = await fetch(`/api/user/schedule?nights=21&_t=${Date.now()}`, {
+      credentials: "include",
+      cache: "no-store"
+    });
+    if (!scheduleRes.ok) return;
+    const data = await scheduleRes.json();
+    setSchedule(data?.schedule || []);
+    setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
+    setNextInCue(Array.isArray(data?.nextInCue) ? data.nextInCue : []);
+    setPrepAudio(data?.prepAudio || null);
+    setGapHours(typeof data?.gapHours === "number" ? data.gapHours : 2.5);
+  }, []);
 
   const currentPlaylistFallback = useMemo(() => {
     if (!schedule.length) return [];
@@ -193,6 +207,8 @@ export default function PlayOptionsClient({
             Start a guided session tailored to your goals. Each session plays your
             preparation audio, then your first goal recording. A second recording
             is scheduled {gapHours} hours later if you have enabled 2 sessions per night.
+            Your schedule night advances after you finish listening for that night — not by
+            the calendar alone.
           </p>
           {schedule.length > 0 && (() => {
             const tonightIndex = Math.max(0, Math.min(currentNight - 1, schedule.length - 1));
@@ -254,6 +270,17 @@ export default function PlayOptionsClient({
               autoStart={autoStart}
               onSessionStart={() => {
                 fetch("/api/user/session-used", { method: "POST", credentials: "include" }).catch(() => {});
+              }}
+              scheduleNightNumber={tonight.night}
+              onScheduleNightComplete={(night) => {
+                fetch("/api/user/schedule-night-complete", {
+                  method: "POST",
+                  credentials: "include",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ nightCompleted: night })
+                })
+                  .then((r) => (r.ok ? loadSchedule() : undefined))
+                  .catch(() => {});
               }}
             />
           );
