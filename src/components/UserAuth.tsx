@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 const inputStyle = {
@@ -10,7 +10,7 @@ const inputStyle = {
   width: "100%"
 };
 
-function UserAuthForm() {
+export default function UserAuth() {
   const searchParams = useSearchParams();
   const errorFromUrl = searchParams.get("error") === "invalid";
   const [status, setStatus] = useState<string | null>(errorFromUrl ? "Invalid credentials. Try again." : null);
@@ -193,20 +193,5 @@ function UserAuthForm() {
         </p>
       )}
     </div>
-  );
-}
-
-export default function UserAuth() {
-  return (
-    <Suspense
-      fallback={
-        <div className="card" style={{ maxWidth: 520, margin: "0 auto" }}>
-          <h2 style={{ marginTop: 0 }}>Member Login</h2>
-          <p style={{ color: "#64748b", marginBottom: 0 }}>Loading sign-in…</p>
-        </div>
-      }
-    >
-      <UserAuthForm />
-    </Suspense>
   );
 }
