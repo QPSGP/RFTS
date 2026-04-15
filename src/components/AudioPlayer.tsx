@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { logMemberPlayedAudio } from "@/lib/member-audio-activity";
 
 type AudioPlayerProps = {
   title: string;
@@ -89,7 +90,15 @@ export default function AudioPlayer({
       setIsPlaying(false);
     };
 
+    const handlePlaying = () => {
+      const src = audio.currentSrc || audio.src || "";
+      const onPrep = !!prepAudioUrl && src.includes("prep=1");
+      const label = onPrep ? "Starting music" : title;
+      logMemberPlayedAudio(`Library — ${label}`);
+    };
+
     audio.addEventListener("play", handlePlay);
+    audio.addEventListener("playing", handlePlaying);
     audio.addEventListener("pause", handlePause);
     audio.addEventListener("ended", handlePause);
 
@@ -102,12 +111,13 @@ export default function AudioPlayer({
 
     return () => {
       audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("playing", handlePlaying);
       audio.removeEventListener("pause", handlePause);
       audio.removeEventListener("ended", handlePause);
       document.removeEventListener("visibilitychange", handleVisibility);
       releaseWakeLock();
     };
-  }, []);
+  }, [prepAudioUrl, title]);
 
   useEffect(() => {
     const audio = audioRef.current;

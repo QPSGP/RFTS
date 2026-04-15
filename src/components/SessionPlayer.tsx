@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { logMemberPlayedAudio } from "@/lib/member-audio-activity";
 
 type SessionTrack = {
   title: string;
@@ -66,6 +67,36 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const [onePerNightComplete, setOnePerNightComplete] = useState(false);
 
   secondTrackRef.current = secondTrack ?? null;
+
+  const currentRef = useRef(current);
+  const phaseRef = useRef(phase);
+  const prepAudioRef = useRef(prepAudio ?? null);
+  currentRef.current = current;
+  phaseRef.current = phase;
+  prepAudioRef.current = prepAudio ?? null;
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onPlaying = () => {
+      const c = currentRef.current;
+      if (!c?.title) return;
+      const ph = phaseRef.current;
+      if (ph !== "first" && ph !== "second") return;
+      const prep = prepAudioRef.current;
+      let kind: string;
+      if (prep && c.url === prep.url) {
+        kind = "Preparation audio";
+      } else if (ph === "second") {
+        kind = `Second: ${c.title}`;
+      } else {
+        kind = `First: ${c.title}`;
+      }
+      logMemberPlayedAudio(`Play Options — ${kind}`);
+    };
+    audio.addEventListener("playing", onPlaying);
+    return () => audio.removeEventListener("playing", onPlaying);
+  }, []);
 
   /** Pause/Play/Restart, native audio, and mobile fixed bar only while actively in first or second segment (not idle/waiting). */
   const showActivePlaybackUi = Boolean(current && (phase === "first" || phase === "second"));

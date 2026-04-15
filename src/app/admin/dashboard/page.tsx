@@ -57,6 +57,11 @@ function formatDateTime(iso: string | null): string {
   }
 }
 
+function formatMemberActivityAction(action: string): string {
+  if (action === "played_audio") return "Played audio";
+  return action.replace(/_/g, " ");
+}
+
 type AdminWithLogin = {
   id: string;
   email: string;
@@ -279,7 +284,7 @@ export default function AdminDashboardPage() {
       <section style={{ marginTop: 32, fontSize: 14 }}>
         <h2 style={{ marginBottom: 12, fontSize: 18 }}>Recent member activity</h2>
         <p style={{ color: "#4b5563", marginBottom: 12 }}>
-          Logins and console actions to understand member behavior.
+          Logins, console and library playback, and other actions. Details show the audio or page when relevant.
         </p>
         <div className="card" style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 500, fontSize: 14 }}>
@@ -303,7 +308,7 @@ export default function AdminDashboardPage() {
                       <span style={{ color: "#6b7280", fontSize: 12 }}> ({entry.email})</span>
                     ) : null}
                   </td>
-                  <td style={{ padding: "8px 10px" }}>{entry.action.replace(/_/g, " ")}</td>
+                  <td style={{ padding: "8px 10px" }}>{formatMemberActivityAction(entry.action)}</td>
                   <td style={{ padding: "8px 10px", color: "#4b5563" }}>{entry.details ?? "—"}</td>
                 </tr>
               ))}

@@ -101,6 +101,8 @@ function formatActivityAction(action: string): string {
       return "Updated goals";
     case "updated_plays_per_night":
       return "Updated sessions per night";
+    case "played_audio":
+      return "Played audio";
     default:
       return action.replace(/_/g, " ");
   }

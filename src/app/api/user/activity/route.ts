@@ -5,7 +5,7 @@ import { getUserProfile, recordMemberActivity } from "@/lib/db";
 
 const bodySchema = z.object({
   action: z.string().min(1).max(200),
-  details: z.string().max(500).optional()
+  details: z.string().max(1000).optional()
 });
 
 /** Record a member action (e.g. viewed console, viewed library). Call from member frontend. */
