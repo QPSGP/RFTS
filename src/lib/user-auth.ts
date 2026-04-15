@@ -54,6 +54,34 @@ export function verifyOneTimeSessionToken(tokenEnc: string): string | null {
 
 type CookieRequestHint = Pick<Request, "headers" | "url"> | null | undefined;
 
+export type MemberSessionCookieOpts = {
+  httpOnly: boolean;
+  secure: boolean;
+  sameSite: "lax";
+  path: string;
+  maxAge: number;
+  domain?: string;
+};
+
+/**
+ * Optional registrable domain so one login works on both www and apex (host-only cookies do not).
+ * Set MEMBER_SESSION_COOKIE_DOMAIN=.yourdomain.com in env, or we infer for reachforthestars.today only.
+ */
+function memberCookieDomain(request?: CookieRequestHint): string | undefined {
+  const fromEnv = process.env.MEMBER_SESSION_COOKIE_DOMAIN?.trim();
+  if (fromEnv) {
+    return fromEnv;
+  }
+  const host = request?.headers.get("host")?.split(":")[0]?.toLowerCase();
+  if (!host || host === "localhost" || host.endsWith(".vercel.app")) {
+    return undefined;
+  }
+  if (host === "www.reachforthestars.today" || host === "reachforthestars.today") {
+    return ".reachforthestars.today";
+  }
+  return undefined;
+}
+
 /** Use with incoming Request in route handlers so Secure matches the actual connection (e.g. HTTP vs HTTPS). */
 function memberCookieSecure(request?: CookieRequestHint): boolean {
   if (process.env.COOKIE_INSECURE === "1" || process.env.COOKIE_SECURE === "0") {
@@ -75,13 +103,15 @@ function memberCookieSecure(request?: CookieRequestHint): boolean {
   return true;
 }
 
-export function memberSessionCookieOptions(request?: CookieRequestHint) {
+export function memberSessionCookieOptions(request?: CookieRequestHint): MemberSessionCookieOpts {
+  const domain = memberCookieDomain(request);
   return {
     httpOnly: true,
     secure: memberCookieSecure(request),
-    sameSite: "lax" as const,
+    sameSite: "lax",
     path: "/",
-    maxAge: SESSION_MAX_AGE_SECONDS
+    maxAge: SESSION_MAX_AGE_SECONDS,
+    ...(domain ? { domain } : {})
   };
 }
 
@@ -105,6 +135,9 @@ export function buildMemberSessionSetCookieHeader(token: string, request?: Cooki
     `HttpOnly`,
     `SameSite=${opts.sameSite}`
   ];
+  if (opts.domain) {
+    parts.push(`Domain=${opts.domain}`);
+  }
   if (opts.secure) parts.push("Secure");
   return parts.join("; ");
 }

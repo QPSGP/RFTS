@@ -58,11 +58,18 @@ export default function UserAuth() {
         setStatusType("error");
         return;
       }
+      if (!data?.ok) {
+        setStatus(
+          "Sign-in did not complete (unexpected server response). If you use both www and non-www links, pick one address and bookmark it, or try again."
+        );
+        setStatusType("error");
+        return;
+      }
       const nextUrl = searchParams.get("next");
       const safeNext = nextUrl && nextUrl.startsWith("/") && !nextUrl.startsWith("//") ? nextUrl : "/play-options";
       setStatus("Signed in. Taking you there…");
       setStatusType("success");
-      window.location.href = safeNext;
+      window.location.href = new URL(safeNext, window.location.origin).href;
       return;
     } catch {
       setStatus("Something went wrong. Please try again.");
