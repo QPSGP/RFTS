@@ -62,7 +62,11 @@ export default async function SiteHeader() {
                 <a href="/moderator/console">Facilitators</a>
                 <a href="/login">Administrator</a>
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
-                {memberConsoleLink && <a href={memberConsoleLink.href}>{memberConsoleLink.label}</a>}
+                {memberConsoleLink && (
+                  <a href={memberConsoleLink.href} data-rfts="member-console">
+                    {memberConsoleLink.label}
+                  </a>
+                )}
                 {memberConsoleLink && <a href="/member/report-issue">Report an issue</a>}
               </div>
             </details>
