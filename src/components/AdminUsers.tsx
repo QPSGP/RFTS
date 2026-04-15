@@ -158,6 +158,7 @@ export default function AdminUsers() {
   const [memberTierFilter, setMemberTierFilter] = useState<"all" | "platinum" | "platinum_managed">("all");
   const [memberActivity, setMemberActivity] = useState<Record<string, MemberActivityRow[]>>({});
   const [memberActivityLoading, setMemberActivityLoading] = useState<Record<string, boolean>>({});
+  const [memberActivityError, setMemberActivityError] = useState<Record<string, string | null>>({});
   /** Non-fatal: interests/library failed but member list may still have loaded */
   const [dataLoadNotice, setDataLoadNotice] = useState<string | null>(null);
 
@@ -414,16 +415,26 @@ export default function AdminUsers() {
 
   const loadMemberActivity = async (email: string) => {
     setMemberActivityLoading((prev) => ({ ...prev, [email]: true }));
+    setMemberActivityError((prev) => ({ ...prev, [email]: null }));
     try {
       const res = await fetch(
         `/api/admin/member-activity?email=${encodeURIComponent(email)}`,
         { credentials: "include" }
       );
       if (!res.ok) {
+        const data = await res.json().catch(() => ({} as { error?: string }));
+        const msg =
+          res.status === 401
+            ? "Could not load activity (sign in as admin)."
+            : typeof data?.error === "string"
+              ? data.error
+              : `Could not load activity (HTTP ${res.status}).`;
+        setMemberActivityError((prev) => ({ ...prev, [email]: msg }));
         setMemberActivity((prev) => ({ ...prev, [email]: [] }));
         return;
       }
       const data = await res.json();
+      setMemberActivityError((prev) => ({ ...prev, [email]: null }));
       setMemberActivity((prev) => ({
         ...prev,
         [email]: Array.isArray(data.activityLog) ? data.activityLog : []
@@ -1019,8 +1030,7 @@ export default function AdminUsers() {
                       >
                         {profileOpen[user.email] ? "Hide Member Profile" : "View Member Profile"}
                       </button>
-                      {profileDrafts[user.email] && (
-                        <div className="card" style={{ marginTop: 12 }}>
+                      <div className="card" style={{ marginTop: 12 }}>
                           <div
                             style={{
                               display: "flex",
@@ -1043,8 +1053,8 @@ export default function AdminUsers() {
                             </button>
                           </div>
                           <p style={{ color: "#64748b", fontSize: 13, marginTop: 0, marginBottom: 12 }}>
-                            Sign-ins (with first page they head to), sign-outs, page views on Play Options,
-                            Library, Goals, Profile, and Report issue, plus goal and console actions.
+                            Sign-ins (with first page they head to), sign-outs, page views, played audio (library
+                            and Play Options), goal and console updates, and related actions.
                           </p>
                           {(memberActivity[user.email] || []).length > 0 ? (
                             <div style={{ overflowX: "auto", marginBottom: 16 }}>
@@ -1087,12 +1097,23 @@ export default function AdminUsers() {
                               </table>
                             </div>
                           ) : (
-                            <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 16 }}>
+                            <p
+                              style={{
+                                color: memberActivityError[user.email] ? "#b91c1c" : "#94a3b8",
+                                fontSize: 13,
+                                marginBottom: 16
+                              }}
+                            >
                               {memberActivityLoading[user.email]
                                 ? "Loading activity…"
-                                : "No activity logged yet for this member (they need to sign in after this feature ships)."}
+                                : memberActivityError[user.email]
+                                  ? memberActivityError[user.email]
+                                  : "No activity logged yet for this member (they need to sign in after this feature ships)."}
                             </p>
                           )}
+                      </div>
+                      {profileDrafts[user.email] ? (
+                        <div className="card" style={{ marginTop: 12 }}>
                           <h4>1. Member Profile</h4>
                           <p style={{ color: "#4b5563", marginTop: 4 }}>
                             Same fields and order as new member signup (Personal Details step).
@@ -1369,6 +1390,10 @@ export default function AdminUsers() {
                             Save Profile
                           </button>
                         </div>
+                      ) : (
+                        <p style={{ marginTop: 12, color: "#64748b", fontSize: 14 }}>
+                          Loading member profile…
+                        </p>
                       )}
                       <div style={{ marginTop: 12 }}>
                         <h4 style={{ marginBottom: 8 }}>2. Goals</h4>
