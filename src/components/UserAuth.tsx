@@ -20,7 +20,7 @@ export default function UserAuth() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const logout = async () => {
-    await fetch("/api/user/logout", { method: "POST" });
+    await fetch("/api/user/logout", { method: "POST", credentials: "include" });
     setStatus("Logged out.");
     setStatusType("success");
     setLoggedIn(false);

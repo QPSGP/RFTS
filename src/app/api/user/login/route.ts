@@ -40,7 +40,8 @@ async function doPost(request: Request) {
   let loginDetails: string | null = null;
 
   const contentType = request.headers.get("content-type") || "";
-  if (contentType.includes("application/x-www-form-urlencoded")) {
+  const isFormLogin = contentType.includes("application/x-www-form-urlencoded");
+  if (isFormLogin) {
     const formData = await request.formData();
     const e = formData.get("email");
     const p = formData.get("password");
@@ -70,17 +71,23 @@ async function doPost(request: Request) {
 
   const user = await getUserByEmail(email);
   if (!user) {
+    if (!isFormLogin) {
+      return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
+    }
     return NextResponse.redirect(loginErrorUrl, 302);
   }
   const isValid = await bcrypt.compare(password, user.password_hash);
   if (!isValid) {
+    if (!isFormLogin) {
+      return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
+    }
     return NextResponse.redirect(loginErrorUrl, 302);
   }
 
   const token = createUserSessionToken(user.email);
   await recordMemberActivity(user.id, "login", loginDetails);
 
-  if (contentType.includes("application/x-www-form-urlencoded")) {
+  if (isFormLogin) {
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=${successUrl}"></head><body>Signed in. Taking you to Play Options…</body></html>`;
     const response = new NextResponse(html, {
       status: 200,
