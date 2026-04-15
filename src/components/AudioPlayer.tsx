@@ -31,6 +31,8 @@ export default function AudioPlayer({
   const [isPlayingPrep, setIsPlayingPrep] = useState(!!prepAudioUrl);
   const [isMobile, setIsMobile] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  /** Mobile fixed Pause/Play/Restart strip; hidden after Close until playback starts again. */
+  const [showMobileLibraryBar, setShowMobileLibraryBar] = useState(true);
 
   const releaseWakeLock = async () => {
     try {
@@ -85,6 +87,7 @@ export default function AudioPlayer({
     const handlePlay = () => {
       requestWakeLock();
       setIsPlaying(true);
+      setShowMobileLibraryBar(true);
     };
 
     const handlePause = () => {
@@ -172,6 +175,7 @@ export default function AudioPlayer({
     setIsPlaying(false);
     setIsPlayingPrep(!!prepAudioUrl);
     libraryStoppedRef.current = true;
+    setShowMobileLibraryBar(false);
   };
 
   const handleLibraryPlay = () => {
@@ -253,7 +257,9 @@ export default function AudioPlayer({
             </p>
           )}
         </div>
-        {isMobile && <div style={{ height: 220 }} aria-hidden />}
+        {isMobile && showMobileLibraryBar && (
+          <div style={{ height: 220 }} aria-hidden />
+        )}
         <audio ref={audioRef} controls controlsList="nodownload" style={{ width: "100%" }}>
           {!prepAudioUrl && <source src={audioUrl} />}
           Your browser does not support the audio element.
@@ -267,7 +273,7 @@ export default function AudioPlayer({
           Close library audio
         </button>
       </div>
-      {isMobile && (
+      {isMobile && showMobileLibraryBar && (
         <div
           style={{
             position: "fixed",
