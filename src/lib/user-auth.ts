@@ -52,22 +52,62 @@ export function verifyOneTimeSessionToken(tokenEnc: string): string | null {
   return email;
 }
 
-const sessionCookieOptions = () => ({
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  path: "/",
-  maxAge: SESSION_MAX_AGE_SECONDS
-});
+/**
+ * Use request when available so Secure matches the browser connection (fixes cookies
+ * dropped when NODE_ENV=production but the request is HTTP, e.g. local prod or some proxies).
+ */
+export function memberSessionCookieOpts(request?: Request | null): {
+  httpOnly: boolean;
+  secure: boolean;
+  sameSite: "lax";
+  path: string;
+  maxAge: number;
+} {
+  if (process.env.COOKIE_INSECURE === "1" || process.env.COOKIE_SECURE === "0") {
+    return {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+      maxAge: SESSION_MAX_AGE_SECONDS
+    };
+  }
+  let secure = false;
+  if (request) {
+    const forwarded = request.headers.get("x-forwarded-proto");
+    if (forwarded === "https") secure = true;
+    else if (forwarded === "http") secure = false;
+    else {
+      try {
+        secure = new URL(request.url).protocol === "https:";
+      } catch {
+        secure = false;
+      }
+    }
+  } else {
+    secure = process.env.NODE_ENV === "production";
+  }
+  return {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    path: "/",
+    maxAge: SESSION_MAX_AGE_SECONDS
+  };
+}
 
 /** Set session cookie on a response (use in route handlers so Set-Cookie is on the returned response). */
-export function setUserSessionCookieOnResponse(response: NextResponse, token: string): void {
-  response.cookies.set(sessionCookie, token, sessionCookieOptions());
+export function setUserSessionCookieOnResponse(
+  response: NextResponse,
+  token: string,
+  request?: Request | null
+): void {
+  response.cookies.set(sessionCookie, token, memberSessionCookieOpts(request ?? undefined));
 }
 
 /** Build Set-Cookie header value (value in quotes so characters like | don't break parsing). */
 export function buildMemberSessionSetCookieHeader(token: string): string {
-  const opts = sessionCookieOptions();
+  const opts = memberSessionCookieOpts(null);
   const value = `"${token.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
   const parts = [
     `${sessionCookie}=${value}`,
@@ -82,12 +122,12 @@ export function buildMemberSessionSetCookieHeader(token: string): string {
 
 export async function setUserSession(token: string): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.set(sessionCookie, token, sessionCookieOptions());
+  cookieStore.set(sessionCookie, token, memberSessionCookieOpts(null));
 }
 
-export async function clearUserSession(): Promise<void> {
+export async function clearUserSession(request?: Request | null): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.set(sessionCookie, "", { ...sessionCookieOptions(), maxAge: 0 });
+  cookieStore.set(sessionCookie, "", { ...memberSessionCookieOpts(request ?? undefined), maxAge: 0 });
 }
 
 export async function getUserSessionEmail(): Promise<string | null> {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { createUser, ensureSubscription, getUserByEmail } from "@/lib/db";
+import { createUser, ensureSubscription, getUserByEmail, normalizeMemberEmail } from "@/lib/db";
 import { createUserSessionToken, setUserSessionCookieOnResponse } from "@/lib/user-auth";
 
 const schema = z.object({
@@ -22,8 +22,8 @@ export async function POST(request: Request) {
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
   const user = await createUser(parsed.data.email, passwordHash);
   await ensureSubscription(user.id, "platinum", "inactive");
-  const token = createUserSessionToken(user.email);
+  const token = createUserSessionToken(normalizeMemberEmail(user.email));
   const response = NextResponse.json({ ok: true });
-  setUserSessionCookieOnResponse(response, token);
+  setUserSessionCookieOnResponse(response, token, request);
   return response;
 }

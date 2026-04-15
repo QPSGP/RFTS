@@ -1205,11 +1205,20 @@ export type MemberActivityLogEntry = {
   createdAt: string;
 };
 
+export type MemberActivityForUserResult =
+  | { ok: true; entries: MemberActivityLogEntry[] }
+  | { ok: false; entries: []; error: string };
+
+export type MemberActivityGlobalResult =
+  | { ok: true; entries: MemberActivityLogRow[] }
+  | { ok: false; entries: []; error: string };
+
 /** Recent activity rows for a single member (admin member detail view). */
 export const getMemberActivityLogForUser = async (
   userId: string,
   limit: number = 150
-): Promise<MemberActivityLogEntry[]> => {
+): Promise<MemberActivityForUserResult> => {
+  const cap = Math.min(500, Math.max(1, Math.floor(Number(limit)) || 150));
   try {
     const { rows } = await sql<{
       id: string;
@@ -1221,21 +1230,27 @@ export const getMemberActivityLogForUser = async (
       FROM member_activity_log
       WHERE user_id = ${userId}
       ORDER BY created_at DESC
-      LIMIT ${limit}
+      LIMIT ${cap}
     `;
-    return rows.map((r) => ({
-      id: r.id,
-      action: r.action,
-      details: r.details ?? null,
-      createdAt: r.created_at
-    }));
-  } catch {
-    return [];
+    return {
+      ok: true,
+      entries: rows.map((r) => ({
+        id: r.id,
+        action: r.action,
+        details: r.details ?? null,
+        createdAt: r.created_at
+      }))
+    };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[getMemberActivityLogForUser]", msg);
+    return { ok: false, entries: [], error: msg };
   }
 };
 
 /** Get recent member activity for admin (with user name/email). */
-export const getMemberActivityLog = async (limit: number = 100): Promise<MemberActivityLogRow[]> => {
+export const getMemberActivityLog = async (limit: number = 100): Promise<MemberActivityGlobalResult> => {
+  const cap = Math.min(500, Math.max(1, Math.floor(Number(limit)) || 100));
   try {
     const { rows } = await sql<{
       id: string;
@@ -1260,20 +1275,25 @@ export const getMemberActivityLog = async (limit: number = 100): Promise<MemberA
       JOIN users u ON u.id = m.user_id
       LEFT JOIN member_profiles mp ON mp.user_id = m.user_id
       ORDER BY m.created_at DESC
-      LIMIT ${limit}
+      LIMIT ${cap}
     `;
-    return rows.map((r) => ({
-      id: r.id,
-      userId: r.user_id,
-      email: r.email,
-      firstName: r.first_name ?? null,
-      lastName: r.last_name ?? null,
-      action: r.action,
-      details: r.details ?? null,
-      createdAt: r.created_at
-    }));
-  } catch {
-    return [];
+    return {
+      ok: true,
+      entries: rows.map((r) => ({
+        id: r.id,
+        userId: r.user_id,
+        email: r.email,
+        firstName: r.first_name ?? null,
+        lastName: r.last_name ?? null,
+        action: r.action,
+        details: r.details ?? null,
+        createdAt: r.created_at
+      }))
+    };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[getMemberActivityLog]", msg);
+    return { ok: false, entries: [], error: msg };
   }
 };
 
