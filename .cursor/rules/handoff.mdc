@@ -15,6 +15,12 @@ When the user asks where we left off, what we're doing, or for a summary of the 
 
 Use that file to give an accurate, up-to-date summary and to continue work in the right place.
 
+## Member login & session (do not touch by default)
+
+**Do not change** member authentication, session cookies, or login UX **unless the user explicitly asks** to work on login, signup auth, sessions, or related bugs.
+
+Treat as sensitive / stable: `src/app/api/user/login`, `src/lib/user-auth.ts`, `src/middleware.ts` (pathname for header), `SiteHeader` behavior on `/member/login`, `src/app/member/login`, JSON vs form login responses, `ClearSession`, and login test scripts. Prefer unrelated features and other routes unless the request clearly covers this area.
+
 ## Resend (email)
 
 When the user asks for **Resend** info, **Resend setup**, or **email env / BCC / templates**:
