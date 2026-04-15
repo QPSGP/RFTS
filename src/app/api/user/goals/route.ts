@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getUserProfile, recordMemberActivity, setScheduleStartedToToday, setUserGoals, setUserPlaysPerNight } from "@/lib/db";
+import {
+  getUserProfile,
+  listInterests,
+  recordMemberActivity,
+  setScheduleStartedToToday,
+  setUserGoals,
+  setUserPlaysPerNight
+} from "@/lib/db";
 
 const schema = z.object({
   goalIds: z.array(z.string()).min(1).max(10).optional(),
@@ -34,8 +41,17 @@ export async function GET() {
   const isManaged = profile.subscriptionTier === "platinum_managed";
 
   const editState = computeGoalEditState(profile);
+  const goalIds = profile.goalIds || [];
+  const interests = await listInterests();
+  const nameById = new Map(interests.map((i) => [i.id, i.name]));
+  const goalsOrdered = goalIds.map((id) => ({
+    id,
+    name: nameById.get(id) ?? "Unknown goal"
+  }));
+
   return NextResponse.json({
-    goalIds: profile.goalIds || [],
+    goalIds,
+    goalsOrdered,
     limit: GOAL_LIMIT,
     canEdit: isManaged ? false : editState.canEdit, // Managed members cannot edit goals
     nextAllowedAt: editState.nextAllowedAt,

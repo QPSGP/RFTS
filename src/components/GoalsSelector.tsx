@@ -43,7 +43,7 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
   );
 
   useEffect(() => {
-    fetch("/api/user/goals")
+    fetch("/api/user/goals", { credentials: "include" })
       .then((res) => {
         if (!res.ok) {
           throw new Error("Unauthorized");
@@ -90,6 +90,7 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
     setMessage(null);
     const response = await fetch("/api/user/goals", {
       method: "PUT",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ goalIds, playsPerNight })
     });
