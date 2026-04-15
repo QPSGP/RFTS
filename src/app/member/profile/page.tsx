@@ -99,17 +99,9 @@ function toState(profile: {
   };
 }
 
-type GoalRow = { id: string; name: string };
-
 export default function MemberProfilePage() {
   const [status, setStatus] = useState<"loading" | "ready" | "loggedOut">("loading");
   const [profile, setProfile] = useState<ProfileState>(emptyProfile);
-  const [goalsOrdered, setGoalsOrdered] = useState<GoalRow[]>([]);
-  const [goalsMeta, setGoalsMeta] = useState<{
-    isManaged: boolean;
-    playsPerNight: number;
-  } | null>(null);
-  const [goalsLoadError, setGoalsLoadError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -122,10 +114,7 @@ export default function MemberProfilePage() {
   }, [profile.birthDate, profile.yearBorn]);
 
   const load = useCallback(async () => {
-    const [res, goalsRes] = await Promise.all([
-      fetch("/api/member/profile", { credentials: "include" }),
-      fetch("/api/user/goals", { credentials: "include" })
-    ]);
+    const res = await fetch("/api/member/profile", { credentials: "include" });
     if (res.status === 401) {
       setStatus("loggedOut");
       return;
@@ -133,32 +122,11 @@ export default function MemberProfilePage() {
     if (!res.ok) {
       setStatus("ready");
       setProfile(emptyProfile);
-      setGoalsOrdered([]);
-      setGoalsMeta(null);
-      setGoalsLoadError(null);
       return;
     }
     const data = await res.json();
     setProfile(toState(data.profile ?? {}));
     setStatus("ready");
-
-    if (goalsRes.ok) {
-      const g = await goalsRes.json();
-      setGoalsOrdered(Array.isArray(g.goalsOrdered) ? g.goalsOrdered : []);
-      setGoalsMeta({
-        isManaged: !!g.isManaged,
-        playsPerNight: typeof g.playsPerNight === "number" ? g.playsPerNight : 2
-      });
-      setGoalsLoadError(null);
-    } else {
-      setGoalsOrdered([]);
-      setGoalsMeta(null);
-      setGoalsLoadError(
-        goalsRes.status === 401
-          ? "Goals could not be loaded (session). Try refreshing the page."
-          : "Could not load your goals. You can still update them from Play Options."
-      );
-    }
   }, []);
 
   useEffect(() => {
@@ -440,48 +408,6 @@ export default function MemberProfilePage() {
             </span>
           )}
         </div>
-
-        <div className="section-heading" style={{ marginTop: 32, marginBottom: 8 }}>
-          Your goals
-        </div>
-        <p style={{ color: "#4b5563", fontSize: 14, marginBottom: 12 }}>
-          These are the focus areas used for your session lineup (same order as on the goals page).
-        </p>
-        {goalsLoadError && (
-          <p style={{ color: "#dc2626", fontSize: 14, marginBottom: 12 }} role="alert">
-            {goalsLoadError}
-          </p>
-        )}
-        {goalsMeta?.isManaged && (
-          <p style={{ color: "#166534", fontSize: 14, marginBottom: 12, background: "#f0fdf4", padding: 12, borderRadius: 8, border: "1px solid #bbf7d0" }}>
-            Your account is managed by an administrator. Goal changes are made for you in the admin console.
-          </p>
-        )}
-        {!goalsMeta?.isManaged && goalsMeta && (
-          <p style={{ fontSize: 13, color: "#64748b", marginBottom: 12 }}>
-            Plays per night: <strong>{goalsMeta.playsPerNight}</strong> (change on{" "}
-            <Link href="/goals">Update Goals</Link>).
-          </p>
-        )}
-        {goalsOrdered.length === 0 && !goalsLoadError ? (
-          <p style={{ color: "#6b7280", marginBottom: 12 }}>No goals selected yet.</p>
-        ) : goalsOrdered.length > 0 ? (
-          <ol style={{ margin: "0 0 16px 0", paddingLeft: 22, color: "#374151" }}>
-            {goalsOrdered.map((g, i) => (
-              <li key={g.id} style={{ marginBottom: 6 }}>
-                <strong style={{ marginRight: 8 }}>{i + 1}.</strong>
-                {g.name}
-              </li>
-            ))}
-          </ol>
-        ) : null}
-        {!goalsMeta?.isManaged && (
-          <p style={{ marginBottom: 0 }}>
-            <Link href="/goals" className="button button-secondary">
-              Update Goals
-            </Link>
-          </p>
-        )}
 
         <p style={{ marginTop: 24, marginBottom: 0 }}>
           <Link href="/play-options" className="button button-secondary">
