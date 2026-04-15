@@ -3,6 +3,9 @@ import MemberRouteActivityLogger from "@/components/MemberRouteActivityLogger";
 import SiteHeader from "@/components/SiteHeader";
 import "./globals.css";
 
+/** Fresh cookie reads for SiteHeader on every request (avoids stale “Members Console” vs /api/user/me mismatch). */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Reach For The Stars",
   description: "Guided audio for calm, sleep, and recovery.",

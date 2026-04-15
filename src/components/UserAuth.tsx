@@ -1,7 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 
 const inputStyle = {
   padding: 12,
@@ -10,14 +9,36 @@ const inputStyle = {
   width: "100%"
 };
 
-function UserAuthForm() {
-  const searchParams = useSearchParams();
-  const errorFromUrl = searchParams.get("error") === "invalid";
-  const [status, setStatus] = useState<string | null>(errorFromUrl ? "Invalid credentials. Try again." : null);
-  const [statusType, setStatusType] = useState<"success" | "error" | null>(errorFromUrl ? "error" : null);
+function firstQueryString(v: string | string[] | undefined): string | undefined {
+  if (typeof v === "string") return v;
+  if (Array.isArray(v) && typeof v[0] === "string") return v[0];
+  return undefined;
+}
+
+export type UserAuthProps = {
+  /** From server `searchParams` — avoids useSearchParams (blank page / stuck Suspense on login). */
+  initialErrorInvalid?: boolean;
+  initialNextPath?: string;
+};
+
+export default function UserAuth({
+  initialErrorInvalid = false,
+  initialNextPath
+}: UserAuthProps) {
+  const [status, setStatus] = useState<string | null>(
+    initialErrorInvalid ? "Invalid credentials. Try again." : null
+  );
+  const [statusType, setStatusType] = useState<"success" | "error" | null>(
+    initialErrorInvalid ? "error" : null
+  );
   const [loggedIn, setLoggedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const safeNextPath =
+    initialNextPath && initialNextPath.startsWith("/") && !initialNextPath.startsWith("//")
+      ? initialNextPath
+      : "/play-options";
 
   const logout = async () => {
     await fetch("/api/user/logout", { method: "POST", credentials: "include" });
@@ -40,17 +61,12 @@ function UserAuthForm() {
     }
     setIsSubmitting(true);
     try {
-      const nextParam = searchParams.get("next");
-      const nextForLog =
-        nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
-          ? nextParam
-          : "/play-options";
       const response = await fetch("/api/user/login", {
         method: "POST",
         credentials: "include",
         redirect: "manual",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, next: nextForLog })
+        body: JSON.stringify({ email, password, next: safeNextPath })
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -68,11 +84,9 @@ function UserAuthForm() {
         setStatusType("error");
         return;
       }
-      const nextUrl = searchParams.get("next");
-      const safeNext = nextUrl && nextUrl.startsWith("/") && !nextUrl.startsWith("//") ? nextUrl : "/play-options";
       setStatus("Signed in. Taking you there…");
       setStatusType("success");
-      window.location.href = new URL(safeNext, window.location.origin).href;
+      window.location.href = new URL(safeNextPath, window.location.origin).href;
       return;
     } catch {
       setStatus("Something went wrong. Please try again.");
@@ -112,7 +126,12 @@ function UserAuthForm() {
             Log Out
           </button>
           {status && (
-            <p className={`status-message status-message--${statusType ?? "success"}`} style={{ marginTop: 12 }} role="status" aria-live="polite">
+            <p
+              className={`status-message status-message--${statusType ?? "success"}`}
+              style={{ marginTop: 12 }}
+              role="status"
+              aria-live="polite"
+            >
               {status}
             </p>
           )}
@@ -122,7 +141,9 @@ function UserAuthForm() {
         <h2>Member Login</h2>
         <form onSubmit={handleLogin} className="grid" noValidate>
           <div>
-            <label htmlFor="member-login-email" className="sr-only">Email</label>
+            <label htmlFor="member-login-email" className="sr-only">
+              Email
+            </label>
             <input
               id="member-login-email"
               name="email"
@@ -140,7 +161,9 @@ function UserAuthForm() {
             </p>
           </div>
           <div style={{ position: "relative" }}>
-            <label htmlFor="member-login-password" className="sr-only">Password</label>
+            <label htmlFor="member-login-password" className="sr-only">
+              Password
+            </label>
             <input
               id="member-login-password"
               name="password"
@@ -191,25 +214,16 @@ function UserAuthForm() {
         </p>
       </div>
       {!loggedIn && status && (
-        <p id="member-login-status" className={`status-message status-message--${statusType ?? "error"}`} style={{ marginTop: 12 }} role="alert" aria-live="polite">
+        <p
+          id="member-login-status"
+          className={`status-message status-message--${statusType ?? "error"}`}
+          style={{ marginTop: 12 }}
+          role="alert"
+          aria-live="polite"
+        >
           {status}
         </p>
       )}
     </div>
-  );
-}
-
-export default function UserAuth() {
-  return (
-    <Suspense
-      fallback={
-        <div className="card" style={{ maxWidth: 520, margin: "0 auto" }}>
-          <h2 style={{ marginTop: 0 }}>Member Login</h2>
-          <p style={{ color: "#64748b", marginBottom: 0 }}>Loading…</p>
-        </div>
-      }
-    >
-      <UserAuthForm />
-    </Suspense>
   );
 }

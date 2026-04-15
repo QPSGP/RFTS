@@ -83,7 +83,7 @@ export default function PlayOptionsPage() {
       if (params.get("autoplay") === "1") setAutoStart(true);
       if (params.get("autoplay") === "0") setAutoStart(false);
     }
-    fetch("/api/user/me", { credentials: "include" })
+    fetch("/api/user/me", { credentials: "include", cache: "no-store" })
       .then((res) => {
         if (!res.ok) {
           throw new Error("Unauthorized");

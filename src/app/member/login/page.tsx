@@ -1,7 +1,23 @@
 import UserAuth from "@/components/UserAuth";
 import SiteFooter from "@/components/SiteFooter";
 
-export default function MemberLoginPage() {
+function firstQuery(v: string | string[] | undefined): string | undefined {
+  if (typeof v === "string") return v;
+  if (Array.isArray(v) && typeof v[0] === "string") return v[0];
+  return undefined;
+}
+
+type MemberLoginPageProps = {
+  searchParams?: Record<string, string | string[] | undefined>;
+};
+
+export default function MemberLoginPage({ searchParams = {} }: MemberLoginPageProps) {
+  const err = firstQuery(searchParams.error);
+  const initialErrorInvalid = err === "invalid";
+  const nextRaw = firstQuery(searchParams.next);
+  const initialNextPath =
+    nextRaw && nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : undefined;
+
   return (
     <main>
       <section className="hero section">
@@ -12,7 +28,7 @@ export default function MemberLoginPage() {
           status.
         </p>
       </section>
-      <UserAuth />
+      <UserAuth initialErrorInvalid={initialErrorInvalid} initialNextPath={initialNextPath} />
       <SiteFooter showCta={false} />
     </main>
   );

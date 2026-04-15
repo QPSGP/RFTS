@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getMemberProfileByUserId, getUserProfile } from "@/lib/db";
+import { getMemberProfileByUserId, getUserProfile, normalizeMemberEmail } from "@/lib/db";
 
 const sessionCookie = "rfts_user_session";
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
@@ -69,8 +69,19 @@ function memberCookieSecure(request?: CookieRequestHint): boolean {
   return true;
 }
 
+function memberCookieDomain(request?: CookieRequestHint): string | undefined {
+  const fromEnv = process.env.MEMBER_SESSION_COOKIE_DOMAIN?.trim();
+  if (fromEnv) return fromEnv;
+  const host = request?.headers.get("host")?.split(":")[0]?.toLowerCase();
+  if (!host || host.endsWith(".vercel.app")) return undefined;
+  if (host === "www.reachforthestars.today" || host === "reachforthestars.today") {
+    return ".reachforthestars.today";
+  }
+  return undefined;
+}
+
 function memberSessionCookieOptions(request?: CookieRequestHint) {
-  const domain = process.env.MEMBER_SESSION_COOKIE_DOMAIN?.trim();
+  const domain = memberCookieDomain(request);
   return {
     httpOnly: true,
     secure: memberCookieSecure(request),
@@ -141,7 +152,7 @@ export async function getUserSessionEmail(): Promise<string | null> {
   if (sign(payload) !== signature) {
     return null;
   }
-  return email;
+  return normalizeMemberEmail(email);
 };
 
 /** Server-side: get full member profile for current session (same shape as GET /api/user/me). */
