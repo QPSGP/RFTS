@@ -157,6 +157,11 @@ function formatActivityTime(iso: string): string {
   }
 }
 
+/** 1 or 2 — how many main rotation recordings count as one finished “schedule night”. */
+function memberPlaysPerNight(user: { playsPerNight?: number }): 1 | 2 {
+  return user.playsPerNight === 1 ? 1 : 2;
+}
+
 type PlaybackSettingsState = { fallbackTrackId: string; cgmrTrackId?: string } | null;
 
 export default function AdminUsers() {
@@ -527,7 +532,9 @@ export default function AdminUsers() {
         setStatus(typeof data?.error === "string" ? data.error : "Could not update schedule progress.");
         return;
       }
-      setStatus(`Schedule updated for ${email}: completed nights = ${clamped} (tonight = night ${Math.min(366, Math.max(1, clamped + 1))}).`);
+      setStatus(
+        `Schedule updated for ${email}: completed schedule nights = ${clamped} (next schedule night #${Math.min(366, Math.max(1, clamped + 1))}).`
+      );
       await loadMemberActivity(email);
     } finally {
       setMemberScheduleSaving((prev) => ({ ...prev, [email]: false }));
@@ -1157,11 +1164,37 @@ export default function AdminUsers() {
                                 border: "1px solid #e2e8f0"
                               }}
                             >
-                              <h5 style={{ margin: "0 0 8px", fontSize: 14 }}>Listening schedule (manual)</h5>
+                              <h5 style={{ margin: "0 0 8px", fontSize: 14 }}>Schedule nights (manual)</h5>
+                              <p style={{ margin: "0 0 8px", fontSize: 13, color: "#334155", lineHeight: 1.45 }}>
+                                {memberPlaysPerNight(user) === 2 ? (
+                                  <>
+                                    This member uses <strong>two main recordings per schedule night</strong>{" "}
+                                    (full session: first audio, then the second after the gap). Preparation
+                                    audio, if any, is extra and is not what this counter measures.
+                                  </>
+                                ) : (
+                                  <>
+                                    This member uses <strong>one main recording per schedule night</strong>{" "}
+                                    (half session). Preparation audio, if any, is extra and is not what this
+                                    counter measures.
+                                  </>
+                                )}{" "}
+                                The numbers below are <strong>finished schedule nights</strong> in the rotation —{" "}
+                                not each tap on play.
+                              </p>
                               <p style={{ margin: "0 0 10px", fontSize: 13, color: "#475569" }}>
-                                <strong>Completed nights:</strong>{" "}
-                                {memberScheduleProgress[user.email]!.completedScheduleNights} ·{" "}
-                                <strong>Tonight (next night):</strong> night{" "}
+                                <strong>Completed schedule nights:</strong>{" "}
+                                {memberScheduleProgress[user.email]!.completedScheduleNights}
+                                {" · "}
+                                <strong>Main rotation audios completed (approx.):</strong>{" "}
+                                {memberScheduleProgress[user.email]!.completedScheduleNights *
+                                  memberPlaysPerNight(user)}{" "}
+                                <span style={{ color: "#64748b" }}>
+                                  (schedule nights × {memberPlaysPerNight(user)} main recording
+                                  {memberPlaysPerNight(user) === 2 ? "s" : ""} each)
+                                </span>
+                                {" · "}
+                                <strong>Next schedule night:</strong> #
                                 {memberScheduleProgress[user.email]!.currentNight}
                                 {memberScheduleProgress[user.email]!.scheduleStartedAt ? (
                                   <>
@@ -1191,7 +1224,7 @@ export default function AdminUsers() {
                                     )
                                   }
                                 >
-                                  −1 night
+                                  −1 schedule night
                                 </button>
                                 <button
                                   type="button"
@@ -1205,10 +1238,10 @@ export default function AdminUsers() {
                                     )
                                   }
                                 >
-                                  +1 night
+                                  +1 schedule night
                                 </button>
                                 <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
-                                  Set completed nights (0–366)
+                                  Set completed schedule nights (0–366)
                                   <input
                                     type="number"
                                     min={0}
@@ -1232,7 +1265,7 @@ export default function AdminUsers() {
                                     const raw = memberScheduleDraft[user.email] ?? "0";
                                     const n = parseInt(raw, 10);
                                     if (Number.isNaN(n)) {
-                                      setStatus("Enter a number between 0 and 366 for completed nights.");
+                                      setStatus("Enter a number between 0 and 366 for completed schedule nights.");
                                       return;
                                     }
                                     void saveMemberScheduleProgress(user.email, n);
@@ -1242,8 +1275,8 @@ export default function AdminUsers() {
                                 </button>
                               </div>
                               <p style={{ margin: "10px 0 0", fontSize: 12, color: "#64748b" }}>
-                                This sets how many schedule nights they have fully finished. It does not change
-                                their goals or rotation start date. Use for support / corrections.
+                                This updates how many schedule nights they have fully completed in the app. It
+                                does not change their goals, sessions-per-night setting, or rotation start date.
                               </p>
                             </div>
                           )}
