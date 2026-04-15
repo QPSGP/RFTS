@@ -18,8 +18,8 @@ export default async function LibraryItemPage({ params }: PageProps) {
 
   return (
     <main>
-      <PlaySecondRecordingCta />
       <AudioGate item={item} />
+      <PlaySecondRecordingCta />
       <ScreenWakeToggle />
       <section style={{ textAlign: "center", paddingTop: 24, marginTop: 24, borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
         <Link className="button button-secondary" href="/library">

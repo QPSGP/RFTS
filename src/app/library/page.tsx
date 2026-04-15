@@ -49,8 +49,8 @@ export default async function LibraryPage() {
           ← Back to Console
         </a>
       </section>
-      <PlaySecondRecordingCta />
       <LibraryBrowser interests={interests} library={libraryForMember} />
+      <PlaySecondRecordingCta />
       <section style={{ textAlign: "center", paddingTop: 24, marginTop: 24, borderTop: "1px solid #e5e7eb" }}>
         <a className="button button-secondary" href="/play-options">
           ← Back to Console

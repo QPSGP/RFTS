@@ -55,10 +55,10 @@ export default function PlaySecondRecordingCta() {
         borderColor: "#e2e8f0"
       }}
     >
-      <h3 style={{ marginTop: 0, marginBottom: 8 }}>Your second recording tonight</h3>
+      <h3 style={{ marginTop: 0, marginBottom: 8 }}>Play Options — second recording tonight</h3>
       <p style={{ color: "#475569", marginTop: 0, marginBottom: 8 }}>
-        <strong>{secondTitle}</strong> — starts with the same preparation audio as your session, then plays
-        this goal recording.
+        This opens your <strong>nightly session</strong> on Play Options (not the library player above).{" "}
+        <strong>{secondTitle}</strong> — same preparation audio as your session, then this goal recording.
       </p>
       <a
         className="button button-secondary"

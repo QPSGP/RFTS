@@ -234,21 +234,32 @@ export type IssueResolvedEmailOptions = {
   categoryLabel: string;
   /** Admin resolution notes (optional); shown to member when non-empty. */
   resolutionNotes?: string | null;
+  /** Default resolved; closed uses the same layout with closed wording. */
+  outcome?: "resolved" | "closed";
 };
 
-/** Member-facing email when an admin sets their issue report to Resolved. */
+/** Member-facing email when an admin sets their issue report to Resolved or Closed. */
 export function getIssueResolvedEmailContent(opts: IssueResolvedEmailOptions): TemplateContent {
   const { firstName, reportSubject, categoryLabel, resolutionNotes } = opts;
+  const outcome = opts.outcome ?? "resolved";
   const baseUrl = getBaseUrl();
-  const subj = "Your report has been resolved — Reach For The Stars";
+  const subj =
+    outcome === "closed"
+      ? "Your report has been closed — Reach For The Stars"
+      : "Your report has been resolved — Reach For The Stars";
   const notes = (resolutionNotes || "").trim();
+  const emptyLead =
+    outcome === "closed"
+      ? `<p>Our team has marked your report as <strong>closed</strong>. If anything else comes up, you can submit another report anytime from your member console.</p>`
+      : `<p>Our team has marked your report as <strong>resolved</strong>. If anything else comes up, you can submit another report anytime from your member console.</p>`;
   const notesBlock =
     notes.length > 0
       ? `<p><strong>Message from our team:</strong></p><p style="white-space: pre-wrap; background: #f9fafb; padding: 12px; border-radius: 8px;">${escapeHtml(notes).replace(/\n/g, "<br />")}</p>`
-      : `<p>Our team has marked your report as <strong>resolved</strong>. If anything else comes up, you can submit another report anytime from your member console.</p>`;
+      : emptyLead;
+  const statusWord = outcome === "closed" ? "closed" : "resolved";
   const html = emailWrapper(`
   <p>${firstName?.trim() ? `Hi ${escapeHtml(firstName.trim())},` : "Hi there,"}</p>
-  <p>Thank you for reaching out. Your report has been <strong>resolved</strong>.</p>
+  <p>Thank you for reaching out. Your report has been <strong>${statusWord}</strong>.</p>
   <p><strong>Category:</strong> ${escapeHtml(categoryLabel)}</p>
   <p><strong>Subject you reported:</strong> ${escapeHtml(reportSubject)}</p>
   ${notesBlock}
@@ -259,7 +270,7 @@ export function getIssueResolvedEmailContent(opts: IssueResolvedEmailOptions): T
   const hiText = firstName?.trim() ? `Hi ${firstName.trim()},` : "Hi there,";
   const text = `${hiText}
 
-Thank you for reaching out. Your report has been resolved.
+Thank you for reaching out. Your report has been ${statusWord}.
 
 Category: ${categoryLabel}
 Subject: ${reportSubject}

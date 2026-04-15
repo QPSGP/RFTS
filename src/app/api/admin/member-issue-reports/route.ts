@@ -97,11 +97,13 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: result.error }, { status });
   }
 
-  const becameResolved =
-    parsed.data.status === "resolved" && previous.status !== "resolved";
+  const wasTerminal = previous.status === "resolved" || previous.status === "closed";
+  const isTerminal = parsed.data.status === "resolved" || parsed.data.status === "closed";
+  /** First time moving to resolved or closed — email member once (not again resolved→closed). */
+  const shouldNotifyMember = isTerminal && !wasTerminal;
   let resolutionEmailSent: boolean | undefined;
 
-  if (becameResolved) {
+  if (shouldNotifyMember) {
     let firstName: string | null = null;
     try {
       const profile = await getMemberProfileByUserId(previous.userId);
@@ -113,7 +115,8 @@ export async function PATCH(request: Request) {
       firstName,
       reportSubject: previous.subject,
       categoryLabel: previous.category || "General",
-      resolutionNotes: effectiveResolutionNotes
+      resolutionNotes: effectiveResolutionNotes,
+      outcome: parsed.data.status === "closed" ? "closed" : "resolved"
     });
     const sendResult = await sendEmail({
       to: previous.memberEmail,
@@ -124,7 +127,7 @@ export async function PATCH(request: Request) {
     });
     resolutionEmailSent = sendResult.ok;
     if (!sendResult.ok) {
-      console.error("[member-issue-reports PATCH] Resolution email:", sendResult.error);
+      console.error("[member-issue-reports PATCH] Member status email:", sendResult.error);
     }
   }
 

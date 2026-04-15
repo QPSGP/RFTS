@@ -24,6 +24,8 @@ export default function AudioPlayer({
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  /** After "Close library audio", src is cleared; next Play must reassign prep/main URLs. */
+  const libraryStoppedRef = useRef(false);
   const [wakeLockSupported, setWakeLockSupported] = useState(true);
   const [wakeLockActive, setWakeLockActive] = useState(false);
   const [isPlayingPrep, setIsPlayingPrep] = useState(!!prepAudioUrl);
@@ -159,15 +161,46 @@ export default function AudioPlayer({
     audioRef.current?.pause();
   };
 
+  const handleCloseLibraryAudio = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.pause();
+    audio.currentTime = 0;
+    audio.removeAttribute("src");
+    audio.load();
+    void releaseWakeLock();
+    setIsPlaying(false);
+    setIsPlayingPrep(!!prepAudioUrl);
+    libraryStoppedRef.current = true;
+  };
+
   const handleLibraryPlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
+    if (libraryStoppedRef.current || !(audio.currentSrc || audio.src)) {
+      libraryStoppedRef.current = false;
+      if (prepAudioUrl) {
+        setIsPlayingPrep(true);
+        audio.src = prepAudioUrl;
+      } else {
+        setIsPlayingPrep(false);
+        audio.src = audioUrl;
+      }
+    }
     void audio.play().catch(() => {});
   };
 
   const handleLibraryRestart = () => {
     const audio = audioRef.current;
     if (!audio) return;
+    libraryStoppedRef.current = false;
+    if (prepAudioUrl) {
+      setIsPlayingPrep(true);
+      audio.src = prepAudioUrl;
+    } else {
+      setIsPlayingPrep(false);
+      audio.src = audioUrl;
+    }
     audio.currentTime = 0;
     void audio.play().catch(() => {});
   };
@@ -225,6 +258,14 @@ export default function AudioPlayer({
           {!prepAudioUrl && <source src={audioUrl} />}
           Your browser does not support the audio element.
         </audio>
+        <button
+          type="button"
+          className="button button-secondary"
+          onClick={handleCloseLibraryAudio}
+          style={{ marginTop: 10 }}
+        >
+          Close library audio
+        </button>
       </div>
       {isMobile && (
         <div
@@ -261,7 +302,26 @@ export default function AudioPlayer({
                   : "Main recording."}
               </div>
             )}
+            <p style={{ fontSize: 12, color: "#64748b", margin: "8px 0 0" }}>
+              {`"Play second recording" on this page is for your nightly session on Play Options, not this library player.`}
+            </p>
           </div>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={handleCloseLibraryAudio}
+            style={{
+              width: "100%",
+              marginBottom: 12,
+              padding: "14px 16px",
+              fontSize: 16,
+              fontWeight: 600,
+              borderColor: "#475569",
+              color: "#1e293b"
+            }}
+          >
+            Close library audio
+          </button>
           <div
             style={{
               display: "flex",

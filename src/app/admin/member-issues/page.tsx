@@ -131,10 +131,10 @@ export default function AdminMemberIssuesPage() {
     }
     let msg = "Saved.";
     if (data.resolutionEmailSent === true) {
-      msg += " Member was emailed that the report is resolved.";
+      msg += " Member was emailed about the report status (resolved or closed).";
     } else if (data.resolutionEmailSent === false) {
       msg +=
-        " Report marked Resolved, but the member email did not send (check RESEND_API_KEY / Resend dashboard and server logs).";
+        " Status saved, but the member notice email did not send (check RESEND_API_KEY / Resend dashboard and server logs).";
     }
     setStatusMsg(msg);
     await load();
