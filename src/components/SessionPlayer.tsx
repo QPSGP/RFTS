@@ -53,6 +53,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const secondStartAtRef = useRef<number>(0);
   const skipEffectPlayRef = useRef(false);
   const hasAutoStartedRef = useRef(false);
+  /** Incremented in endSession so deferred canplay / gap timers cannot restart audio. */
+  const sessionEpochRef = useRef(0);
   /** When we advance from prep to first track, store the track we're loading so "Tap play" uses it (avoids replaying prep if state is stale). */
   const pendingNextTrackRef = useRef<SessionTrack | null>(null);
 
@@ -232,6 +234,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
 
   /** Stop playback, clear UI, cancel gap countdown (so second track will not auto-start). */
   const endSession = useCallback(() => {
+    sessionEpochRef.current += 1;
     clearWaitTimers();
     const audio = audioRef.current;
     if (audio) {
@@ -251,6 +254,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
 
   const handleEnded = useCallback(() => {
     if (queue.length > 1) {
+      const epochAtAdvance = sessionEpochRef.current;
       const [, ...rest] = queue;
       const nextTrack = rest[0] || null;
       setQueue(rest);
@@ -262,6 +266,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         audio.src = nextTrack.url;
         audio.load();
         const playWhenReady = () => {
+          if (epochAtAdvance !== sessionEpochRef.current) return;
           clearTimeout(fallbackId);
           pendingNextTrackRef.current = null;
           audio.play().catch(() => {
@@ -270,6 +275,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           });
         };
         const fallbackId = setTimeout(() => {
+          if (epochAtAdvance !== sessionEpochRef.current) return;
           setNeedsUserPlay(true);
           setMessage("Tap play to start the session.");
         }, 3000);
@@ -277,6 +283,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         audio.addEventListener(
           "error",
           () => {
+            if (epochAtAdvance !== sessionEpochRef.current) return;
             clearTimeout(fallbackId);
             setMessage("Tap play to start playback.");
             setNeedsUserPlay(true);
@@ -304,7 +311,9 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         const left = Math.max(0, Math.round((secondStartAtRef.current - Date.now()) / 1000));
         setRemainingSeconds(left);
       }, 1000);
+      const epochAtGapStart = sessionEpochRef.current;
       waitTimeoutRef.current = setTimeout(() => {
+        if (epochAtGapStart !== sessionEpochRef.current) return;
         clearWaitTimers();
         const tr = secondTrackRef.current;
         if (tr) {
@@ -366,37 +375,46 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     if (!audio) return;
     const toPlay = pendingNextTrackRef.current || current;
     if (toPlay) {
+      const epochAtPlay = sessionEpochRef.current;
       audio.src = toPlay.url;
       audio.load();
       if (pendingNextTrackRef.current) pendingNextTrackRef.current = null;
       const onCanPlay = () => {
+        if (epochAtPlay !== sessionEpochRef.current) return;
         audio.removeEventListener("error", onError);
-        audio.play()
+        audio
+          .play()
           .then(() => {
+            if (epochAtPlay !== sessionEpochRef.current) return;
             setNeedsUserPlay(false);
             setMessage(null);
           })
           .catch(() => setNeedsUserPlay(true));
       };
       const onError = () => {
+        if (epochAtPlay !== sessionEpochRef.current) return;
         audio.removeEventListener("canplaythrough", onCanPlay);
         setMessage("Tap play to start playback.");
         setNeedsUserPlay(true);
       };
       audio.addEventListener("canplaythrough", onCanPlay, { once: true });
       audio.addEventListener("error", onError, { once: true });
-      audio.play()
+      audio
+        .play()
         .then(() => {
+          if (epochAtPlay !== sessionEpochRef.current) return;
           setNeedsUserPlay(false);
           setMessage(null);
         })
         .catch(() => {});
       return;
     }
+    const epochResume = sessionEpochRef.current;
     const playPromise = audio.play();
     if (playPromise && typeof playPromise.then === "function") {
       playPromise
         .then(() => {
+          if (epochResume !== sessionEpochRef.current) return;
           setNeedsUserPlay(false);
           setMessage(null);
         })
@@ -537,9 +555,13 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
                 <div
                   role="button"
                   tabIndex={0}
-                  onClick={handlePlay}
+                  onClick={(event) => {
+                    if ((event.target as HTMLElement).closest("button, a")) return;
+                    handlePlay();
+                  }}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
+                      if ((event.target as HTMLElement).closest("button, a")) return;
                       handlePlay();
                     }
                   }}

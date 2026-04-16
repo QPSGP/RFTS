@@ -115,11 +115,26 @@ function formatActivityAction(action: string): string {
 function formatPlayedAudioTitle(action: string, details: string | null): string {
   if (action !== "played_audio" || !details) return "";
   const d = details.trim();
-  const lib = /^Library — (.+)$/.exec(d);
-  if (lib) return lib[1].trim();
-  if (/^Play Options — Preparation audio$/i.test(d)) return "Preparation audio";
-  const po = /^Play Options — (First|Second):\s*(.+)$/i.exec(d);
-  if (po) return po[2].trim();
+  /* Log lines use em dash; allow en dash / hyphen; titles may span lines (dotAll). */
+  const sep = "[\\u2014\\u2013\\-]";
+  const lib = new RegExp(`^Library\\s*${sep}\\s*(.+)$`, "is").exec(d);
+  if (lib) return lib[1].trim().replace(/\s+/g, " ");
+  if (new RegExp(`^Play Options\\s*${sep}\\s*Preparation audio\\s*$`, "i").test(d)) {
+    return "Preparation audio";
+  }
+  const po = new RegExp(`^Play Options\\s*${sep}\\s*(First|Second)\\s*:\\s*([\\s\\S]+)$`, "i").exec(d);
+  if (po) {
+    const title = (po[2] || "").trim().replace(/\s+/g, " ");
+    if (title.length > 0) return title;
+    return `${po[1]} recording`;
+  }
+  const stripped = d
+    .replace(/^Play Options\s*[\u2014\u2013-]\s*/i, "")
+    .replace(/^Library\s*[\u2014\u2013-]\s*/i, "")
+    .trim();
+  if (stripped.length > 0 && stripped !== d) {
+    return stripped.replace(/^(First|Second)\s*:\s*/i, "").trim() || stripped;
+  }
   return d;
 }
 
@@ -127,11 +142,11 @@ function formatPlayedAudioTitle(action: string, details: string | null): string 
 function formatPlayedAudioContext(action: string, details: string | null): string {
   if (action !== "played_audio" || !details) return "";
   const d = details.trim();
-  if (d.startsWith("Library —")) return "Audio library";
-  if (/^Play Options — Preparation audio$/i.test(d)) return "Play Options · preparation";
-  const po = /^Play Options — (First|Second):/i.exec(d);
+  if (/^Library\s*[—–-]/i.test(d)) return "Audio library";
+  if (/^Play Options\s*[—–-]\s*Preparation audio$/i.test(d)) return "Play Options · preparation";
+  const po = /^Play Options\s*[—–-]\s*(First|Second)\s*:/i.exec(d);
   if (po) return `Play Options · ${po[1].toLowerCase()} recording`;
-  if (d.startsWith("Play Options —")) return "Play Options";
+  if (/^Play Options\s*[—–-]/i.test(d)) return "Play Options";
   return "";
 }
 
