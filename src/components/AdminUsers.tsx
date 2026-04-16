@@ -86,6 +86,18 @@ type MemberActivityRow = {
   createdAt: string;
 };
 
+type MemberActivityViewFilter = "all" | "library" | "session" | "other";
+type MemberActivityPageSize = 20 | 50 | 100;
+
+/** Library vs Play Options session vs everything else (for admin activity filters). */
+function classifyMemberActivityRow(row: MemberActivityRow): "library" | "session" | "other" {
+  if (row.action !== "played_audio" || !row.details) return "other";
+  const d = row.details.trim();
+  if (/^Library\s*[\u2014\u2013-]/i.test(d)) return "library";
+  if (/^Play Options\s*[\u2014\u2013-]/i.test(d)) return "session";
+  return "other";
+}
+
 function formatActivityAction(action: string): string {
   switch (action) {
     case "login":
@@ -213,6 +225,12 @@ export default function AdminUsers() {
   const [memberActivity, setMemberActivity] = useState<Record<string, MemberActivityRow[]>>({});
   const [memberActivityLoading, setMemberActivityLoading] = useState<Record<string, boolean>>({});
   const [memberActivityError, setMemberActivityError] = useState<Record<string, string | null>>({});
+  const [memberActivityFilter, setMemberActivityFilter] = useState<
+    Record<string, MemberActivityViewFilter>
+  >({});
+  const [memberActivityPageSize, setMemberActivityPageSize] = useState<
+    Record<string, MemberActivityPageSize>
+  >({});
   const [memberScheduleProgress, setMemberScheduleProgress] = useState<
     Record<
       string,
@@ -485,7 +503,7 @@ export default function AdminUsers() {
     setMemberActivityError((prev) => ({ ...prev, [email]: null }));
     try {
       const res = await fetch(
-        `/api/admin/member-activity?email=${encodeURIComponent(email)}`,
+        `/api/admin/member-activity?email=${encodeURIComponent(email)}&limit=500`,
         { credentials: "include" }
       );
       if (!res.ok) {
@@ -1080,7 +1098,17 @@ export default function AdminUsers() {
                 </p>
               ) : (
                 <div className="grid">
-                  {filteredUsers.map((user) => (
+                  {filteredUsers.map((user) => {
+                  const rawActivity = memberActivity[user.email] || [];
+                  const actFilter = memberActivityFilter[user.email] ?? "all";
+                  const actPageSize = memberActivityPageSize[user.email] ?? 50;
+                  const filteredActivity =
+                    actFilter === "all"
+                      ? rawActivity
+                      : rawActivity.filter((row) => classifyMemberActivityRow(row) === actFilter);
+                  const displayedActivity = filteredActivity.slice(0, actPageSize);
+
+                  return (
                 <div key={user.id} className="card">
                   <strong>
                     {user.firstName || user.lastName
@@ -1162,26 +1190,90 @@ export default function AdminUsers() {
                               flexWrap: "wrap",
                               alignItems: "center",
                               justifyContent: "space-between",
-                              gap: 8,
+                              gap: 10,
                               marginBottom: 8
                             }}
                           >
                             <h4 style={{ margin: 0 }}>Member activity</h4>
-                            <button
-                              type="button"
-                              className="button button-secondary"
-                              style={{ fontSize: 13, padding: "6px 12px" }}
-                              disabled={!!memberActivityLoading[user.email]}
-                              onClick={() => void loadMemberActivity(user.email)}
+                            <div
+                              style={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                alignItems: "center",
+                                gap: 10
+                              }}
                             >
-                              {memberActivityLoading[user.email] ? "Loading…" : "Refresh activity"}
-                            </button>
+                              <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+                                Filter
+                                <select
+                                  style={{ fontSize: 13, padding: "4px 8px", borderRadius: 6, border: "1px solid #cbd5e1" }}
+                                  value={actFilter}
+                                  onChange={(e) =>
+                                    setMemberActivityFilter((prev) => ({
+                                      ...prev,
+                                      [user.email]: e.target.value as MemberActivityViewFilter
+                                    }))
+                                  }
+                                >
+                                  <option value="all">All activity</option>
+                                  <option value="library">Library plays</option>
+                                  <option value="session">Session plays</option>
+                                  <option value="other">Other</option>
+                                </select>
+                              </label>
+                              <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+                                Rows
+                                <select
+                                  style={{ fontSize: 13, padding: "4px 8px", borderRadius: 6, border: "1px solid #cbd5e1" }}
+                                  value={actPageSize}
+                                  onChange={(e) =>
+                                    setMemberActivityPageSize((prev) => ({
+                                      ...prev,
+                                      [user.email]: Number(e.target.value) as MemberActivityPageSize
+                                    }))
+                                  }
+                                >
+                                  <option value={20}>20</option>
+                                  <option value={50}>50</option>
+                                  <option value={100}>100</option>
+                                </select>
+                              </label>
+                              <button
+                                type="button"
+                                className="button button-secondary"
+                                style={{ fontSize: 13, padding: "6px 12px" }}
+                                disabled={!!memberActivityLoading[user.email]}
+                                onClick={() => void loadMemberActivity(user.email)}
+                              >
+                                {memberActivityLoading[user.email] ? "Loading…" : "Refresh activity"}
+                              </button>
+                            </div>
                           </div>
                           <p style={{ color: "#64748b", fontSize: 13, marginTop: 0, marginBottom: 12 }}>
                             Sign-ins (with first page they head to), sign-outs, page views, played audio (library
                             and Play Options — each row lists the recording name), goal and console updates, and
-                            admin schedule changes.
+                            admin schedule changes. Use <strong>Filter</strong> for library vs session playback vs
+                            everything else; <strong>Rows</strong> caps how many matching rows appear (newest first).
+                            Refresh loads up to 500 recent events.
                           </p>
+                          {rawActivity.length > 0 && !memberActivityLoading[user.email] && (
+                            <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 10px" }}>
+                              Loaded <strong>{rawActivity.length}</strong> newest events.
+                              {actFilter !== "all" ? (
+                                <>
+                                  {" "}
+                                  <strong>{filteredActivity.length}</strong> match this filter.
+                                </>
+                              ) : null}
+                              {filteredActivity.length > actPageSize ? (
+                                <>
+                                  {" "}
+                                  Showing the <strong>{actPageSize}</strong> newest of{" "}
+                                  <strong>{filteredActivity.length}</strong> in the table.
+                                </>
+                              ) : null}
+                            </p>
+                          )}
                           {memberScheduleProgress[user.email] != null && (
                             <div
                               style={{
@@ -1354,7 +1446,7 @@ export default function AdminUsers() {
                               </p>
                             </div>
                           )}
-                          {(memberActivity[user.email] || []).length > 0 ? (
+                          {displayedActivity.length > 0 ? (
                             <div style={{ overflowX: "auto", marginBottom: 16 }}>
                               <table
                                 style={{
@@ -1372,7 +1464,7 @@ export default function AdminUsers() {
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {(memberActivity[user.email] || []).map((row: MemberActivityRow) => (
+                                  {displayedActivity.map((row: MemberActivityRow) => (
                                     <tr key={row.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
                                       <td style={{ padding: "8px 6px", whiteSpace: "nowrap", color: "#374151" }}>
                                         {formatActivityTime(row.createdAt)}
@@ -1408,6 +1500,10 @@ export default function AdminUsers() {
                                 </tbody>
                               </table>
                             </div>
+                          ) : rawActivity.length > 0 && filteredActivity.length === 0 ? (
+                            <p style={{ color: "#64748b", fontSize: 13, marginBottom: 16 }}>
+                              No entries match this filter. Try <strong>All activity</strong> or another filter.
+                            </p>
                           ) : (
                             <p
                               style={{
@@ -2299,7 +2395,8 @@ export default function AdminUsers() {
                     </div>
                   )}
                 </div>
-                ))}
+                  );
+                  })}
               </div>
             )}
             </>
