@@ -142,11 +142,14 @@ function formatPlayedAudioTitle(action: string, details: string | null): string 
 function formatPlayedAudioContext(action: string, details: string | null): string {
   if (action !== "played_audio" || !details) return "";
   const d = details.trim();
-  if (/^Library\s*[—–-]/i.test(d)) return "Audio library";
-  if (/^Play Options\s*[—–-]\s*Preparation audio$/i.test(d)) return "Play Options · preparation";
-  const po = /^Play Options\s*[—–-]\s*(First|Second)\s*:/i.exec(d);
+  const dash = "[\\u2014\\u2013\\-]";
+  if (new RegExp(`^Library\\s*${dash}`, "i").test(d)) return "Audio library";
+  if (new RegExp(`^Play Options\\s*${dash}\\s*Preparation audio$`, "i").test(d)) {
+    return "Play Options · preparation";
+  }
+  const po = new RegExp(`^Play Options\\s*${dash}\\s*(First|Second)\\s*:`, "i").exec(d);
   if (po) return `Play Options · ${po[1].toLowerCase()} recording`;
-  if (/^Play Options\s*[—–-]/i.test(d)) return "Play Options";
+  if (new RegExp(`^Play Options\\s*${dash}`, "i").test(d)) return "Play Options";
   return "";
 }
 
