@@ -10,21 +10,37 @@ This compares **two member accounts** side by side using the same code path as p
 ## How to generate the CSV / HTML
 
 1. From `rfts-platform`, ensure `.env.local` has a working **`POSTGRES_URL`** (or `POSTGRES_URL_UNPOOLED`) so the app can read members and library.
-2. Set member emails (use the real login emails in your database):
+2. Set member emails and run the export.
 
-```bash
+### Ready-to-run: Craig (Gold) vs Terry (Platinum Managed)
+
+Use these when comparing **Craig Rogers** (non-managed) and **Terry & Craig Rogers** (managed):
+
+```powershell
 # PowerShell
-$env:SCHEDULE_GOLD_EMAIL="craig@example.com"
-$env:SCHEDULE_MANAGED_EMAIL="terry.craig@example.com"
+$env:SCHEDULE_GOLD_EMAIL="CraigMiloRogers@gmail.com"
+$env:SCHEDULE_MANAGED_EMAIL="terry_bg@msn.com"
 $env:SCHEDULE_NIGHTS="42"
 npm run schedule:spreadsheet
 ```
 
 ```bash
 # macOS / Linux
-SCHEDULE_GOLD_EMAIL=craig@example.com \
-SCHEDULE_MANAGED_EMAIL=terry.craig@example.com \
+SCHEDULE_GOLD_EMAIL=CraigMiloRogers@gmail.com \
+SCHEDULE_MANAGED_EMAIL=terry_bg@msn.com \
 SCHEDULE_NIGHTS=42 \
+npm run schedule:spreadsheet
+```
+
+### Other members
+
+Replace with any two login emails (Gold goal-based vs Platinum Managed with assignments):
+
+```bash
+# PowerShell
+$env:SCHEDULE_GOLD_EMAIL="member1@example.com"
+$env:SCHEDULE_MANAGED_EMAIL="member2@example.com"
+$env:SCHEDULE_NIGHTS="42"
 npm run schedule:spreadsheet
 ```
 
