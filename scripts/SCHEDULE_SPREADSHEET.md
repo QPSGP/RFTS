@@ -59,6 +59,12 @@ npm run schedule:spreadsheet
 | Gold — play 1 / 2 | First and second main play that night (when 2 plays/night). |
 | Managed — play 1 / 2 | Same for the managed account’s assigned-audio rotation. |
 | SKU | Library SKU codes for traceability. |
+| **Gold — rotation (night start)** | **New goal enters** the active set (add-new-track rule) and/or **session-drop**: a goal **leaves** the active set per the fixed session-count bands (first “set” dropping off over time). |
+| **Gold — rotation (after plays)** | After this night’s listens, any **goal removed** because every track for that goal hit `playsPerRecording`. |
+| **Managed — rotation (night start)** | **New assigned audio** enters the active rotation (same add-new-track cadence as Gold, but for assigned list order). |
+| **Managed — rotation (after plays)** | Assigned **audio removed** after this night when it reached `playsPerRecording` plays. |
+
+In the **HTML** export, any night where **either** account has a rotation event is **highlighted in yellow** for quick scanning. The CSV has the same text in the rotation columns (use conditional formatting in Excel on those columns if you want colors locally).
 
 ## If managed column looks wrong
 

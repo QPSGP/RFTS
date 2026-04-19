@@ -25,7 +25,7 @@ import { config } from "dotenv";
 config({ path: path.join(process.cwd(), ".env.local") });
 
 import type { LibraryItem } from "../src/lib/types";
-import { buildSchedulePreview } from "../src/lib/scheduler";
+import { buildSchedulePreview, type ScheduleNight } from "../src/lib/scheduler";
 import {
   getMemberProfileByUserId,
   getMemberAudioOrder,
@@ -87,6 +87,29 @@ function resolveUserAssignedTrack(
 function csvEscape(cell: string): string {
   if (/[",\r\n]/.test(cell)) return `"${cell.replace(/"/g, '""')}"`;
   return cell;
+}
+
+/** Night start: new goal/audio in rotation, and (Gold only) session-drop removals. */
+function rotationStartText(n: ScheduleNight | undefined): string {
+  if (!n) return "";
+  const parts: string[] = [];
+  if (n.rotationAdded?.length) parts.push(...n.rotationAdded);
+  if (n.rotationSessionDrop?.length) parts.push(...n.rotationSessionDrop);
+  return parts.join(" | ");
+}
+
+/** After this night’s plays: play-cap removals. */
+function rotationAfterText(n: ScheduleNight | undefined): string {
+  if (!n?.rotationRemovedAfterPlays?.length) return "";
+  return n.rotationRemovedAfterPlays.join(" | ");
+}
+
+function hasRotationHighlight(n: ScheduleNight | undefined): boolean {
+  return !!(
+    n?.rotationAdded?.length ||
+    n?.rotationSessionDrop?.length ||
+    n?.rotationRemovedAfterPlays?.length
+  );
 }
 
 async function main() {
@@ -180,11 +203,15 @@ async function main() {
     "Gold — play 2 (title)",
     "Gold — SKU play 1",
     "Gold — SKU play 2",
+    "Gold — rotation (night start: new audio / session drop)",
+    "Gold — rotation (after plays: play-cap drop)",
     "Algorithm note (Managed)",
     "Managed — play 1 (title)",
     "Managed — play 2 (title)",
     "Managed — SKU play 1",
-    "Managed — SKU play 2"
+    "Managed — SKU play 2",
+    "Managed — rotation (night start: new audio)",
+    "Managed — rotation (after plays: play-cap drop)"
   ];
 
   const rows: string[][] = [header];
@@ -202,11 +229,15 @@ async function main() {
       gTracks[1]?.title ?? "",
       gTracks[0]?.skuCode ?? "",
       gTracks[1]?.skuCode ?? "",
+      rotationStartText(g),
+      rotationAfterText(g),
       m?.note ?? "",
       mTracks[0]?.title ?? "",
       mTracks[1]?.title ?? "",
       mTracks[0]?.skuCode ?? "",
-      mTracks[1]?.skuCode ?? ""
+      mTracks[1]?.skuCode ?? "",
+      rotationStartText(m),
+      rotationAfterText(m)
     ]);
   }
 
@@ -249,14 +280,25 @@ async function main() {
     <div><strong>Gold (non-managed):</strong> ${escapeHtml(goldEmail)} — goals: ${(goldProfile.goalIds || []).length}</div>
     <div><strong>Platinum Managed:</strong> ${escapeHtml(managedEmail)} — assigned audios: ${assignedAudioIds?.length ?? 0}</div>
     <div><strong>Nights generated:</strong> ${maxN}</div>
-    <div>Use the .csv in Excel or Google Sheets; this HTML opens in a browser.</div>
+    <div>Rows with a <span style="background:#fef08a;padding:2px 6px;border-radius:4px">yellow</span> background mark a night where something enters or leaves the active rotation (new audio, session drop for Gold, or play-cap removal).</div>
+    <div>Use the .csv in Excel or Google Sheets; apply conditional formatting on the rotation columns if you like.</div>
   </div>
   <table>
     <thead>
       <tr>${rows[0].map((c) => `<th>${escapeHtml(c)}</th>`).join("")}</tr>
     </thead>
     <tbody>
-      ${rows.slice(1).map((r) => `<tr>${r.map((c) => `<td>${escapeHtml(c)}</td>`).join("")}</tr>`).join("\n")}
+      ${rows
+        .slice(1)
+        .map((r, i) => {
+          const g = goldSchedule[i];
+          const m = managedSchedule[i];
+          const hi = hasRotationHighlight(g) || hasRotationHighlight(m);
+          return `<tr${hi ? ' style="background:#fef9c3"' : ""}>${r
+            .map((c) => `<td>${escapeHtml(c)}</td>`)
+            .join("")}</tr>`;
+        })
+        .join("\n")}
     </tbody>
   </table>
 </body>

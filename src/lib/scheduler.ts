@@ -4,6 +4,12 @@ export type ScheduleNight = {
   night: number;
   tracks: LibraryItem[];
   note?: string;
+  /** New goal (Gold) or assigned audio (Managed) enters the active rotation this night (add-new-track rule). */
+  rotationAdded?: string[];
+  /** Non-managed only: a goal leaves the active set at night start (session-count drop bands). */
+  rotationSessionDrop?: string[];
+  /** After this night’s plays: items removed when play-count hits `playsPerRecording` (both tiers). */
+  rotationRemovedAfterPlays?: string[];
 };
 
 /**
@@ -190,7 +196,12 @@ export const buildSchedulePreview = ({
 
   const schedule: ScheduleNight[] = [];
   let nextAddAtSession = settings.addNewTrackEveryNights > 0 ? settings.addNewTrackEveryNights : 0;
+  const goalLabel = (goalId: string) =>
+    interestRecords?.find((i) => i.id === goalId)?.name ?? goalId;
+
   for (let night = 1; night <= nights; night += 1) {
+    const nightAdditions: string[] = [];
+    const nightSessionDrops: string[] = [];
     // Add new goal/audio every N sessions (sessions so far = (night - 1) * playsPerNight)
     const sessionsSoFar = (night - 1) * playsPerNight;
     if (isManagedMember) {
@@ -199,7 +210,11 @@ export const buildSchedulePreview = ({
         sessionsSoFar >= nextAddAtSession &&
         nextIndex < assignedAudios.length
       ) {
-        activeAssignedAudios.push(assignedAudios[nextIndex]);
+        const adding = assignedAudios[nextIndex];
+        activeAssignedAudios.push(adding);
+        nightAdditions.push(
+          `${adding.title} — new assigned audio enters rotation (after ${sessionsSoFar} sessions completed)`
+        );
         nextIndex += 1;
         nextAddAtSession += settings.addNewTrackEveryNights;
       }
@@ -209,7 +224,11 @@ export const buildSchedulePreview = ({
         sessionsSoFar >= nextAddAtSession &&
         nextIndex < orderedGoals.length
       ) {
-        activeGoals.push(orderedGoals[nextIndex]);
+        const gid = orderedGoals[nextIndex];
+        activeGoals.push(gid);
+        nightAdditions.push(
+          `${goalLabel(gid)} — new goal enters rotation (after ${sessionsSoFar} sessions completed)`
+        );
         nextIndex += 1;
         nextAddAtSession += settings.addNewTrackEveryNights;
       }
@@ -221,6 +240,9 @@ export const buildSchedulePreview = ({
         const dropId = orderedGoals[dropGoalIndex - 1];
         const dropIdx = activeGoals.indexOf(dropId);
         if (dropIdx !== -1) {
+          nightSessionDrops.push(
+            `${goalLabel(dropId)} — leaves active rotation (session-drop rule; slot ${dropGoalIndex}; sessions at night start: ${sessionsSoFar})`
+          );
           activeGoals.splice(dropIdx, 1);
         }
       }
@@ -312,7 +334,7 @@ export const buildSchedulePreview = ({
     const isSpecialThisNight = playsPerNight === 1 ? isSpecialSessionFirst : isSpecialSessionSecond;
     const noteSpecial =
       playsPerNight === 1 ? "T18/CGMR session" : "T18/CGMR night";
-    schedule.push({
+    const entry: ScheduleNight = {
       night,
       tracks,
       note:
@@ -323,23 +345,28 @@ export const buildSchedulePreview = ({
           : isSpecialThisNight
             ? noteSpecial
             : `Rotation night (${settings.nightlyGapHours} hour gap)`
-    });
+    };
+    if (nightAdditions.length) entry.rotationAdded = nightAdditions;
+    if (nightSessionDrops.length) entry.rotationSessionDrop = nightSessionDrops;
+    schedule.push(entry);
 
+    const removedAfter: string[] = [];
     // Remove tracks that reached the play target
     if (settings.playsPerRecording > 0) {
       if (isManagedMember) {
-        // For managed members: remove audios that reached play target
         activeAssignedAudios.forEach((audio) => {
           const playCount = playCounts.get(audio.id) || 0;
           if (playCount >= settings.playsPerRecording) {
             const idx = activeAssignedAudios.indexOf(audio);
             if (idx !== -1) {
+              removedAfter.push(
+                `${audio.title} — leaves rotation after this night (hit ${settings.playsPerRecording} plays)`
+              );
               activeAssignedAudios.splice(idx, 1);
             }
           }
         });
       } else {
-        // For regular members: remove goals whose tracks all reached play target
         activeGoals.forEach((goalId) => {
           const tracksForGoal = goalTrackMap.get(goalId) || [];
           const completed = tracksForGoal.every(
@@ -348,12 +375,16 @@ export const buildSchedulePreview = ({
           if (completed) {
             const idx = activeGoals.indexOf(goalId);
             if (idx !== -1) {
+              removedAfter.push(
+                `${goalLabel(goalId)} — goal leaves rotation after this night (all its tracks hit ${settings.playsPerRecording} plays)`
+              );
               activeGoals.splice(idx, 1);
             }
           }
         });
       }
     }
+    if (removedAfter.length) entry.rotationRemovedAfterPlays = removedAfter;
   }
 
   return schedule;
