@@ -1,0 +1,53 @@
+# Schedule algorithm spreadsheet (Gold vs Platinum Managed)
+
+This compares **two member accounts** side by side using the same code path as production: `buildSchedulePreview` in `src/lib/scheduler.ts` and the same inputs as `GET /api/user/schedule` (library, playback settings, goals vs assigned audio order, per-member library filtering, T-18/CGMR allow-list rules).
+
+## Who this is for
+
+- **Column “Gold (non-managed)”** — goal-based rotation (e.g. **Craig Rogers** on standard Gold / `platinum`).
+- **Column “Platinum Managed”** — admin-ordered assigned audios (e.g. **Terry & Craig Rogers** on `platinum_managed` with `member_audio_assignments`).
+
+## How to generate the CSV / HTML
+
+1. From `rfts-platform`, ensure `.env.local` has a working **`POSTGRES_URL`** (or `POSTGRES_URL_UNPOOLED`) so the app can read members and library.
+2. Set member emails (use the real login emails in your database):
+
+```bash
+# PowerShell
+$env:SCHEDULE_GOLD_EMAIL="craig@example.com"
+$env:SCHEDULE_MANAGED_EMAIL="terry.craig@example.com"
+$env:SCHEDULE_NIGHTS="42"
+npm run schedule:spreadsheet
+```
+
+```bash
+# macOS / Linux
+SCHEDULE_GOLD_EMAIL=craig@example.com \
+SCHEDULE_MANAGED_EMAIL=terry.craig@example.com \
+SCHEDULE_NIGHTS=42 \
+npm run schedule:spreadsheet
+```
+
+3. Open the files under **`scripts/output/`**:
+   - **`schedule-algorithm-comparison.csv`** — open in Excel or Google Sheets (you may delete the `#` comment lines at the top if you want a clean table only).
+   - **`schedule-algorithm-comparison.html`** — open in a browser; you can also open in Excel.
+
+`scripts/output/` is gitignored; copy the files elsewhere if you need to share them.
+
+## What the columns mean
+
+| Column | Meaning |
+|--------|--------|
+| Schedule night | Night index 1…N (same as app “schedule night”). |
+| Algorithm note | e.g. rotation vs T-18/CGMR night (see scheduler). |
+| Gold — play 1 / 2 | First and second main play that night (when 2 plays/night). |
+| Managed — play 1 / 2 | Same for the managed account’s assigned-audio rotation. |
+| SKU | Library SKU codes for traceability. |
+
+## If managed column looks wrong
+
+- The managed account must have **`member_audio_assignments`** rows (admin “Check audios” / audio order). If the script warns about missing assignments, fix data in admin first, then re-run.
+
+## Algorithm reference
+
+See `src/lib/scheduler.ts` and `PROJECT_STATUS.md` (schedule / T-18 / CGMR notes).
