@@ -4,22 +4,41 @@ Use this file to get up to speed when opening the project in the **rfts-platform
 
 ---
 
-## Latest handoff — where we left off (scheduling, email, members)
+## Latest handoff — where we left off (March–April 2026 update)
 
 Use this block to resume the next session without re-reading the whole thread.
 
-- **Platinum Managed + custom list, no CGMR:** `src/app/api/user/schedule/route.ts` — special slot uses global T-18/fallback, not the first allow-listed track. **`src/components/AdminUsers.tsx`** — “Schedule uses as CGMR slot” matches that (not T-26 by mistake).
-- **Scheduler rotation:** `src/lib/scheduler.ts` — when CGMR/T-18 replaces the **second** play (2/night), advance assigned-audio / goal pointer; when **1 play/night** and the night is all CGMR, advance pointer too; **1 play** special nights no longer consume a throwaway assigned pick.
-- **Member emails:** `normalizeMemberEmail` + `createUser`; `canonicalizeUserEmail` on **admin PATCH** member save; allow-list appends lowercase. Onboarding uses `user.email` for mail + library.
-- **Transactional email (Resend):** `src/lib/email-templates.ts` + `src/lib/email.ts` — **Welcome** (new copy, subject “Welcome New Member”), **Life Guidance** (long follow-up), **Therapist/healer/coach** (Terry letter; “Practice building gifts” → `/goals`). All three **CC** Terry + Richard via **`getWelcomeEmailCcRecipients()`** / env **`WELCOME_EMAIL_CC`**; those sends use **`skipStaffBcc: true`**. **`README.md`** documents `WELCOME_EMAIL_CC`.
-- **Signup checkboxes:** Life Guidance + therapist/healer/coach are on **MemberOnboarding step 1 “Personal Details”** (`/signup/step-1-subscription-selection` — “Start Your Journey” entry). Same flags on **`/member/profile`**.
-- **Next when going live:** Set **`RESEND_API_KEY`**, verified **`EMAIL_FROM`**, **`NEXT_PUBLIC_APP_URL`** on Vercel. Optional: **`WELCOME_EMAIL_CC`**, **`EMAIL_STAFF_BCC`**. If “gifts” should not be `/goals`, add a dedicated URL (env) and wire the therapist email button.
+### Schedule & verification
+- **`src/lib/scheduler.ts`:** Each `ScheduleNight` can include **`rotationAdded`**, **`rotationSessionDrop`** (Gold only, session-count bands), **`rotationRemovedAfterPlays`** (play-cap after that night’s plays). Used by the app schedule JSON and by the local export (optional fields; clients can ignore).
+- **Spreadsheet export (Gold vs Platinum Managed):** `npm run schedule:spreadsheet` — requires **`POSTGRES_URL`** in `.env.local`. Set **`SCHEDULE_GOLD_EMAIL`** and **`SCHEDULE_MANAGED_EMAIL`**; optional **`SCHEDULE_NIGHTS`**. Writes **`scripts/output/schedule-algorithm-comparison.csv`** + **`.html`** (HTML highlights rows with rotation events). Docs: **`scripts/SCHEDULE_SPREADSHEET.md`** (includes example emails for Craig Gold vs Terry managed). Dev dependency **`tsx`**. **`GET /api/admin/member-activity?email=…&limit=`** supports up to 500 rows for admin.
+- **Platinum Managed + CGMR:** `src/app/api/user/schedule/route.ts` — managed members with assigned-audio list use global T-18/fallback for the special slot, not an accidental allow-list steal. **`AdminUsers`** copy matches.
+
+### Member & admin UX
+- **Admin → Members → Member activity:** Filter **All / Library plays / Session plays / Other**; row cap **20 / 50 / 100**; **`formatPlayedAudioTitle`** tolerates dash variants and multiline titles; loads up to **500** events when refreshing.
+- **Library `AudioPlayer`:** **Close library audio** stops and clears the element; mobile fixed bar hides until playback resumes; copy clarifies **Play second recording** vs library. **`PlaySecondRecordingCta`** placement/copy updated on library pages.
+- **`SessionPlayer`:** **End session** no longer restarts audio (overlay no longer bubbles `handlePlay` to parent; **`sessionEpochRef`** cancels stale `canplaythrough` / gap timers). **`AdminUsers`** member activity shows recording titles reliably.
+
+### Member issue reports
+- **`PATCH /api/admin/member-issue-reports`:** Member gets email the **first** time a report reaches **resolved** or **closed** (not a second email on resolved→closed). Template supports **`outcome`** in **`src/lib/email-templates.ts`**.
+
+### Still true from earlier (short)
+- **Resend / go-live:** **`RESEND_API_KEY`**, **`EMAIL_FROM`**, **`NEXT_PUBLIC_APP_URL`** on Vercel; optional **`WELCOME_EMAIL_CC`**, **`EMAIL_STAFF_BCC`**, **`REPORT_ISSUE_EMAIL`**.
+- **Transactional onboarding email** CC patterns and **MemberOnboarding** / profile checkboxes — unchanged; see sections below and **`RESEND.md`**.
 
 ---
 
 ## Summary of changes (for the day)
 
 **Use this section to keep up to date and write your daily notes.**
+
+### Update batch — schedule export, admin activity, library & sessions (2026)
+
+- **Schedule algorithm spreadsheet:** `scripts/schedule-spreadsheet-export.ts`, `npm run schedule:spreadsheet`, `scripts/SCHEDULE_SPREADSHEET.md`; compares two members (Gold goals vs Managed assigned order); CSV + HTML with rotation columns and yellow row highlights when rotation changes.
+- **Scheduler metadata on each night:** `rotationAdded` / `rotationSessionDrop` / `rotationRemovedAfterPlays` in `src/lib/scheduler.ts` (`ScheduleNight` type).
+- **Admin member activity table:** Filters (library / session / other), 20–50–100 row cap, improved **played_audio** title parsing in `AdminUsers.tsx`.
+- **Library audio:** Close + hide mobile control bar; **Play second recording** confusion reduced (`AudioPlayer`, `PlaySecondRecordingCta`, library page order).
+- **SessionPlayer:** End session reliability (overlay + epoch); member activity audio titles.
+- **Member issue reports:** One member notice email on first **resolved** or **closed** (`email-templates`, admin route).
 
 - **Cover art (review queue):** `public/covers-review/` — SVG drafts for `data/library.json` rows with empty `coverUrl`, generated from titles + `recording-descriptions.json` + small curated blurbs (`scripts/generate-covers-review.js`, `npm run covers:review`). Each SVG includes a **themed vector background** (keywords → `pickVisualTheme` / `renderThemedBackground` in the script) plus a text-readability fade; `manifest.json` lists `visualTheme` per track; `index.html` gallery has a **Visual theme** column. **Not** linked in the app; open `http://localhost:3000/covers-review/index.html` (or dev server) to review. Approve → export/upload PNG or SVG to Blob / set Cover URL in admin. **Production catalog covers** in `data/blob-assets.json` are **PNG** album art on Vercel Blob (`SKU-*.png`), not the review SVGs. Production DB-only libraries need a JSON export or script tweak to target missing covers.
 - **Admin audio library:** Title list and each detail card include **Play preview** (`<audio controls>`) using `/api/stream/audio?id=…`. Stream API skips member subscription check when `isAdminSession()` so admins can preview even without an active member sub.
