@@ -100,7 +100,7 @@ export default function PlayOptionsPage() {
           fetch("/api/user/activity", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "viewed_console" }),
+            body: JSON.stringify({ action: "viewed_console", details: "/play-options" }),
             credentials: "include"
           }).catch(() => {});
           fetch("/api/user/schedule?nights=21", { credentials: "include" })
@@ -320,8 +320,8 @@ export default function PlayOptionsPage() {
             <p style={{ color: "#6b7280" }}>No audios in your play list yet.</p>
           ) : (
             <div className="goal-list" style={{ marginTop: 8 }}>
-              {currentPlaylist.map((track) => (
-                <div key={track.id} className="goal-item">
+              {currentPlaylist.map((track, idx) => (
+                <div key={`${track.id}-cue-${idx}`} className="goal-item">
                   {[track.skuCode, track.title].filter(Boolean).join(" – ")}
                 </div>
               ))}
@@ -375,7 +375,7 @@ export default function PlayOptionsPage() {
                 )}
                 {tonight.tracks.map((track, index) => (
                   <a
-                    key={track.id}
+                    key={`${tonight.night}-${index}-${track.id}`}
                     className="button button-secondary"
                     href={`/library/${track.id}`}
                   >

@@ -89,12 +89,45 @@ type MemberActivityRow = {
 type MemberActivityViewFilter = "all" | "library" | "session" | "other";
 type MemberActivityPageSize = 20 | 50 | 100;
 
+/** First separator after "Library" / "Play Options" (any unicode dash + ASCII hyphen + spaces). */
+const PLAYED_AUDIO_LOC_SEP = /^\s*[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFE58\uFE63\uFF0D\-]+\s*/;
+
+function playedAudioLocation(details: string): "library" | "play_options" | null {
+  const t = details.trim().replace(/^\uFEFF/, "");
+  if (/^Play\s+Options\b/i.test(t)) return "play_options";
+  if (/^Library\b/i.test(t)) return "library";
+  return null;
+}
+
+/**
+ * Text after "Library …" or "Play Options …" (strips keyword + first dash run).
+ * Uses slice-after-prefix (not a single rigid "^Play Options ") so NBSP / multiple spaces
+ * between words still match — session logs use `Play Options — First: …` from SessionPlayer.
+ * Play Options is checked before Library so odd titles cannot confuse the parser.
+ */
+function playedAudioAfterLocationPrefix(details: string): { where: "library" | "play_options"; rest: string } | null {
+  const t = details.trim().replace(/^\uFEFF/, "");
+  const playHead = t.match(/^Play\s+Options\b/i);
+  if (playHead) {
+    let rest = t.slice(playHead[0].length);
+    rest = rest.replace(PLAYED_AUDIO_LOC_SEP, "");
+    return { where: "play_options", rest };
+  }
+  const libHead = t.match(/^Library\b/i);
+  if (libHead) {
+    let rest = t.slice(libHead[0].length);
+    rest = rest.replace(PLAYED_AUDIO_LOC_SEP, "");
+    return { where: "library", rest };
+  }
+  return null;
+}
+
 /** Library vs Play Options session vs everything else (for admin activity filters). */
 function classifyMemberActivityRow(row: MemberActivityRow): "library" | "session" | "other" {
   if (row.action !== "played_audio" || !row.details) return "other";
-  const d = row.details.trim();
-  if (/^Library\s*[\u2014\u2013-]/i.test(d)) return "library";
-  if (/^Play Options\s*[\u2014\u2013-]/i.test(d)) return "session";
+  const loc = playedAudioLocation(row.details.trim());
+  if (loc === "library") return "library";
+  if (loc === "play_options") return "session";
   return "other";
 }
 
@@ -127,46 +160,80 @@ function formatActivityAction(action: string): string {
 function formatPlayedAudioTitle(action: string, details: string | null): string {
   if (action !== "played_audio" || !details) return "";
   const d = details.trim();
-  /* Log lines use em dash; allow en dash / hyphen; titles may span lines (dotAll). */
-  const sep = "[\\u2014\\u2013\\-]";
-  const lib = new RegExp(`^Library\\s*${sep}\\s*(.+)$`, "is").exec(d);
-  if (lib) return lib[1].trim().replace(/\s+/g, " ");
-  if (new RegExp(`^Play Options\\s*${sep}\\s*Preparation audio\\s*$`, "i").test(d)) {
+  const loc = playedAudioAfterLocationPrefix(d);
+  if (!loc) {
+    return d.replace(/\s+/g, " ").trim();
+  }
+  if (loc.where === "library") {
+    const libTitle = loc.rest.trim().replace(/\s+/g, " ");
+    if (libTitle.length > 0) return libTitle;
+    return d.replace(/\s+/g, " ").trim();
+  }
+  const rest = loc.rest.trim();
+  if (/^Preparation audio\s*$/i.test(rest)) {
     return "Preparation audio";
   }
-  const po = new RegExp(`^Play Options\\s*${sep}\\s*(First|Second)\\s*:\\s*([\\s\\S]+)$`, "i").exec(d);
-  if (po) {
-    const title = (po[2] || "").trim().replace(/\s+/g, " ");
+  /* ASCII or fullwidth colon after First/Second (some titles use Unicode punctuation). */
+  const fs = /^(First|Second)\s*[:：]\s*([\s\S]+)$/i.exec(rest);
+  if (fs) {
+    const title = (fs[2] || "").trim().replace(/\s+/g, " ");
     if (title.length > 0) return title;
-    return `${po[1]} recording`;
+    return `${fs[1]} recording`;
   }
-  const stripped = d
-    .replace(/^Play Options\s*[\u2014\u2013-]\s*/i, "")
-    .replace(/^Library\s*[\u2014\u2013-]\s*/i, "")
-    .trim();
-  if (stripped.length > 0 && stripped !== d) {
-    return stripped.replace(/^(First|Second)\s*:\s*/i, "").trim() || stripped;
-  }
-  return d;
+  const tail = rest.replace(/\s+/g, " ").trim();
+  if (tail.length > 0) return tail;
+  return d.replace(/\s+/g, " ").trim();
 }
 
 /** Where they played (library vs Play Options, first/second/prep). */
 function formatPlayedAudioContext(action: string, details: string | null): string {
-  if (action !== "played_audio" || !details) return "";
+  if (action !== "played_audio" || !details?.trim()) return "";
   const d = details.trim();
-  const dash = "[\\u2014\\u2013\\-]";
-  if (new RegExp(`^Library\\s*${dash}`, "i").test(d)) return "Audio library";
-  if (new RegExp(`^Play Options\\s*${dash}\\s*Preparation audio$`, "i").test(d)) {
-    return "Play Options · preparation";
+  const loc = playedAudioAfterLocationPrefix(d);
+  if (loc) {
+    if (loc.where === "library") return "Audio library";
+    const rest = loc.rest.trim();
+    if (/^Preparation audio\s*$/i.test(rest)) return "Play Options · preparation";
+    const fs = /^(First|Second)\s*:/i.exec(rest);
+    if (fs) return `Play Options · ${fs[1].toLowerCase()} recording`;
+    return "Play Options";
   }
-  const po = new RegExp(`^Play Options\\s*${dash}\\s*(First|Second)\\s*:`, "i").exec(d);
-  if (po) return `Play Options · ${po[1].toLowerCase()} recording`;
-  if (new RegExp(`^Play Options\\s*${dash}`, "i").test(d)) return "Play Options";
-  return "";
+  if (/^Library\b/i.test(d)) return "Audio library";
+  if (/^Play\s+Options\b/i.test(d)) return "Play Options";
+  return "Playback";
+}
+
+/** Title column: parsed recording name, or full stored line if parsing yields nothing (always show something). */
+function playedAudioTitleForAdminCell(action: string, details: string | null): string {
+  if (action !== "played_audio") return "";
+  const parsed = formatPlayedAudioTitle(action, details);
+  if (parsed) return parsed;
+  return details?.trim().replace(/\s+/g, " ") || "";
+}
+
+/** When older rows have no `details`, still show a short explanation in the Detail column. */
+function activityDetailFallback(action: string): string | null {
+  switch (action) {
+    case "logout":
+      return "Session ended";
+    case "viewed_console":
+      return "Play Options page";
+    case "viewed_library":
+      return "Audio library index";
+    case "login":
+      return "Sign-in (no destination captured)";
+    default:
+      return null;
+  }
 }
 
 function formatActivityDetails(action: string, details: string | null): string {
-  if (!details) return "—";
+  if (action === "played_audio" && (!details || !details.trim())) {
+    return "— (nothing was stored — plays log only when a member is signed in at /member/login)";
+  }
+  if (!details?.trim()) {
+    return activityDetailFallback(action) ?? "—";
+  }
   if (action === "played_audio") {
     const ctx = formatPlayedAudioContext(action, details);
     return ctx || "—";
@@ -1256,6 +1323,22 @@ export default function AdminUsers() {
                             everything else; <strong>Rows</strong> caps how many matching rows appear (newest first).
                             Refresh loads up to 500 recent events.
                           </p>
+                          <p
+                            style={{
+                              color: "#92400e",
+                              fontSize: 12,
+                              marginTop: -8,
+                              marginBottom: 12,
+                              padding: "8px 10px",
+                              background: "#fffbeb",
+                              borderRadius: 8,
+                              border: "1px solid #fde68a"
+                            }}
+                          >
+                            <strong>Member session only:</strong> Library and Play Options save plays for whoever is
+                            signed in at <strong>/member/login</strong> — use Incognito if you also use Admin in this
+                            browser.
+                          </p>
                           {rawActivity.length > 0 && !memberActivityLoading[user.email] && (
                             <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 10px" }}>
                               Loaded <strong>{rawActivity.length}</strong> newest events.
@@ -1482,7 +1565,7 @@ export default function AdminUsers() {
                                         }}
                                       >
                                         {row.action === "played_audio"
-                                          ? formatPlayedAudioTitle(row.action, row.details) || "—"
+                                          ? playedAudioTitleForAdminCell(row.action, row.details) || "—"
                                           : "—"}
                                       </td>
                                       <td
@@ -1886,16 +1969,40 @@ export default function AdminUsers() {
                             <div style={{ marginTop: 12 }}>
                               <label style={{ fontSize: 12 }}>Current audios play list</label>
                               <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
-                                Up to 10 audios in this member&apos;s rotation (from goals or assigned).
+                                Up to 10 audios in this member&apos;s rotation (from goals or assigned).{" "}
+                                {user.subscriptionTier === "platinum_managed" ? (
+                                  <span>
+                                    For Platinum Managed, order is the saved assignment order (same as the live
+                                    schedule and the schedule spreadsheet export), not the order rows appear in the
+                                    library list.
+                                  </span>
+                                ) : null}
                               </p>
                               <div className="goal-list">
                                 {(() => {
                                   const isManaged = user.subscriptionTier === "platinum_managed";
-                                  const assignedForPlaylist = isManaged
-                                    ? library.filter((item) =>
-                                        (item.allowedUserEmails || []).some((e) => e.toLowerCase() === user.email.toLowerCase())
-                                      ).slice(0, 10)
-                                    : [];
+                                  /**
+                                   * Must match GET /api/user/schedule / buildSchedulePreview: managed rotation uses
+                                   * member_audio_assignments order only — not `library` iteration order from
+                                   * allowedUserEmails.
+                                   */
+                                  const assignedForPlaylist = (() => {
+                                    if (!isManaged) return [];
+                                    const orderIds = audioOrder[user.email] ?? [];
+                                    const byId = new Map(library.map((item) => [item.id, item]));
+                                    if (orderIds.length > 0) {
+                                      return orderIds
+                                        .slice(0, 10)
+                                        .map((id) => byId.get(id))
+                                        .filter((item): item is LibraryItem => item != null);
+                                    }
+                                    const emailLower = user.email.toLowerCase();
+                                    return library
+                                      .filter((item) =>
+                                        (item.allowedUserEmails || []).some((e) => e.toLowerCase() === emailLower)
+                                      )
+                                      .slice(0, 10);
+                                  })();
                                   const goalAudios = getDerivedAudios(user.goalIds || []).slice(0, 10);
                                   const list = isManaged ? assignedForPlaylist : goalAudios;
                                   return list.length === 0 ? (

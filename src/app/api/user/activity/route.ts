@@ -5,7 +5,14 @@ import { getUserProfile, recordMemberActivity } from "@/lib/db";
 
 const bodySchema = z.object({
   action: z.string().min(1).max(200),
-  details: z.string().max(1000).optional()
+  /** Allow null from clients; trim and cap length for storage. */
+  details: z
+    .union([z.string(), z.null()])
+    .optional()
+    .transform((v) => {
+      if (v == null || v === "") return undefined;
+      return String(v).trim().slice(0, 1000);
+    })
 });
 
 /** Record a member action (e.g. viewed console, viewed library). Call from member frontend. */

@@ -18,5 +18,17 @@ export function logMemberPlayedAudio(details: string): void {
     credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "played_audio", details: trimmed })
-  }).catch(() => {});
+  })
+    .then(async (res) => {
+      if (res.ok) return;
+      const errText = await res.text().catch(() => "");
+      console.warn(
+        "[logMemberPlayedAudio] POST /api/user/activity failed:",
+        res.status,
+        errText || res.statusText
+      );
+    })
+    .catch((err) => {
+      console.warn("[logMemberPlayedAudio] network error:", err);
+    });
 }

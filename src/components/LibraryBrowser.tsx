@@ -37,7 +37,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
         fetch("/api/user/activity", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "viewed_library" }),
+          body: JSON.stringify({ action: "viewed_library", details: "/library" }),
           credentials: "include"
         }).catch(() => {});
       })
