@@ -17,7 +17,9 @@ export function logMemberPlayedAudio(details: string): void {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "played_audio", details: trimmed })
+    body: JSON.stringify({ action: "played_audio", details: trimmed }),
+    /** Improves chance the request completes if the member navigates away right after play starts. */
+    keepalive: true
   })
     .then(async (res) => {
       if (res.ok) return;

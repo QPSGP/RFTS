@@ -37,7 +37,15 @@ async function run() {
       [userId]
     );
 
-    console.log("Test user ready:", TEST_EMAIL, "/", TEST_PASSWORD);
+    await pool.query(
+      `INSERT INTO subscriptions (user_id, tier, status)
+       VALUES ($1, 'platinum', 'active')
+       ON CONFLICT (user_id)
+       DO UPDATE SET tier = EXCLUDED.tier, status = EXCLUDED.status`,
+      [userId]
+    );
+
+    console.log("Test user ready:", TEST_EMAIL, "/", TEST_PASSWORD, "(active subscription)");
   } catch (err) {
     console.error(err);
     process.exit(1);

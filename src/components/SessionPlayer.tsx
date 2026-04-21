@@ -82,17 +82,28 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     if (!audio) return;
     const onPlaying = () => {
       const c = currentRef.current;
-      if (!c?.title) return;
+      if (!c?.url) return;
       const ph = phaseRef.current;
       if (ph !== "first" && ph !== "second") return;
       const prep = prepAudioRef.current;
+      const label =
+        (c.title || "").trim() ||
+        (() => {
+          try {
+            const u = new URL(c.url, typeof window !== "undefined" ? window.location.origin : "http://local");
+            const base = u.pathname.split("/").pop() || "recording";
+            return base.replace(/\.[^.]+$/, "") || "Recording";
+          } catch {
+            return "Recording";
+          }
+        })();
       let kind: string;
       if (prep && c.url === prep.url) {
         kind = "Preparation audio";
       } else if (ph === "second") {
-        kind = `Second: ${c.title}`;
+        kind = `Second: ${label}`;
       } else {
-        kind = `First: ${c.title}`;
+        kind = `First: ${label}`;
       }
       logMemberPlayedAudio(`Play Options — ${kind}`);
     };

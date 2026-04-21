@@ -1335,9 +1335,9 @@ export default function AdminUsers() {
                               border: "1px solid #fde68a"
                             }}
                           >
-                            <strong>Member session only:</strong> Library and Play Options save plays for whoever is
-                            signed in at <strong>/member/login</strong> — use Incognito if you also use Admin in this
-                            browser.
+                            Plays are saved for the member who was signed in at <strong>/member/login</strong> when
+                            audio ran, not for the admin viewing this screen. (This note is always shown here; it does
+                            not mean your current setup is wrong.)
                           </p>
                           {rawActivity.length > 0 && !memberActivityLoading[user.email] && (
                             <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 10px" }}>
