@@ -92,8 +92,42 @@ type MemberActivityPageSize = 20 | 50 | 100;
 /** First separator after "Library" / "Play Options" (any unicode dash + ASCII hyphen + spaces). */
 const PLAYED_AUDIO_LOC_SEP = /^\s*[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFE58\uFE63\uFF0D\-]+\s*/;
 
+/** Strip BOM / zero-width chars that break ^-anchored parsing of session lines. */
+function normalizeActivityDetailsString(raw: string): string {
+  return raw
+    .trim()
+    .replace(/^\uFEFF/, "")
+    .normalize("NFKC")
+    .replace(/[\u200B\u200C\u200D\uFEFF]/g, "");
+}
+
+/**
+ * Session logs use `Play Options — First: …` from SessionPlayer. If the prefix or dashes
+ * do not strip cleanly, `rest`-only parsing can miss the title; this searches the full line.
+ */
+function extractPlayOptionsAudioTitle(d: string): string | null {
+  const t = normalizeActivityDetailsString(d);
+  if (!/^Play\s+Options\b/i.test(t)) return null;
+  if (/\bFirst\s*:/i.test(t) || /\bSecond\s*:/i.test(t)) {
+    const firstM = /\bFirst\s*[:：]\s*(.+)$/is.exec(t);
+    if (firstM) {
+      const title = (firstM[1] || "").trim().replace(/\s+/g, " ");
+      if (title.length > 0) return title;
+    }
+    const secondM = /\bSecond\s*[:：]\s*(.+)$/is.exec(t);
+    if (secondM) {
+      const title = (secondM[1] || "").trim().replace(/\s+/g, " ");
+      if (title.length > 0) return title;
+    }
+  }
+  if (/\bPreparation audio\b/i.test(t) && !/\bFirst\s*:/i.test(t) && !/\bSecond\s*:/i.test(t)) {
+    return "Preparation audio";
+  }
+  return null;
+}
+
 function playedAudioLocation(details: string): "library" | "play_options" | null {
-  const t = details.trim().replace(/^\uFEFF/, "");
+  const t = normalizeActivityDetailsString(details);
   if (/^Play\s+Options\b/i.test(t)) return "play_options";
   if (/^Library\b/i.test(t)) return "library";
   return null;
@@ -106,7 +140,7 @@ function playedAudioLocation(details: string): "library" | "play_options" | null
  * Play Options is checked before Library so odd titles cannot confuse the parser.
  */
 function playedAudioAfterLocationPrefix(details: string): { where: "library" | "play_options"; rest: string } | null {
-  const t = details.trim().replace(/^\uFEFF/, "");
+  const t = normalizeActivityDetailsString(details);
   const playHead = t.match(/^Play\s+Options\b/i);
   if (playHead) {
     let rest = t.slice(playHead[0].length);
@@ -159,7 +193,9 @@ function formatActivityAction(action: string): string {
 /** Track / recording title for activity table (from `played_audio` details). */
 function formatPlayedAudioTitle(action: string, details: string | null): string {
   if (action !== "played_audio" || !details) return "";
-  const d = details.trim();
+  const d = normalizeActivityDetailsString(details);
+  const sessionLineTitle = extractPlayOptionsAudioTitle(d);
+  if (sessionLineTitle) return sessionLineTitle;
   const loc = playedAudioAfterLocationPrefix(d);
   if (!loc) {
     return d.replace(/\s+/g, " ").trim();
@@ -188,7 +224,7 @@ function formatPlayedAudioTitle(action: string, details: string | null): string 
 /** Where they played (library vs Play Options, first/second/prep). */
 function formatPlayedAudioContext(action: string, details: string | null): string {
   if (action !== "played_audio" || !details?.trim()) return "";
-  const d = details.trim();
+  const d = normalizeActivityDetailsString(details);
   const loc = playedAudioAfterLocationPrefix(d);
   if (loc) {
     if (loc.where === "library") return "Audio library";
