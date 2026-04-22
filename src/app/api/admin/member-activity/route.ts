@@ -47,7 +47,15 @@ export async function GET(request: Request) {
       scheduleStartedAt: mp?.scheduleStartedAt ?? null,
       currentNight: Math.min(366, Math.max(1, completed + 1))
     };
-    return noStoreJson({ activityLog, scheduleProgress });
+    const newestActivityAt = activityLog[0]?.createdAt ?? null;
+    return noStoreJson({
+      activityLog,
+      scheduleProgress,
+      serverTime: new Date().toISOString(),
+      newestActivityAt,
+      rowCount: activityLog.length,
+      targetUserId: user.id
+    });
   }
   const activityLog = await getMemberActivityLog(100);
   return noStoreJson({ activityLog });

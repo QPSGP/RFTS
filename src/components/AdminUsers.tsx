@@ -1,7 +1,7 @@
 "use client";
 
 import { put } from "@vercel/blob/client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { formatFullSessionsFraction } from "@/lib/session-progress-format";
 import type { LibraryItem } from "@/lib/types";
 
@@ -282,7 +282,13 @@ function formatActivityDetails(action: string, details: string | null): string {
 
 function formatActivityTime(iso: string): string {
   try {
-    return new Date(iso).toLocaleString(undefined, {
+    const raw = String(iso).trim();
+    let d = new Date(raw);
+    if (Number.isNaN(d.getTime()) && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(raw)) {
+      d = new Date(raw.replace(" ", "T") + "Z");
+    }
+    if (Number.isNaN(d.getTime())) return raw;
+    return d.toLocaleString(undefined, {
       dateStyle: "medium",
       timeStyle: "short"
     });
@@ -333,6 +339,19 @@ export default function AdminUsers() {
   >({});
   const [memberActivityPageSize, setMemberActivityPageSize] = useState<
     Record<string, MemberActivityPageSize>
+  >({});
+  /** Last fetch metadata so we can confirm the list matches the database (and refetch on tab focus). */
+  const [memberActivitySnapshot, setMemberActivitySnapshot] = useState<
+    Record<
+      string,
+      {
+        serverTime: string;
+        newestActivityAt: string | null;
+        loadedAt: string;
+        rowCount: number;
+        targetUserId?: string;
+      }
+    >
   >({});
   const [memberScheduleProgress, setMemberScheduleProgress] = useState<
     Record<
@@ -609,7 +628,14 @@ export default function AdminUsers() {
         `/api/admin/member-activity?email=${encodeURIComponent(
           email
         )}&limit=500&_t=${Date.now()}`,
-        { credentials: "include", cache: "no-store" }
+        {
+          credentials: "include",
+          cache: "no-store",
+          headers: {
+            Pragma: "no-cache",
+            "Cache-Control": "no-cache"
+          }
+        }
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({} as { error?: string }));
@@ -628,6 +654,20 @@ export default function AdminUsers() {
       setMemberActivity((prev) => ({
         ...prev,
         [email]: Array.isArray(data.activityLog) ? data.activityLog : []
+      }));
+      const rows = Array.isArray(data.activityLog) ? data.activityLog : [];
+      setMemberActivitySnapshot((prev) => ({
+        ...prev,
+        [email]: {
+          serverTime: typeof data.serverTime === "string" ? data.serverTime : new Date().toISOString(),
+          newestActivityAt:
+            typeof data.newestActivityAt === "string" || data.newestActivityAt === null
+              ? data.newestActivityAt
+              : rows[0]?.createdAt ?? null,
+          loadedAt: new Date().toISOString(),
+          rowCount: rows.length,
+          targetUserId: typeof data.targetUserId === "string" ? data.targetUserId : undefined
+        }
       }));
       const sp = data.scheduleProgress;
       if (
@@ -657,6 +697,29 @@ export default function AdminUsers() {
       setMemberActivityLoading((prev) => ({ ...prev, [email]: false }));
     }
   };
+
+  const loadMemberActivityRef = useRef(loadMemberActivity);
+  loadMemberActivityRef.current = loadMemberActivity;
+
+  useEffect(() => {
+    let deb: ReturnType<typeof setTimeout> | undefined;
+    const refresh = () => {
+      if (document.visibilityState !== "visible") return;
+      if (deb) clearTimeout(deb);
+      deb = setTimeout(() => {
+        for (const e of Object.keys(profileOpen)) {
+          if (profileOpen[e]) void loadMemberActivityRef.current(e);
+        }
+      }, 400);
+    };
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      if (deb) clearTimeout(deb);
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [profileOpen]);
 
   const saveMemberScheduleProgress = async (email: string, completedScheduleNights: number) => {
     const clamped = Math.max(0, Math.min(366, Math.floor(completedScheduleNights)));
@@ -1393,6 +1456,29 @@ export default function AdminUsers() {
                                   <strong>{filteredActivity.length}</strong> in the table.
                                 </>
                               ) : null}
+                            </p>
+                          )}
+                          {rawActivity.length > 0 &&
+                            !memberActivityLoading[user.email] &&
+                            memberActivitySnapshot[user.email] && (
+                            <p style={{ fontSize: 11, color: "#94a3b8", margin: "0 0 10px" }}>
+                              <strong>DB snapshot (this request):</strong>{" "}
+                              {memberActivitySnapshot[user.email].newestActivityAt ? (
+                                <>
+                                  top row <strong>
+                                    {formatActivityTime(
+                                      memberActivitySnapshot[user.email].newestActivityAt as string
+                                    )}
+                                  </strong>{" "}
+                                </>
+                              ) : (
+                                "no rows · "
+                              )}
+                              ({memberActivitySnapshot[user.email].rowCount} rows) · server{" "}
+                              {formatActivityTime(memberActivitySnapshot[user.email].serverTime)} · this page
+                              loaded {formatActivityTime(memberActivitySnapshot[user.email].loadedAt)}. If new
+                              plays are missing, they are not in the database for this account yet, or a filter
+                              is hiding them.
                             </p>
                           )}
                           {memberScheduleProgress[user.email] != null && (

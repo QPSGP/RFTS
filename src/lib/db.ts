@@ -1245,15 +1245,24 @@ export const getMemberActivityLogForUser = async (
       SELECT id, action, details, created_at
       FROM member_activity_log
       WHERE user_id = ${userId}
-      ORDER BY created_at DESC
+      ORDER BY created_at DESC NULLS LAST, id DESC
       LIMIT ${limit}
     `;
-    return rows.map((r) => ({
-      id: r.id,
-      action: r.action,
-      details: r.details ?? null,
-      createdAt: r.created_at
-    }));
+    return rows.map((r) => {
+      const ca = r.created_at as unknown;
+      const createdAt =
+        ca instanceof Date
+          ? ca.toISOString()
+          : typeof r.created_at === "string"
+            ? r.created_at
+            : String(r.created_at);
+      return {
+        id: r.id,
+        action: r.action,
+        details: r.details ?? null,
+        createdAt
+      };
+    });
   } catch {
     return [];
   }
