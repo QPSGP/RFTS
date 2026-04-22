@@ -28,19 +28,26 @@ async function main() {
   }
   const cookie = setCookie.split(";")[0].trim();
 
-  const details = "Library — smoke test track (verify-member-activity-post)";
-  const actRes = await fetch(`${BASE}/api/user/activity`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Cookie: cookie },
-    body: JSON.stringify({ action: "played_audio", details })
-  });
-  const bodyText = await actRes.text();
-  if (!actRes.ok) {
-    console.error("POST /api/user/activity failed:", actRes.status, bodyText);
-    process.exit(1);
+  const libraryLine = "Library — smoke test track (verify-member-activity-post)";
+  const playOptionsLine = "Play Options - First: verify play-options title (smoke)";
+
+  for (const [label, details] of [
+    ["library", libraryLine],
+    ["play options session", playOptionsLine]
+  ]) {
+    const actRes = await fetch(`${BASE}/api/user/activity`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Cookie: cookie },
+      body: JSON.stringify({ action: "played_audio", details })
+    });
+    const bodyText = await actRes.text();
+    if (!actRes.ok) {
+      console.error(`POST /api/user/activity failed (${label}):`, actRes.status, bodyText);
+      process.exit(1);
+    }
   }
-  console.log("OK: played_audio accepted for", TEST_EMAIL);
-  console.log("   Admin → Members →", TEST_EMAIL, "→ Refresh activity — expect Audio + Detail for Played audio.");
+  console.log("OK: played_audio accepted for", TEST_EMAIL, "(library + play options lines)");
+  console.log("   Admin → Members →", TEST_EMAIL, "→ activity: Audio column should show the track title for each row.");
 }
 
 main().catch((e) => {

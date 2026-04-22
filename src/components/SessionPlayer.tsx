@@ -1,6 +1,14 @@
 "use client";
 
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState
+} from "react";
 import { logMemberPlayedAudio } from "@/lib/member-audio-activity";
 
 type SessionTrack = {
@@ -80,10 +88,11 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   /** Pause/Play/Restart, native audio, and mobile fixed bar only while actively in first or second segment (not idle/waiting). */
   const showActivePlaybackUi = Boolean(current && (phase === "first" || phase === "second"));
 
-  useEffect(() => {
+  /** useLayoutEffect + play/playing: attach before paint, log on the first event some browsers only emit. */
+  useLayoutEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const onPlaying = () => {
+    const onPlaybackLogged = () => {
       const c = currentRef.current;
       if (!c?.url) return;
       const ph = phaseRef.current;
@@ -108,10 +117,15 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       } else {
         kind = `First: ${label}`;
       }
-      logMemberPlayedAudio(`Play Options — ${kind}`);
+      // ASCII " - " keeps DB/API UTF-8 handling simple; Admin parses this and em-dash variants.
+      logMemberPlayedAudio(`Play Options - ${kind}`.replace(/\s+/g, " ").trim());
     };
-    audio.addEventListener("playing", onPlaying);
-    return () => audio.removeEventListener("playing", onPlaying);
+    audio.addEventListener("playing", onPlaybackLogged);
+    audio.addEventListener("play", onPlaybackLogged);
+    return () => {
+      audio.removeEventListener("playing", onPlaybackLogged);
+      audio.removeEventListener("play", onPlaybackLogged);
+    };
     /* `<audio>` mounts only when `showActivePlaybackUi` is true, so a [] effect ran on first
      * paint with ref still null and never re-ran — session `played_audio` was never logged. */
   }, [showActivePlaybackUi, current?.url, phase, prepAudio?.url]);

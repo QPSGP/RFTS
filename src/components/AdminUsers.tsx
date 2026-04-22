@@ -158,8 +158,8 @@ function playedAudioAfterLocationPrefix(details: string): { where: "library" | "
 
 /** Library vs Play Options session vs everything else (for admin activity filters). */
 function classifyMemberActivityRow(row: MemberActivityRow): "library" | "session" | "other" {
-  if (row.action !== "played_audio" || !row.details) return "other";
-  const loc = playedAudioLocation(row.details.trim());
+  if (row.action !== "played_audio" || !row.details?.trim()) return "other";
+  const loc = playedAudioLocation(String(row.details).trim());
   if (loc === "library") return "library";
   if (loc === "play_options") return "session";
   return "other";
@@ -191,9 +191,10 @@ function formatActivityAction(action: string): string {
 }
 
 /** Track / recording title for activity table (from `played_audio` details). */
-function formatPlayedAudioTitle(action: string, details: string | null): string {
-  if (action !== "played_audio" || !details) return "";
-  const d = normalizeActivityDetailsString(details);
+function formatPlayedAudioTitle(action: string, details: string | null | undefined): string {
+  if (action !== "played_audio") return "";
+  const d = normalizeActivityDetailsString(details == null ? "" : String(details));
+  if (!d) return "";
   const sessionLineTitle = extractPlayOptionsAudioTitle(d);
   if (sessionLineTitle) return sessionLineTitle;
   const loc = playedAudioAfterLocationPrefix(d);
@@ -240,7 +241,7 @@ function formatPlayedAudioContext(action: string, details: string | null): strin
 }
 
 /** Title column: parsed recording name, or full stored line if parsing yields nothing (always show something). */
-function playedAudioTitleForAdminCell(action: string, details: string | null): string {
+function playedAudioTitleForAdminCell(action: string, details: string | null | undefined): string {
   if (action !== "played_audio") return "";
   const parsed = formatPlayedAudioTitle(action, details);
   if (parsed) return parsed;
