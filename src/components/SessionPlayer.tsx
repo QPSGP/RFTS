@@ -77,6 +77,9 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   phaseRef.current = phase;
   prepAudioRef.current = prepAudio ?? null;
 
+  /** Pause/Play/Restart, native audio, and mobile fixed bar only while actively in first or second segment (not idle/waiting). */
+  const showActivePlaybackUi = Boolean(current && (phase === "first" || phase === "second"));
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -109,10 +112,9 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     };
     audio.addEventListener("playing", onPlaying);
     return () => audio.removeEventListener("playing", onPlaying);
-  }, []);
-
-  /** Pause/Play/Restart, native audio, and mobile fixed bar only while actively in first or second segment (not idle/waiting). */
-  const showActivePlaybackUi = Boolean(current && (phase === "first" || phase === "second"));
+    /* `<audio>` mounts only when `showActivePlaybackUi` is true, so a [] effect ran on first
+     * paint with ref still null and never re-ran — session `played_audio` was never logged. */
+  }, [showActivePlaybackUi, current?.url, phase, prepAudio?.url]);
 
   const attemptPlay = (track?: SessionTrack | null) => {
     const audio = audioRef.current;
