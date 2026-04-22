@@ -606,8 +606,10 @@ export default function AdminUsers() {
     setMemberActivityError((prev) => ({ ...prev, [email]: null }));
     try {
       const res = await fetch(
-        `/api/admin/member-activity?email=${encodeURIComponent(email)}&limit=500`,
-        { credentials: "include" }
+        `/api/admin/member-activity?email=${encodeURIComponent(
+          email
+        )}&limit=500&_t=${Date.now()}`,
+        { credentials: "include", cache: "no-store" }
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({} as { error?: string }));
