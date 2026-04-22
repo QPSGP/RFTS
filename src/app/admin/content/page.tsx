@@ -11,6 +11,7 @@ import AdminUsers from "@/components/AdminUsers";
 import AdminAdmins from "@/components/AdminAdmins";
 import AdminLogoutButton from "@/components/AdminLogoutButton";
 import AffiliateAdmin from "@/components/AffiliateAdmin";
+import ScheduleAlgorithmTool from "@/components/ScheduleAlgorithmTool";
 
 export default function AdminContentPage() {
   const [isFirstAdmin, setIsFirstAdmin] = useState<boolean | null>(null);
@@ -22,7 +23,8 @@ export default function AdminContentPage() {
     subscriptions: false,
     goals: false,
     library: false,
-    admins: false
+    admins: false,
+    scheduleAlgorithm: false
   });
 
   useEffect(() => {
@@ -122,6 +124,13 @@ export default function AdminContentPage() {
           >
             Audio Library Section
           </button>
+          <button
+            className="button button-secondary"
+            type="button"
+            onClick={() => toggleSection("scheduleAlgorithm", "admin-schedule-algorithm")}
+          >
+            Schedule algorithm (Gold vs Managed)
+          </button>
           {isFirstAdmin && (
             <button
               className="button button-secondary"
@@ -157,6 +166,11 @@ export default function AdminContentPage() {
       {openSections.subscriptions && (
         <section id="admin-subscriptions" style={{ marginBottom: 20 }}>
           <AdminSubscriptions />
+        </section>
+      )}
+      {openSections.scheduleAlgorithm && (
+        <section id="admin-schedule-algorithm" style={{ marginBottom: 20 }}>
+          <ScheduleAlgorithmTool />
         </section>
       )}
       {isFirstAdmin && openSections.admins && (

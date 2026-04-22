@@ -9,6 +9,14 @@ This compares **two member accounts** side by side using the same code path as p
 
 ## How to generate the CSV / HTML
 
+### Option A — Admin (recommended)
+
+1. Sign in at `/admin/...` (Activity Dashboard or Content Console).
+2. On **Content Console** (`/admin/content`), open **“Schedule algorithm (Gold vs Managed)”**.
+3. Enter the two member emails, choose how many nights to build, then **Preview in admin** and/or **Download CSV** / **Download HTML** (same data as the CLI script, against production DB on Vercel when you use the live site).
+
+### Option B — Local CLI
+
 1. From `rfts-platform`, ensure `.env.local` has a working **`POSTGRES_URL`** (or `POSTGRES_URL_UNPOOLED`) so the app can read members and library.
 2. Set member emails and run the export.
 
