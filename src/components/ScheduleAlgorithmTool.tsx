@@ -6,19 +6,19 @@ type JsonResponse = {
   header: string[];
   rows: string[][];
   rowHighlight: boolean[];
-  goldEmail: string;
-  managedEmail: string;
-  goldLabel: string;
-  managedLabel: string;
+  email: string;
+  label: string;
+  subscriptionTier: string | null;
+  goalsCount: number;
+  assignedAudioCount: number;
+  playsPerNight: 1 | 2;
   nights: number;
   maxN: number;
   warnings: string[];
-  assignedAudioCount: number;
 };
 
 export default function ScheduleAlgorithmTool() {
-  const [goldEmail, setGoldEmail] = useState("");
-  const [managedEmail, setManagedEmail] = useState("");
+  const [email, setEmail] = useState("");
   const [nights, setNights] = useState(42);
   const [loading, setLoading] = useState(false);
   const [fileBusy, setFileBusy] = useState(false);
@@ -30,14 +30,13 @@ export default function ScheduleAlgorithmTool() {
     setPreview(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/schedule-algorithm-comparison", {
+      const res = await fetch("/api/admin/schedule-algorithm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         cache: "no-store",
         body: JSON.stringify({
-          goldEmail: goldEmail.trim(),
-          managedEmail: managedEmail.trim(),
+          email: email.trim(),
           nights,
           format: "json"
         })
@@ -53,21 +52,20 @@ export default function ScheduleAlgorithmTool() {
     } finally {
       setLoading(false);
     }
-  }, [goldEmail, managedEmail, nights]);
+  }, [email, nights]);
 
   const download = useCallback(
     async (format: "csv" | "html") => {
       setError(null);
       setFileBusy(true);
       try {
-        const res = await fetch("/api/admin/schedule-algorithm-comparison", {
+        const res = await fetch("/api/admin/schedule-algorithm", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           cache: "no-store",
           body: JSON.stringify({
-            goldEmail: goldEmail.trim(),
-            managedEmail: managedEmail.trim(),
+            email: email.trim(),
             nights,
             format
           })
@@ -80,7 +78,7 @@ export default function ScheduleAlgorithmTool() {
         const blob = await res.blob();
         const dispo = res.headers.get("Content-Disposition") || "";
         const m = /filename="([^"]+)"/.exec(dispo);
-        const name = m?.[1] ?? `schedule-algorithm-comparison.${format === "csv" ? "csv" : "html"}`;
+        const name = m?.[1] ?? `schedule-algorithm.${format === "csv" ? "csv" : "html"}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -93,42 +91,30 @@ export default function ScheduleAlgorithmTool() {
         setFileBusy(false);
       }
     },
-    [goldEmail, managedEmail, nights]
+    [email, nights]
   );
 
   return (
     <div className="card" style={{ marginBottom: 20 }}>
-      <h3>Schedule algorithm — Gold vs Platinum Managed</h3>
+      <h3>Schedule algorithm (one member)</h3>
       <p style={{ color: "#4b5563", marginTop: 8 }}>
-        Uses the same code as production: <code>buildSchedulePreview</code> in <code>src/lib/scheduler.ts</code> and the
-        same data as the member &quot;Tonight&apos;s Audio&quot; schedule. Compare a <strong>goal-based (Gold)</strong>{" "}
-        account to a <strong>Platinum Managed</strong> account with admin-assigned audio order.
+        Build the same schedule as <strong>Tonight&apos;s Audio</strong> in the member app: <code>buildSchedulePreview</code>{" "}
+        with their goals (Gold) or admin-assigned audio order (Platinum Managed).
       </p>
-      <div style={{ display: "grid", gap: 12, maxWidth: 560, marginTop: 12 }}>
+      <div style={{ display: "grid", gap: 12, maxWidth: 480, marginTop: 12 }}>
         <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ fontSize: 14, fontWeight: 600 }}>Gold (non‑managed) member email</span>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>Member email</span>
           <input
             className="input"
             type="email"
             autoComplete="off"
-            placeholder="e.g. CraigMiloRogers@gmail.com"
-            value={goldEmail}
-            onChange={(e) => setGoldEmail(e.target.value)}
+            placeholder="member@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
         </label>
         <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ fontSize: 14, fontWeight: 600 }}>Platinum Managed member email</span>
-          <input
-            className="input"
-            type="email"
-            autoComplete="off"
-            placeholder="e.g. terry_bg@msn.com"
-            value={managedEmail}
-            onChange={(e) => setManagedEmail(e.target.value)}
-          />
-        </label>
-        <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ fontSize: 14, fontWeight: 600 }}>Number of schedule nights to generate</span>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>Schedule nights to generate (1–366)</span>
           <input
             className="input"
             type="number"
@@ -151,7 +137,7 @@ export default function ScheduleAlgorithmTool() {
         <button
           type="button"
           className="button button-secondary"
-          disabled={loading || fileBusy || !goldEmail.trim() || !managedEmail.trim()}
+          disabled={loading || fileBusy || !email.trim()}
           onClick={() => void download("csv")}
         >
           {fileBusy ? "Preparing…" : "Download CSV"}
@@ -159,7 +145,7 @@ export default function ScheduleAlgorithmTool() {
         <button
           type="button"
           className="button button-secondary"
-          disabled={loading || fileBusy || !goldEmail.trim() || !managedEmail.trim()}
+          disabled={loading || fileBusy || !email.trim()}
           onClick={() => void download("html")}
         >
           Download HTML
@@ -173,9 +159,10 @@ export default function ScheduleAlgorithmTool() {
       {preview && (
         <div style={{ marginTop: 20 }}>
           <p style={{ fontSize: 14, color: "#374151", marginBottom: 8 }}>
-            <strong>{preview.goldLabel}</strong> · <strong>{preview.managedLabel}</strong> — {preview.maxN} nights,{" "}
-            {preview.assignedAudioCount} assigned audios (managed).{" "}
-            <span style={{ color: "#6b7280" }}>Yellow rows = rotation change that night.</span>
+            <strong>{preview.label}</strong> — tier: {preview.subscriptionTier ?? "—"} · {preview.playsPerNight} main
+            play(s) per night · {preview.maxN} nights · {preview.goalsCount} goal(s) · {preview.assignedAudioCount}{" "}
+            assigned track(s).{" "}
+            <span style={{ color: "#6b7280" }}>Yellow = rotation change that night.</span>
           </p>
           {preview.warnings.length > 0 && (
             <ul style={{ color: "#b45309", margin: "0 0 12px" }}>
@@ -184,8 +171,10 @@ export default function ScheduleAlgorithmTool() {
               ))}
             </ul>
           )}
-          <div style={{ overflowX: "auto", maxHeight: 480, overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: 8 }}>
-            <table style={{ borderCollapse: "collapse", fontSize: 11, width: "100%", minWidth: 900 }}>
+          <div
+            style={{ overflowX: "auto", maxHeight: 480, overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: 8 }}
+          >
+            <table style={{ borderCollapse: "collapse", fontSize: 11, width: "100%", minWidth: 700 }}>
               <thead>
                 <tr>
                   {preview.header.map((h) => (

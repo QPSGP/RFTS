@@ -1,6 +1,7 @@
 /**
- * CLI export (same output as Admin → Schedule algorithm (Gold vs Managed)).
- * For web UI, use the admin console; this script writes files under scripts/output/.
+ * CLI: export one member’s schedule to scripts/output/ (same as Admin → Schedule algorithm).
+ *
+ *   SCHEDULE_EMAIL=member@example.com SCHEDULE_NIGHTS=42 npm run schedule:spreadsheet
  */
 import fs from "fs";
 import path from "path";
@@ -9,37 +10,33 @@ import { config } from "dotenv";
 config({ path: path.join(process.cwd(), ".env.local") });
 
 import {
-  buildComparisonCsvString,
-  buildComparisonHtmlString,
-  buildScheduleAlgorithmComparison
-} from "../src/lib/schedule-algorithm-comparison";
+  buildMemberExportCsvString,
+  buildMemberExportHtmlString,
+  buildScheduleAlgorithmForMember
+} from "../src/lib/schedule-algorithm-export";
 
 async function main() {
-  const goldEmail = process.env.SCHEDULE_GOLD_EMAIL?.trim();
-  const managedEmail = process.env.SCHEDULE_MANAGED_EMAIL?.trim();
+  const email = process.env.SCHEDULE_EMAIL?.trim() || process.env.SCHEDULE_GOLD_EMAIL?.trim();
+  if (!email) {
+    console.error("Set SCHEDULE_EMAIL (member login email), e.g. SCHEDULE_EMAIL=you@example.com");
+    process.exit(1);
+  }
   const nightsRaw = process.env.SCHEDULE_NIGHTS?.trim();
   const nights = Math.min(
     366,
     Math.max(1, nightsRaw ? parseInt(nightsRaw, 10) || 42 : 42)
   );
 
-  if (!goldEmail || !managedEmail) {
-    console.error(
-      "Set SCHEDULE_GOLD_EMAIL and SCHEDULE_MANAGED_EMAIL (e.g. Craig Rogers Gold account and Terry & Craig Managed account)."
-    );
-    process.exit(1);
-  }
-
-  const result = await buildScheduleAlgorithmComparison(goldEmail, managedEmail, nights);
+  const result = await buildScheduleAlgorithmForMember(email, nights);
   for (const w of result.warnings) {
     console.warn("Warning:", w);
   }
 
-  const csv = buildComparisonCsvString(result);
-  const html = buildComparisonHtmlString(result);
+  const csv = buildMemberExportCsvString(result);
+  const html = buildMemberExportHtmlString(result);
   const outDir = path.join(process.cwd(), "scripts", "output");
   fs.mkdirSync(outDir, { recursive: true });
-  const base = "schedule-algorithm-comparison";
+  const base = "schedule-algorithm";
   const csvPath = path.join(outDir, `${base}.csv`);
   const htmlPath = path.join(outDir, `${base}.html`);
   fs.writeFileSync(csvPath, csv, "utf8");

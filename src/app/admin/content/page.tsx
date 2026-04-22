@@ -129,7 +129,7 @@ export default function AdminContentPage() {
             type="button"
             onClick={() => toggleSection("scheduleAlgorithm", "admin-schedule-algorithm")}
           >
-            Schedule algorithm (Gold vs Managed)
+            Schedule algorithm (member)
           </button>
           {isFirstAdmin && (
             <button

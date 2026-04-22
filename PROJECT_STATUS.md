@@ -10,7 +10,7 @@ Use this block to resume the next session without re-reading the whole thread.
 
 ### Schedule & verification
 - **`src/lib/scheduler.ts`:** Each `ScheduleNight` can include **`rotationAdded`**, **`rotationSessionDrop`** (Gold only, session-count bands), **`rotationRemovedAfterPlays`** (play-cap after that night’s plays). Used by the app schedule JSON and by the local export (optional fields; clients can ignore).
-- **Spreadsheet export (Gold vs Platinum Managed):** `npm run schedule:spreadsheet` — requires **`POSTGRES_URL`** in `.env.local`. Set **`SCHEDULE_GOLD_EMAIL`** and **`SCHEDULE_MANAGED_EMAIL`**; optional **`SCHEDULE_NIGHTS`**. Writes **`scripts/output/schedule-algorithm-comparison.csv`** + **`.html`** (HTML highlights rows with rotation events). Docs: **`scripts/SCHEDULE_SPREADSHEET.md`** (includes example emails for Craig Gold vs Terry managed). Dev dependency **`tsx`**. **`GET /api/admin/member-activity?email=…&limit=`** supports up to 500 rows for admin.
+- **Schedule export (one member):** Admin **Content Console** → **Schedule algorithm (member)**, or CLI `npm run schedule:spreadsheet` with **`SCHEDULE_EMAIL`** (optional **`SCHEDULE_NIGHTS`**). Same **`buildSchedulePreview`** as the member app. Legacy **`SCHEDULE_GOLD_EMAIL`** still works as a fallback in the script. Writes **`scripts/output/schedule-algorithm.csv/html`**. See **`scripts/SCHEDULE_SPREADSHEET.md`**. **`GET /api/admin/member-activity?email=…&limit=`** supports up to 500 rows for admin.
 - **Platinum Managed + CGMR:** `src/app/api/user/schedule/route.ts` — managed members with assigned-audio list use global T-18/fallback for the special slot, not an accidental allow-list steal. **`AdminUsers`** copy matches.
 
 ### Member & admin UX

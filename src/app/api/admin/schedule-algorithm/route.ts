@@ -2,19 +2,17 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
 import {
-  buildComparisonCsvString,
-  buildComparisonHtmlString,
-  buildScheduleAlgorithmComparison
-} from "@/lib/schedule-algorithm-comparison";
+  buildMemberExportCsvString,
+  buildMemberExportHtmlString,
+  buildScheduleAlgorithmForMember
+} from "@/lib/schedule-algorithm-export";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const bodySchema = z.object({
-  goldEmail: z.string().min(3).max(320),
-  managedEmail: z.string().min(3).max(320),
+  email: z.string().min(3).max(320),
   nights: z.number().int().min(1).max(366).optional().default(42),
-  /** "csv" | "html" | "json" — json returns table + metadata for in-app preview. */
   format: z.enum(["csv", "html", "json"]).default("json")
 });
 
@@ -27,11 +25,11 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const { goldEmail, managedEmail, nights, format } = parsed.data;
+  const { email, nights, format } = parsed.data;
 
-  let result: Awaited<ReturnType<typeof buildScheduleAlgorithmComparison>>;
+  let result: Awaited<ReturnType<typeof buildScheduleAlgorithmForMember>>;
   try {
-    result = await buildScheduleAlgorithmComparison(goldEmail, managedEmail, nights);
+    result = await buildScheduleAlgorithmForMember(email, nights);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: msg }, { status: 400 });
@@ -43,39 +41,38 @@ export async function POST(request: Request) {
         header: result.header,
         rows: result.rows,
         rowHighlight: result.rowHighlight,
-        goldEmail: result.goldEmail,
-        managedEmail: result.managedEmail,
-        goldLabel: result.goldLabel,
-        managedLabel: result.managedLabel,
+        email: result.email,
+        label: result.label,
+        subscriptionTier: result.subscriptionTier,
+        goalsCount: result.goalsCount,
+        assignedAudioCount: result.assignedAudioCount,
+        playsPerNight: result.playsPerNight,
         nights: result.nights,
         maxN: result.maxN,
-        warnings: result.warnings,
-        assignedAudioCount: result.assignedAudioCount
+        warnings: result.warnings
       },
-      {
-        headers: { "Cache-Control": "no-store" }
-      }
+      { headers: { "Cache-Control": "no-store" } }
     );
   }
 
   if (format === "csv") {
-    const csv = buildComparisonCsvString(result);
+    const csv = buildMemberExportCsvString(result);
     return new NextResponse(csv, {
       status: 200,
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="schedule-algorithm-comparison.csv"`,
+        "Content-Disposition": `attachment; filename="schedule-algorithm.csv"`,
         "Cache-Control": "no-store"
       }
     });
   }
 
-  const html = buildComparisonHtmlString(result);
+  const html = buildMemberExportHtmlString(result);
   return new NextResponse(html, {
     status: 200,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Content-Disposition": `attachment; filename="schedule-algorithm-comparison.html"`,
+      "Content-Disposition": `attachment; filename="schedule-algorithm.html"`,
       "Cache-Control": "no-store"
     }
   });

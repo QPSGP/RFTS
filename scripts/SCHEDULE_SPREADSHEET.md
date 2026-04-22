@@ -1,83 +1,45 @@
-# Schedule algorithm spreadsheet (Gold vs Platinum Managed)
+# Schedule algorithm export (single member)
 
-This compares **two member accounts** side by side using the same code path as production: `buildSchedulePreview` in `src/lib/scheduler.ts` and the same inputs as `GET /api/user/schedule` (library, playback settings, goals vs assigned audio order, per-member library filtering, T-18/CGMR allow-list rules).
+Exports the **same** schedule the app uses for “Tonight’s Audio” (`buildSchedulePreview` in `src/lib/scheduler.ts`, with inputs aligned to `GET /api/user/schedule`).
 
-## Who this is for
+**Gold (platinum):** goal-based rotation. **Platinum Managed:** `member_audio_assignments` order. The export picks the path from the member’s subscription tier.
 
-- **Column “Gold (non-managed)”** — goal-based rotation (e.g. **Craig Rogers** on standard Gold / `platinum`).
-- **Column “Platinum Managed”** — admin-ordered assigned audios (e.g. **Terry & Craig Rogers** on `platinum_managed` with `member_audio_assignments`).
+## Option A — Admin (recommended)
 
-## How to generate the CSV / HTML
+1. Open **Content Console** → [Schedule algorithm (member)](/admin/content#admin-schedule-algorithm).
+2. Enter the **member email**, set **nights (1–366)**, then **Preview in admin** and/or **Download CSV** / **Download HTML**.
 
-### Option A — Admin (recommended)
+Uses the **production** database when you are on the live site.
 
-1. Sign in at `/admin/...` (Activity Dashboard or Content Console).
-2. On **Content Console** (`/admin/content`), open **“Schedule algorithm (Gold vs Managed)”**.
-3. Enter the two member emails, choose how many nights to build, then **Preview in admin** and/or **Download CSV** / **Download HTML** (same data as the CLI script, against production DB on Vercel when you use the live site).
+## Option B — Local CLI
 
-### Option B — Local CLI
-
-1. From `rfts-platform`, ensure `.env.local` has a working **`POSTGRES_URL`** (or `POSTGRES_URL_UNPOOLED`) so the app can read members and library.
-2. Set member emails and run the export.
-
-### Ready-to-run: Craig (Gold) vs Terry (Platinum Managed)
-
-Use these when comparing **Craig Rogers** (non-managed) and **Terry & Craig Rogers** (managed):
+From `rfts-platform` with `POSTGRES_URL` in `.env.local`:
 
 ```powershell
-# PowerShell
-$env:SCHEDULE_GOLD_EMAIL="CraigMiloRogers@gmail.com"
-$env:SCHEDULE_MANAGED_EMAIL="terry_bg@msn.com"
+$env:SCHEDULE_EMAIL="richard@visimon.app"
 $env:SCHEDULE_NIGHTS="42"
 npm run schedule:spreadsheet
 ```
 
-```bash
-# macOS / Linux
-SCHEDULE_GOLD_EMAIL=CraigMiloRogers@gmail.com \
-SCHEDULE_MANAGED_EMAIL=terry_bg@msn.com \
-SCHEDULE_NIGHTS=42 \
-npm run schedule:spreadsheet
-```
+- Output: `scripts/output/schedule-algorithm.csv` and `schedule-algorithm.html` (gitignored).  
+- Legacy: `SCHEDULE_GOLD_EMAIL` is still read if `SCHEDULE_EMAIL` is not set (single-account export only).
 
-### Other members
-
-Replace with any two login emails (Gold goal-based vs Platinum Managed with assignments):
-
-```bash
-# PowerShell
-$env:SCHEDULE_GOLD_EMAIL="member1@example.com"
-$env:SCHEDULE_MANAGED_EMAIL="member2@example.com"
-$env:SCHEDULE_NIGHTS="42"
-npm run schedule:spreadsheet
-```
-
-3. Open the files under **`scripts/output/`**:
-   - **`schedule-algorithm-comparison.csv`** — open in Excel or Google Sheets (you may delete the `#` comment lines at the top if you want a clean table only).
-   - **`schedule-algorithm-comparison.html`** — open in a browser; you can also open in Excel.
-
-`scripts/output/` is gitignored; copy the files elsewhere if you need to share them.
-
-## What the columns mean
+## Column reference
 
 | Column | Meaning |
 |--------|--------|
-| Schedule night | Night index 1…N (same as app “schedule night”). |
-| Algorithm note | e.g. rotation vs T-18/CGMR night (see scheduler). |
-| Gold — play 1 / 2 | First and second main play that night (when 2 plays/night). |
-| Managed — play 1 / 2 | Same for the managed account’s assigned-audio rotation. |
-| SKU | Library SKU codes for traceability. |
-| **Gold — rotation (night start)** | **New goal enters** the active set (add-new-track rule) and/or **session-drop**: a goal **leaves** the active set per the fixed session-count bands (first “set” dropping off over time). |
-| **Gold — rotation (after plays)** | After this night’s listens, any **goal removed** because every track for that goal hit `playsPerRecording`. |
-| **Managed — rotation (night start)** | **New assigned audio** enters the active rotation (same add-new-track cadence as Gold, but for assigned list order). |
-| **Managed — rotation (after plays)** | Assigned **audio removed** after this night when it reached `playsPerRecording` plays. |
+| Schedule night | 1…N (same as app). |
+| Algorithm note | e.g. special / T-18 night, etc. |
+| Play 1 / 2, SKU | First and second main play that night. |
+| Rotation (night start) | New item in rotation and/or (Gold) session-drop. |
+| Rotation (after plays) | After this night, items removed for play-cap. |
 
-In the **HTML** export, any night where **either** account has a rotation event is **highlighted in yellow** for quick scanning. The CSV has the same text in the rotation columns (use conditional formatting in Excel on those columns if you want colors locally).
+Yellow Highlight in HTML: rotation change that night. Use conditional formatting in Excel on rotation columns if you use CSV.
 
-## If managed column looks wrong
+## If a Platinum Managed schedule looks empty
 
-- The managed account must have **`member_audio_assignments`** rows (admin “Check audios” / audio order). If the script warns about missing assignments, fix data in admin first, then re-run.
+- Ensure **member audio assignments** are saved in Admin for that email, then re-run.
 
-## Algorithm reference
+## Algorithm code
 
-See `src/lib/scheduler.ts` and `PROJECT_STATUS.md` (schedule / T-18 / CGMR notes).
+`src/lib/scheduler.ts` and `PROJECT_STATUS.md` (schedule notes).
