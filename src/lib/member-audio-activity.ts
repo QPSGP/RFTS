@@ -6,9 +6,18 @@ let lastPlayedLog: { key: string; at: number } | null = null;
 
 const ACTIVITY_MAX = 1000;
 
-function postActivity(action: string, details: string, useKeepalive: boolean) {
+function okResponseStub(): Response {
+  return { ok: true, status: 200, text: async () => "" } as unknown as Response;
+}
+
+function postActivity(
+  action: string,
+  details: string,
+  useKeepalive: boolean
+): ReturnType<typeof fetch> {
   if (typeof fetch !== "function") {
-    return Promise.resolve() as ReturnType<typeof fetch>;
+    // Jest (no fetch) and similar: avoid `new Response` (not always in jsdom).
+    return Promise.resolve(okResponseStub());
   }
   return fetch("/api/user/activity", {
     method: "POST",
