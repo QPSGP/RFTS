@@ -379,7 +379,8 @@ export default function PlayOptionsPage() {
                     className="button button-secondary"
                     href={`/library/${track.id}`}
                   >
-                    Play {index === 1 ? "Second" : "First"}: {track.title}
+                    Play {index === 1 ? "Second" : "First"}:{" "}
+                    {[track.skuCode, track.title].filter((x) => String(x || "").trim()).join(" – ")}
                   </a>
                 ))}
               </div>
@@ -408,12 +409,20 @@ export default function PlayOptionsPage() {
             prepAudio={prepAudio}
             firstTrack={
               tonight.tracks[0]
-                ? { title: tonight.tracks[0].title, url: tonight.tracks[0].audioUrl }
+                ? {
+                    title: tonight.tracks[0].title,
+                    url: tonight.tracks[0].audioUrl,
+                    skuCode: tonight.tracks[0].skuCode
+                  }
                 : null
             }
             secondTrack={
               tonight.tracks[1]
-                ? { title: tonight.tracks[1].title, url: tonight.tracks[1].audioUrl }
+                ? {
+                    title: tonight.tracks[1].title,
+                    url: tonight.tracks[1].audioUrl,
+                    skuCode: tonight.tracks[1].skuCode
+                  }
                 : null
             }
             gapHours={gapHours}

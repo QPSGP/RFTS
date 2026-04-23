@@ -14,7 +14,25 @@ import { logMemberPlayedAudio } from "@/lib/member-audio-activity";
 type SessionTrack = {
   title: string;
   url: string;
+  /** Shown in member session UI and in activity when present. */
+  skuCode?: string;
 };
+
+function defaultTitleFromUrl(url: string): string {
+  try {
+    const u = new URL(url, typeof window !== "undefined" ? window.location.origin : "http://local");
+    const base = u.pathname.split("/").pop() || "recording";
+    return base.replace(/\.[^.]+$/, "") || "Recording";
+  } catch {
+    return "Recording";
+  }
+}
+
+function displayNameForSessionTrack(t: SessionTrack): string {
+  const title = (t.title || "").trim() || defaultTitleFromUrl(t.url);
+  const sku = (t.skuCode || "").trim();
+  return sku ? `${sku} – ${title}` : title;
+}
 
 type SessionPlayerProps = {
   prepAudio?: SessionTrack | null;
@@ -98,17 +116,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       const ph = phaseRef.current;
       if (ph !== "first" && ph !== "second") return;
       const prep = prepAudioRef.current;
-      const label =
-        (c.title || "").trim() ||
-        (() => {
-          try {
-            const u = new URL(c.url, typeof window !== "undefined" ? window.location.origin : "http://local");
-            const base = u.pathname.split("/").pop() || "recording";
-            return base.replace(/\.[^.]+$/, "") || "Recording";
-          } catch {
-            return "Recording";
-          }
-        })();
+      const label = displayNameForSessionTrack(c);
       let kind: string;
       if (prep && c.url === prep.url) {
         kind = "Preparation audio";
@@ -507,7 +515,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       )}
       {showActivePlaybackUi && current && (
         <div style={{ marginTop: 16 }}>
-          <strong>Now Playing: {current.title}</strong>
+          <strong>Now Playing: {displayNameForSessionTrack(current)}</strong>
           {!isMobile && (
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
               <button
@@ -660,19 +668,19 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
                 </strong>
                 {prepAudio && (
                   <div style={{ marginBottom: 2 }}>
-                    Prep: {prepAudio.title}
+                    Prep: {displayNameForSessionTrack(prepAudio)}
                     {current?.url === prepAudio.url && " (now playing)"}
                   </div>
                 )}
                 {firstTrack && (
                   <div style={{ marginBottom: 2 }}>
-                    First: {firstTrack.title}
+                    First: {displayNameForSessionTrack(firstTrack)}
                     {current?.url === firstTrack.url && " (now playing)"}
                   </div>
                 )}
                 {secondTrack && playsPerNight === 2 && (
                   <div>
-                    Second: {secondTrack.title}
+                    Second: {displayNameForSessionTrack(secondTrack)}
                     {current?.url === secondTrack.url && " (now playing)"}
                   </div>
                 )}
