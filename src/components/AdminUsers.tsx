@@ -156,8 +156,30 @@ function playedAudioAfterLocationPrefix(details: string): { where: "library" | "
   return null;
 }
 
+/** Base line before ` | outcome` in some rows (e.g. audio_playback_outcome). */
+function activityDetailsBaseLine(details: string | null | undefined): string {
+  if (!details?.trim()) return "";
+  const t = String(details);
+  const sep = t.indexOf(" | ");
+  return sep === -1 ? t.trim() : t.slice(0, sep).trim();
+}
+
+function outcomeTextFromActivityDetails(details: string | null | undefined): string {
+  if (!details?.trim()) return "";
+  const t = String(details);
+  const sep = t.indexOf(" | ");
+  if (sep === -1) return "";
+  return t.slice(sep + 3).trim();
+}
+
 /** Library vs Play Options session vs everything else (for admin activity filters). */
 function classifyMemberActivityRow(row: MemberActivityRow): "library" | "session" | "other" {
+  if (row.action === "audio_playback_outcome" && row.details?.trim()) {
+    const t = String(row.details).trim();
+    if (/^Play\s+Options/i.test(t)) return "session";
+    if (/^Library\b/i.test(t)) return "library";
+    return "other";
+  }
   if (row.action !== "played_audio" || !row.details?.trim()) return "other";
   const loc = playedAudioLocation(String(row.details).trim());
   if (loc === "library") return "library";
@@ -183,6 +205,8 @@ function formatActivityAction(action: string): string {
       return "Updated session length (half/full)";
     case "played_audio":
       return "Played audio";
+    case "audio_playback_outcome":
+      return "Playback result";
     case "admin_schedule_adjusted":
       return "Admin: schedule progress";
     default:
@@ -240,12 +264,18 @@ function formatPlayedAudioContext(action: string, details: string | null): strin
   return "Playback";
 }
 
-/** Title column: parsed recording name, or full stored line if parsing yields nothing (always show something). */
+/**
+ * Audio column: title + SKU when present (from Play Options / Library line), for start + outcome rows.
+ */
 function playedAudioTitleForAdminCell(action: string, details: string | null | undefined): string {
-  if (action !== "played_audio") return "";
-  const parsed = formatPlayedAudioTitle(action, details);
+  if (action !== "played_audio" && action !== "audio_playback_outcome") return "";
+  const base = activityDetailsBaseLine(details);
+  if (!base) {
+    return details?.trim().replace(/\s+/g, " ") || "";
+  }
+  const parsed = formatPlayedAudioTitle("played_audio", base);
   if (parsed) return parsed;
-  return details?.trim().replace(/\s+/g, " ") || "";
+  return base.replace(/\s+/g, " ").trim();
 }
 
 /** When older rows have no `details`, still show a short explanation in the Detail column. */
@@ -270,6 +300,10 @@ function formatActivityDetails(action: string, details: string | null): string {
   }
   if (!details?.trim()) {
     return activityDetailFallback(action) ?? "—";
+  }
+  if (action === "audio_playback_outcome") {
+    const o = outcomeTextFromActivityDetails(details);
+    return o || "—";
   }
   if (action === "played_audio") {
     const ctx = formatPlayedAudioContext(action, details);
@@ -1686,10 +1720,15 @@ export default function AdminUsers() {
                                           color: "#111827",
                                           wordBreak: "break-word",
                                           maxWidth: 220,
-                                          fontWeight: row.action === "played_audio" ? 500 : 400
+                                          fontWeight:
+                                            row.action === "played_audio" ||
+                                            row.action === "audio_playback_outcome"
+                                              ? 500
+                                              : 400
                                         }}
                                       >
-                                        {row.action === "played_audio"
+                                        {row.action === "played_audio" ||
+                                        row.action === "audio_playback_outcome"
                                           ? playedAudioTitleForAdminCell(row.action, row.details) || "—"
                                           : "—"}
                                       </td>

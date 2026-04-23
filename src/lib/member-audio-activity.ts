@@ -4,6 +4,45 @@
  */
 let lastPlayedLog: { key: string; at: number } | null = null;
 
+const ACTIVITY_MAX = 1000;
+
+function postActivity(action: string, details: string, useKeepalive: boolean) {
+  if (typeof fetch !== "function") {
+    return Promise.resolve() as ReturnType<typeof fetch>;
+  }
+  return fetch("/api/user/activity", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, details }),
+    keepalive: useKeepalive
+  });
+}
+
+/**
+ * General member activity POST (e.g. playback completed / stopped). No dedupe — each outcome is a row.
+ */
+export function logMemberActivity(action: string, details: string): void {
+  if (typeof window === "undefined") return;
+  const trimmed = details.trim().slice(0, ACTIVITY_MAX);
+  if (!trimmed) return;
+  void postActivity(action, trimmed, true)
+    .then(async (res) => {
+      if (res?.ok) return;
+      if (!res) return;
+      const errText = await res.text().catch(() => "");
+      console.warn("[logMemberActivity] POST /api/user/activity failed:", res.status, errText);
+    })
+    .catch((err) => {
+      console.warn("[logMemberActivity] network error:", err);
+    });
+}
+
+/** `details` use format: `Play Options - First: T-12 – Title | completed full listen` (prefix matches played_audio, then ` | ` + outcome). */
+export function logMemberAudioOutcome(details: string): void {
+  logMemberActivity("audio_playback_outcome", details);
+}
+
 export function logMemberPlayedAudio(details: string): void {
   if (typeof window === "undefined") return;
   const trimmed = details.trim().slice(0, 950);
@@ -13,16 +52,10 @@ export function logMemberPlayedAudio(details: string): void {
     return;
   }
   lastPlayedLog = { key: trimmed, at: now };
-  fetch("/api/user/activity", {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "played_audio", details: trimmed }),
-    /** Improves chance the request completes if the member navigates away right after play starts. */
-    keepalive: true
-  })
+  void postActivity("played_audio", trimmed, true)
     .then(async (res) => {
-      if (res.ok) return;
+      if (res?.ok) return;
+      if (!res) return;
       const errText = await res.text().catch(() => "");
       console.warn(
         "[logMemberPlayedAudio] POST /api/user/activity failed:",

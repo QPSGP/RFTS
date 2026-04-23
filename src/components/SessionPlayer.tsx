@@ -9,7 +9,7 @@ import {
   useRef,
   useState
 } from "react";
-import { logMemberPlayedAudio } from "@/lib/member-audio-activity";
+import { logMemberAudioOutcome, logMemberPlayedAudio } from "@/lib/member-audio-activity";
 
 type SessionTrack = {
   title: string;
@@ -58,6 +58,26 @@ export type SessionPlayerHandle = {
 
 type Phase = "idle" | "first" | "waiting" | "second";
 
+/** One line for activity logs (play start + outcome); `prep` is session prep track if any. */
+function buildPlayOptionsLogLine(
+  c: SessionTrack,
+  ph: Phase,
+  prep: SessionTrack | null
+): string | null {
+  if (!c?.url) return null;
+  if (ph !== "first" && ph !== "second") return null;
+  const label = displayNameForSessionTrack(c);
+  let kind: string;
+  if (prep && c.url === prep.url) {
+    kind = "Preparation audio";
+  } else if (ph === "second") {
+    kind = `Second: ${label}`;
+  } else {
+    kind = `First: ${label}`;
+  }
+  return `Play Options - ${kind}`.replace(/\s+/g, " ").trim();
+}
+
 const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(function SessionPlayer(
   {
     prepAudio,
@@ -93,6 +113,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const [phase, setPhase] = useState<Phase>("idle");
   const [remainingSeconds, setRemainingSeconds] = useState<number>(0);
   const [onePerNightComplete, setOnePerNightComplete] = useState(false);
+  const pauseForResumeRef = useRef(false);
+  const suppressResumeForRestartRef = useRef(false);
 
   secondTrackRef.current = secondTrack ?? null;
 
@@ -112,21 +134,13 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     if (!audio) return;
     const onPlaybackLogged = () => {
       const c = currentRef.current;
-      if (!c?.url) return;
       const ph = phaseRef.current;
-      if (ph !== "first" && ph !== "second") return;
       const prep = prepAudioRef.current;
-      const label = displayNameForSessionTrack(c);
-      let kind: string;
-      if (prep && c.url === prep.url) {
-        kind = "Preparation audio";
-      } else if (ph === "second") {
-        kind = `Second: ${label}`;
-      } else {
-        kind = `First: ${label}`;
+      const line = c ? buildPlayOptionsLogLine(c, ph, prep) : null;
+      if (line) {
+        // ASCII " - " keeps DB/API UTF-8 handling simple; Admin parses this and em-dash variants.
+        logMemberPlayedAudio(line);
       }
-      // ASCII " - " keeps DB/API UTF-8 handling simple; Admin parses this and em-dash variants.
-      logMemberPlayedAudio(`Play Options - ${kind}`.replace(/\s+/g, " ").trim());
     };
     audio.addEventListener("playing", onPlaybackLogged);
     audio.addEventListener("play", onPlaybackLogged);
@@ -137,6 +151,42 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     /* `<audio>` mounts only when `showActivePlaybackUi` is true, so a [] effect ran on first
      * paint with ref still null and never re-ran — session `played_audio` was never logged. */
   }, [showActivePlaybackUi, current?.url, phase, prepAudio?.url]);
+
+  useLayoutEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onPause = () => {
+      if (phaseRef.current === "first" || phaseRef.current === "second") {
+        pauseForResumeRef.current = true;
+      }
+    };
+    const onPlay = () => {
+      if (suppressResumeForRestartRef.current) {
+        suppressResumeForRestartRef.current = false;
+        return;
+      }
+      if (!pauseForResumeRef.current) return;
+      pauseForResumeRef.current = false;
+      if (audio.currentTime < 1) return;
+      const c = currentRef.current;
+      const ph = phaseRef.current;
+      const prep = prepAudioRef.current;
+      const line = c ? buildPlayOptionsLogLine(c, ph, prep) : null;
+      if (line) {
+        logMemberAudioOutcome(`${line} | resumed from where they left off`);
+      }
+    };
+    audio.addEventListener("pause", onPause);
+    audio.addEventListener("play", onPlay);
+    return () => {
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("play", onPlay);
+    };
+  }, [showActivePlaybackUi, current?.url, phase, prepAudio?.url]);
+
+  useEffect(() => {
+    pauseForResumeRef.current = false;
+  }, [current?.url]);
 
   const attemptPlay = (track?: SessionTrack | null) => {
     const audio = audioRef.current;
@@ -269,9 +319,32 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
 
   /** Stop playback, clear UI, cancel gap countdown (so second track will not auto-start). */
   const endSession = useCallback(() => {
+    const cEnd = currentRef.current;
+    const phEnd = phaseRef.current;
+    const prepEnd = prepAudioRef.current;
+    const audio = audioRef.current;
+    if (
+      cEnd &&
+      (phEnd === "first" || phEnd === "second") &&
+      audio &&
+      !audio.ended
+    ) {
+      const line = buildPlayOptionsLogLine(cEnd, phEnd, prepEnd);
+      if (line) {
+        const dur = audio.duration;
+        let incomplete = true;
+        if (Number.isFinite(dur) && dur > 0) {
+          incomplete = audio.currentTime / dur < 0.98;
+        } else {
+          incomplete = audio.currentTime < 0.5;
+        }
+        if (incomplete && audio.currentTime > 0.15) {
+          logMemberAudioOutcome(`${line} | stopped before end (did not complete)`);
+        }
+      }
+    }
     sessionEpochRef.current += 1;
     clearWaitTimers();
-    const audio = audioRef.current;
     if (audio) {
       audio.pause();
       audio.removeAttribute("src");
@@ -288,6 +361,17 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   }, [clearWaitTimers]);
 
   const handleEnded = useCallback(() => {
+    {
+      const c0 = currentRef.current;
+      const ph0 = phaseRef.current;
+      const prep0 = prepAudioRef.current;
+      if (c0) {
+        const line = buildPlayOptionsLogLine(c0, ph0, prep0);
+        if (line) {
+          logMemberAudioOutcome(`${line} | completed full listen`);
+        }
+      }
+    }
     if (queue.length > 1) {
       const epochAtAdvance = sessionEpochRef.current;
       const [, ...rest] = queue;
@@ -460,8 +544,18 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const handleRestart = () => {
     const audio = audioRef.current;
     if (!audio) return;
+    const c0 = currentRef.current;
+    const ph0 = phaseRef.current;
+    const prep0 = prepAudioRef.current;
+    if (c0) {
+      const line = buildPlayOptionsLogLine(c0, ph0, prep0);
+      if (line) {
+        suppressResumeForRestartRef.current = true;
+        logMemberAudioOutcome(`${line} | restarted from the beginning`);
+      }
+    }
     audio.currentTime = 0;
-    audio.play();
+    void audio.play();
   };
 
   return (

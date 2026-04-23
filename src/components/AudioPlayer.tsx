@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { logMemberPlayedAudio } from "@/lib/member-audio-activity";
+import { logMemberAudioOutcome, logMemberPlayedAudio } from "@/lib/member-audio-activity";
 
 type AudioPlayerProps = {
   title: string;
@@ -33,6 +33,9 @@ export default function AudioPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   /** Mobile fixed Pause/Play/Restart strip; hidden after Close until playback starts again. */
   const [showMobileLibraryBar, setShowMobileLibraryBar] = useState(true);
+  const pauseForResumeRef = useRef(false);
+  const suppressResumeForRestartRef = useRef(false);
+  const isPlayingPrepRef = useRef(!!prepAudioUrl);
 
   const releaseWakeLock = async () => {
     try {
@@ -125,6 +128,10 @@ export default function AudioPlayer({
   }, [prepAudioUrl, title]);
 
   useEffect(() => {
+    isPlayingPrepRef.current = isPlayingPrep;
+  }, [isPlayingPrep]);
+
+  useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     if (prepAudioUrl) {
@@ -160,6 +167,47 @@ export default function AudioPlayer({
     };
   }, [prepAudioUrl, audioUrl, isPlayingPrep]);
 
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const isPrepSrc = (src: string) => src.includes("prep=1") || src.toLowerCase().includes("prep%3d1");
+    const onEnded = () => {
+      const src = (audio.currentSrc || audio.src || "").trim();
+      if (prepAudioUrl && isPrepSrc(src)) {
+        return;
+      }
+      const label = prepAudioUrl && isPlayingPrepRef.current ? "Starting music" : title;
+      logMemberAudioOutcome(`Library — ${label} | completed full listen`);
+    };
+    audio.addEventListener("ended", onEnded);
+    return () => audio.removeEventListener("ended", onEnded);
+  }, [prepAudioUrl, title, audioUrl]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onPause = () => {
+      pauseForResumeRef.current = true;
+    };
+    const onPlay = () => {
+      if (suppressResumeForRestartRef.current) {
+        suppressResumeForRestartRef.current = false;
+        return;
+      }
+      if (!pauseForResumeRef.current) return;
+      pauseForResumeRef.current = false;
+      if (audio.currentTime < 1) return;
+      const label = prepAudioUrl && isPlayingPrepRef.current ? "Starting music" : title;
+      logMemberAudioOutcome(`Library — ${label} | resumed from where they left off`);
+    };
+    audio.addEventListener("pause", onPause);
+    audio.addEventListener("play", onPlay);
+    return () => {
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("play", onPlay);
+    };
+  }, [prepAudioUrl, title, audioUrl]);
+
   const handleLibraryPause = () => {
     audioRef.current?.pause();
   };
@@ -167,6 +215,23 @@ export default function AudioPlayer({
   const handleCloseLibraryAudio = () => {
     const audio = audioRef.current;
     if (!audio) return;
+    const isPrepSrc = (src: string) => src.includes("prep=1") || src.toLowerCase().includes("prep%3d1");
+    const srcNow = (audio.currentSrc || audio.src || "").trim();
+    if ((audio.currentSrc || audio.src) && !audio.ended) {
+      const label = prepAudioUrl && isPrepSrc(srcNow) ? "Starting music" : title;
+      const dur = audio.duration;
+      let incomplete = true;
+      if (Number.isFinite(dur) && dur > 0) {
+        incomplete = audio.currentTime / dur < 0.98;
+      } else {
+        incomplete = audio.currentTime < 0.5;
+      }
+      if (incomplete) {
+        logMemberAudioOutcome(
+          `Library — ${label} | stopped before end (did not complete)`
+        );
+      }
+    }
     audio.pause();
     audio.currentTime = 0;
     audio.removeAttribute("src");
@@ -197,6 +262,9 @@ export default function AudioPlayer({
   const handleLibraryRestart = () => {
     const audio = audioRef.current;
     if (!audio) return;
+    const label = prepAudioUrl && isPlayingPrep ? "Starting music" : title;
+    suppressResumeForRestartRef.current = true;
+    logMemberAudioOutcome(`Library — ${label} | restarted from the beginning`);
     libraryStoppedRef.current = false;
     if (prepAudioUrl) {
       setIsPlayingPrep(true);
