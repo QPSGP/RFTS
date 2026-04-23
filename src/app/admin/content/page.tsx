@@ -170,7 +170,11 @@ export default function AdminContentPage() {
       )}
       {openSections.scheduleAlgorithm && (
         <section id="admin-schedule-algorithm" style={{ marginBottom: 20 }}>
-          <ScheduleAlgorithmTool />
+          <ScheduleAlgorithmTool
+            onClose={() =>
+              setOpenSections((prev) => ({ ...prev, scheduleAlgorithm: false }))
+            }
+          />
         </section>
       )}
       {isFirstAdmin && openSections.admins && (

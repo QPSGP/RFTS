@@ -17,7 +17,12 @@ type JsonResponse = {
   warnings: string[];
 };
 
-export default function ScheduleAlgorithmTool() {
+type ScheduleAlgorithmToolProps = {
+  /** Collapse this section in the content console (e.g. parent toggles `scheduleAlgorithm` off). */
+  onClose?: () => void;
+};
+
+export default function ScheduleAlgorithmTool({ onClose }: ScheduleAlgorithmToolProps) {
   const [email, setEmail] = useState("");
   const [nights, setNights] = useState(42);
   const [loading, setLoading] = useState(false);
@@ -96,7 +101,22 @@ export default function ScheduleAlgorithmTool() {
 
   return (
     <div className="card" style={{ marginBottom: 20 }}>
-      <h3>Schedule algorithm (one member)</h3>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          gap: 12,
+          flexWrap: "wrap"
+        }}
+      >
+        <h3 style={{ margin: 0 }}>Schedule algorithm (one member)</h3>
+        {onClose && (
+          <button type="button" className="button button-secondary" onClick={onClose}>
+            Close
+          </button>
+        )}
+      </div>
       <p style={{ color: "#4b5563", marginTop: 8 }}>
         Build the same schedule as <strong>Tonight&apos;s Audio</strong> in the member app: <code>buildSchedulePreview</code>{" "}
         with their goals (Gold) or admin-assigned audio order (Platinum Managed).
