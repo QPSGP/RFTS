@@ -469,8 +469,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       <h3>Tonight&apos;s Audio</h3>
       <p style={{ color: "#4b5563" }}>
         {playsPerNight === 1
-          ? "Plays a short preparation audio, then your goal recording for tonight. Your next audio is scheduled for tomorrow."
-          : `Plays a short preparation audio, then your first goal recording. The second recording is scheduled ${gapHours} hours later and also begins with preparation audio when you play it.`}
+          ? "Plays a short preparation audio, then your goal audio for tonight. Your next audio is scheduled for tomorrow."
+          : `Plays a short preparation audio, then your first goal audio. The second audio is scheduled ${gapHours} hours later and also begins with preparation audio when you play it.`}
       </p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <button className="button" onClick={startSession}>
@@ -478,7 +478,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         </button>
         {secondTrack && (
           <button className="button button-secondary" onClick={playSecond}>
-            Play Second Recording
+            Play Second Audio
           </button>
         )}
       </div>

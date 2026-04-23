@@ -262,7 +262,7 @@ export default function PlayOptionsPage() {
                 document.getElementById("meditation-session")?.scrollIntoView({ behavior: "smooth" });
               }}
             >
-              Play Second Recording
+              Play Second Audio
             </button>
           )}
           <a className="button button-secondary" href="/library">
@@ -338,11 +338,11 @@ export default function PlayOptionsPage() {
         <div className="card" id="meditation-session">
           <h3>Meditation Session</h3>
           <p>
-            Start a guided session tailored to your goals. Each session plays your
-            preparation audio, then your first goal recording. A second recording
-            is scheduled {gapHours} hours later if you have enabled 2 sessions per night
-            (it also uses preparation audio when it starts). Your schedule night advances
-            after you finish listening for that night — not by the calendar alone.
+            Start a guided session tailored to your goals. A preparation audio is played first, then
+            your first goal audio starts. A second audio is scheduled {gapHours} hours later if you have
+            enabled 2 sessions per night (it also uses preparation audio when it starts). Your
+            schedule night advances after you finish listening for that night. A session equals 2
+            audios, so if you listen to one audio per night that is a half session.
           </p>
           {schedule.length > 0 && profile && (
             <p style={{ marginTop: 12, fontSize: 16, color: "#0f172a" }}>

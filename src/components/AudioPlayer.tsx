@@ -309,7 +309,7 @@ export default function AudioPlayer({
               </div>
             )}
             <p style={{ fontSize: 12, color: "#64748b", margin: "8px 0 0" }}>
-              {`"Play second recording" on this page is for your nightly session on Play Options, not this library player.`}
+              {`"Play second audio" on this page is for your nightly session on Play Options, not this library player.`}
             </p>
           </div>
           <button

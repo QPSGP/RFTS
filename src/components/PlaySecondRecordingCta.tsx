@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 /**
  * Shown on library pages for active members on 2-per-night when tonight has a second track.
- * Same action as “Play Second Recording” on Play Options (prep audio, then second goal).
+ * Same action as “Play Second Audio” on Play Options (prep audio, then second goal).
  */
 export default function PlaySecondRecordingCta() {
   const [visible, setVisible] = useState(false);
@@ -55,17 +55,17 @@ export default function PlaySecondRecordingCta() {
         borderColor: "#e2e8f0"
       }}
     >
-      <h3 style={{ marginTop: 0, marginBottom: 8 }}>Play Options — second recording tonight</h3>
+      <h3 style={{ marginTop: 0, marginBottom: 8 }}>Play Options — second audio tonight</h3>
       <p style={{ color: "#475569", marginTop: 0, marginBottom: 8 }}>
         This opens your <strong>nightly session</strong> on Play Options (not the library player above).{" "}
-        <strong>{secondTitle}</strong> — same preparation audio as your session, then this goal recording.
+        <strong>{secondTitle}</strong> — same preparation audio as your session, then this goal audio.
       </p>
       <a
         className="button button-secondary"
         href="/play-options?playSecond=1#meditation-session"
         style={{ marginTop: 4 }}
       >
-        Play second recording
+        Play second audio
       </a>
     </div>
   );
