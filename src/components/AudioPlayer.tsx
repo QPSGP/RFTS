@@ -7,8 +7,28 @@ import {
   MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER
 } from "@/lib/member-audio-activity";
 
+/** Same pattern as SessionPlayer `displayNameForSessionTrack` (en dash); used in activity logs. */
+function libraryActivityLogLabel(skuCode: string | null | undefined, recordingTitle: string): string {
+  const sku = (skuCode || "").trim();
+  const t = (recordingTitle || "").trim() || "Recording";
+  return sku ? `${sku} \u2013 ${t}` : t;
+}
+
+/** Page heading: omit MU* SKU prefix in UI only (matches prior AudioGate behavior). */
+function libraryDisplayHeading(skuCode: string | null | undefined, recordingTitle: string): string {
+  const sku = (skuCode || "").trim();
+  const t = (recordingTitle || "").trim() || "Recording";
+  if (sku && !sku.toUpperCase().startsWith("MU")) {
+    return `${sku} \u2014 ${t}`;
+  }
+  return t;
+}
+
 type AudioPlayerProps = {
+  /** Recording title only (no SKU); pass `skuCode` separately for logs and heading. */
   title: string;
+  /** When set, prepended to `title` in member activity (admin always sees SKU when present). */
+  skuCode?: string | null;
   description: string;
   audioUrl: string;
   coverUrl: string;
@@ -20,6 +40,7 @@ type AudioPlayerProps = {
 
 export default function AudioPlayer({
   title,
+  skuCode,
   description,
   audioUrl,
   coverUrl,
@@ -106,7 +127,7 @@ export default function AudioPlayer({
     const handlePlaying = () => {
       const src = audio.currentSrc || audio.src || "";
       const onPrep = !!prepAudioUrl && src.includes("prep=1");
-      const label = onPrep ? "Starting music" : title;
+      const label = onPrep ? "Starting music" : libraryActivityLogLabel(skuCode, title);
       logMemberPlayedAudio(`Library — ${label}`);
     };
 
@@ -130,7 +151,7 @@ export default function AudioPlayer({
       document.removeEventListener("visibilitychange", handleVisibility);
       releaseWakeLock();
     };
-  }, [prepAudioUrl, title]);
+  }, [prepAudioUrl, title, skuCode]);
 
   useEffect(() => {
     isPlayingPrepRef.current = isPlayingPrep;
@@ -198,12 +219,13 @@ export default function AudioPlayer({
       if (prepAudioUrl && isPrepSrc(src)) {
         return;
       }
-      const label = prepAudioUrl && isPlayingPrepRef.current ? "Starting music" : title;
+      const label =
+        prepAudioUrl && isPlayingPrepRef.current ? "Starting music" : libraryActivityLogLabel(skuCode, title);
       logMemberAudioOutcome(`Library — ${label} | completed full listen`);
     };
     audio.addEventListener("ended", onEnded);
     return () => audio.removeEventListener("ended", onEnded);
-  }, [prepAudioUrl, title, audioUrl]);
+  }, [prepAudioUrl, title, skuCode, audioUrl]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -219,7 +241,8 @@ export default function AudioPlayer({
       if (!pauseForResumeRef.current) return;
       pauseForResumeRef.current = false;
       if (audio.currentTime < 1) return;
-      const label = prepAudioUrl && isPlayingPrepRef.current ? "Starting music" : title;
+      const label =
+        prepAudioUrl && isPlayingPrepRef.current ? "Starting music" : libraryActivityLogLabel(skuCode, title);
       logMemberAudioOutcome(`Library — ${label} | resumed from where they left off`);
     };
     audio.addEventListener("pause", onPause);
@@ -228,7 +251,7 @@ export default function AudioPlayer({
       audio.removeEventListener("pause", onPause);
       audio.removeEventListener("play", onPlay);
     };
-  }, [prepAudioUrl, title, audioUrl]);
+  }, [prepAudioUrl, title, skuCode, audioUrl]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -243,7 +266,7 @@ export default function AudioPlayer({
     const onSeeked = () => {
       const src = (audio.currentSrc || audio.src || "").trim();
       if (!src) return;
-      const label = prepAudioUrl && isPrepSrc(src) ? "Starting music" : title;
+      const label = prepAudioUrl && isPrepSrc(src) ? "Starting music" : libraryActivityLogLabel(skuCode, title);
       const prev = lastLibraryPlaybackPosForSeekRef.current;
       const now = audio.currentTime;
       if (now <= prev + 3.5) return;
@@ -258,7 +281,7 @@ export default function AudioPlayer({
       audio.removeEventListener("loadedmetadata", onLoadedMetadata);
       audio.removeEventListener("seeked", onSeeked);
     };
-  }, [prepAudioUrl, title, audioUrl]);
+  }, [prepAudioUrl, title, skuCode, audioUrl]);
 
   const handleLibraryPause = () => {
     audioRef.current?.pause();
@@ -270,7 +293,7 @@ export default function AudioPlayer({
     const isPrepSrc = (src: string) => src.includes("prep=1") || src.toLowerCase().includes("prep%3d1");
     const srcNow = (audio.currentSrc || audio.src || "").trim();
     if ((audio.currentSrc || audio.src) && !audio.ended) {
-      const label = prepAudioUrl && isPrepSrc(srcNow) ? "Starting music" : title;
+      const label = prepAudioUrl && isPrepSrc(srcNow) ? "Starting music" : libraryActivityLogLabel(skuCode, title);
       const dur = audio.duration;
       let incomplete = true;
       if (Number.isFinite(dur) && dur > 0) {
@@ -314,7 +337,7 @@ export default function AudioPlayer({
   const handleLibraryRestart = () => {
     const audio = audioRef.current;
     if (!audio) return;
-    const label = prepAudioUrl && isPlayingPrep ? "Starting music" : title;
+    const label = prepAudioUrl && isPlayingPrep ? "Starting music" : libraryActivityLogLabel(skuCode, title);
     suppressResumeForRestartRef.current = true;
     logMemberAudioOutcome(`Library — ${label} | restarted from the beginning`);
     libraryStoppedRef.current = false;
@@ -329,8 +352,8 @@ export default function AudioPlayer({
     void audio.play().catch(() => {});
   };
 
-  const nowPlayingLabel =
-    prepAudioUrl && isPlayingPrep ? "Starting music" : title;
+  const displayHeading = libraryDisplayHeading(skuCode, title);
+  const nowPlayingLabel = prepAudioUrl && isPlayingPrep ? "Starting music" : displayHeading;
 
   return (
     <div className="card">
@@ -345,7 +368,7 @@ export default function AudioPlayer({
         {showCover && (
           <img
             src={coverUrl}
-            alt={`${title} cover`}
+            alt={`${displayHeading} cover`}
             style={{
               width: "100%",
               maxWidth: 320,
@@ -355,7 +378,7 @@ export default function AudioPlayer({
           />
         )}
         <div style={{ width: "100%" }}>
-          <h2 style={{ marginBottom: 8, marginTop: 0 }}>{title}</h2>
+          <h2 style={{ marginBottom: 8, marginTop: 0 }}>{displayHeading}</h2>
           <p style={{ color: "#4b5563", marginTop: 0, marginBottom: 8 }}>
             {description}
           </p>

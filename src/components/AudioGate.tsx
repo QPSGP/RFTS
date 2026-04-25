@@ -112,13 +112,10 @@ export default function AudioGate({ item }: AudioGateProps) {
 
   const streamUrl = `/api/stream/audio?id=${item.id}`;
   const prepAudioUrl = "/api/stream/audio?prep=1";
-  const displayTitle =
-    item.skuCode && !item.skuCode.toUpperCase().startsWith("MU")
-      ? `${item.skuCode} — ${item.title}`
-      : item.title;
   return (
     <AudioPlayer
-      title={displayTitle}
+      title={item.title}
+      skuCode={item.skuCode}
       description={item.description || "Description pending."}
       audioUrl={streamUrl}
       coverUrl={libraryItemCoverSrc(item)}
