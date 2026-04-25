@@ -32,6 +32,7 @@ export default async function SiteHeader() {
                 {consoleType === "admin" && <a href="/facilitator">Facilitators</a>}
                 {consoleType === "admin" && <a href="/affiliates">Affiliates</a>}
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
+                {memberConsoleLink && <a href={memberConsoleLink.href}>{memberConsoleLink.label}</a>}
                 {showMemberReportIssue && <a href="/member/report-issue">Report an issue</a>}
               </div>
             </details>
@@ -54,6 +55,7 @@ export default async function SiteHeader() {
             {consoleType === "admin" && <a href="/facilitator">Facilitators</a>}
             {consoleType === "admin" && <a href="/affiliates">Affiliates</a>}
             {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
+            {memberConsoleLink && <a href={memberConsoleLink.href}>{memberConsoleLink.label}</a>}
             {showMemberReportIssue && <a href="/member/report-issue">Report an issue</a>}
           </nav>
           <div className="header-actions">
@@ -63,17 +65,17 @@ export default async function SiteHeader() {
                 <span className="header-btn-short">Start</span>
               </a>
             )}
-            <details className="login-toggle">
-              <summary className="button header-cta">Login</summary>
-              <div className="menu-panel">
-                <a href="/member/login">Members</a>
-                <a href="/moderator/console">Facilitators</a>
-                <a href="/login">Administrator</a>
-                {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
-                {memberConsoleLink && <a href={memberConsoleLink.href}>{memberConsoleLink.label}</a>}
-                {showMemberReportIssue && <a href="/member/report-issue">Report an issue</a>}
-              </div>
-            </details>
+            {consoleType !== "member" && (
+              <details className="login-toggle">
+                <summary className="button header-cta">Login</summary>
+                <div className="menu-panel">
+                  <a href="/member/login">Members</a>
+                  <a href="/moderator/console">Facilitators</a>
+                  <a href="/login">Administrator</a>
+                  {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
+                </div>
+              </details>
+            )}
           </div>
         </div>
       </div>
