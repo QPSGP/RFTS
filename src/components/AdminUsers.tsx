@@ -2,6 +2,7 @@
 
 import { put } from "@vercel/blob/client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER } from "@/lib/member-audio-activity";
 import { formatFullSessionsFraction } from "@/lib/session-progress-format";
 import type { LibraryItem } from "@/lib/types";
 
@@ -98,30 +99,26 @@ function normalizeActivityDetailsString(raw: string): string {
     .trim()
     .replace(/^\uFEFF/, "")
     .normalize("NFKC")
-    .replace(/[\u200B\u200C\u200D\uFEFF]/g, "");
+    .replace(/[\u200B\u200C\u200D\uFEFF]/g, "")
+    .replace(/\u00A0/g, " ");
 }
 
 /**
- * Session logs use `Play Options — First: …` from SessionPlayer. If the prefix or dashes
- * do not strip cleanly, `rest`-only parsing can miss the title; this searches the full line.
+ * Play Options lines look like `Play Options - First: SKU – Title` (SessionPlayer).
+ * Strip the location prefix first so `First:` / `Second:` inside the recording title cannot
+ * steal the match (older code used `\\bFirst` on the full string).
  */
 function extractPlayOptionsAudioTitle(d: string): string | null {
   const t = normalizeActivityDetailsString(d);
   if (!/^Play\s+Options\b/i.test(t)) return null;
-  if (/\bFirst\s*:/i.test(t) || /\bSecond\s*:/i.test(t)) {
-    const firstM = /\bFirst\s*[:：]\s*(.+)$/is.exec(t);
-    if (firstM) {
-      const title = (firstM[1] || "").trim().replace(/\s+/g, " ");
-      if (title.length > 0) return title;
-    }
-    const secondM = /\bSecond\s*[:：]\s*(.+)$/is.exec(t);
-    if (secondM) {
-      const title = (secondM[1] || "").trim().replace(/\s+/g, " ");
-      if (title.length > 0) return title;
-    }
-  }
-  if (/\bPreparation audio\b/i.test(t) && !/\bFirst\s*:/i.test(t) && !/\bSecond\s*:/i.test(t)) {
-    return "Preparation audio";
+  let rest = t.replace(/^Play\s+Options\s*/i, "").trim();
+  rest = rest.replace(PLAYED_AUDIO_LOC_SEP, "").trim();
+  if (/^Preparation audio$/i.test(rest)) return "Preparation audio";
+  const fs = /^(First|Second)\s*[:：]\s*(.+)$/is.exec(rest);
+  if (fs) {
+    const title = (fs[2] || "").trim().replace(/\s+/g, " ");
+    if (title.length > 0) return title;
+    return `${fs[1]} recording`;
   }
   return null;
 }
@@ -170,6 +167,11 @@ function outcomeTextFromActivityDetails(details: string | null | undefined): str
   const sep = t.indexOf(" | ");
   if (sep === -1) return "";
   return t.slice(sep + 3).trim();
+}
+
+function activityDetailsNonLinearPlayback(details: string | null | undefined): boolean {
+  if (!details?.trim()) return false;
+  return details.includes(MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER);
 }
 
 /** Library vs Play Options session vs everything else (for admin activity filters). */
@@ -1304,7 +1306,7 @@ export default function AdminUsers() {
                   {filteredUsers.map((user) => {
                   const rawActivity = memberActivity[user.email] || [];
                   const actFilter = memberActivityFilter[user.email] ?? "all";
-                  const actPageSize = memberActivityPageSize[user.email] ?? 50;
+                  const actPageSize = memberActivityPageSize[user.email] ?? 20;
                   const filteredActivity =
                     actFilter === "all"
                       ? rawActivity
@@ -1457,7 +1459,9 @@ export default function AdminUsers() {
                             and Play Options — each row lists the recording name), goal and console updates, and
                             admin schedule changes. Use <strong>Filter</strong> for library vs session playback vs
                             everything else; <strong>Rows</strong> caps how many matching rows appear (newest first).
-                            Refresh loads up to 500 recent events.
+                            Refresh loads up to 500 recent events. Rows with a <strong style={{ color: "#b91c1c" }}>red</strong>{" "}
+                            background indicate the member jumped ahead in the player (seek / fast-forward), not
+                            continuous playback.
                           </p>
                           <p
                             style={{
@@ -1706,18 +1710,31 @@ export default function AdminUsers() {
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {displayedActivity.map((row: MemberActivityRow) => (
-                                    <tr key={row.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                                  {displayedActivity.map((row: MemberActivityRow) => {
+                                    const nonlinear = activityDetailsNonLinearPlayback(row.details);
+                                    return (
+                                    <tr
+                                      key={row.id}
+                                      style={{
+                                        borderBottom: "1px solid #f3f4f6",
+                                        ...(nonlinear ? { backgroundColor: "#fef2f2" } : {})
+                                      }}
+                                    >
                                       <td style={{ padding: "8px 6px", whiteSpace: "nowrap", color: "#374151" }}>
                                         {formatActivityTime(row.createdAt)}
                                       </td>
-                                      <td style={{ padding: "8px 6px", color: "#111827" }}>
+                                      <td
+                                        style={{
+                                          padding: "8px 6px",
+                                          color: nonlinear ? "#b91c1c" : "#111827"
+                                        }}
+                                      >
                                         {formatActivityAction(row.action)}
                                       </td>
                                       <td
                                         style={{
                                           padding: "8px 6px",
-                                          color: "#111827",
+                                          color: nonlinear ? "#b91c1c" : "#111827",
                                           wordBreak: "break-word",
                                           maxWidth: 220,
                                           fontWeight:
@@ -1735,7 +1752,7 @@ export default function AdminUsers() {
                                       <td
                                         style={{
                                           padding: "8px 6px",
-                                          color: "#4b5563",
+                                          color: nonlinear ? "#b91c1c" : "#4b5563",
                                           wordBreak: "break-word",
                                           maxWidth: 260
                                         }}
@@ -1743,7 +1760,8 @@ export default function AdminUsers() {
                                         {formatActivityDetails(row.action, row.details)}
                                       </td>
                                     </tr>
-                                  ))}
+                                    );
+                                  })}
                                 </tbody>
                               </table>
                             </div>

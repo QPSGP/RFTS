@@ -1,4 +1,10 @@
 /**
+ * Appended to `audio_playback_outcome` details when the member seeks or fast-forwards
+ * (non-linear). Admin member activity highlights rows containing this marker.
+ */
+export const MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER = "skipped ahead (non-linear playback)";
+
+/**
  * Client-only: POST member activity when audio actually starts playing.
  * Dedupes rapid repeat "playing" events for the same label (pause/resume).
  */

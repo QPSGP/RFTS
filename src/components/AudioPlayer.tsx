@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { logMemberAudioOutcome, logMemberPlayedAudio } from "@/lib/member-audio-activity";
+import {
+  logMemberAudioOutcome,
+  logMemberPlayedAudio,
+  MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER
+} from "@/lib/member-audio-activity";
 
 type AudioPlayerProps = {
   title: string;
@@ -36,6 +40,7 @@ export default function AudioPlayer({
   const pauseForResumeRef = useRef(false);
   const suppressResumeForRestartRef = useRef(false);
   const isPlayingPrepRef = useRef(!!prepAudioUrl);
+  const lastLibraryPlaybackPosForSeekRef = useRef(0);
 
   const releaseWakeLock = async () => {
     try {
@@ -143,11 +148,24 @@ export default function AudioPlayer({
     const audio = audioRef.current;
     if (!audio || !prepAudioUrl) return;
 
+    const playMainFromStart = () => {
+      try {
+        audio.currentTime = 0;
+      } catch {
+        /* */
+      }
+      void audio.play().catch(() => {});
+    };
+
     const handleEnded = () => {
       if (isPlayingPrep) {
         setIsPlayingPrep(false);
         audio.src = audioUrl;
-        audio.play().catch(() => {});
+        if (audio.readyState >= 1) {
+          playMainFromStart();
+        } else {
+          audio.addEventListener("canplay", playMainFromStart, { once: true });
+        }
       }
     };
 
@@ -155,7 +173,11 @@ export default function AudioPlayer({
       if (isPlayingPrep) {
         setIsPlayingPrep(false);
         audio.src = audioUrl;
-        audio.play().catch(() => {});
+        if (audio.readyState >= 1) {
+          playMainFromStart();
+        } else {
+          audio.addEventListener("canplay", playMainFromStart, { once: true });
+        }
       }
     };
 
@@ -205,6 +227,36 @@ export default function AudioPlayer({
     return () => {
       audio.removeEventListener("pause", onPause);
       audio.removeEventListener("play", onPlay);
+    };
+  }, [prepAudioUrl, title, audioUrl]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const isPrepSrc = (src: string) => src.includes("prep=1") || src.toLowerCase().includes("prep%3d1");
+    const onTimeUpdate = () => {
+      lastLibraryPlaybackPosForSeekRef.current = audio.currentTime;
+    };
+    const onLoadedMetadata = () => {
+      lastLibraryPlaybackPosForSeekRef.current = audio.currentTime;
+    };
+    const onSeeked = () => {
+      const src = (audio.currentSrc || audio.src || "").trim();
+      if (!src) return;
+      const label = prepAudioUrl && isPrepSrc(src) ? "Starting music" : title;
+      const prev = lastLibraryPlaybackPosForSeekRef.current;
+      const now = audio.currentTime;
+      if (now <= prev + 3.5) return;
+      if (now < 2) return;
+      logMemberAudioOutcome(`Library — ${label} | ${MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER}`);
+    };
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("loadedmetadata", onLoadedMetadata);
+    audio.addEventListener("seeked", onSeeked);
+    return () => {
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+      audio.removeEventListener("seeked", onSeeked);
     };
   }, [prepAudioUrl, title, audioUrl]);
 

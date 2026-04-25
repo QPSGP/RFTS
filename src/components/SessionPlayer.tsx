@@ -9,7 +9,11 @@ import {
   useRef,
   useState
 } from "react";
-import { logMemberAudioOutcome, logMemberPlayedAudio } from "@/lib/member-audio-activity";
+import {
+  logMemberAudioOutcome,
+  logMemberPlayedAudio,
+  MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER
+} from "@/lib/member-audio-activity";
 
 type SessionTrack = {
   title: string;
@@ -131,6 +135,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const secondFromGapInFlightRef = useRef(false);
   const pauseForResumeRef = useRef(false);
   const suppressResumeForRestartRef = useRef(false);
+  /** Last known `currentTime` for detecting forward seeks (admin activity). */
+  const lastPlaybackPositionForSeekRef = useRef(0);
 
   secondTrackRef.current = secondTrack ?? null;
 
@@ -328,6 +334,38 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     media.addListener(handleChange);
     return () => media.removeListener(handleChange);
   }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !showActivePlaybackUi) return;
+    const onTimeUpdate = () => {
+      lastPlaybackPositionForSeekRef.current = audio.currentTime;
+    };
+    const onLoadedMetadata = () => {
+      lastPlaybackPositionForSeekRef.current = audio.currentTime;
+    };
+    const onSeeked = () => {
+      const ph = phaseRef.current;
+      if (ph !== "first" && ph !== "second") return;
+      const c = currentRef.current;
+      if (!c?.url) return;
+      const prev = lastPlaybackPositionForSeekRef.current;
+      const now = audio.currentTime;
+      if (now <= prev + 3.5) return;
+      if (now < 2) return;
+      const line = buildPlayOptionsLogLine(c, ph, prepAudioRef.current);
+      if (!line) return;
+      logMemberAudioOutcome(`${line} | ${MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER}`);
+    };
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("loadedmetadata", onLoadedMetadata);
+    audio.addEventListener("seeked", onSeeked);
+    return () => {
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+      audio.removeEventListener("seeked", onSeeked);
+    };
+  }, [showActivePlaybackUi, current?.url, phase, prepAudio?.url]);
 
   const clearWaitTimers = useCallback(() => {
     if (waitTimeoutRef.current) {
