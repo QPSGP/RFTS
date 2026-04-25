@@ -59,6 +59,19 @@ export type SessionPlayerHandle = {
 type Phase = "idle" | "first" | "waiting" | "second";
 
 /** One line for activity logs (play start + outcome); `prep` is session prep track if any. */
+/**
+ * Browsers may keep `currentTime` for the same stream URL. Always start new segments
+ * and fresh “Start session” runs from 0. (Pause/Resume in the same visit is unchanged
+ * and does not call this when the track URL is unchanged and user only hits Play again.)
+ */
+function startTrackFromBeginning(audio: HTMLMediaElement) {
+  try {
+    audio.currentTime = 0;
+  } catch {
+    // ignore
+  }
+}
+
 function buildPlayOptionsLogLine(
   c: SessionTrack,
   ph: Phase,
@@ -113,6 +126,9 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const [phase, setPhase] = useState<Phase>("idle");
   const [remainingSeconds, setRemainingSeconds] = useState<number>(0);
   const [onePerNightComplete, setOnePerNightComplete] = useState(false);
+  /** 2 per night: both main segments finished; distinct from 1/night `onePerNightComplete`. */
+  const [fullNightSessionComplete, setFullNightSessionComplete] = useState(false);
+  const secondFromGapInFlightRef = useRef(false);
   const pauseForResumeRef = useRef(false);
   const suppressResumeForRestartRef = useRef(false);
 
@@ -196,6 +212,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     if (audio.src !== track.url) {
       audio.src = track.url;
     }
+    startTrackFromBeginning(audio);
     const playPromise = audio.play();
     if (playPromise && typeof playPromise.catch === "function") {
       playPromise.catch(() => {
@@ -210,26 +227,27 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       setMessage("Select goals to build your session lineup.");
       return;
     }
-    if (phase === "first" && current && prepAudio?.url && current.url !== prepAudio.url) {
-      attemptPlay(current);
-      return;
-    }
+    /** Always start tonight’s session from prep (or first) at 0, not mid–first main. */
     pendingNextTrackRef.current = null;
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("rfts-session-start"));
     }
     onSessionStart?.();
     setOnePerNightComplete(false);
+    setFullNightSessionComplete(false);
+    secondFromGapInFlightRef.current = false;
     setPhase("first");
     const nextQueue = [prepAudio, firstTrack].filter(
       (track): track is SessionTrack => !!track
     );
+    // Only skip the `current` effect when `<audio>` is already mounted and attemptPlay will run; otherwise the effect must start playback after mount (e.g. first load, gap/waiting → second).
+    skipEffectPlayRef.current = Boolean(audioRef.current);
     setQueue(nextQueue);
     setCurrent(nextQueue[0] || null);
     setMessage(null);
     setNeedsUserPlay(false);
     attemptPlay(nextQueue[0]);
-  }, [firstTrack, prepAudio, onSessionStart, phase, current]);
+  }, [firstTrack, prepAudio, onSessionStart]);
 
   const playSecond = useCallback(() => {
     if (!secondTrack) {
@@ -249,6 +267,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     const nextQueue = [prepAudio, secondTrack].filter(
       (track): track is SessionTrack => !!track
     );
+    skipEffectPlayRef.current = Boolean(audioRef.current);
     setQueue(nextQueue);
     setCurrent(nextQueue[0] || null);
     setMessage(null);
@@ -270,12 +289,20 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     if (audio.src !== current.url) {
       audio.src = current.url;
     }
-    const playPromise = audio.play();
-    if (playPromise && typeof playPromise.catch === "function") {
-      playPromise.catch(() => {
-        setMessage("Tap play to start the session.");
-        setNeedsUserPlay(true);
-      });
+    const playFromZero = () => {
+      startTrackFromBeginning(audio);
+      const playPromise = audio.play();
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch(() => {
+          setMessage("Tap play to start the session.");
+          setNeedsUserPlay(true);
+        });
+      }
+    };
+    if (audio.readyState >= 1) {
+      playFromZero();
+    } else {
+      audio.addEventListener("canplay", () => playFromZero(), { once: true });
     }
   }, [current]);
 
@@ -313,6 +340,44 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     }
   }, []);
 
+  const beginSecondAfterGap = useCallback(() => {
+    if (phaseRef.current !== "waiting") return;
+    if (secondFromGapInFlightRef.current) return;
+    secondFromGapInFlightRef.current = true;
+    const tr = secondTrackRef.current;
+    clearWaitTimers();
+    if (!tr) {
+      secondFromGapInFlightRef.current = false;
+      setPhase("idle");
+      return;
+    }
+    const nextQueue = [prepAudio, tr].filter(
+      (track): track is SessionTrack => !!track
+    );
+    setPhase("second");
+    setQueue(nextQueue);
+    setCurrent(nextQueue[0] || null);
+    setMessage(null);
+    setNeedsUserPlay(false);
+    // `<audio>` was unmounted during "waiting" — do not set skipEffectPlayRef; the `current` effect starts playback.
+  }, [prepAudio, clearWaitTimers]);
+
+  useEffect(() => {
+    if (typeof document === "undefined" || phase !== "waiting") {
+      return;
+    }
+    const gapEpoch = sessionEpochRef.current;
+    const onVisibility = () => {
+      if (document.visibilityState !== "visible") return;
+      if (sessionEpochRef.current !== gapEpoch) return;
+      if (phaseRef.current !== "waiting") return;
+      if (Date.now() < secondStartAtRef.current) return;
+      beginSecondAfterGap();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [phase, beginSecondAfterGap]);
+
   useEffect(() => {
     return () => clearWaitTimers();
   }, [clearWaitTimers]);
@@ -344,6 +409,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       }
     }
     sessionEpochRef.current += 1;
+    secondFromGapInFlightRef.current = false;
     clearWaitTimers();
     if (audio) {
       audio.pause();
@@ -354,6 +420,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     skipEffectPlayRef.current = false;
     setIsPlaying(false);
     setNeedsUserPlay(false);
+    setFullNightSessionComplete(false);
     setPhase("idle");
     setQueue([]);
     setCurrent(null);
@@ -388,6 +455,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           if (epochAtAdvance !== sessionEpochRef.current) return;
           clearTimeout(fallbackId);
           pendingNextTrackRef.current = null;
+          startTrackFromBeginning(audio);
           audio.play().catch(() => {
             setMessage("Tap play to start the session.");
             setNeedsUserPlay(true);
@@ -409,6 +477,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           },
           { once: true }
         );
+        startTrackFromBeginning(audio);
         audio.play().catch(() => {});
       }
       return;
@@ -417,6 +486,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     const hasSecond = !!secondTrackRef.current;
     const doSecondAfterGap = playsPerNight === 2 && phase === "first" && hasSecond;
     if (doSecondAfterGap) {
+      secondFromGapInFlightRef.current = false;
       clearWaitTimers();
       setIsPlaying(false);
       setNeedsUserPlay(false);
@@ -433,26 +503,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       const epochAtGapStart = sessionEpochRef.current;
       waitTimeoutRef.current = setTimeout(() => {
         if (epochAtGapStart !== sessionEpochRef.current) return;
-        clearWaitTimers();
-        const tr = secondTrackRef.current;
-        if (tr) {
-          const nextQueue = [prepAudio, tr].filter(
-            (track): track is SessionTrack => !!track
-          );
-          setPhase("second");
-          setQueue(nextQueue);
-          setCurrent(nextQueue[0] || null);
-          setMessage(null);
-          setNeedsUserPlay(false);
-          const audio = audioRef.current;
-          const first = nextQueue[0];
-          if (audio && first) {
-            audio.src = first.url;
-            audio.play().catch(() => setNeedsUserPlay(true));
-          }
-        } else {
-          setPhase("idle");
-        }
+        beginSecondAfterGap();
       }, gapMs);
     } else {
       const nightFullyListened =
@@ -466,6 +517,9 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         onScheduleNightComplete
       ) {
         onScheduleNightComplete(scheduleNightNumber);
+      }
+      if (nightFullyListened && playsPerNight === 2) {
+        setFullNightSessionComplete(true);
       }
       // Single track (or last of queue) ended — stop and clear so it doesn't repeat; 1 per night = cued for next night
       const audio = audioRef.current;
@@ -483,7 +537,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         setOnePerNightComplete(true);
       }
     }
-  }, [phase, gapHours, playsPerNight, queue, clearWaitTimers, prepAudio, scheduleNightNumber, onScheduleNightComplete]);
+  }, [phase, gapHours, playsPerNight, queue, clearWaitTimers, prepAudio, scheduleNightNumber, onScheduleNightComplete, beginSecondAfterGap]);
 
   const handlePause = () => {
     audioRef.current?.pause();
@@ -501,6 +555,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       const onCanPlay = () => {
         if (epochAtPlay !== sessionEpochRef.current) return;
         audio.removeEventListener("error", onError);
+        startTrackFromBeginning(audio);
         audio
           .play()
           .then(() => {
@@ -582,6 +637,14 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           <p style={{ margin: 0, fontWeight: 600, color: "#166534" }}>Session complete.</p>
           <p style={{ margin: "8px 0 0", color: "#15803d" }}>
             Your next audio is cued for tomorrow. Start Session when you&apos;re ready.
+          </p>
+        </div>
+      )}
+      {fullNightSessionComplete && playsPerNight === 2 && (
+        <div className="card" style={{ marginTop: 16, background: "#f0fdf4", borderColor: "#22c55e" }}>
+          <p style={{ margin: 0, fontWeight: 600, color: "#166534" }}>Tonight&apos;s session is complete.</p>
+          <p style={{ margin: "8px 0 0", color: "#15803d" }}>
+            Both of tonight&apos;s goal audios have finished. The player is closed; use Start Session the next time you listen.
           </p>
         </div>
       )}

@@ -157,7 +157,7 @@ describe("SessionPlayer", () => {
     expect(mockAudio.play).toHaveBeenCalled();
   });
 
-  it("when first track is cued, Start Session plays first track instead of restarting prep", async () => {
+  it("when first track is cued, Start Session restarts the session from preparation audio (beginning of session)", async () => {
     render(
       <SessionPlayer
         prepAudio={PREP}
@@ -186,9 +186,9 @@ describe("SessionPlayer", () => {
     const startButton = screen.getByRole("button", { name: /Start Session/i });
     await userEvent.click(startButton);
 
-    expect(mockAudio.src).toBe(FIRST_TRACK.url);
+    expect(mockAudio.src).toBe(PREP.url);
     expect(mockAudio.play).toHaveBeenCalled();
-    expect(screen.getByText(/Now Playing:/)).toHaveTextContent(FIRST_TRACK.title);
+    expect(screen.getByText(/Now Playing:/)).toHaveTextContent(PREP.title);
   });
 
   it("hides Pause/Play/Restart after first segment ends (gap before second)", async () => {
@@ -292,6 +292,55 @@ describe("SessionPlayer", () => {
     });
 
     jest.useRealTimers();
+  });
+
+  it("Play second during gap starts the second half (no <audio> mounted during wait)", async () => {
+    const SECOND = { title: "Second Recording", url: "/api/stream/audio?id=second-456" };
+    render(
+      <SessionPlayer
+        prepAudio={PREP}
+        firstTrack={FIRST_TRACK}
+        secondTrack={SECOND}
+        gapHours={2.5}
+        playsPerNight={2}
+        autoStart={true}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(PREP.title);
+    });
+
+    let audio = document.querySelector("audio");
+    await act(async () => {
+      audio?.dispatchEvent(new Event("ended"));
+    });
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(FIRST_TRACK.title);
+    });
+
+    audio = document.querySelector("audio");
+    await act(async () => {
+      audio?.dispatchEvent(new Event("ended"));
+    });
+    await waitFor(() => {
+      expect(screen.getByText(/First session complete/i)).toBeInTheDocument();
+    });
+    expect(document.querySelector("audio")).toBeNull();
+
+    mockAudio.play.mockClear();
+    const playSecondBtn = screen.getByRole("button", { name: /Play Second Audio/i });
+    await userEvent.click(playSecondBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(PREP.title);
+    });
+    const audioAfter = document.querySelector("audio");
+    expect(audioAfter).toBeInTheDocument();
+    await act(async () => {
+      audioAfter?.dispatchEvent(new Event("canplay"));
+    });
+    expect(mockAudio.play).toHaveBeenCalled();
   });
 
   it("hides transport after only nightly audio completes (1 per night)", async () => {
