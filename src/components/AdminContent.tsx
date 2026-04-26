@@ -63,7 +63,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [goalDraft, setGoalDraft] = useState<Interest | null>(null);
   const [librarySort, setLibrarySort] = useState<"title" | "sku">("title");
-  const [libraryCategoryFilter, setLibraryCategoryFilter] = useState<"all" | "General" | "Special" | "CGMR">("all");
+  const [libraryCategoryFilter, setLibraryCategoryFilter] = useState<"all" | "General" | "Special" | "CGMR">("General");
   const [librarySearch, setLibrarySearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<LibraryItem | null>(null);
