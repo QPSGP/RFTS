@@ -77,8 +77,13 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   const [assignAudioC, setAssignAudioC] = useState<string>("");
   const [uploadAudioStatus, setUploadAudioStatus] = useState<string | null>(null);
   const [uploadAudioLoading, setUploadAudioLoading] = useState(false);
+  const [uploadCoverStatus, setUploadCoverStatus] = useState<string | null>(null);
+  const [uploadCoverLoading, setUploadCoverLoading] = useState(false);
+  const [editCoverStatus, setEditCoverStatus] = useState<string | null>(null);
+  const [editCoverLoading, setEditCoverLoading] = useState(false);
   const [libraryAddStatus, setLibraryAddStatus] = useState<string | null>(null);
   const addLibraryFormRef = useRef<HTMLFormElement>(null);
+  const editCoverInputRef = useRef<HTMLInputElement | null>(null);
 
   const load = async () => {
     const [interestRes, libraryRes] = await Promise.all([
@@ -335,6 +340,75 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     }
   };
 
+  const uploadCoverFromFile = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetch("/api/admin/upload-cover", {
+      method: "POST",
+      body: formData,
+      credentials: "include"
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data?.url) {
+      throw new Error(data?.error || `Upload failed (${response.status}).`);
+    }
+    return String(data.url);
+  };
+
+  const uploadCoverForAdd = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const fileInput = form.elements.namedItem("uploadCoverFile") as HTMLInputElement;
+    const file = fileInput?.files?.[0];
+    if (!file) {
+      setUploadCoverStatus("Choose a cover image first.");
+      return;
+    }
+    setUploadCoverStatus(null);
+    setUploadCoverLoading(true);
+    try {
+      const url = await uploadCoverFromFile(file);
+      setUploadCoverStatus(`Uploaded: ${file.name}. Cover URL was filled in Step 2.`);
+      const addForm = addLibraryFormRef.current;
+      if (addForm && url) {
+        (addForm.elements.namedItem("coverUrl") as HTMLInputElement).value = url;
+        addForm.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      if (fileInput) fileInput.value = "";
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setUploadCoverStatus(`Upload failed: ${msg}`);
+    } finally {
+      setUploadCoverLoading(false);
+    }
+  };
+
+  const uploadCoverForEdit = async () => {
+    if (!editDraft) {
+      setEditCoverStatus("Open an audio in Edit mode first.");
+      return;
+    }
+    const fileInput = editCoverInputRef.current;
+    const file = fileInput?.files?.[0];
+    if (!file) {
+      setEditCoverStatus("Choose a cover image first.");
+      return;
+    }
+    setEditCoverStatus(null);
+    setEditCoverLoading(true);
+    try {
+      const url = await uploadCoverFromFile(file);
+      setEditDraft({ ...editDraft, coverUrl: url });
+      setEditCoverStatus(`Uploaded: ${file.name}. Click Save to keep this cover.`);
+      if (fileInput) fileInput.value = "";
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setEditCoverStatus(`Upload failed: ${msg}`);
+    } finally {
+      setEditCoverLoading(false);
+    }
+  };
+
   const populateFilenamesFromUrls = async () => {
     setPopulateFilenamesStatus(null);
     try {
@@ -396,12 +470,17 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     setEditingId(item.id);
     setEditDraft({ ...item });
     setEditInterestIds(item.interestIds);
+    setEditCoverStatus(null);
+    if (editCoverInputRef.current) editCoverInputRef.current.value = "";
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setEditDraft(null);
     setEditInterestIds([]);
+    setEditCoverStatus(null);
+    setEditCoverLoading(false);
+    if (editCoverInputRef.current) editCoverInputRef.current.value = "";
   };
 
   const saveEdit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -702,6 +781,29 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
           </form>
           {uploadAudioStatus && <p style={{ marginTop: 12, marginBottom: 0 }}>{uploadAudioStatus}</p>}
         </div>
+        <div className="card" style={{ marginBottom: 16 }}>
+          <h3 style={{ marginTop: 0 }}>Step 1B: Upload a cover image (optional)</h3>
+          <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>
+            Choose a PNG, JPG, WEBP, GIF, or SVG from your computer (up to 10 MB). On success, the
+            <strong> Cover URL</strong> field in Step 2 is filled automatically.
+          </p>
+          <form onSubmit={uploadCoverForAdd} style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
+            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 13 }}>Cover file</span>
+              <input
+                name="uploadCoverFile"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                style={{ ...inputStyle, maxWidth: 320 }}
+                disabled={uploadCoverLoading}
+              />
+            </label>
+            <button className="button" type="submit" disabled={uploadCoverLoading}>
+              {uploadCoverLoading ? "Uploading…" : "Upload cover"}
+            </button>
+          </form>
+          {uploadCoverStatus && <p style={{ marginTop: 12, marginBottom: 0 }}>{uploadCoverStatus}</p>}
+        </div>
         {isFirstAdmin && (
           <>
             <p style={{ color: "#4b5563" }}>
@@ -928,6 +1030,36 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             <div key={item.id} id={`audio-${item.id}`} className="card">
               {editingId === item.id && editDraft ? (
                 <form onSubmit={saveEdit} className="grid">
+                  <div className="card" style={{ marginBottom: 8 }}>
+                    <h4 style={{ marginTop: 0, marginBottom: 8 }}>Upload cover from computer</h4>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <span style={{ fontSize: 13 }}>Cover image</span>
+                        <input
+                          ref={editCoverInputRef}
+                          name="editCoverFile"
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                          style={{ ...inputStyle, maxWidth: 340 }}
+                          disabled={editCoverLoading}
+                        />
+                      </label>
+                      <button
+                        className="button button-secondary"
+                        type="button"
+                        onClick={() => void uploadCoverForEdit()}
+                        disabled={editCoverLoading}
+                      >
+                        {editCoverLoading ? "Uploading…" : "Upload cover"}
+                      </button>
+                    </div>
+                    {editCoverStatus && <p style={{ marginTop: 10, marginBottom: 0 }}>{editCoverStatus}</p>}
+                    {editDraft.coverUrl ? (
+                      <p style={{ marginTop: 8, marginBottom: 0, fontSize: 12, color: "#6b7280" }}>
+                        Current cover URL is set below. Click <strong>Save</strong> to keep uploaded changes.
+                      </p>
+                    ) : null}
+                  </div>
                   <input
                     name="title"
                     value={editDraft.title}
