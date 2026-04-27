@@ -76,6 +76,50 @@ function startTrackFromBeginning(audio: HTMLMediaElement) {
   }
 }
 
+/** iOS (mobile Safari) may fulfill `play()` but leave the element paused without a user gesture. */
+function shouldVerifyAutoplayStalledByPaused(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  if (/CriOS|FxiOS|EdgiOS/i.test(ua)) return true;
+  return /iPhone|iPod|iPad/i.test(ua);
+}
+
+/**
+ * Run `play()`; on failure call onNeedTap. On iOS, `play()` can "succeed" while the element
+ * stays paused—re-check after a short delay and prompt if still paused.
+ * Returns a cancel function to clear follow-up timers.
+ */
+function startPlaybackWithIOSAutoplayGuard(
+  audio: HTMLMediaElement,
+  isStillValid: () => boolean,
+  onNeedTap: () => void
+): () => void {
+  const verifyDelays = shouldVerifyAutoplayStalledByPaused() ? [220, 900] : [];
+  const timers: number[] = [];
+  const runIfStillPaused = () => {
+    if (!isStillValid()) return;
+    if (audio.paused && !audio.ended) onNeedTap();
+  };
+  const onPromiseFail = () => {
+    if (!isStillValid()) return;
+    onNeedTap();
+  };
+  const p = audio.play();
+  if (p && typeof p.then === "function") {
+    p.then(() => {
+      if (!isStillValid()) return;
+      for (const ms of verifyDelays) {
+        timers.push(window.setTimeout(runIfStillPaused, ms));
+      }
+    }).catch(onPromiseFail);
+  } else if (p && typeof p.catch === "function") {
+    p.catch(onPromiseFail);
+  }
+  return () => {
+    for (const id of timers) window.clearTimeout(id);
+  };
+}
+
 function buildPlayOptionsLogLine(
   c: SessionTrack,
   ph: Phase,
@@ -120,6 +164,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const sessionEpochRef = useRef(0);
   /** When we advance from prep to first track, store the track we're loading so "Tap play" uses it (avoids replaying prep if state is stale). */
   const pendingNextTrackRef = useRef<SessionTrack | null>(null);
+  const lastAttemptAutoplayCancelRef = useRef<(() => void) | null>(null);
 
   const [queue, setQueue] = useState<SessionTrack[]>([]);
   const [current, setCurrent] = useState<SessionTrack | null>(null);
@@ -218,14 +263,24 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     if (audio.src !== track.url) {
       audio.src = track.url;
     }
+    lastAttemptAutoplayCancelRef.current?.();
+    const trackUrl = track.url;
+    const epoch0 = sessionEpochRef.current;
+    const isValid = () =>
+      sessionEpochRef.current === epoch0 && currentRef.current?.url === trackUrl;
     startTrackFromBeginning(audio);
-    const playPromise = audio.play();
-    if (playPromise && typeof playPromise.catch === "function") {
-      playPromise.catch(() => {
-        setMessage("Tap play to start the session.");
+    lastAttemptAutoplayCancelRef.current = startPlaybackWithIOSAutoplayGuard(
+      audio,
+      isValid,
+      () => {
+        setMessage(
+          phaseRef.current === "second"
+            ? "Tap play to start the second half (preparation, then your second track)."
+            : "Tap play to start the session."
+        );
         setNeedsUserPlay(true);
-      });
-    }
+      }
+    );
   };
 
   const startSession = useCallback(() => {
@@ -295,21 +350,36 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     if (audio.src !== current.url) {
       audio.src = current.url;
     }
+    const urlAtStart = current.url;
+    const epochAtStart = sessionEpochRef.current;
+    let cancelAutoplayCheck: (() => void) | null = null;
     const playFromZero = () => {
+      cancelAutoplayCheck?.();
+      const trackUrl = urlAtStart;
+      const isValid = () =>
+        sessionEpochRef.current === epochAtStart && currentRef.current?.url === trackUrl;
       startTrackFromBeginning(audio);
-      const playPromise = audio.play();
-      if (playPromise && typeof playPromise.catch === "function") {
-        playPromise.catch(() => {
-          setMessage("Tap play to start the session.");
+      cancelAutoplayCheck = startPlaybackWithIOSAutoplayGuard(
+        audio,
+        isValid,
+        () => {
+          setMessage(
+            phaseRef.current === "second"
+              ? "Tap play to start the second half (preparation, then your second track)."
+              : "Tap play to start the session."
+          );
           setNeedsUserPlay(true);
-        });
-      }
+        }
+      );
     };
     if (audio.readyState >= 1) {
       playFromZero();
     } else {
       audio.addEventListener("canplay", () => playFromZero(), { once: true });
     }
+    return () => {
+      cancelAutoplayCheck?.();
+    };
   }, [current]);
 
   useEffect(() => {
@@ -494,10 +564,18 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           clearTimeout(fallbackId);
           pendingNextTrackRef.current = null;
           startTrackFromBeginning(audio);
-          audio.play().catch(() => {
-            setMessage("Tap play to start the session.");
-            setNeedsUserPlay(true);
-          });
+          startPlaybackWithIOSAutoplayGuard(
+            audio,
+            () => epochAtAdvance === sessionEpochRef.current,
+            () => {
+              setMessage(
+                phaseRef.current === "second"
+                  ? "Tap play to start the second half (preparation, then your second track)."
+                  : "Tap play to start the session."
+              );
+              setNeedsUserPlay(true);
+            }
+          );
         };
         const fallbackId = setTimeout(() => {
           if (epochAtAdvance !== sessionEpochRef.current) return;
@@ -515,8 +593,6 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           },
           { once: true }
         );
-        startTrackFromBeginning(audio);
-        audio.play().catch(() => {});
       }
       return;
     }
@@ -698,6 +774,11 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
                 : `${remainingSeconds}s`}
             . It will begin and close automatically.
           </p>
+          {isMobile && (
+            <p style={{ margin: "10px 0 0", color: "#15803d" }}>
+              On iPhone, tap Play if the second half (including preparation) does not start when the wait ends.
+            </p>
+          )}
           <button
             type="button"
             className="button button-secondary"
