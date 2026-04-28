@@ -76,17 +76,22 @@ function startTrackFromBeginning(audio: HTMLMediaElement) {
   }
 }
 
-/** iOS (mobile Safari) may fulfill `play()` but leave the element paused without a user gesture. */
+/**
+ * Mobile browsers often fulfill `play()` but leave the element paused without a user gesture
+ * (iOS Safari, Chrome/Android WebView, Samsung Internet, etc.).
+ */
 function shouldVerifyAutoplayStalledByPaused(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent || "";
   if (/CriOS|FxiOS|EdgiOS/i.test(ua)) return true;
-  return /iPhone|iPod|iPad/i.test(ua);
+  if (/iPhone|iPod|iPad/i.test(ua)) return true;
+  if (/Android/i.test(ua)) return true;
+  return false;
 }
 
 /**
- * Run `play()`; on failure call onNeedTap. On iOS, `play()` can "succeed" while the element
- * stays paused—re-check after a short delay and prompt if still paused.
+ * Run `play()`; on failure call onNeedTap. On many mobile browsers, `play()` can "succeed" while
+ * the element stays paused—re-check after a short delay and prompt if still paused.
  * Returns a cancel function to clear follow-up timers.
  */
 function startPlaybackWithIOSAutoplayGuard(
@@ -456,6 +461,9 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     clearWaitTimers();
     if (!tr) {
       secondFromGapInFlightRef.current = false;
+      setMessage(
+        "No second recording was scheduled. Reload Play Options or check your lineup has two tracks for tonight."
+      );
       setPhase("idle");
       return;
     }
@@ -471,19 +479,30 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   }, [prepAudio, clearWaitTimers]);
 
   useEffect(() => {
-    if (typeof document === "undefined" || phase !== "waiting") {
+    if (typeof document === "undefined" || typeof window === "undefined" || phase !== "waiting") {
       return;
     }
     const gapEpoch = sessionEpochRef.current;
-    const onVisibility = () => {
-      if (document.visibilityState !== "visible") return;
+    const tryResumeSecondHalf = () => {
       if (sessionEpochRef.current !== gapEpoch) return;
       if (phaseRef.current !== "waiting") return;
       if (Date.now() < secondStartAtRef.current) return;
       beginSecondAfterGap();
     };
+    const onVisibility = () => {
+      if (document.visibilityState !== "visible") return;
+      tryResumeSecondHalf();
+    };
+    /** bfcache restore / tab wake — long gap timers can be unreliable without this */
+    const onPageShow = () => {
+      tryResumeSecondHalf();
+    };
     document.addEventListener("visibilitychange", onVisibility);
-    return () => document.removeEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pageshow", onPageShow);
+    };
   }, [phase, beginSecondAfterGap]);
 
   useEffect(() => {
@@ -613,6 +632,10 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       countdownIntervalRef.current = setInterval(() => {
         const left = Math.max(0, Math.round((secondStartAtRef.current - Date.now()) / 1000));
         setRemainingSeconds(left);
+        /** Backup if long `setTimeout` was throttled or dropped (mobile background). */
+        if (phaseRef.current === "waiting" && Date.now() >= secondStartAtRef.current) {
+          beginSecondAfterGap();
+        }
       }, 1000);
       const epochAtGapStart = sessionEpochRef.current;
       waitTimeoutRef.current = setTimeout(() => {
@@ -776,7 +799,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           </p>
           {isMobile && (
             <p style={{ margin: "10px 0 0", color: "#15803d" }}>
-              On iPhone, tap Play if the second half (including preparation) does not start when the wait ends.
+              On a phone, tap Play if the second half (including preparation) does not start when the wait ends.
             </p>
           )}
           <button
@@ -843,7 +866,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
             <>
               <div className="card" style={{ marginTop: 12 }}>
                 <p style={{ color: "#b91c1c", marginTop: 0 }}>
-                  Tap below to start playback on iPhone.
+                  Tap below to start playback (required on most phones).
                 </p>
                 <button
                   className="button"
@@ -889,7 +912,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
                   <div className="card" style={{ maxWidth: 420, textAlign: "center" }}>
                     <h3 style={{ marginTop: 0 }}>Tap to Start Audio</h3>
                     <p style={{ color: "#4b5563" }}>
-                      iPhone requires a tap to begin playback.
+                      This device may need a tap to begin playback.
                     </p>
                     <button
                       className="button"
