@@ -187,6 +187,11 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const suppressResumeForRestartRef = useRef(false);
   /** Last known `currentTime` for detecting forward seeks (admin activity). */
   const lastPlaybackPositionForSeekRef = useRef(0);
+  /**
+   * Bump when starting the second half after the gap so `<audio key>` changes — Safari/Android often
+   * keep a dead pipeline when the prep URL matches the first half and the element was torn down for `waiting`.
+   */
+  const [gapResumeGeneration, setGapResumeGeneration] = useState(0);
 
   secondTrackRef.current = secondTrack ?? null;
 
@@ -302,6 +307,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     setOnePerNightComplete(false);
     setFullNightSessionComplete(false);
     secondFromGapInFlightRef.current = false;
+    setGapResumeGeneration(0);
     setPhase("first");
     const nextQueue = [prepAudio, firstTrack].filter(
       (track): track is SessionTrack => !!track
@@ -329,6 +335,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       countdownIntervalRef.current = null;
     }
     pendingNextTrackRef.current = null;
+    setGapResumeGeneration((g) => g + 1);
     setPhase("second");
     const nextQueue = [prepAudio, secondTrack].filter(
       (track): track is SessionTrack => !!track
@@ -343,7 +350,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
 
   useImperativeHandle(ref, () => ({ startSession, playSecond }), [startSession, playSecond]);
 
-  useEffect(() => {
+  /** Layout phase so `<audio ref>` is attached before play(); fixes gap→second half silent failures on mobile. */
+  useLayoutEffect(() => {
     if (skipEffectPlayRef.current) {
       skipEffectPlayRef.current = false;
       return;
@@ -467,9 +475,11 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       setPhase("idle");
       return;
     }
-    const nextQueue = [prepAudio, tr].filter(
+    const prep = prepAudioRef.current;
+    const nextQueue = [prep, tr].filter(
       (track): track is SessionTrack => !!track
     );
+    setGapResumeGeneration((g) => g + 1);
     setPhase("second");
     setQueue(nextQueue);
     setCurrent(nextQueue[0] || null);
@@ -854,6 +864,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           )}
           {isMobile && <div style={{ height: 280 }} />}
           <audio
+            key={`audio-session-${gapResumeGeneration}`}
             ref={audioRef}
             controls={!!current}
             controlsList="nodownload"
