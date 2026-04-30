@@ -7,9 +7,12 @@ const querySchema = z.object({
   email: z.string().email()
 });
 
+const MANAGED_MAX_ROTATION_SLOTS = 10;
+const MANAGED_MAX_SLOTS_PER_AUDIO = 3;
+
 const updateSchema = z.object({
   email: z.string().email(),
-  order: z.array(z.string().uuid())
+  order: z.array(z.string().uuid()).max(MANAGED_MAX_ROTATION_SLOTS)
 });
 
 export async function GET(request: Request) {
@@ -55,21 +58,29 @@ export async function POST(request: Request) {
   }
   const { email, order } = parsed.data;
   const emailLower = email.toLowerCase();
+  const perId = new Map<string, number>();
+  for (const itemId of order) {
+    perId.set(itemId, (perId.get(itemId) || 0) + 1);
+    if ((perId.get(itemId) || 0) > MANAGED_MAX_SLOTS_PER_AUDIO) {
+      return NextResponse.json(
+        { error: `Each audio may appear at most ${MANAGED_MAX_SLOTS_PER_AUDIO} times in the rotation.` },
+        { status: 400 }
+      );
+    }
+  }
   try {
     // Delete existing order for this member
     await sql`
       DELETE FROM member_audio_assignments
       WHERE user_email = ${emailLower}
     `;
-    // Insert new order
+    // Insert new order (same library_item_id may repeat in different slots)
     if (order.length > 0) {
       await Promise.all(
         order.map((itemId, index) =>
           sql`
             INSERT INTO member_audio_assignments (user_email, library_item_id, assignment_order)
             VALUES (${emailLower}, ${itemId}, ${index + 1})
-            ON CONFLICT (user_email, library_item_id) DO UPDATE
-            SET assignment_order = ${index + 1}
           `
         )
       );

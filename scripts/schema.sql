@@ -226,16 +226,48 @@ ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS birth_date date;
 -- Migration: highest schedule night number fully listened (play-based progression; safe on existing DBs)
 ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS completed_schedule_nights integer NOT NULL DEFAULT 0;
 
--- Member audio assignments with order (for managed members)
+-- Member audio assignments with order (for managed members).
+-- Same library_item_id may repeat up to admin UI limits (multiple rotation slots).
 CREATE TABLE IF NOT EXISTS member_audio_assignments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_email text NOT NULL,
   library_item_id uuid NOT NULL REFERENCES library_items(id) ON DELETE CASCADE,
   assignment_order integer NOT NULL,
   created_at timestamptz DEFAULT now(),
-  PRIMARY KEY (user_email, library_item_id)
+  UNIQUE (user_email, assignment_order)
 );
 CREATE INDEX IF NOT EXISTS member_audio_assignments_user_email
   ON member_audio_assignments (user_email, assignment_order);
+
+-- Upgrade legacy table that used PRIMARY KEY (user_email, library_item_id). Safe no-op if already migrated.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'member_audio_assignments'
+      AND column_name = 'id'
+  ) THEN
+    RETURN;
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'member_audio_assignments'
+  ) THEN
+    ALTER TABLE member_audio_assignments ADD COLUMN id uuid DEFAULT gen_random_uuid();
+    UPDATE member_audio_assignments SET id = gen_random_uuid() WHERE id IS NULL;
+    ALTER TABLE member_audio_assignments ALTER COLUMN id SET NOT NULL;
+    ALTER TABLE member_audio_assignments DROP CONSTRAINT IF EXISTS member_audio_assignments_pkey;
+    ALTER TABLE member_audio_assignments ADD PRIMARY KEY (id);
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_indexes WHERE indexname = 'member_audio_assignments_user_email_assignment_order_key'
+    ) THEN
+      CREATE UNIQUE INDEX member_audio_assignments_user_email_assignment_order_key
+        ON member_audio_assignments (user_email, assignment_order);
+    END IF;
+  END IF;
+END $$;
 
 -- Admin display profile (optional; safe on existing DBs)
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS first_name text;

@@ -39,6 +39,14 @@ const inputStyle = {
   width: "100%"
 };
 
+/** Platinum Managed rotation list persisted to member_audio_assignments (order may repeat IDs). */
+const MANAGED_MAX_ROTATION_SLOTS = 10;
+const MANAGED_MAX_SLOTS_PER_AUDIO = 3;
+
+function countAudioSlotsInOrder(order: string[], itemId: string): number {
+  return order.filter((id) => id === itemId).length;
+}
+
 const timeZones = [
   "Pacific Time",
   "Mountain Time",
@@ -819,10 +827,44 @@ export default function AdminUsers() {
     return assigned;
   };
 
-  const toggleAudioAssignment = (email: string, itemId: string) => {
+  const toggleAudioAssignment = (
+    email: string,
+    itemId: string,
+    tier: UserRow["subscriptionTier"]
+  ) => {
+    if (tier === "platinum_managed") {
+      const curOrder = audioOrder[email] || [];
+      const slots = countAudioSlotsInOrder(curOrder, itemId);
+      const mapped = audioAssignments[email]?.[itemId];
+      /** Rotation slots or explicit assign flag — not “allowed on library” alone (legacy access without order). */
+      const isOn = slots > 0 || mapped === true;
+
+      if (isOn) {
+        setAudioOrder((prev) => ({
+          ...prev,
+          [email]: (prev[email] || []).filter((id) => id !== itemId)
+        }));
+        setAudioAssignments((prev) => ({
+          ...prev,
+          [email]: { ...(prev[email] || {}), [itemId]: false }
+        }));
+      } else {
+        setAudioAssignments((prev) => ({
+          ...prev,
+          [email]: { ...(prev[email] || {}), [itemId]: true }
+        }));
+        setAudioOrder((prev) => {
+          const cur = prev[email] || [];
+          if (cur.length >= MANAGED_MAX_ROTATION_SLOTS) return prev;
+          return { ...prev, [email]: [...cur, itemId] };
+        });
+      }
+      return;
+    }
+
     const current = audioAssignments[email]?.[itemId] ?? false;
     const newValue = !current;
-    
+
     setAudioAssignments((prev) => ({
       ...prev,
       [email]: {
@@ -831,11 +873,9 @@ export default function AdminUsers() {
       }
     }));
 
-    // Update order: if checking, add to end; if unchecking, remove
     setAudioOrder((prev) => {
       const currentOrder = prev[email] || [];
       if (newValue) {
-        // Add to end if not already present
         if (!currentOrder.includes(itemId)) {
           return {
             ...prev,
@@ -843,7 +883,6 @@ export default function AdminUsers() {
           };
         }
       } else {
-        // Remove from order
         return {
           ...prev,
           [email]: currentOrder.filter((id) => id !== itemId)
@@ -853,10 +892,55 @@ export default function AdminUsers() {
     });
   };
 
+  const incrementManagedAudioSlot = (email: string, itemId: string) => {
+    setAudioOrder((prev) => {
+      const cur = prev[email] || [];
+      const n = countAudioSlotsInOrder(cur, itemId);
+      if (n >= MANAGED_MAX_SLOTS_PER_AUDIO || cur.length >= MANAGED_MAX_ROTATION_SLOTS) {
+        return prev;
+      }
+      const nextOrder = [...cur, itemId];
+      setAudioAssignments((a) => ({
+        ...a,
+        [email]: { ...(a[email] || {}), [itemId]: true }
+      }));
+      return { ...prev, [email]: nextOrder };
+    });
+  };
+
+  const decrementManagedAudioSlot = (email: string, itemId: string) => {
+    setAudioOrder((prev) => {
+      const cur = prev[email] || [];
+      const idx = cur.lastIndexOf(itemId);
+      if (idx === -1) return prev;
+      const nextOrder = cur.filter((_, i) => i !== idx);
+      const remaining = countAudioSlotsInOrder(nextOrder, itemId);
+      setAudioAssignments((a) => ({
+        ...a,
+        [email]: { ...(a[email] || {}), [itemId]: remaining > 0 }
+      }));
+      return { ...prev, [email]: nextOrder };
+    });
+  };
+
+  const removeManagedSlotAtIndex = (email: string, slotIndex: number) => {
+    setAudioOrder((prev) => {
+      const cur = prev[email] || [];
+      if (slotIndex < 0 || slotIndex >= cur.length) return prev;
+      const removedId = cur[slotIndex];
+      const nextOrder = cur.filter((_, i) => i !== slotIndex);
+      const remaining = countAudioSlotsInOrder(nextOrder, removedId);
+      setAudioAssignments((a) => ({
+        ...a,
+        [email]: { ...(a[email] || {}), [removedId]: remaining > 0 }
+      }));
+      return { ...prev, [email]: nextOrder };
+    });
+  };
+
   const updateAudioOrder = (email: string, itemId: string, orderValue: string) => {
     const parsed = Number(orderValue);
     if (!orderValue || Number.isNaN(parsed) || parsed <= 0) {
-      // Remove from order but keep assignment
       setAudioOrder((prev) => {
         const currentOrder = prev[email] || [];
         return {
@@ -2579,7 +2663,11 @@ export default function AdminUsers() {
                       <div style={{ marginTop: 12 }}>
                         <h4 style={{ marginBottom: 8 }}>5. Check audios designed for them</h4>
                         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
-                          Check which audios this member can access. Managed members are entered only by a facilitator or admin; you choose their recordings and order. The order you check them (shown as numbers) is used by the algorithm.
+                          Check which audios this member can access.{" "}
+                          <strong>Platinum Managed:</strong> rotation follows the ordered list below; you may include the
+                          same audio up to {MANAGED_MAX_SLOTS_PER_AUDIO} times (total up to {MANAGED_MAX_ROTATION_SLOTS}{" "}
+                          slots). Use + / − on each row or remove a row from the numbered list.{" "}
+                          <strong>Gold:</strong> use # for position (each audio once).
                         </p>
                         <div className="goal-list">
                           {library
@@ -2605,60 +2693,149 @@ export default function AdminUsers() {
                             })
                             .map((item) => {
                             const emailLower = user.email.toLowerCase();
-                            const isAssigned =
-                              audioAssignments[user.email]?.[item.id] ??
-                              item.allowedUserEmails?.some(
-                                (allowed) => allowed.toLowerCase() === emailLower
-                              ) ??
-                              false;
                             const currentOrder = audioOrder[user.email] || [];
+                            const slotsForItem = countAudioSlotsInOrder(currentOrder, item.id);
+                            const mappedAssign = audioAssignments[user.email]?.[item.id];
+                            const isManagedMember = user.subscriptionTier === "platinum_managed";
+                            const isAssigned = isManagedMember
+                              ? slotsForItem > 0 || mappedAssign === true
+                              : (audioAssignments[user.email]?.[item.id] ??
+                                  item.allowedUserEmails?.some(
+                                    (allowed) => allowed.toLowerCase() === emailLower
+                                  ) ??
+                                  false);
                             const fallbackOrder = library
                               .filter((i) =>
                                 i.allowedUserEmails?.some((e) => e.toLowerCase() === emailLower)
                               )
                               .map((i) => i.id);
                             const orderValue = getAudioOrder(user.email, item.id, fallbackOrder);
+                            const totalSlots = currentOrder.length;
                             return (
                               <label
                                 key={item.id}
                                 className="goal-item"
-                                style={{ display: "flex", gap: 8, alignItems: "center" }}
+                                style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}
                               >
                                 <input
                                   type="checkbox"
                                   checked={isAssigned}
-                                  onChange={() => toggleAudioAssignment(user.email, item.id)}
+                                  onChange={() =>
+                                    toggleAudioAssignment(user.email, item.id, user.subscriptionTier)
+                                  }
                                 />
                                 <span style={{ flex: 1 }}>
                                   {item.skuCode || item.title || "No SKU/Title"}
                                 </span>
-                                <input
-                                  value={orderValue}
-                                  onChange={(event) =>
-                                    updateAudioOrder(
-                                      user.email,
-                                      item.id,
-                                      event.target.value
-                                    )
-                                  }
-                                  placeholder="#"
-                                  style={{
-                                    width: 44,
-                                    textAlign: "center",
-                                    borderRadius: 6,
-                                    border: "1px solid #d1d5db",
-                                    padding: "4px 6px",
-                                    background: orderValue ? "#16a34a" : "#ffffff",
-                                    color: orderValue ? "#ffffff" : "#111827",
-                                    fontWeight: 600
-                                  }}
-                                />
+                                {isManagedMember ? (
+                                  <span
+                                    style={{
+                                      display: "inline-flex",
+                                      gap: 6,
+                                      alignItems: "center",
+                                      fontSize: 12,
+                                      fontWeight: 600,
+                                      color: "#374151"
+                                    }}
+                                  >
+                                    <span style={{ minWidth: 72, textAlign: "center" }}>
+                                      ×{slotsForItem}/{MANAGED_MAX_SLOTS_PER_AUDIO}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      className="button button-secondary"
+                                      disabled={slotsForItem === 0}
+                                      style={{ padding: "4px 10px", minWidth: 36 }}
+                                      aria-label={`Remove one slot for ${item.skuCode || item.title}`}
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        decrementManagedAudioSlot(user.email, item.id);
+                                      }}
+                                    >
+                                      −
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="button button-secondary"
+                                      disabled={
+                                        slotsForItem >= MANAGED_MAX_SLOTS_PER_AUDIO ||
+                                        totalSlots >= MANAGED_MAX_ROTATION_SLOTS ||
+                                        !isAssigned
+                                      }
+                                      style={{ padding: "4px 10px", minWidth: 36 }}
+                                      aria-label={`Add another slot for ${item.skuCode || item.title}`}
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        incrementManagedAudioSlot(user.email, item.id);
+                                      }}
+                                    >
+                                      +
+                                    </button>
+                                  </span>
+                                ) : (
+                                  <input
+                                    value={orderValue}
+                                    onChange={(event) =>
+                                      updateAudioOrder(
+                                        user.email,
+                                        item.id,
+                                        event.target.value
+                                      )
+                                    }
+                                    placeholder="#"
+                                    style={{
+                                      width: 44,
+                                      textAlign: "center",
+                                      borderRadius: 6,
+                                      border: "1px solid #d1d5db",
+                                      padding: "4px 6px",
+                                      background: orderValue ? "#16a34a" : "#ffffff",
+                                      color: orderValue ? "#ffffff" : "#111827",
+                                      fontWeight: 600
+                                    }}
+                                  />
+                                )}
                               </label>
                             );
                           })}
                         </div>
+                        {user.subscriptionTier === "platinum_managed" && (
+                          <div style={{ marginTop: 12 }}>
+                            <strong style={{ fontSize: 13 }}>
+                              Rotation order ({(audioOrder[user.email] || []).length}/
+                              {MANAGED_MAX_ROTATION_SLOTS} slots)
+                            </strong>
+                            {(audioOrder[user.email] || []).length === 0 ? (
+                              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
+                                No slots yet — check audios and use + to build the rotation, then save.
+                              </p>
+                            ) : (
+                              <ol style={{ marginTop: 8, paddingLeft: 22, fontSize: 13 }}>
+                                {(audioOrder[user.email] || []).map((slotId, idx) => {
+                                  const libItem = library.find((x) => x.id === slotId);
+                                  const label =
+                                    [libItem?.skuCode, libItem?.title].filter(Boolean).join(" – ") || slotId;
+                                  return (
+                                    <li key={`managed-slot-${user.email}-${idx}-${slotId}`} style={{ marginBottom: 6 }}>
+                                      {label}
+                                      <button
+                                        type="button"
+                                        className="button button-secondary"
+                                        style={{ marginLeft: 10, padding: "2px 10px", fontSize: 12 }}
+                                        onClick={() => removeManagedSlotAtIndex(user.email, idx)}
+                                      >
+                                        Remove
+                                      </button>
+                                    </li>
+                                  );
+                                })}
+                              </ol>
+                            )}
+                          </div>
+                        )}
                         <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
-                          To remove a track from this member: uncheck it above and click Save Personalized Audios.
+                          To remove a track from this member: uncheck it (managed: clear all slots first or use −) and
+                          click Save Personalized Audios.
                         </p>
                         <div style={{ marginTop: 8, display: "flex", gap: 12 }}>
                           <button
