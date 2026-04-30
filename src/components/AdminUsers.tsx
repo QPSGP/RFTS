@@ -938,6 +938,30 @@ export default function AdminUsers() {
     });
   };
 
+  /** Swap slot with neighbor so repeats can sit apart (e.g. same SKU in positions 1 and 10). */
+  const moveManagedSlot = (email: string, slotIndex: number, direction: "up" | "down") => {
+    setAudioOrder((prev) => {
+      const cur = [...(prev[email] || [])];
+      const j = direction === "up" ? slotIndex - 1 : slotIndex + 1;
+      if (slotIndex < 0 || slotIndex >= cur.length || j < 0 || j >= cur.length) return prev;
+      const t = cur[slotIndex];
+      cur[slotIndex] = cur[j];
+      cur[j] = t;
+      return { ...prev, [email]: cur };
+    });
+  };
+
+  const moveManagedSlotToEdge = (email: string, slotIndex: number, edge: "top" | "bottom") => {
+    setAudioOrder((prev) => {
+      const cur = [...(prev[email] || [])];
+      if (slotIndex < 0 || slotIndex >= cur.length) return prev;
+      const [item] = cur.splice(slotIndex, 1);
+      if (edge === "top") cur.unshift(item);
+      else cur.push(item);
+      return { ...prev, [email]: cur };
+    });
+  };
+
   const updateAudioOrder = (email: string, itemId: string, orderValue: string) => {
     const parsed = Number(orderValue);
     if (!orderValue || Number.isNaN(parsed) || parsed <= 0) {
@@ -2666,7 +2690,8 @@ export default function AdminUsers() {
                           Check which audios this member can access.{" "}
                           <strong>Platinum Managed:</strong> rotation follows the ordered list below; you may include the
                           same audio up to {MANAGED_MAX_SLOTS_PER_AUDIO} times (total up to {MANAGED_MAX_ROTATION_SLOTS}{" "}
-                          slots). Use + / − on each row or remove a row from the numbered list.{" "}
+                          slots). + adds a copy at the end — use Move up / down (or Top / Bottom) on each numbered line to
+                          spread repeats (for example slot 1 and slot 10). Use − on each row or Remove on the list.{" "}
                           <strong>Gold:</strong> use # for position (each audio once).
                         </p>
                         <div className="goal-list">
@@ -2815,17 +2840,69 @@ export default function AdminUsers() {
                                   const libItem = library.find((x) => x.id === slotId);
                                   const label =
                                     [libItem?.skuCode, libItem?.title].filter(Boolean).join(" – ") || slotId;
+                                  const list = audioOrder[user.email] || [];
                                   return (
-                                    <li key={`managed-slot-${user.email}-${idx}-${slotId}`} style={{ marginBottom: 6 }}>
-                                      {label}
-                                      <button
-                                        type="button"
-                                        className="button button-secondary"
-                                        style={{ marginLeft: 10, padding: "2px 10px", fontSize: 12 }}
-                                        onClick={() => removeManagedSlotAtIndex(user.email, idx)}
-                                      >
-                                        Remove
-                                      </button>
+                                    <li
+                                      key={`managed-slot-${user.email}-${idx}-${slotId}`}
+                                      style={{
+                                        marginBottom: 8,
+                                        display: "flex",
+                                        flexWrap: "wrap",
+                                        alignItems: "center",
+                                        gap: 8
+                                      }}
+                                    >
+                                      <span style={{ flex: "1 1 140px", minWidth: 0 }}>{label}</span>
+                                      <span style={{ display: "inline-flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                                        <button
+                                          type="button"
+                                          className="button button-secondary"
+                                          style={{ padding: "2px 10px", fontSize: 12 }}
+                                          disabled={idx === 0}
+                                          aria-label={`Move ${label} to start of rotation`}
+                                          onClick={() => moveManagedSlotToEdge(user.email, idx, "top")}
+                                        >
+                                          Top
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="button button-secondary"
+                                          style={{ padding: "2px 10px", fontSize: 12 }}
+                                          disabled={idx >= list.length - 1}
+                                          aria-label={`Move ${label} to end of rotation`}
+                                          onClick={() => moveManagedSlotToEdge(user.email, idx, "bottom")}
+                                        >
+                                          Bottom
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="button button-secondary"
+                                          style={{ padding: "2px 10px", fontSize: 12 }}
+                                          disabled={idx === 0}
+                                          aria-label={`Move ${label} earlier in rotation`}
+                                          onClick={() => moveManagedSlot(user.email, idx, "up")}
+                                        >
+                                          Up
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="button button-secondary"
+                                          style={{ padding: "2px 10px", fontSize: 12 }}
+                                          disabled={idx >= list.length - 1}
+                                          aria-label={`Move ${label} later in rotation`}
+                                          onClick={() => moveManagedSlot(user.email, idx, "down")}
+                                        >
+                                          Down
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="button button-secondary"
+                                          style={{ padding: "2px 10px", fontSize: 12 }}
+                                          onClick={() => removeManagedSlotAtIndex(user.email, idx)}
+                                        >
+                                          Remove
+                                        </button>
+                                      </span>
                                     </li>
                                   );
                                 })}
