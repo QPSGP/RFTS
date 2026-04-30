@@ -294,7 +294,7 @@ describe("SessionPlayer", () => {
     jest.useRealTimers();
   });
 
-  it("Play second during gap starts the second half (no <audio> mounted during wait)", async () => {
+  it("Play second during gap starts the second half (silent gap bridge keeps <audio> mounted)", async () => {
     const SECOND = { title: "Second Recording", url: "/api/stream/audio?id=second-456" };
     render(
       <SessionPlayer
@@ -326,7 +326,7 @@ describe("SessionPlayer", () => {
     await waitFor(() => {
       expect(screen.getByText(/First session complete/i)).toBeInTheDocument();
     });
-    expect(document.querySelector("audio")).toBeNull();
+    expect(document.querySelector("audio")).toBeInTheDocument();
 
     mockAudio.play.mockClear();
     const playSecondBtn = screen.getByRole("button", { name: /Play Second Audio/i });

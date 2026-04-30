@@ -300,6 +300,7 @@ export default function PlayOptionsClient({
               }}
               scheduleNightNumber={tonight.night}
               onScheduleNightComplete={(night) => {
+                /* Only after a full night is listened (both main audios when 2/night, or the single when 1/night). */
                 fetch("/api/user/schedule-night-complete", {
                   method: "POST",
                   credentials: "include",

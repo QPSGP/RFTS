@@ -125,6 +125,57 @@ function startPlaybackWithIOSAutoplayGuard(
   };
 }
 
+let silentGapLoopDataUriCache: string | null = null;
+
+/** Short looping silence during the first→second gap keeps `<audio>` in a playing state for mobile autoplay handoff. */
+function getSilentGapLoopDataUri(): string {
+  if (silentGapLoopDataUriCache) return silentGapLoopDataUriCache;
+  if (typeof window === "undefined") return "";
+  const sampleRate = 8000;
+  const durationMs = 250;
+  const numSamples = Math.ceil((durationMs / 1000) * sampleRate);
+  const bitsPerSample = 8;
+  const numChannels = 1;
+  const blockAlign = numChannels * (bitsPerSample / 8);
+  const byteRate = sampleRate * blockAlign;
+  const dataSize = numSamples * blockAlign;
+  const buffer = new ArrayBuffer(44 + dataSize);
+  const v = new DataView(buffer);
+  let o = 0;
+  const write = (s: string) => {
+    for (let i = 0; i < s.length; i++) {
+      v.setUint8(o++, s.charCodeAt(i));
+    }
+  };
+  write("RIFF");
+  v.setUint32(o, 36 + dataSize, true);
+  o += 4;
+  write("WAVE");
+  write("fmt ");
+  v.setUint32(o, 16, true);
+  o += 4;
+  v.setUint16(o, 1, true);
+  o += 2;
+  v.setUint16(o, numChannels, true);
+  o += 2;
+  v.setUint32(o, sampleRate, true);
+  o += 4;
+  v.setUint32(o, byteRate, true);
+  o += 4;
+  v.setUint16(o, blockAlign, true);
+  o += 2;
+  v.setUint16(o, bitsPerSample, true);
+  o += 2;
+  write("data");
+  v.setUint32(o, dataSize, true);
+  o += 4;
+  const u8 = new Uint8Array(buffer);
+  let bin = "";
+  for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
+  silentGapLoopDataUriCache = `data:audio/wav;base64,${window.btoa(bin)}`;
+  return silentGapLoopDataUriCache;
+}
+
 function buildPlayOptionsLogLine(
   c: SessionTrack,
   ph: Phase,
@@ -187,12 +238,6 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const suppressResumeForRestartRef = useRef(false);
   /** Last known `currentTime` for detecting forward seeks (admin activity). */
   const lastPlaybackPositionForSeekRef = useRef(0);
-  /**
-   * Bump when starting the second half after the gap so `<audio key>` changes — Safari/Android often
-   * keep a dead pipeline when the prep URL matches the first half and the element was torn down for `waiting`.
-   */
-  const [gapResumeGeneration, setGapResumeGeneration] = useState(0);
-
   secondTrackRef.current = secondTrack ?? null;
 
   const currentRef = useRef(current);
@@ -202,14 +247,18 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   phaseRef.current = phase;
   prepAudioRef.current = prepAudio ?? null;
 
-  /** Pause/Play/Restart, native audio, and mobile fixed bar only while actively in first or second segment (not idle/waiting). */
+  /** “Now playing” and full transport — not while waiting (unless using silent gap bridge, see `sessionAudioMounted`). */
   const showActivePlaybackUi = Boolean(current && (phase === "first" || phase === "second"));
+  /** Keep `<audio>` mounted during the inter-half gap: silent loop + same element handoff to second-half prep. */
+  const sessionAudioMounted =
+    showActivePlaybackUi || (phase === "waiting" && playsPerNight === 2);
 
   /** useLayoutEffect + play/playing: attach before paint, log on the first event some browsers only emit. */
   useLayoutEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     const onPlaybackLogged = () => {
+      if (phaseRef.current === "waiting") return;
       const c = currentRef.current;
       const ph = phaseRef.current;
       const prep = prepAudioRef.current;
@@ -225,9 +274,9 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       audio.removeEventListener("playing", onPlaybackLogged);
       audio.removeEventListener("play", onPlaybackLogged);
     };
-    /* `<audio>` mounts only when `showActivePlaybackUi` is true, so a [] effect ran on first
+    /* `<audio>` mounts only when `sessionAudioMounted` is true, so a [] effect ran on first
      * paint with ref still null and never re-ran — session `played_audio` was never logged. */
-  }, [showActivePlaybackUi, current?.url, phase, prepAudio?.url]);
+  }, [sessionAudioMounted, current?.url, phase, prepAudio?.url]);
 
   useLayoutEffect(() => {
     const audio = audioRef.current;
@@ -259,7 +308,32 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       audio.removeEventListener("pause", onPause);
       audio.removeEventListener("play", onPlay);
     };
-  }, [showActivePlaybackUi, current?.url, phase, prepAudio?.url]);
+  }, [sessionAudioMounted, current?.url, phase, prepAudio?.url]);
+
+  /** Between first and second half (2/night): loop inaudible WAV so the media element stays active for autoplay. */
+  useLayoutEffect(() => {
+    if (phase !== "waiting" || playsPerNight !== 2) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+    const silent = getSilentGapLoopDataUri();
+    if (!silent) return;
+    const epoch = sessionEpochRef.current;
+    audio.loop = true;
+    audio.volume = 0;
+    if (audio.src !== silent) {
+      audio.src = silent;
+      audio.load();
+    }
+    const cancel = startPlaybackWithIOSAutoplayGuard(
+      audio,
+      () => sessionEpochRef.current === epoch && phaseRef.current === "waiting",
+      () => {
+        setMessage("Tap Play once so the silent bridge can keep this page ready for your second audio.");
+        setNeedsUserPlay(true);
+      }
+    );
+    return () => cancel();
+  }, [phase, playsPerNight]);
 
   useEffect(() => {
     pauseForResumeRef.current = false;
@@ -307,7 +381,6 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     setOnePerNightComplete(false);
     setFullNightSessionComplete(false);
     secondFromGapInFlightRef.current = false;
-    setGapResumeGeneration(0);
     setPhase("first");
     const nextQueue = [prepAudio, firstTrack].filter(
       (track): track is SessionTrack => !!track
@@ -335,7 +408,6 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       countdownIntervalRef.current = null;
     }
     pendingNextTrackRef.current = null;
-    setGapResumeGeneration((g) => g + 1);
     setPhase("second");
     const nextQueue = [prepAudio, secondTrack].filter(
       (track): track is SessionTrack => !!track
@@ -371,6 +443,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       const trackUrl = urlAtStart;
       const isValid = () =>
         sessionEpochRef.current === epochAtStart && currentRef.current?.url === trackUrl;
+      audio.loop = false;
+      audio.volume = 1;
       startTrackFromBeginning(audio);
       cancelAutoplayCheck = startPlaybackWithIOSAutoplayGuard(
         audio,
@@ -420,7 +494,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !showActivePlaybackUi) return;
+    if (!audio || !sessionAudioMounted) return;
     const onTimeUpdate = () => {
       lastPlaybackPositionForSeekRef.current = audio.currentTime;
     };
@@ -448,7 +522,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       audio.removeEventListener("loadedmetadata", onLoadedMetadata);
       audio.removeEventListener("seeked", onSeeked);
     };
-  }, [showActivePlaybackUi, current?.url, phase, prepAudio?.url]);
+  }, [sessionAudioMounted, current?.url, phase, prepAudio?.url]);
 
   const clearWaitTimers = useCallback(() => {
     if (waitTimeoutRef.current) {
@@ -479,7 +553,6 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     const nextQueue = [prep, tr].filter(
       (track): track is SessionTrack => !!track
     );
-    setGapResumeGeneration((g) => g + 1);
     setPhase("second");
     setQueue(nextQueue);
     setCurrent(nextQueue[0] || null);
@@ -822,56 +895,70 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           </button>
         </div>
       )}
-      {showActivePlaybackUi && current && (
+      {sessionAudioMounted && (
         <div style={{ marginTop: 16 }}>
-          <strong>Now Playing: {displayNameForSessionTrack(current)}</strong>
-          {!isMobile && (
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
-              <button
-                className="button button-secondary"
-                onClick={handlePause}
-                type="button"
-                style={{ background: "#dc2626", color: "#fff", borderColor: "#dc2626" }}
-              >
-                Pause
-              </button>
-              <button
-                className="button button-secondary"
-                onClick={handlePlay}
-                type="button"
-                disabled={isPlaying}
-                style={{ background: "#16a34a", color: "#fff", borderColor: "#16a34a" }}
-              >
-                Play
-              </button>
-              <button
-                className="button button-secondary"
-                onClick={handleRestart}
-                type="button"
-                style={{ background: "#eab308", color: "#1f2937", borderColor: "#eab308" }}
-              >
-                Restart
-              </button>
-              <button
-                className="button button-secondary"
-                onClick={endSession}
-                type="button"
-                style={{ borderColor: "#64748b", color: "#334155" }}
-              >
-                End session
-              </button>
-            </div>
+          {showActivePlaybackUi && current && (
+            <>
+              <strong>Now Playing: {displayNameForSessionTrack(current)}</strong>
+              {!isMobile && (
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
+                  <button
+                    className="button button-secondary"
+                    onClick={handlePause}
+                    type="button"
+                    style={{ background: "#dc2626", color: "#fff", borderColor: "#dc2626" }}
+                  >
+                    Pause
+                  </button>
+                  <button
+                    className="button button-secondary"
+                    onClick={handlePlay}
+                    type="button"
+                    disabled={isPlaying}
+                    style={{ background: "#16a34a", color: "#fff", borderColor: "#16a34a" }}
+                  >
+                    Play
+                  </button>
+                  <button
+                    className="button button-secondary"
+                    onClick={handleRestart}
+                    type="button"
+                    style={{ background: "#eab308", color: "#1f2937", borderColor: "#eab308" }}
+                  >
+                    Restart
+                  </button>
+                  <button
+                    className="button button-secondary"
+                    onClick={endSession}
+                    type="button"
+                    style={{ borderColor: "#64748b", color: "#334155" }}
+                  >
+                    End session
+                  </button>
+                </div>
+              )}
+              {isMobile && <div style={{ height: 280 }} />}
+            </>
           )}
-          {isMobile && <div style={{ height: 280 }} />}
+          {phase === "waiting" && playsPerNight === 2 && (
+            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 8, marginTop: 0 }}>
+              Silent playback runs until your second audio starts (nothing audible — it keeps the session active on phones).
+            </p>
+          )}
           <audio
-            key={`audio-session-${gapResumeGeneration}`}
+            key="rfts-session-audio"
             ref={audioRef}
-            controls={!!current}
+            playsInline
+            controls={Boolean(showActivePlaybackUi && current)}
             controlsList="nodownload"
             onEnded={handleEnded}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
-            style={{ width: "100%", marginTop: 8, display: current ? "block" : "none" }}
+            style={{
+              width: "100%",
+              marginTop: 8,
+              display: showActivePlaybackUi && current ? "block" : "none"
+            }}
           />
           {needsUserPlay && (
             <>
