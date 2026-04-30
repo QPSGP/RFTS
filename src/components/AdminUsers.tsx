@@ -1191,7 +1191,9 @@ export default function AdminUsers() {
     <>
       <h2>Member Accounts</h2>
       <p style={{ color: "#4b5563" }}>
-        Create member accounts, assign tiers, and activate subscriptions.
+        Create member accounts, assign tiers, and activate subscriptions. Member passwords are stored as a secure hash;
+        you cannot view an existing password—enter a new one below or in the expanded profile to reset login for any
+        member.
       </p>
       {dataLoadNotice && (
         <p style={{ color: "#b45309", marginTop: 8, marginBottom: 0 }} role="status">
@@ -1357,6 +1359,40 @@ export default function AdminUsers() {
                       >
                         View / Edit member
                       </button>
+                      <div
+                        style={{
+                          marginTop: 12,
+                          paddingTop: 12,
+                          borderTop: "1px solid #e5e7eb"
+                        }}
+                      >
+                        <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 8px 0" }}>
+                          <strong>Member login password:</strong> hashed in the database (cannot be displayed). Set a new
+                          password so they can sign in at /member/login.
+                        </p>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                          <label htmlFor={`member-pw-${user.email}`} className="sr-only">
+                            New password for {user.email}
+                          </label>
+                          <input
+                            id={`member-pw-${user.email}`}
+                            style={{ ...inputStyle, flex: "1 1 200px", maxWidth: 280 }}
+                            placeholder="New password (min 6 characters)"
+                            type="password"
+                            autoComplete="new-password"
+                            value={resetPasswords[user.email] || ""}
+                            onChange={(event) =>
+                              setResetPasswords({
+                                ...resetPasswords,
+                                [user.email]: event.target.value
+                              })
+                            }
+                          />
+                          <button className="button" type="button" onClick={() => updateUser(user.email)}>
+                            Set password
+                          </button>
+                        </div>
+                      </div>
                     </>
                   )}
                   {profileOpen[user.email] && (
@@ -2213,11 +2249,11 @@ export default function AdminUsers() {
                       </div>
                       <div style={{ marginTop: 12 }}>
                         <h4 style={{ marginBottom: 8 }}>
-                          3. Membership, active status, session length (half/full), password
+                          3. Membership, active status, session length (half/full), login password
                         </h4>
                         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
-                          Passwords are stored securely and cannot be viewed. Enter a new password (6+ characters)
-                          and click Save to set it for this member—you can change password only without changing tier.
+                          Current password cannot be shown (one-way hash). Enter a new password (6+ characters) and click
+                          Save to reset member login—you can update password alone without changing tier or goals.
                         </p>
                         <select
                           style={inputStyle}
