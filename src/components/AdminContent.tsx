@@ -118,6 +118,17 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
       }));
   }, [interests]);
 
+  const interestNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    interests.forEach((i) => map.set(i.id, i.name));
+    return map;
+  }, [interests]);
+
+  const formatGoalIdsForAdmin = (ids: string[]) => {
+    if (!ids.length) return null;
+    return ids.map((id) => interestNameById.get(id) || id).join("; ");
+  };
+
   const goalCounts = useMemo(() => {
     const counts = new Map<string, number>();
     library.forEach((item) => {
@@ -1276,7 +1287,14 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                   </p>
                   <p>Cover: {item.coverUrl || "Pending"}</p>
                   <p>Audio: {item.audioUrl ? getFileNameFromAudioUrl(item.audioUrl) || "Pending" : "Pending"}</p>
-                  <p>Interests: {item.interestIds.join(", ") || "None"}</p>
+                  <p>
+                    <strong>Goals (library grouping / scheduling):</strong>{" "}
+                    {formatGoalIdsForAdmin(item.interestIds) || "None"}
+                  </p>
+                  <p style={{ fontSize: 12, color: "#6b7280", marginTop: -6 }}>
+                    Edit this audio and use &quot;Attach goals&quot; to fix mistaken links. Goal play-order slots (A→B→C)
+                    are edited under Goals → Edit on each goal.
+                  </p>
                   <p>
                     Allowed Users:{" "}
                     {item.allowedUserEmails && item.allowedUserEmails.length > 0
