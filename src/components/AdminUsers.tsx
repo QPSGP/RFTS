@@ -2933,6 +2933,10 @@ export default function AdminUsers() {
                               <strong style={{ fontSize: 13, display: "block", marginBottom: 8 }}>
                                 Add at end of rotation
                               </strong>
+                              <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 8px 0" }}>
+                                Same recording on multiple nights? Pick it once, then click <strong>Add at end</strong> once per
+                                extra step — you don&apos;t need to re-select. Use <strong>Up / Down</strong> to reorder.
+                              </p>
                               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
                               <select
                                 aria-label="Choose audio to add at end of rotation"
@@ -2987,9 +2991,12 @@ export default function AdminUsers() {
                                 }
                                 onClick={() => {
                                   const id = managedRotationPicker[user.email]?.trim();
-                                  if (!id) return;
+                                  if (!id) {
+                                    setStatus("Choose a recording in the dropdown before Add at end.");
+                                    return;
+                                  }
                                   incrementManagedAudioSlot(user.email, id);
-                                  setManagedRotationPicker((p) => ({ ...p, [user.email]: "" }));
+                                  /** Keep selection so the same track can be appended again with another click (Up/Down to place). */
                                 }}
                               >
                                 Add at end
