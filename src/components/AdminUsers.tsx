@@ -377,6 +377,9 @@ export default function AdminUsers() {
   const audioAssignments = memberAudio.assignments;
   /** Platinum Managed: pending library item id for “Add to rotation” dropdown (per member email). */
   const [managedRotationPicker, setManagedRotationPicker] = useState<Record<string, string>>({});
+  /** While true, rotation edits must not run — async hydrate would overwrite them (race with saved order). */
+  const [memberAudioHydrating, setMemberAudioHydrating] = useState<Record<string, boolean>>({});
+  const memberAudioHydratingRef = useRef<Record<string, boolean>>({});
   const [audioSaveStatus, setAudioSaveStatus] = useState<Record<string, string>>({});
   const [uploadStatus, setUploadStatus] = useState<Record<string, string>>({});
   const [personalizedAudioUploading, setPersonalizedAudioUploading] = useState<Record<string, boolean>>({});
@@ -834,8 +837,22 @@ export default function AdminUsers() {
     return assigned;
   };
 
+  const startMemberAudioHydration = (email: string) => {
+    memberAudioHydratingRef.current = { ...memberAudioHydratingRef.current, [email]: true };
+    setMemberAudioHydrating((p) => ({ ...p, [email]: true }));
+  };
+
+  const finishMemberAudioHydration = (email: string) => {
+    memberAudioHydratingRef.current = { ...memberAudioHydratingRef.current, [email]: false };
+    setMemberAudioHydrating((p) => ({ ...p, [email]: false }));
+  };
+
   /** Managed: remove every rotation slot for this item and revoke library assignment. */
   const clearManagedAudioForItem = (email: string, itemId: string) => {
+    if (memberAudioHydratingRef.current[email]) {
+      setStatus("Still loading saved rotation for this member — try again in a second.");
+      return;
+    }
     setMemberAudio((prev) => ({
       ...prev,
       order: {
@@ -884,10 +901,20 @@ export default function AdminUsers() {
 
   /** Append one rotation slot (order + assignment flag in one state commit). */
   const incrementManagedAudioSlot = (email: string, itemId: string) => {
+    if (memberAudioHydratingRef.current[email]) {
+      setStatus("Still loading saved rotation for this member — try again in a second.");
+      return;
+    }
+    let blocked: "per_audio" | "full" | null = null;
     setMemberAudio((prev) => {
       const cur = prev.order[email] || [];
       const n = countAudioSlotsInOrder(cur, itemId);
-      if (n >= MANAGED_MAX_SLOTS_PER_AUDIO || cur.length >= MANAGED_MAX_ROTATION_SLOTS) {
+      if (n >= MANAGED_MAX_SLOTS_PER_AUDIO) {
+        blocked = "per_audio";
+        return prev;
+      }
+      if (cur.length >= MANAGED_MAX_ROTATION_SLOTS) {
+        blocked = "full";
         return prev;
       }
       return {
@@ -899,9 +926,19 @@ export default function AdminUsers() {
         }
       };
     });
+    if (blocked === "per_audio") {
+      setStatus(
+        `This audio is already in the rotation ${MANAGED_MAX_SLOTS_PER_AUDIO} times (maximum). Remove a slot or pick another track.`
+      );
+    } else if (blocked === "full") {
+      setStatus(
+        `Rotation is full (${MANAGED_MAX_ROTATION_SLOTS} slots). Remove a slot before adding another.`
+      );
+    }
   };
 
   const decrementManagedAudioSlot = (email: string, itemId: string) => {
+    if (memberAudioHydratingRef.current[email]) return;
     setMemberAudio((prev) => {
       const cur = prev.order[email] || [];
       const idx = cur.lastIndexOf(itemId);
@@ -920,6 +957,7 @@ export default function AdminUsers() {
   };
 
   const removeManagedSlotAtIndex = (email: string, slotIndex: number) => {
+    if (memberAudioHydratingRef.current[email]) return;
     setMemberAudio((prev) => {
       const cur = prev.order[email] || [];
       if (slotIndex < 0 || slotIndex >= cur.length) return prev;
@@ -939,6 +977,7 @@ export default function AdminUsers() {
 
   /** Swap slot with neighbor so repeats can sit apart (e.g. same SKU in positions 1 and 10). */
   const moveManagedSlot = (email: string, slotIndex: number, direction: "up" | "down") => {
+    if (memberAudioHydratingRef.current[email]) return;
     setMemberAudio((prev) => {
       const cur = [...(prev.order[email] || [])];
       const j = direction === "up" ? slotIndex - 1 : slotIndex + 1;
@@ -1427,6 +1466,7 @@ export default function AdminUsers() {
                   /** Pending tier in membership dropdown (saved on Save) — drives managed rotation UI. */
                   const effectiveTier =
                     updates[user.email]?.subscriptionTier ?? user.subscriptionTier ?? "platinum";
+                  const audioHydrating = !!memberAudioHydrating[user.email];
 
                   return (
                 <div key={user.id} className="card">
@@ -1453,18 +1493,25 @@ export default function AdminUsers() {
                         type="button"
                         onClick={async () => {
                           setProfileOpen({ ...profileOpen, [user.email]: true });
-                          if (!profileDrafts[user.email]) {
-                            await loadProfile(user.email);
+                          setStatus(null);
+                          startMemberAudioHydration(user.email);
+                          try {
+                            const assignments = buildAudioAssignment(user.email);
+                            const order = await buildAudioOrder(user.email);
+                            setMemberAudio((prev) => ({
+                              ...prev,
+                              assignments: { ...prev.assignments, [user.email]: assignments },
+                              order: { ...prev.order, [user.email]: order }
+                            }));
+                            if (!profileDrafts[user.email]) {
+                              await loadProfile(user.email);
+                            }
+                            void loadMemberActivity(user.email);
+                          } catch {
+                            setStatus("Could not load saved rotation or profile. Refresh the page and try again.");
+                          } finally {
+                            finishMemberAudioHydration(user.email);
                           }
-                          void loadMemberActivity(user.email);
-                          // Load audio assignments and order
-                          const assignments = buildAudioAssignment(user.email);
-                          const order = await buildAudioOrder(user.email);
-                          setMemberAudio((prev) => ({
-                            ...prev,
-                            assignments: { ...prev.assignments, [user.email]: assignments },
-                            order: { ...prev.order, [user.email]: order }
-                          }));
                         }}
                       >
                         View / Edit member
@@ -1513,19 +1560,26 @@ export default function AdminUsers() {
                         onClick={async () => {
                           const next = !profileOpen[user.email];
                           setProfileOpen({ ...profileOpen, [user.email]: next });
-                          if (next && !profileDrafts[user.email]) {
-                            await loadProfile(user.email);
-                          }
                           if (next) {
-                            void loadMemberActivity(user.email);
-                            // Load audio assignments and order
-                            const assignments = buildAudioAssignment(user.email);
-                            const order = await buildAudioOrder(user.email);
-                            setMemberAudio((prev) => ({
-                              ...prev,
-                              assignments: { ...prev.assignments, [user.email]: assignments },
-                              order: { ...prev.order, [user.email]: order }
-                            }));
+                            setStatus(null);
+                            startMemberAudioHydration(user.email);
+                            try {
+                              const assignments = buildAudioAssignment(user.email);
+                              const order = await buildAudioOrder(user.email);
+                              setMemberAudio((prev) => ({
+                                ...prev,
+                                assignments: { ...prev.assignments, [user.email]: assignments },
+                                order: { ...prev.order, [user.email]: order }
+                              }));
+                              if (!profileDrafts[user.email]) {
+                                await loadProfile(user.email);
+                              }
+                              void loadMemberActivity(user.email);
+                            } catch {
+                              setStatus("Could not load saved rotation or profile. Refresh the page and try again.");
+                            } finally {
+                              finishMemberAudioHydration(user.email);
+                            }
                           }
                         }}
                       >
@@ -2726,6 +2780,11 @@ export default function AdminUsers() {
                               {(audioOrder[user.email] || []).length}/{MANAGED_MAX_ROTATION_SLOTS} slots · each audio max{" "}
                               {MANAGED_MAX_SLOTS_PER_AUDIO}×
                             </p>
+                            {audioHydrating ? (
+                              <p style={{ fontSize: 12, color: "#2563eb", marginTop: 4, marginBottom: 10 }} role="status">
+                                Loading saved rotation from server… Edit controls unlock in a moment.
+                              </p>
+                            ) : null}
                             {(audioOrder[user.email] || []).length === 0 ? (
                               <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4, marginBottom: 10 }}>
                                 No slots yet — <strong>click an audio name</strong> in the library below (each click adds one
@@ -2763,7 +2822,7 @@ export default function AdminUsers() {
                                           type="button"
                                           className="button button-secondary"
                                           style={{ padding: "2px 10px", fontSize: 12 }}
-                                          disabled={idx === 0}
+                                          disabled={audioHydrating || idx === 0}
                                           aria-label={`Move ${label} earlier in rotation`}
                                           onClick={() => moveManagedSlot(user.email, idx, "up")}
                                         >
@@ -2773,7 +2832,7 @@ export default function AdminUsers() {
                                           type="button"
                                           className="button button-secondary"
                                           style={{ padding: "2px 10px", fontSize: 12 }}
-                                          disabled={idx >= list.length - 1}
+                                          disabled={audioHydrating || idx >= list.length - 1}
                                           aria-label={`Move ${label} later in rotation`}
                                           onClick={() => moveManagedSlot(user.email, idx, "down")}
                                         >
@@ -2783,6 +2842,7 @@ export default function AdminUsers() {
                                           type="button"
                                           className="button button-secondary"
                                           style={{ padding: "2px 10px", fontSize: 12 }}
+                                          disabled={audioHydrating}
                                           onClick={() => removeManagedSlotAtIndex(user.email, idx)}
                                         >
                                           Remove
@@ -2806,6 +2866,7 @@ export default function AdminUsers() {
                             >
                               <select
                                 aria-label="Choose audio to add to rotation"
+                                disabled={audioHydrating}
                                 value={managedRotationPicker[user.email] || ""}
                                 onChange={(e) =>
                                   setManagedRotationPicker((p) => ({
@@ -2817,7 +2878,8 @@ export default function AdminUsers() {
                                   ...inputStyle,
                                   maxWidth: 360,
                                   width: "100%",
-                                  flex: "1 1 240px"
+                                  flex: "1 1 240px",
+                                  opacity: audioHydrating ? 0.6 : 1
                                 }}
                               >
                                 <option value="">Add audio to rotation…</option>
@@ -2849,6 +2911,7 @@ export default function AdminUsers() {
                                 type="button"
                                 className="button button-secondary"
                                 disabled={
+                                  audioHydrating ||
                                   !managedRotationPicker[user.email]?.trim() ||
                                   (audioOrder[user.email] || []).length >= MANAGED_MAX_ROTATION_SLOTS
                                 }
@@ -2920,6 +2983,7 @@ export default function AdminUsers() {
                                 ? managedSlotPositions.map((n) => `#${n}`).join(" · ")
                                 : "—";
                             const appendDisabled =
+                              audioHydrating ||
                               slotsForItem >= MANAGED_MAX_SLOTS_PER_AUDIO ||
                               totalSlots >= MANAGED_MAX_ROTATION_SLOTS;
                             return (
@@ -2941,6 +3005,7 @@ export default function AdminUsers() {
                                     <input
                                       type="checkbox"
                                       checked={isAssigned}
+                                      disabled={audioHydrating}
                                       onChange={(e) => {
                                         if (!e.target.checked) {
                                           clearManagedAudioForItem(user.email, item.id);
@@ -2956,9 +3021,11 @@ export default function AdminUsers() {
                                       className="button button-secondary"
                                       disabled={appendDisabled}
                                       title={
-                                        appendDisabled
-                                          ? "At max slots for this audio or rotation is full."
-                                          : "Add one step to the rotation list (click again for another copy)."
+                                        audioHydrating
+                                          ? "Wait until saved rotation finishes loading."
+                                          : appendDisabled
+                                            ? "At max slots for this audio or rotation is full."
+                                            : "Add one step to the rotation list (click again for another copy)."
                                       }
                                       onClick={() => incrementManagedAudioSlot(user.email, item.id)}
                                       style={{
@@ -3030,7 +3097,7 @@ export default function AdminUsers() {
                                     <button
                                       type="button"
                                       className="button button-secondary"
-                                      disabled={slotsForItem === 0}
+                                      disabled={audioHydrating || slotsForItem === 0}
                                       style={{ padding: "4px 10px", minWidth: 36 }}
                                       aria-label={`Remove one slot for ${item.skuCode || item.title}`}
                                       onClick={(e) => {
@@ -3045,6 +3112,7 @@ export default function AdminUsers() {
                                       type="button"
                                       className="button button-secondary"
                                       disabled={
+                                        audioHydrating ||
                                         slotsForItem >= MANAGED_MAX_SLOTS_PER_AUDIO ||
                                         totalSlots >= MANAGED_MAX_ROTATION_SLOTS
                                       }
