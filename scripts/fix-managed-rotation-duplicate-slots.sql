@@ -25,14 +25,14 @@ BEGIN
     RETURN;
   END IF;
 
+  -- Use attnum = ANY (conkey): unnest(conkey) breaks some hosted SQL runners (int2vector).
   SELECT c.conname::text,
-         array_agg(a.attname ORDER BY u.ord)
+         array_agg(a.attname ORDER BY a.attnum)
   INTO pk_name, cols
   FROM pg_constraint c
   JOIN pg_class t ON t.oid = c.conrelid
   JOIN pg_namespace n ON n.oid = t.relnamespace
-  JOIN unnest(c.conkey) WITH ORDINALITY AS u(attnum, ord)
-  JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = u.attnum AND a.attnum > 0
+  JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum > 0 AND NOT a.attisdropped AND a.attnum = ANY (c.conkey)
   WHERE n.nspname = 'public'
     AND t.relname = 'member_audio_assignments'
     AND c.contype = 'p'
@@ -89,9 +89,9 @@ BEGIN
     SELECT
       c.conname::text AS cname,
       (
-        SELECT array_agg(a.attname ORDER BY u.ord)
-        FROM unnest(c.conkey) WITH ORDINALITY AS u(attnum, ord)
-        JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = u.attnum AND a.attnum > 0
+        SELECT array_agg(a.attname ORDER BY a.attnum)
+        FROM pg_attribute a
+        WHERE a.attrelid = c.conrelid AND a.attnum > 0 AND NOT a.attisdropped AND a.attnum = ANY (c.conkey)
       ) AS cols
     FROM pg_constraint c
     JOIN pg_class t ON c.conrelid = t.oid
@@ -103,7 +103,7 @@ BEGIN
     IF r.cols IS NOT NULL
        AND 'library_item_id' = ANY (r.cols)
        AND 'user_email' = ANY (r.cols)
-       AND NOT 'assignment_order' = ANY (r.cols) THEN
+       AND NOT ('assignment_order' = ANY (r.cols)) THEN
       EXECUTE format('ALTER TABLE member_audio_assignments DROP CONSTRAINT IF EXISTS %I', r.cname);
     END IF;
   END LOOP;
@@ -132,7 +132,7 @@ BEGIN
     IF r.cols IS NOT NULL
        AND 'library_item_id' = ANY (r.cols)
        AND 'user_email' = ANY (r.cols)
-       AND NOT 'assignment_order' = ANY (r.cols) THEN
+       AND NOT ('assignment_order' = ANY (r.cols)) THEN
       EXECUTE format('DROP INDEX IF EXISTS %I', r.idx_name);
     END IF;
   END LOOP;
