@@ -5,10 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER } from "@/lib/member-audio-activity";
 import { formatFullSessionsFraction } from "@/lib/session-progress-format";
-import {
-  MANAGED_MAX_ROTATION_SLOTS,
-  MANAGED_MAX_SLOTS_PER_AUDIO
-} from "@/lib/managed-rotation-limits";
+import { MANAGED_MAX_SLOTS_PER_AUDIO } from "@/lib/managed-rotation-limits";
 import type { LibraryItem } from "@/lib/types";
 
 
@@ -117,16 +114,13 @@ function computeManagedRotationAppend(
   prev: MemberAudioSnapshot,
   emailRaw: string,
   itemId: string
-): { next: MemberAudioSnapshot; outcome: "added" | "per_audio" | "full" } {
+): { next: MemberAudioSnapshot; outcome: "added" | "per_audio" } {
   const key = memberAudioEmailKey(emailRaw);
   const raw = emailRaw.trim();
   const cur = prev.order[key] ?? prev.order[raw] ?? [];
   const n = countAudioSlotsInOrder(cur, itemId);
   if (n >= MANAGED_MAX_SLOTS_PER_AUDIO) {
     return { next: prev, outcome: "per_audio" };
-  }
-  if (cur.length >= MANAGED_MAX_ROTATION_SLOTS) {
-    return { next: prev, outcome: "full" };
   }
   const prevAssign = prev.assignments[key] ?? prev.assignments[raw] ?? {};
   let next = patchMemberOrderKeys(prev, emailRaw, [...cur, itemId]);
@@ -991,7 +985,7 @@ export default function AdminUsers() {
       setStatus("Still loading saved rotation for this member — try again in a second.");
       return false;
     }
-    let computed!: { next: MemberAudioSnapshot; outcome: "added" | "per_audio" | "full" };
+    let computed!: { next: MemberAudioSnapshot; outcome: "added" | "per_audio" };
     flushSync(() => {
       setMemberAudio((prev) => {
         computed = computeManagedRotationAppend(prev, email, itemId);
@@ -1002,10 +996,6 @@ export default function AdminUsers() {
     if (outcome === "per_audio") {
       setStatus(
         `This audio is already in the rotation ${MANAGED_MAX_SLOTS_PER_AUDIO} times (maximum). Remove a slot or pick another track.`
-      );
-    } else if (outcome === "full") {
-      setStatus(
-        `Rotation is full (${MANAGED_MAX_ROTATION_SLOTS} slots). Remove a slot before adding another.`
       );
     }
     return outcome === "added";
@@ -2811,7 +2801,7 @@ export default function AdminUsers() {
                           <strong>Rotation order</strong> below — pick a recording and <strong>Add at end</strong> (the
                           dropdown resets each time; same recording can appear multiple times). Use <strong>Up / Down</strong>{" "}
                           to place each step. Up to{" "}
-                          {MANAGED_MAX_SLOTS_PER_AUDIO}× per recording, {MANAGED_MAX_ROTATION_SLOTS} slots total. The library checklist
+                          {MANAGED_MAX_SLOTS_PER_AUDIO}× per recording (no fixed cap on total steps). The library checklist
                           is for <strong>access</strong> only; it does not add steps. Step numbers appear only in{" "}
                           <strong>Rotation order</strong> below.
                         </p>
@@ -2880,8 +2870,8 @@ export default function AdminUsers() {
                               reorder. Then <strong>Save Personalized Audios</strong>.
                             </p>
                             <p style={{ fontSize: 12, color: "#6b7280", marginTop: 0, marginBottom: 8 }}>
-                              {rotationOrder.length}/{MANAGED_MAX_ROTATION_SLOTS} slots · each audio max{" "}
-                              {MANAGED_MAX_SLOTS_PER_AUDIO}×
+                              {rotationOrder.length} step{rotationOrder.length === 1 ? "" : "s"} · each recording max{" "}
+                              {MANAGED_MAX_SLOTS_PER_AUDIO}× in this rotation
                             </p>
                             {audioHydrating ? (
                               <p
@@ -3002,24 +2992,6 @@ export default function AdminUsers() {
                                 browser supports it — use <strong>Up / Down</strong> to move it, then{" "}
                                 <strong>Save Personalized Audios</strong>.
                               </p>
-                              {rotationOrder.length >= MANAGED_MAX_ROTATION_SLOTS ? (
-                                <p
-                                  role="status"
-                                  style={{
-                                    fontSize: 12,
-                                    color: "#9a3412",
-                                    margin: "0 0 8px 0",
-                                    fontWeight: 600,
-                                    padding: 8,
-                                    background: "#fff7ed",
-                                    borderRadius: 6,
-                                    border: "1px solid #fdba74"
-                                  }}
-                                >
-                                  Rotation is full ({rotationOrder.length}/{MANAGED_MAX_ROTATION_SLOTS} slots). Remove a step
-                                  before <strong>Add at end</strong> is available again.
-                                </p>
-                              ) : null}
                               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
                               <select
                                 aria-label="Choose audio to add at end of rotation"
@@ -3069,8 +3041,7 @@ export default function AdminUsers() {
                                 className="button button-secondary"
                                 disabled={
                                   audioHydrating ||
-                                  !(managedRotationPicker[audioKey] ?? managedRotationPicker[user.email])?.trim() ||
-                                  rotationOrder.length >= MANAGED_MAX_ROTATION_SLOTS
+                                  !(managedRotationPicker[audioKey] ?? managedRotationPicker[user.email])?.trim()
                                 }
                                 onClick={() => {
                                   const email = user.email;

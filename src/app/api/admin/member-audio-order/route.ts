@@ -2,10 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
 import { sql } from "@vercel/postgres";
-import {
-  MANAGED_MAX_ROTATION_SLOTS,
-  MANAGED_MAX_SLOTS_PER_AUDIO
-} from "@/lib/managed-rotation-limits";
+import { MANAGED_MAX_SLOTS_PER_AUDIO } from "@/lib/managed-rotation-limits";
 
 const querySchema = z.object({
   email: z.string().email()
@@ -13,7 +10,7 @@ const querySchema = z.object({
 
 const updateSchema = z.object({
   email: z.string().email(),
-  order: z.array(z.string().uuid()).max(MANAGED_MAX_ROTATION_SLOTS)
+  order: z.array(z.string().uuid())
 });
 
 /** Walk Neon/pg nested errors for Postgres fields. */
