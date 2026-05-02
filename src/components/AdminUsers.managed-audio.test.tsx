@@ -141,7 +141,10 @@ describe("AdminUsers Platinum Managed rotation", () => {
     const combo = screen.getByRole("combobox", { name: /choose audio to add at end of rotation/i });
     await user.selectOptions(combo, LIB_ALPHA.id);
     await user.click(screen.getByRole("button", { name: /^Add at end$/i }));
-    /** Second append uses the same dropdown selection (picker is not cleared after add). */
+    await waitFor(() => {
+      expect(combo).toHaveValue("");
+    });
+    await user.selectOptions(combo, LIB_ALPHA.id);
     await user.click(screen.getByRole("button", { name: /^Add at end$/i }));
 
     const rotationHeading = await screen.findByText(/Rotation order \(live schedule\)/i);
@@ -261,6 +264,10 @@ describe("AdminUsers Platinum Managed rotation", () => {
     const combo = screen.getByRole("combobox", { name: /choose audio to add at end of rotation/i });
     await user.selectOptions(combo, LIB_ALPHA.id);
     await user.click(screen.getByRole("button", { name: /^Add at end$/i }));
+    await waitFor(() => {
+      expect(combo).toHaveValue("");
+    });
+    await user.selectOptions(combo, LIB_ALPHA.id);
     await user.click(screen.getByRole("button", { name: /^Add at end$/i }));
 
     const rotationHeading = await screen.findByText(/Rotation order \(live schedule\)/i);

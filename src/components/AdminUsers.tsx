@@ -2,6 +2,7 @@
 
 import { put } from "@vercel/blob/client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER } from "@/lib/member-audio-activity";
 import { formatFullSessionsFraction } from "@/lib/session-progress-format";
 import type { LibraryItem } from "@/lib/types";
@@ -380,6 +381,8 @@ export default function AdminUsers() {
   /** While true, rotation edits must not run — async hydrate would overwrite them (race with saved order). */
   const [memberAudioHydrating, setMemberAudioHydrating] = useState<Record<string, boolean>>({});
   const memberAudioHydratingRef = useRef<Record<string, boolean>>({});
+  /** Scroll newly appended rotation rows into view (one list per member email). */
+  const managedRotationOlRefs = useRef<Record<string, HTMLOListElement | null>>({});
   const [audioSaveStatus, setAudioSaveStatus] = useState<Record<string, string>>({});
   const [uploadStatus, setUploadStatus] = useState<Record<string, string>>({});
   const [personalizedAudioUploading, setPersonalizedAudioUploading] = useState<Record<string, boolean>>({});
@@ -899,42 +902,46 @@ export default function AdminUsers() {
     });
   };
 
-  /** Append one rotation slot (order + assignment flag in one state commit). */
-  const incrementManagedAudioSlot = (email: string, itemId: string) => {
+  /** Append one rotation slot (order + assignment flag in one state commit). Returns whether a row was added. */
+  const incrementManagedAudioSlot = (email: string, itemId: string): boolean => {
     if (memberAudioHydratingRef.current[email]) {
       setStatus("Still loading saved rotation for this member — try again in a second.");
-      return;
+      return false;
     }
-    let blocked: "per_audio" | "full" | null = null;
-    setMemberAudio((prev) => {
-      const cur = prev.order[email] || [];
-      const n = countAudioSlotsInOrder(cur, itemId);
-      if (n >= MANAGED_MAX_SLOTS_PER_AUDIO) {
-        blocked = "per_audio";
-        return prev;
-      }
-      if (cur.length >= MANAGED_MAX_ROTATION_SLOTS) {
-        blocked = "full";
-        return prev;
-      }
-      return {
-        ...prev,
-        order: { ...prev.order, [email]: [...cur, itemId] },
-        assignments: {
-          ...prev.assignments,
-          [email]: { ...(prev.assignments[email] || {}), [itemId]: true }
+    let outcome: "added" | "per_audio" | "full" = "added";
+    flushSync(() => {
+      setMemberAudio((prev) => {
+        const cur = prev.order[email] || [];
+        const n = countAudioSlotsInOrder(cur, itemId);
+        if (n >= MANAGED_MAX_SLOTS_PER_AUDIO) {
+          outcome = "per_audio";
+          return prev;
         }
-      };
+        if (cur.length >= MANAGED_MAX_ROTATION_SLOTS) {
+          outcome = "full";
+          return prev;
+        }
+        outcome = "added";
+        return {
+          ...prev,
+          order: { ...prev.order, [email]: [...cur, itemId] },
+          assignments: {
+            ...prev.assignments,
+            [email]: { ...(prev.assignments[email] || {}), [itemId]: true }
+          }
+        };
+      });
     });
-    if (blocked === "per_audio") {
+    if (outcome === "per_audio") {
       setStatus(
         `This audio is already in the rotation ${MANAGED_MAX_SLOTS_PER_AUDIO} times (maximum). Remove a slot or pick another track.`
       );
-    } else if (blocked === "full") {
+    } else if (outcome === "full") {
       setStatus(
         `Rotation is full (${MANAGED_MAX_ROTATION_SLOTS} slots). Remove a slot before adding another.`
       );
     }
+    return outcome === "added";
   };
 
   const removeManagedSlotAtIndex = (email: string, slotIndex: number) => {
@@ -2749,8 +2756,9 @@ export default function AdminUsers() {
                         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
                           <strong>Gold:</strong> check audios and set <strong>#</strong> order (each audio once).{" "}
                           <strong>Platinum Managed:</strong> build the night-by-night list only in{" "}
-                          <strong>Rotation order</strong> below — add from the dropdown at the end (same recording can appear
-                          multiple times; use <strong>Up / Down</strong> to place each step). Up to{" "}
+                          <strong>Rotation order</strong> below — pick a recording and <strong>Add at end</strong> (the
+                          dropdown resets each time; same recording can appear multiple times). Use <strong>Up / Down</strong>{" "}
+                          to place each step. Up to{" "}
                           {MANAGED_MAX_SLOTS_PER_AUDIO}× per recording, {MANAGED_MAX_ROTATION_SLOTS} slots total. The library checklist
                           is for <strong>access</strong> only; it does not add steps. Step numbers appear only in{" "}
                           <strong>Rotation order</strong> below.
@@ -2788,9 +2796,9 @@ export default function AdminUsers() {
                                 the member row yet.
                               </li>
                               <li>
-                                Add recordings using <strong>Add at end of rotation</strong> (dropdown + button). For another
-                                play of the <em>same</em> recording, add it again at the end and use <strong>Up / Down</strong>{" "}
-                                to move it into place (max {MANAGED_MAX_SLOTS_PER_AUDIO}× per recording).
+                                Add recordings using <strong>Add at end of rotation</strong> (dropdown + button). The dropdown
+                                resets after each add — choose the recording again for another step (same title allowed, max{" "}
+                                {MANAGED_MAX_SLOTS_PER_AUDIO}× per recording). Use <strong>Up / Down</strong> to place each step.
                               </li>
                               <li>
                                 Reorder with <strong>Up / Down</strong>. The library checkboxes only control{" "}
@@ -2840,6 +2848,9 @@ export default function AdminUsers() {
                               </p>
                             ) : (
                               <ol
+                                ref={(el) => {
+                                  managedRotationOlRefs.current[user.email] = el;
+                                }}
                                 style={{
                                   marginTop: 4,
                                   marginLeft: 0,
@@ -2934,8 +2945,9 @@ export default function AdminUsers() {
                                 Add at end of rotation
                               </strong>
                               <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 8px 0" }}>
-                                Same recording on multiple nights? Pick it once, then click <strong>Add at end</strong> once per
-                                extra step — you don&apos;t need to re-select. Use <strong>Up / Down</strong> to reorder.
+                                After each add the dropdown goes back to <strong>Choose recording…</strong> so you can pick the
+                                next step (including the same recording again). The list scrolls to the new row at the bottom —
+                                use <strong>Up / Down</strong> to move it, then <strong>Save Personalized Audios</strong>.
                               </p>
                               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
                               <select
@@ -2990,13 +3002,28 @@ export default function AdminUsers() {
                                   (audioOrder[user.email] || []).length >= MANAGED_MAX_ROTATION_SLOTS
                                 }
                                 onClick={() => {
-                                  const id = managedRotationPicker[user.email]?.trim();
+                                  const email = user.email;
+                                  const id = managedRotationPicker[email]?.trim();
                                   if (!id) {
                                     setStatus("Choose a recording in the dropdown before Add at end.");
                                     return;
                                   }
-                                  incrementManagedAudioSlot(user.email, id);
-                                  /** Keep selection so the same track can be appended again with another click (Up/Down to place). */
+                                  const added = incrementManagedAudioSlot(email, id);
+                                  if (added) {
+                                    setManagedRotationPicker((p) => ({ ...p, [email]: "" }));
+                                    setStatus(
+                                      "Added to end of rotation. Use Up / Down on that row to move it, then Save Personalized Audios."
+                                    );
+                                    requestAnimationFrame(() => {
+                                      const last =
+                                        managedRotationOlRefs.current[email]?.lastElementChild ?? null;
+                                      last?.scrollIntoView?.({
+                                        behavior: "smooth",
+                                        block: "nearest",
+                                        inline: "nearest"
+                                      });
+                                    });
+                                  }
                                 }}
                               >
                                 Add at end
