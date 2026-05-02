@@ -1536,15 +1536,16 @@ export default function AdminUsers() {
                               assignments: { ...prev.assignments, [user.email]: assignments },
                               order: { ...prev.order, [user.email]: order }
                             }));
-                            if (!profileDrafts[user.email]) {
-                              await loadProfile(user.email);
-                            }
-                            void loadMemberActivity(user.email);
                           } catch {
-                            setStatus("Could not load saved rotation or profile. Refresh the page and try again.");
+                            setStatus("Could not load saved rotation. Refresh the page and try again.");
                           } finally {
+                            /** Must not wait on loadProfile — a slow hang left rotation locked forever. */
                             finishMemberAudioHydration(user.email);
                           }
+                          if (!profileDrafts[user.email]) {
+                            void loadProfile(user.email);
+                          }
+                          void loadMemberActivity(user.email);
                         }}
                       >
                         View / Edit member
@@ -1604,15 +1605,15 @@ export default function AdminUsers() {
                                 assignments: { ...prev.assignments, [user.email]: assignments },
                                 order: { ...prev.order, [user.email]: order }
                               }));
-                              if (!profileDrafts[user.email]) {
-                                await loadProfile(user.email);
-                              }
-                              void loadMemberActivity(user.email);
                             } catch {
-                              setStatus("Could not load saved rotation or profile. Refresh the page and try again.");
+                              setStatus("Could not load saved rotation. Refresh the page and try again.");
                             } finally {
                               finishMemberAudioHydration(user.email);
                             }
+                            if (!profileDrafts[user.email]) {
+                              void loadProfile(user.email);
+                            }
+                            void loadMemberActivity(user.email);
                           }
                         }}
                       >
