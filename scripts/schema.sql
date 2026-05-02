@@ -239,27 +239,56 @@ CREATE TABLE IF NOT EXISTS member_audio_assignments (
 CREATE INDEX IF NOT EXISTS member_audio_assignments_user_email
   ON member_audio_assignments (user_email, assignment_order);
 
--- Upgrade legacy table that used PRIMARY KEY (user_email, library_item_id). Safe no-op if already migrated.
+-- Upgrade legacy table that used PRIMARY KEY (user_email, library_item_id).
+-- Do not skip when column id exists: partial installs may have added id but left the composite PK (member_audio_assignments_pkey).
 DO $$
+DECLARE
+  pk_name text;
+  cols text[];
 BEGIN
-  IF EXISTS (
-    SELECT 1
-    FROM information_schema.columns
-    WHERE table_schema = 'public'
-      AND table_name = 'member_audio_assignments'
-      AND column_name = 'id'
-  ) THEN
-    RETURN;
-  END IF;
-  IF EXISTS (
+  IF NOT EXISTS (
     SELECT 1 FROM information_schema.tables
     WHERE table_schema = 'public' AND table_name = 'member_audio_assignments'
   ) THEN
-    ALTER TABLE member_audio_assignments ADD COLUMN id uuid DEFAULT gen_random_uuid();
+    RETURN;
+  END IF;
+
+  SELECT c.conname::text,
+         array_agg(a.attname ORDER BY u.ord)
+  INTO pk_name, cols
+  FROM pg_constraint c
+  JOIN pg_class t ON t.oid = c.conrelid
+  JOIN pg_namespace n ON n.oid = t.relnamespace
+  JOIN unnest(c.conkey) WITH ORDINALITY AS u(attnum, ord)
+  JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = u.attnum AND a.attnum > 0
+  WHERE n.nspname = 'public'
+    AND t.relname = 'member_audio_assignments'
+    AND c.contype = 'p'
+  GROUP BY c.conname;
+
+  IF pk_name IS NULL OR cols IS NULL OR cols = ARRAY['id']::text[] THEN
+    RETURN;
+  END IF;
+
+  IF 'user_email' = ANY (cols)
+     AND 'library_item_id' = ANY (cols)
+     AND NOT ('assignment_order' = ANY (cols)) THEN
+
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'member_audio_assignments'
+        AND column_name = 'id'
+    ) THEN
+      ALTER TABLE member_audio_assignments ADD COLUMN id uuid DEFAULT gen_random_uuid();
+    END IF;
+
     UPDATE member_audio_assignments SET id = gen_random_uuid() WHERE id IS NULL;
     ALTER TABLE member_audio_assignments ALTER COLUMN id SET NOT NULL;
-    ALTER TABLE member_audio_assignments DROP CONSTRAINT IF EXISTS member_audio_assignments_pkey;
+
+    EXECUTE format('ALTER TABLE member_audio_assignments DROP CONSTRAINT %I', pk_name);
     ALTER TABLE member_audio_assignments ADD PRIMARY KEY (id);
+
     IF NOT EXISTS (
       SELECT 1 FROM pg_indexes WHERE indexname = 'member_audio_assignments_user_email_assignment_order_key'
     ) THEN

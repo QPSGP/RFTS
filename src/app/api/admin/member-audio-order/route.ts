@@ -54,8 +54,10 @@ function orderSaveErrorMessage(error: unknown): string {
   }
   if (pg?.code === "23505") {
     const hint =
-      pg.constraint?.includes("library_item") || pg.detail?.includes("library_item")
-        ? "Your database may still enforce only one row per recording per member. In Vercel → Storage → your database → Query, paste and run the full file scripts/fix-managed-rotation-duplicate-slots.sql from the repo (updated column-based version). Then Save Personalized Audios again."
+      pg.constraint === "member_audio_assignments_pkey" ||
+      pg.constraint?.includes("library_item") ||
+      pg.detail?.includes("library_item")
+        ? "Your database still uses the legacy PRIMARY KEY (user_email, library_item_id). In Vercel → Storage → Query, run the full scripts/fix-managed-rotation-duplicate-slots.sql from the repo (Step 1 replaces that PK with PRIMARY KEY (id)). Then Save Personalized Audios again."
         : "A uniqueness constraint rejected this order. Check assignment_order conflicts or run schema migrations.";
     const meta = [pg.constraint && `constraint=${pg.constraint}`, pg.detail && `detail=${pg.detail}`]
       .filter(Boolean)

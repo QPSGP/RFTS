@@ -1,22 +1,86 @@
 -- Run once on production Postgres (Vercel Storage → SQL / Neon console / psql).
--- Fixes: "Order save failed ... only one row per recording per member"
--- Managed rotation needs multiple rows with the same library_item_id (different assignment_order).
+-- Fixes: unique violation on member_audio_assignments_pkey with Key (user_email, library_item_id)=(...)
 --
--- UI note: new rows can appear in the admin list before you click Save — that is local state only.
---          Persisting still requires Save Personalized Audios + a DB that allows duplicate library_item_id per member.
+-- That error means the PRIMARY KEY is still the LEGACY composite (user_email, library_item_id).
+-- Managed rotation requires PRIMARY KEY (id) plus uniqueness on (user_email, assignment_order) only.
 
--- Optional: inspect current rules (run alone, read output, then run the rest)
--- SELECT conname, contype, pg_get_constraintdef(oid)
+-- Optional: inspect current primary key
+-- SELECT conname, pg_get_constraintdef(oid)
 -- FROM pg_constraint
--- WHERE conrelid = 'member_audio_assignments'::regclass;
--- SELECT indexname, indexdef FROM pg_indexes WHERE tablename = 'member_audio_assignments';
+-- WHERE conrelid = 'member_audio_assignments'::regclass AND contype = 'p';
 
--- Known legacy constraint names (no-op if absent)
+-- -----------------------------------------------------------------------------
+-- STEP 1: Replace legacy PRIMARY KEY (user_email, library_item_id) with PRIMARY KEY (id)
+-- Runs even if column `id` already exists (fixes partial migrations that RETURNed too early).
+-- -----------------------------------------------------------------------------
+DO $$
+DECLARE
+  pk_name text;
+  cols text[];
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'member_audio_assignments'
+  ) THEN
+    RETURN;
+  END IF;
+
+  SELECT c.conname::text,
+         array_agg(a.attname ORDER BY u.ord)
+  INTO pk_name, cols
+  FROM pg_constraint c
+  JOIN pg_class t ON t.oid = c.conrelid
+  JOIN pg_namespace n ON n.oid = t.relnamespace
+  JOIN unnest(c.conkey) WITH ORDINALITY AS u(attnum, ord)
+  JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = u.attnum AND a.attnum > 0
+  WHERE n.nspname = 'public'
+    AND t.relname = 'member_audio_assignments'
+    AND c.contype = 'p'
+  GROUP BY c.conname;
+
+  IF pk_name IS NULL OR cols IS NULL THEN
+    RETURN;
+  END IF;
+
+  -- Already on id-only PK
+  IF cols = ARRAY['id']::text[] THEN
+    RETURN;
+  END IF;
+
+  -- Legacy composite PK on member + recording (blocks duplicate library_item_id rows)
+  IF 'user_email' = ANY (cols)
+     AND 'library_item_id' = ANY (cols)
+     AND NOT ('assignment_order' = ANY (cols)) THEN
+
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'member_audio_assignments'
+        AND column_name = 'id'
+    ) THEN
+      ALTER TABLE member_audio_assignments ADD COLUMN id uuid DEFAULT gen_random_uuid();
+    END IF;
+
+    UPDATE member_audio_assignments SET id = gen_random_uuid() WHERE id IS NULL;
+    ALTER TABLE member_audio_assignments ALTER COLUMN id SET NOT NULL;
+
+    EXECUTE format('ALTER TABLE member_audio_assignments DROP CONSTRAINT %I', pk_name);
+    ALTER TABLE member_audio_assignments ADD PRIMARY KEY (id);
+
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_indexes WHERE indexname = 'member_audio_assignments_user_email_assignment_order_key'
+    ) THEN
+      CREATE UNIQUE INDEX member_audio_assignments_user_email_assignment_order_key
+        ON member_audio_assignments (user_email, assignment_order);
+    END IF;
+  END IF;
+END $$;
+
+-- Known legacy UNIQUE constraint names (no-op if absent)
 ALTER TABLE member_audio_assignments DROP CONSTRAINT IF EXISTS member_audio_assignments_user_email_library_item_id_key;
 ALTER TABLE member_audio_assignments DROP CONSTRAINT IF EXISTS member_audio_assignments_library_item_id_user_email_key;
 
 -- UNIQUE table constraints: drop if columns include user_email + library_item_id but NOT assignment_order
--- (Uses pg_catalog so quoted identifiers / formatting in pg_get_constraintdef cannot hide the rule.)
 DO $$
 DECLARE
   r RECORD;
@@ -45,8 +109,7 @@ BEGIN
   END LOOP;
 END $$;
 
--- Standalone UNIQUE indexes (CREATE UNIQUE INDEX ...): same column logic
--- Uses attnum = ANY(indkey) so we do not rely on int2vector → array casts.
+-- Standalone UNIQUE indexes (CREATE UNIQUE INDEX ...)
 DO $$
 DECLARE
   r RECORD;
