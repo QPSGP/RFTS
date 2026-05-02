@@ -48,6 +48,37 @@ function countAudioSlotsInOrder(order: string[], itemId: string): number {
   return order.filter((id) => id === itemId).length;
 }
 
+type MemberAudioSnapshot = {
+  order: Record<string, string[]>;
+  assignments: Record<string, Record<string, boolean>>;
+};
+
+function computeManagedRotationAppend(
+  prev: MemberAudioSnapshot,
+  email: string,
+  itemId: string
+): { next: MemberAudioSnapshot; outcome: "added" | "per_audio" | "full" } {
+  const cur = prev.order[email] || [];
+  const n = countAudioSlotsInOrder(cur, itemId);
+  if (n >= MANAGED_MAX_SLOTS_PER_AUDIO) {
+    return { next: prev, outcome: "per_audio" };
+  }
+  if (cur.length >= MANAGED_MAX_ROTATION_SLOTS) {
+    return { next: prev, outcome: "full" };
+  }
+  return {
+    next: {
+      ...prev,
+      order: { ...prev.order, [email]: [...cur, itemId] },
+      assignments: {
+        ...prev.assignments,
+        [email]: { ...(prev.assignments[email] || {}), [itemId]: true }
+      }
+    },
+    outcome: "added"
+  };
+}
+
 const timeZones = [
   "Pacific Time",
   "Mountain Time",
@@ -908,30 +939,14 @@ export default function AdminUsers() {
       setStatus("Still loading saved rotation for this member — try again in a second.");
       return false;
     }
-    let outcome: "added" | "per_audio" | "full" = "added";
+    let computed!: { next: MemberAudioSnapshot; outcome: "added" | "per_audio" | "full" };
     flushSync(() => {
       setMemberAudio((prev) => {
-        const cur = prev.order[email] || [];
-        const n = countAudioSlotsInOrder(cur, itemId);
-        if (n >= MANAGED_MAX_SLOTS_PER_AUDIO) {
-          outcome = "per_audio";
-          return prev;
-        }
-        if (cur.length >= MANAGED_MAX_ROTATION_SLOTS) {
-          outcome = "full";
-          return prev;
-        }
-        outcome = "added";
-        return {
-          ...prev,
-          order: { ...prev.order, [email]: [...cur, itemId] },
-          assignments: {
-            ...prev.assignments,
-            [email]: { ...(prev.assignments[email] || {}), [itemId]: true }
-          }
-        };
+        computed = computeManagedRotationAppend(prev, email, itemId);
+        return computed.next;
       });
     });
+    const outcome = computed.outcome;
     if (outcome === "per_audio") {
       setStatus(
         `This audio is already in the rotation ${MANAGED_MAX_SLOTS_PER_AUDIO} times (maximum). Remove a slot or pick another track.`
