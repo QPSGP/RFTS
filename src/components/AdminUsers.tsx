@@ -368,13 +368,13 @@ export default function AdminUsers() {
   const [profileOpen, setProfileOpen] = useState<Record<string, boolean>>({});
   const [goalsSectionOpen, setGoalsSectionOpen] = useState<Record<string, boolean>>({});
   const [profileDrafts, setProfileDrafts] = useState<Record<string, ProfileDraft>>({});
-  const [audioAssignments, setAudioAssignments] = useState<Record<string, Record<string, boolean>>>({});
-  const [audioOrder, setAudioOrder] = useState<Record<string, string[]>>({});
-  /** Latest committed rotation (avoids stale closures on checkbox / + between renders). */
-  const audioOrderRef = useRef<Record<string, string[]>>({});
-  useEffect(() => {
-    audioOrderRef.current = audioOrder;
-  }, [audioOrder]);
+  /** Single atom for library checkboxes + rotation order so managed +/− cannot lose updates across two setStates. */
+  const [memberAudio, setMemberAudio] = useState<{
+    order: Record<string, string[]>;
+    assignments: Record<string, Record<string, boolean>>;
+  }>({ order: {}, assignments: {} });
+  const audioOrder = memberAudio.order;
+  const audioAssignments = memberAudio.assignments;
   /** Platinum Managed: pending library item id for “Add to rotation” dropdown (per member email). */
   const [managedRotationPicker, setManagedRotationPicker] = useState<Record<string, string>>({});
   const [audioSaveStatus, setAudioSaveStatus] = useState<Record<string, string>>({});
@@ -840,84 +840,86 @@ export default function AdminUsers() {
     tier: UserRow["subscriptionTier"]
   ) => {
     if (tier === "platinum_managed") {
-      const curOrder = (audioOrderRef.current[email] ?? audioOrder[email]) || [];
-      const slots = countAudioSlotsInOrder(curOrder, itemId);
-      const mapped = audioAssignments[email]?.[itemId];
-      /** Rotation slots or explicit assign flag — not “allowed on library” alone (legacy access without order). */
-      const isOn = slots > 0 || mapped === true;
+      setMemberAudio((prev) => {
+        const curOrder = prev.order[email] || [];
+        const slots = countAudioSlotsInOrder(curOrder, itemId);
+        const mapped = prev.assignments[email]?.[itemId];
+        /** Rotation slots or explicit assign flag — not “allowed on library” alone (legacy access without order). */
+        const isOn = slots > 0 || mapped === true;
 
-      if (isOn) {
-        setAudioOrder((prev) => ({
+        if (isOn) {
+          return {
+            ...prev,
+            order: {
+              ...prev.order,
+              [email]: (prev.order[email] || []).filter((id) => id !== itemId)
+            },
+            assignments: {
+              ...prev.assignments,
+              [email]: { ...(prev.assignments[email] || {}), [itemId]: false }
+            }
+          };
+        }
+        const cur = prev.order[email] || [];
+        const nextOrder =
+          cur.length >= MANAGED_MAX_ROTATION_SLOTS ? cur : [...cur, itemId];
+        return {
           ...prev,
-          [email]: (prev[email] || []).filter((id) => id !== itemId)
-        }));
-        setAudioAssignments((prev) => ({
-          ...prev,
-          [email]: { ...(prev[email] || {}), [itemId]: false }
-        }));
-      } else {
-        setAudioAssignments((prev) => ({
-          ...prev,
-          [email]: { ...(prev[email] || {}), [itemId]: true }
-        }));
-        setAudioOrder((prev) => {
-          const cur = prev[email] || [];
-          if (cur.length >= MANAGED_MAX_ROTATION_SLOTS) return prev;
-          return { ...prev, [email]: [...cur, itemId] };
-        });
-      }
+          order: { ...prev.order, [email]: nextOrder },
+          assignments: {
+            ...prev.assignments,
+            [email]: { ...(prev.assignments[email] || {}), [itemId]: true }
+          }
+        };
+      });
       return;
     }
 
-    const current = audioAssignments[email]?.[itemId] ?? false;
-    const newValue = !current;
-
-    setAudioAssignments((prev) => ({
-      ...prev,
-      [email]: {
-        ...(prev[email] || {}),
-        [itemId]: newValue
-      }
-    }));
-
-    setAudioOrder((prev) => {
-      const currentOrder = prev[email] || [];
+    setMemberAudio((prev) => {
+      const current = prev.assignments[email]?.[itemId] ?? false;
+      const newValue = !current;
+      const assignNext = {
+        ...prev.assignments,
+        [email]: { ...(prev.assignments[email] || {}), [itemId]: newValue }
+      };
+      const currentOrder = prev.order[email] || [];
+      let orderNext = prev.order;
       if (newValue) {
         if (!currentOrder.includes(itemId)) {
-          return {
-            ...prev,
-            [email]: [...currentOrder, itemId]
-          };
+          orderNext = { ...prev.order, [email]: [...currentOrder, itemId] };
         }
       } else {
-        return {
-          ...prev,
+        orderNext = {
+          ...prev.order,
           [email]: currentOrder.filter((id) => id !== itemId)
         };
       }
-      return prev;
+      return { ...prev, assignments: assignNext, order: orderNext };
     });
   };
 
-  /** Append one rotation slot. Do not call setAudioAssignments inside setAudioOrder (React can drop/batch badly). */
+  /** Append one rotation slot (order + assignment flag in one state commit). */
   const incrementManagedAudioSlot = (email: string, itemId: string) => {
-    setAudioOrder((prev) => {
-      const cur = prev[email] || [];
+    setMemberAudio((prev) => {
+      const cur = prev.order[email] || [];
       const n = countAudioSlotsInOrder(cur, itemId);
       if (n >= MANAGED_MAX_SLOTS_PER_AUDIO || cur.length >= MANAGED_MAX_ROTATION_SLOTS) {
         return prev;
       }
-      return { ...prev, [email]: [...cur, itemId] };
+      return {
+        ...prev,
+        order: { ...prev.order, [email]: [...cur, itemId] },
+        assignments: {
+          ...prev.assignments,
+          [email]: { ...(prev.assignments[email] || {}), [itemId]: true }
+        }
+      };
     });
-    setAudioAssignments((a) => ({
-      ...a,
-      [email]: { ...(a[email] || {}), [itemId]: true }
-    }));
   };
 
   const reorderManagedSlotToPosition = (email: string, fromIndex: number, position1Based: number) => {
-    setAudioOrder((prev) => {
-      const cur = [...(prev[email] || [])];
+    setMemberAudio((prev) => {
+      const cur = [...(prev.order[email] || [])];
       if (fromIndex < 0 || fromIndex >= cur.length) return prev;
       const p = Math.round(position1Based);
       const [id] = cur.splice(fromIndex, 1);
@@ -925,88 +927,93 @@ export default function AdminUsers() {
       if (insertAt < 0) insertAt = 0;
       if (insertAt > cur.length) insertAt = cur.length;
       cur.splice(insertAt, 0, id);
-      return { ...prev, [email]: cur };
+      return { ...prev, order: { ...prev.order, [email]: cur } };
     });
   };
 
   const decrementManagedAudioSlot = (email: string, itemId: string) => {
-    setAudioOrder((prev) => {
-      const cur = prev[email] || [];
+    setMemberAudio((prev) => {
+      const cur = prev.order[email] || [];
       const idx = cur.lastIndexOf(itemId);
       if (idx === -1) return prev;
       const nextOrder = cur.filter((_, i) => i !== idx);
       const remaining = countAudioSlotsInOrder(nextOrder, itemId) > 0;
-      queueMicrotask(() => {
-        setAudioAssignments((a) => ({
-          ...a,
-          [email]: { ...(a[email] || {}), [itemId]: remaining }
-        }));
-      });
-      return { ...prev, [email]: nextOrder };
+      return {
+        ...prev,
+        order: { ...prev.order, [email]: nextOrder },
+        assignments: {
+          ...prev.assignments,
+          [email]: { ...(prev.assignments[email] || {}), [itemId]: remaining }
+        }
+      };
     });
   };
 
   const removeManagedSlotAtIndex = (email: string, slotIndex: number) => {
-    setAudioOrder((prev) => {
-      const cur = prev[email] || [];
+    setMemberAudio((prev) => {
+      const cur = prev.order[email] || [];
       if (slotIndex < 0 || slotIndex >= cur.length) return prev;
       const removedId = cur[slotIndex];
       const nextOrder = cur.filter((_, i) => i !== slotIndex);
       const remaining = countAudioSlotsInOrder(nextOrder, removedId) > 0;
-      queueMicrotask(() => {
-        setAudioAssignments((a) => ({
-          ...a,
-          [email]: { ...(a[email] || {}), [removedId]: remaining }
-        }));
-      });
-      return { ...prev, [email]: nextOrder };
+      return {
+        ...prev,
+        order: { ...prev.order, [email]: nextOrder },
+        assignments: {
+          ...prev.assignments,
+          [email]: { ...(prev.assignments[email] || {}), [removedId]: remaining }
+        }
+      };
     });
   };
 
   /** Swap slot with neighbor so repeats can sit apart (e.g. same SKU in positions 1 and 10). */
   const moveManagedSlot = (email: string, slotIndex: number, direction: "up" | "down") => {
-    setAudioOrder((prev) => {
-      const cur = [...(prev[email] || [])];
+    setMemberAudio((prev) => {
+      const cur = [...(prev.order[email] || [])];
       const j = direction === "up" ? slotIndex - 1 : slotIndex + 1;
       if (slotIndex < 0 || slotIndex >= cur.length || j < 0 || j >= cur.length) return prev;
       const t = cur[slotIndex];
       cur[slotIndex] = cur[j];
       cur[j] = t;
-      return { ...prev, [email]: cur };
+      return { ...prev, order: { ...prev.order, [email]: cur } };
     });
   };
 
   const moveManagedSlotToEdge = (email: string, slotIndex: number, edge: "top" | "bottom") => {
-    setAudioOrder((prev) => {
-      const cur = [...(prev[email] || [])];
+    setMemberAudio((prev) => {
+      const cur = [...(prev.order[email] || [])];
       if (slotIndex < 0 || slotIndex >= cur.length) return prev;
       const [item] = cur.splice(slotIndex, 1);
       if (edge === "top") cur.unshift(item);
       else cur.push(item);
-      return { ...prev, [email]: cur };
+      return { ...prev, order: { ...prev.order, [email]: cur } };
     });
   };
 
   const updateAudioOrder = (email: string, itemId: string, orderValue: string) => {
     const parsed = Number(orderValue);
     if (!orderValue || Number.isNaN(parsed) || parsed <= 0) {
-      setAudioOrder((prev) => {
-        const currentOrder = prev[email] || [];
+      setMemberAudio((prev) => {
+        const currentOrder = prev.order[email] || [];
         return {
           ...prev,
-          [email]: currentOrder.filter((id) => id !== itemId)
+          order: {
+            ...prev.order,
+            [email]: currentOrder.filter((id) => id !== itemId)
+          }
         };
       });
       return;
     }
-    setAudioOrder((prev) => {
-      const currentOrder = prev[email] || [];
+    setMemberAudio((prev) => {
+      const currentOrder = prev.order[email] || [];
       const without = currentOrder.filter((id) => id !== itemId);
       const next = [...without];
       next.splice(Math.min(parsed - 1, next.length), 0, itemId);
       return {
         ...prev,
-        [email]: next
+        order: { ...prev.order, [email]: next }
       };
     });
   };
@@ -1458,6 +1465,9 @@ export default function AdminUsers() {
                       ? rawActivity
                       : rawActivity.filter((row) => classifyMemberActivityRow(row) === actFilter);
                   const displayedActivity = filteredActivity.slice(0, actPageSize);
+                  /** Pending tier in membership dropdown (saved on Save) — drives managed rotation UI. */
+                  const effectiveTier =
+                    updates[user.email]?.subscriptionTier ?? user.subscriptionTier ?? "platinum";
 
                   return (
                 <div key={user.id} className="card">
@@ -1473,7 +1483,7 @@ export default function AdminUsers() {
                   ) : null}
                   {!profileOpen[user.email] && (
                     <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
-                      Goals: {user.goalIds?.length || 0} · {user.subscriptionTier === "platinum_managed" ? "Platinum Managed Member" : "Gold Member"} · {user.subscriptionStatus ?? "inactive"} ·{" "}
+                      Goals: {user.goalIds?.length || 0} · {effectiveTier === "platinum_managed" ? "Platinum Managed Member" : "Gold Member"} · {user.subscriptionStatus ?? "inactive"} ·{" "}
                       {memberPlaysPerNight(user) === 2 ? "Full session (2 audios/night)" : "Half session (1 audio/step)"}
                     </p>
                   )}
@@ -1490,14 +1500,11 @@ export default function AdminUsers() {
                           void loadMemberActivity(user.email);
                           // Load audio assignments and order
                           const assignments = buildAudioAssignment(user.email);
-                          setAudioAssignments((prev) => ({
-                            ...prev,
-                            [user.email]: assignments
-                          }));
                           const order = await buildAudioOrder(user.email);
-                          setAudioOrder((prev) => ({
+                          setMemberAudio((prev) => ({
                             ...prev,
-                            [user.email]: order
+                            assignments: { ...prev.assignments, [user.email]: assignments },
+                            order: { ...prev.order, [user.email]: order }
                           }));
                         }}
                       >
@@ -1554,14 +1561,11 @@ export default function AdminUsers() {
                             void loadMemberActivity(user.email);
                             // Load audio assignments and order
                             const assignments = buildAudioAssignment(user.email);
-                            setAudioAssignments((prev) => ({
-                              ...prev,
-                              [user.email]: assignments
-                            }));
                             const order = await buildAudioOrder(user.email);
-                            setAudioOrder((prev) => ({
+                            setMemberAudio((prev) => ({
                               ...prev,
-                              [user.email]: order
+                              assignments: { ...prev.assignments, [user.email]: assignments },
+                              order: { ...prev.order, [user.email]: order }
                             }));
                           }
                         }}
@@ -2332,7 +2336,7 @@ export default function AdminUsers() {
                               <label style={{ fontSize: 12 }}>Current audios play list</label>
                               <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
                                 Up to 10 audios in this member&apos;s rotation (from goals or assigned).{" "}
-                                {user.subscriptionTier === "platinum_managed" ? (
+                                {effectiveTier === "platinum_managed" ? (
                                   <span>
                                     For Platinum Managed, order is the saved assignment order (same as the live
                                     schedule and the schedule spreadsheet export), not the order rows appear in the
@@ -2342,7 +2346,7 @@ export default function AdminUsers() {
                               </p>
                               <div className="goal-list">
                                 {(() => {
-                                  const isManaged = user.subscriptionTier === "platinum_managed";
+                                  const isManaged = effectiveTier === "platinum_managed";
                                   /**
                                    * Must match GET /api/user/schedule / buildSchedulePreview: managed rotation uses
                                    * member_audio_assignments order only — not `library` iteration order from
@@ -2520,7 +2524,7 @@ export default function AdminUsers() {
                             (item.allowedUserEmails || []).some((e) => e.toLowerCase() === emailLower)
                           );
                           const order = audioOrder[user.email] || [];
-                          const isManagedSec4 = user.subscriptionTier === "platinum_managed";
+                          const isManagedSec4 = effectiveTier === "platinum_managed";
                           const byIdLookup = new Map(library.map((item) => [item.id, item]));
                           /** Managed rotation may repeat the same id; expand order into rows (matches schedule). */
                           const assignedOrdered =
@@ -2564,7 +2568,7 @@ export default function AdminUsers() {
                               ? cgmrGlobal || fallbackGlobal
                               : fallbackGlobal || cgmrGlobal;
                           // For non-managed (Platinum) members, show default fallback (e.g. T-18) in the list so it's visible
-                          const isNonManaged = user.subscriptionTier !== "platinum_managed";
+                          const isNonManaged = effectiveTier !== "platinum_managed";
                           const fallbackCode = (playbackSettings?.fallbackTrackId || "T-18").trim().toUpperCase();
                           const fallbackItem = isNonManaged && fallbackCode
                             ? library.find(
@@ -2744,7 +2748,7 @@ export default function AdminUsers() {
                           in the checklist below; use <strong>Add to rotation</strong> or row <strong>+</strong> for extra
                           copies. Set <strong>#</strong> on each rotation row or use Top / Bottom / Up / Down.
                         </p>
-                        {user.subscriptionTier === "platinum_managed" && (
+                        {effectiveTier === "platinum_managed" && (
                           <div
                             className="card"
                             style={{
@@ -2942,7 +2946,7 @@ export default function AdminUsers() {
                           </div>
                         )}
                         <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, marginTop: 4 }}>
-                          {user.subscriptionTier === "platinum_managed"
+                          {effectiveTier === "platinum_managed"
                             ? "Library access (personalized list)"
                             : "Audios & order"}
                         </p>
@@ -2973,7 +2977,7 @@ export default function AdminUsers() {
                             const currentOrder = audioOrder[user.email] || [];
                             const slotsForItem = countAudioSlotsInOrder(currentOrder, item.id);
                             const mappedAssign = audioAssignments[user.email]?.[item.id];
-                            const isManagedMember = user.subscriptionTier === "platinum_managed";
+                            const isManagedMember = effectiveTier === "platinum_managed";
                             const isAssigned = isManagedMember
                               ? slotsForItem > 0 || mappedAssign === true
                               : (audioAssignments[user.email]?.[item.id] ??
@@ -3008,7 +3012,7 @@ export default function AdminUsers() {
                                     type="checkbox"
                                     checked={isAssigned}
                                     onChange={() =>
-                                      toggleAudioAssignment(user.email, item.id, user.subscriptionTier)
+                                      toggleAudioAssignment(user.email, item.id, effectiveTier)
                                     }
                                   />
                                   <span style={{ flex: 1, minWidth: 0 }}>
@@ -3116,7 +3120,7 @@ export default function AdminUsers() {
                           <strong>Platinum Managed Member:</strong> $39.95/mo — Managed membership with admin-assigned audios (no goals).
                         </p>
                         <p style={{ fontSize: 12, margin: 0 }}>
-                          Current tier: <strong>{user.subscriptionTier === "platinum_managed" ? "Platinum Managed Member ($39.95/mo)" : "Gold Member ($19.95/mo)"}</strong> — use subscription controls above to activate and charge.
+                          Current tier: <strong>{effectiveTier === "platinum_managed" ? "Platinum Managed Member ($39.95/mo)" : "Gold Member ($19.95/mo)"}</strong> — use subscription controls above to activate and charge.
                         </p>
                       </div>
                     </>
