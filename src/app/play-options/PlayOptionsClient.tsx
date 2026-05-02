@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import SessionPlayer, { SessionPlayerHandle } from "@/components/SessionPlayer";
 import { formatFullSessionsFraction } from "@/lib/session-progress-format";
+import { buildPlaylistCueFromSchedule } from "@/lib/schedule-playlist-cue";
 
 export type PlayOptionsProfile = {
   email: string;
@@ -48,25 +49,10 @@ export default function PlayOptionsClient({
     setGapHours(typeof data?.gapHours === "number" ? data.gapHours : 2.5);
   }, []);
 
-  const currentPlaylistFallback = useMemo(() => {
-    if (!schedule.length) return [];
-    const startIndex = schedule.findIndex((n) => n.night === currentNight);
-    const fromTonight = startIndex >= 0
-      ? [...schedule.slice(startIndex), ...schedule.slice(0, startIndex)]
-      : schedule;
-    const cue: { id: string; title: string; skuCode?: string }[] = [];
-    const seen = new Set<string>();
-    for (const night of fromTonight) {
-      for (const track of night.tracks) {
-        if (!seen.has(track.id)) {
-          seen.add(track.id);
-          cue.push({ id: track.id, title: track.title, skuCode: track.skuCode });
-        }
-        if (cue.length >= 10) return cue;
-      }
-    }
-    return cue;
-  }, [schedule, currentNight]);
+  const currentPlaylistFallback = useMemo(
+    () => buildPlaylistCueFromSchedule(schedule, currentNight, 10),
+    [schedule, currentNight]
+  );
 
   const currentPlaylist = nextInCue.length > 0 ? nextInCue : currentPlaylistFallback;
 
@@ -182,7 +168,10 @@ export default function PlayOptionsClient({
         </div>
         <div className="card">
           <h3>Current audios play list</h3>
-          <p>The next 10 audios in your queue (starting from tonight), by SKU and title.</p>
+          <p>
+            The next 10 audios in your queue (starting from tonight), by SKU and title. The same recording can appear
+            more than once when it is on multiple steps in your rotation.
+          </p>
           {currentPlaylist.length === 0 ? (
             <p style={{ color: "#6b7280" }}>No audios in your play list yet.</p>
           ) : (
