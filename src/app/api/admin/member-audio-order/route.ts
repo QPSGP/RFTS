@@ -55,9 +55,12 @@ function orderSaveErrorMessage(error: unknown): string {
   if (pg?.code === "23505") {
     const hint =
       pg.constraint?.includes("library_item") || pg.detail?.includes("library_item")
-        ? "Your database may still enforce only one row per recording per member. Run scripts/fix-managed-rotation-duplicate-slots.sql on Postgres (or the matching blocks in scripts/schema.sql) so the same audio can appear in multiple rotation slots."
+        ? "Your database may still enforce only one row per recording per member. In Vercel → Storage → your database → Query, paste and run the full file scripts/fix-managed-rotation-duplicate-slots.sql from the repo (updated column-based version). Then Save Personalized Audios again."
         : "A uniqueness constraint rejected this order. Check assignment_order conflicts or run schema migrations.";
-    return `Order save failed: ${hint}`;
+    const meta = [pg.constraint && `constraint=${pg.constraint}`, pg.detail && `detail=${pg.detail}`]
+      .filter(Boolean)
+      .join("; ");
+    return meta ? `${hint} [${meta}]` : hint;
   }
   if (pg?.message) {
     return `Order save failed: ${pg.message}`;
