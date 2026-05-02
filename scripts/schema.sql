@@ -269,6 +269,11 @@ BEGIN
   END IF;
 END $$;
 
+-- Legacy installs may still forbid the same library_item_id twice per member (old composite PK).
+-- Managed rotation requires multiple slots per recording; safe no-op if constraint names differ.
+ALTER TABLE member_audio_assignments DROP CONSTRAINT IF EXISTS member_audio_assignments_user_email_library_item_id_key;
+ALTER TABLE member_audio_assignments DROP CONSTRAINT IF EXISTS member_audio_assignments_library_item_id_user_email_key;
+
 -- Admin display profile (optional; safe on existing DBs)
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS first_name text;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS last_name text;
