@@ -937,47 +937,6 @@ export default function AdminUsers() {
     }
   };
 
-  /** Insert another play of the same recording immediately after this row (managed duplicates). */
-  const duplicateManagedSlotAfterIndex = (email: string, afterIndex: number) => {
-    if (memberAudioHydratingRef.current[email]) {
-      setStatus("Still loading saved rotation for this member — try again in a second.");
-      return;
-    }
-    let blocked: "per_audio" | "full" | null = null;
-    setMemberAudio((prev) => {
-      const cur = [...(prev.order[email] || [])];
-      if (afterIndex < 0 || afterIndex >= cur.length) return prev;
-      const itemId = cur[afterIndex];
-      const n = countAudioSlotsInOrder(cur, itemId);
-      if (n >= MANAGED_MAX_SLOTS_PER_AUDIO) {
-        blocked = "per_audio";
-        return prev;
-      }
-      if (cur.length >= MANAGED_MAX_ROTATION_SLOTS) {
-        blocked = "full";
-        return prev;
-      }
-      cur.splice(afterIndex + 1, 0, itemId);
-      return {
-        ...prev,
-        order: { ...prev.order, [email]: cur },
-        assignments: {
-          ...prev.assignments,
-          [email]: { ...(prev.assignments[email] || {}), [itemId]: true }
-        }
-      };
-    });
-    if (blocked === "per_audio") {
-      setStatus(
-        `This audio is already in the rotation ${MANAGED_MAX_SLOTS_PER_AUDIO} times (maximum). Remove a slot or pick another track.`
-      );
-    } else if (blocked === "full") {
-      setStatus(
-        `Rotation is full (${MANAGED_MAX_ROTATION_SLOTS} slots). Remove a slot before adding another.`
-      );
-    }
-  };
-
   const removeManagedSlotAtIndex = (email: string, slotIndex: number) => {
     if (memberAudioHydratingRef.current[email]) return;
     setMemberAudio((prev) => {
@@ -2790,9 +2749,9 @@ export default function AdminUsers() {
                         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
                           <strong>Gold:</strong> check audios and set <strong>#</strong> order (each audio once).{" "}
                           <strong>Platinum Managed:</strong> build the night-by-night list only in{" "}
-                          <strong>Rotation order</strong> below — add at the end from the dropdown, or use{" "}
-                          <strong>Play again after this</strong> on a row for a second/third play of the same recording (up to{" "}
-                          {MANAGED_MAX_SLOTS_PER_AUDIO}× each, {MANAGED_MAX_ROTATION_SLOTS} slots total). The library checklist
+                          <strong>Rotation order</strong> below — add from the dropdown at the end (same recording can appear
+                          multiple times; use <strong>Up / Down</strong> to place each step). Up to{" "}
+                          {MANAGED_MAX_SLOTS_PER_AUDIO}× per recording, {MANAGED_MAX_ROTATION_SLOTS} slots total. The library checklist
                           is for <strong>access</strong> only; it does not add steps. Step numbers appear only in{" "}
                           <strong>Rotation order</strong> below.
                         </p>
@@ -2830,8 +2789,8 @@ export default function AdminUsers() {
                               </li>
                               <li>
                                 Add recordings using <strong>Add at end of rotation</strong> (dropdown + button). For another
-                                play of the <em>same</em> recording, use <strong>Play again after this</strong> on that row in
-                                the numbered list (max {MANAGED_MAX_SLOTS_PER_AUDIO}× per recording).
+                                play of the <em>same</em> recording, add it again at the end and use <strong>Up / Down</strong>{" "}
+                                to move it into place (max {MANAGED_MAX_SLOTS_PER_AUDIO}× per recording).
                               </li>
                               <li>
                                 Reorder with <strong>Up / Down</strong>. The library checkboxes only control{" "}
@@ -2857,9 +2816,8 @@ export default function AdminUsers() {
                             <strong style={{ fontSize: 14 }}>Rotation order (live schedule)</strong>
                             <p style={{ fontSize: 12, color: "#64748b", marginTop: 6, marginBottom: 8 }}>
                               This numbered list is the member&apos;s schedule (same recording may appear more than once).
-                              Use <strong>Play again after this</strong> on a row to insert another play of that recording
-                              right below it. Use <strong>Add at end of rotation</strong> to append a different recording.
-                              Then <strong>Save Personalized Audios</strong>.
+                              Use <strong>Add at end of rotation</strong> to append a step, then <strong>Up / Down</strong> to
+                              reorder. Then <strong>Save Personalized Audios</strong>.
                             </p>
                             <p style={{ fontSize: 12, color: "#6b7280", marginTop: 0, marginBottom: 8 }}>
                               {(audioOrder[user.email] || []).length}/{MANAGED_MAX_ROTATION_SLOTS} slots · each audio max{" "}
@@ -2895,11 +2853,6 @@ export default function AdminUsers() {
                                   const label =
                                     [libItem?.skuCode, libItem?.title].filter(Boolean).join(" – ") || slotId;
                                   const list = audioOrder[user.email] || [];
-                                  const copiesOfThis = countAudioSlotsInOrder(list, slotId);
-                                  const dupDisabled =
-                                    audioHydrating ||
-                                    copiesOfThis >= MANAGED_MAX_SLOTS_PER_AUDIO ||
-                                    list.length >= MANAGED_MAX_ROTATION_SLOTS;
                                   return (
                                     <li
                                       key={`managed-slot-${user.email}-${idx}-${slotId}`}
@@ -2954,23 +2907,6 @@ export default function AdminUsers() {
                                           onClick={() => moveManagedSlot(user.email, idx, "down")}
                                         >
                                           Down
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="button button-secondary"
-                                          style={{ padding: "2px 10px", fontSize: 12 }}
-                                          disabled={dupDisabled}
-                                          title={
-                                            dupDisabled && !audioHydrating
-                                              ? copiesOfThis >= MANAGED_MAX_SLOTS_PER_AUDIO
-                                                ? `This recording is already scheduled ${MANAGED_MAX_SLOTS_PER_AUDIO} times (maximum).`
-                                                : "Rotation is full — remove a step first."
-                                              : `Insert another play of this recording after step ${idx + 1}`
-                                          }
-                                          aria-label={`Play again after this: ${label}`}
-                                          onClick={() => duplicateManagedSlotAfterIndex(user.email, idx)}
-                                        >
-                                          Play again after this
                                         </button>
                                         <button
                                           type="button"

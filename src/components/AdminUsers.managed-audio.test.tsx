@@ -1,5 +1,5 @@
 /**
- * Platinum Managed: rotation-only adds; duplicate via "Play again after this".
+ * Platinum Managed: rotation adds at end; duplicate plays via second "Add at end" + manual reorder.
  */
 jest.mock("@vercel/blob/client", () => ({
   put: jest.fn()
@@ -133,7 +133,7 @@ describe("AdminUsers Platinum Managed rotation", () => {
     jest.restoreAllMocks();
   });
 
-  it("adds at end then duplicates with Play again after this", async () => {
+  it("adds at end twice for same recording (reorder manually)", async () => {
     const user = userEvent.setup();
     render(<AdminUsers />);
     await openManagedProfileAndWaitForHydration(user);
@@ -142,7 +142,8 @@ describe("AdminUsers Platinum Managed rotation", () => {
     await user.selectOptions(combo, LIB_ALPHA.id);
     await user.click(screen.getByRole("button", { name: /^Add at end$/i }));
 
-    await user.click(screen.getByRole("button", { name: /Play again after this:/i }));
+    await user.selectOptions(combo, LIB_ALPHA.id);
+    await user.click(screen.getByRole("button", { name: /^Add at end$/i }));
 
     const rotationHeading = await screen.findByText(/Rotation order \(live schedule\)/i);
     const rotationCard = rotationHeading.closest(".card");
@@ -261,7 +262,8 @@ describe("AdminUsers Platinum Managed rotation", () => {
     const combo = screen.getByRole("combobox", { name: /choose audio to add at end of rotation/i });
     await user.selectOptions(combo, LIB_ALPHA.id);
     await user.click(screen.getByRole("button", { name: /^Add at end$/i }));
-    await user.click(screen.getByRole("button", { name: /Play again after this:/i }));
+    await user.selectOptions(combo, LIB_ALPHA.id);
+    await user.click(screen.getByRole("button", { name: /^Add at end$/i }));
 
     const rotationHeading = await screen.findByText(/Rotation order \(live schedule\)/i);
     const rotationCard = rotationHeading.closest(".card");
