@@ -834,44 +834,28 @@ export default function AdminUsers() {
     return assigned;
   };
 
+  /** Managed: remove every rotation slot for this item and revoke library assignment. */
+  const clearManagedAudioForItem = (email: string, itemId: string) => {
+    setMemberAudio((prev) => ({
+      ...prev,
+      order: {
+        ...prev.order,
+        [email]: (prev.order[email] || []).filter((id) => id !== itemId)
+      },
+      assignments: {
+        ...prev.assignments,
+        [email]: { ...(prev.assignments[email] || {}), [itemId]: false }
+      }
+    }));
+  };
+
   const toggleAudioAssignment = (
     email: string,
     itemId: string,
     tier: UserRow["subscriptionTier"]
   ) => {
     if (tier === "platinum_managed") {
-      setMemberAudio((prev) => {
-        const curOrder = prev.order[email] || [];
-        const slots = countAudioSlotsInOrder(curOrder, itemId);
-        const mapped = prev.assignments[email]?.[itemId];
-        /** Rotation slots or explicit assign flag — not “allowed on library” alone (legacy access without order). */
-        const isOn = slots > 0 || mapped === true;
-
-        if (isOn) {
-          return {
-            ...prev,
-            order: {
-              ...prev.order,
-              [email]: (prev.order[email] || []).filter((id) => id !== itemId)
-            },
-            assignments: {
-              ...prev.assignments,
-              [email]: { ...(prev.assignments[email] || {}), [itemId]: false }
-            }
-          };
-        }
-        const cur = prev.order[email] || [];
-        const nextOrder =
-          cur.length >= MANAGED_MAX_ROTATION_SLOTS ? cur : [...cur, itemId];
-        return {
-          ...prev,
-          order: { ...prev.order, [email]: nextOrder },
-          assignments: {
-            ...prev.assignments,
-            [email]: { ...(prev.assignments[email] || {}), [itemId]: true }
-          }
-        };
-      });
+      /** Managed library uses checkbox + “click title to append” — do not route managed through here (see library row). */
       return;
     }
 
@@ -2717,12 +2701,11 @@ export default function AdminUsers() {
                         <h4 style={{ marginBottom: 8 }}>5. Check audios designed for them</h4>
                         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
                           <strong>Gold:</strong> check audios and set <strong>#</strong> order (each audio once).{" "}
-                          <strong>Platinum Managed:</strong> the <strong>rotation list</strong> is the live schedule (Up /
-                          Down per row). The checklist shows each audio&apos;s slot numbers as you build it. The same
-                          recording may appear up to {MANAGED_MAX_SLOTS_PER_AUDIO} times (max {MANAGED_MAX_ROTATION_SLOTS}{" "}
-                          slots). Grant library access below; use <strong>Add to audio rotation</strong> at the bottom of the
-                          rotation card—or row <strong>+</strong>—for an extra copy. When an audio appears only once, you can
-                          also use Up / Down on its library row.
+                          <strong>Platinum Managed:</strong> <strong>Click an audio&apos;s name</strong> to append it to the
+                          rotation list (each click adds another play in order, up to {MANAGED_MAX_SLOTS_PER_AUDIO}× per
+                          recording). Reorder with <strong>Up / Down</strong> on the rotation list. Uncheck the box to remove
+                          that audio from the member entirely. Optional: <strong>Add to audio rotation</strong> at the bottom,
+                          or <strong>+</strong> / <strong>−</strong> for slot count.
                         </p>
                         {effectiveTier === "platinum_managed" && (
                           <div
@@ -2745,8 +2728,9 @@ export default function AdminUsers() {
                             </p>
                             {(audioOrder[user.email] || []).length === 0 ? (
                               <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4, marginBottom: 10 }}>
-                                No slots yet — check an audio in the library below, use <strong>+</strong>, or choose one in{" "}
-                                <strong>Add to audio rotation</strong> at the bottom, then save.
+                                No slots yet — <strong>click an audio name</strong> in the library below (each click adds one
+                                step), use <strong>+</strong>, or <strong>Add to audio rotation</strong> at the bottom, then
+                                save.
                               </p>
                             ) : (
                               <ol style={{ marginTop: 4, paddingLeft: 22, fontSize: 13 }}>
@@ -2935,35 +2919,87 @@ export default function AdminUsers() {
                               managedSlotPositions.length > 0
                                 ? managedSlotPositions.map((n) => `#${n}`).join(" · ")
                                 : "—";
-                            const singleSlotIndex =
-                              slotsForItem === 1 ? currentOrder.indexOf(item.id) : -1;
+                            const appendDisabled =
+                              slotsForItem >= MANAGED_MAX_SLOTS_PER_AUDIO ||
+                              totalSlots >= MANAGED_MAX_ROTATION_SLOTS;
                             return (
                               <div
                                 key={item.id}
                                 className="goal-item"
                                 style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}
                               >
-                                <label
-                                  style={{
-                                    display: "flex",
-                                    flex: "1 1 200px",
-                                    alignItems: "center",
-                                    gap: 8,
-                                    minWidth: 0,
-                                    cursor: "pointer"
-                                  }}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={isAssigned}
-                                    onChange={() =>
-                                      toggleAudioAssignment(user.email, item.id, effectiveTier)
-                                    }
-                                  />
-                                  <span style={{ flex: 1, minWidth: 0 }}>
-                                    {item.skuCode || item.title || "No SKU/Title"}
-                                  </span>
-                                </label>
+                                {isManagedMember ? (
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flex: "1 1 200px",
+                                      alignItems: "center",
+                                      gap: 8,
+                                      minWidth: 0
+                                    }}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isAssigned}
+                                      onChange={(e) => {
+                                        if (!e.target.checked) {
+                                          clearManagedAudioForItem(user.email, item.id);
+                                        } else {
+                                          incrementManagedAudioSlot(user.email, item.id);
+                                        }
+                                      }}
+                                      aria-label={`Include ${item.skuCode || item.title || "audio"} for this member (uncheck removes all slots)`}
+                                      style={{ flex: "0 0 auto", marginTop: 2 }}
+                                    />
+                                    <button
+                                      type="button"
+                                      className="button button-secondary"
+                                      disabled={appendDisabled}
+                                      title={
+                                        appendDisabled
+                                          ? "At max slots for this audio or rotation is full."
+                                          : "Add one step to the rotation list (click again for another copy)."
+                                      }
+                                      onClick={() => incrementManagedAudioSlot(user.email, item.id)}
+                                      style={{
+                                        flex: 1,
+                                        minWidth: 0,
+                                        textAlign: "left",
+                                        fontWeight: 600,
+                                        justifyContent: "flex-start",
+                                        border: "1px solid #e5e7eb",
+                                        background: "#fafafa",
+                                        padding: "8px 10px",
+                                        borderRadius: 8,
+                                        cursor: appendDisabled ? "not-allowed" : "pointer"
+                                      }}
+                                    >
+                                      {item.skuCode || item.title || "No SKU/Title"}
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <label
+                                    style={{
+                                      display: "flex",
+                                      flex: "1 1 200px",
+                                      alignItems: "center",
+                                      gap: 8,
+                                      minWidth: 0,
+                                      cursor: "pointer"
+                                    }}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isAssigned}
+                                      onChange={() =>
+                                        toggleAudioAssignment(user.email, item.id, effectiveTier)
+                                      }
+                                    />
+                                    <span style={{ flex: 1, minWidth: 0 }}>
+                                      {item.skuCode || item.title || "No SKU/Title"}
+                                    </span>
+                                  </label>
+                                )}
                                 {isManagedMember ? (
                                   <span
                                     style={{
@@ -2984,56 +3020,10 @@ export default function AdminUsers() {
                                         fontVariantNumeric: "tabular-nums",
                                         color: slotsForItem > 0 ? "#15803d" : "#9ca3af"
                                       }}
-                                      title={
-                                        slotsForItem > 1
-                                          ? "Multiple slots: reorder each copy in the rotation list above."
-                                          : undefined
-                                      }
+                                      title="Slot positions in the rotation list above"
                                     >
                                       {orderLabel}
                                     </span>
-                                    <button
-                                      type="button"
-                                      className="button button-secondary"
-                                      disabled={singleSlotIndex <= 0}
-                                      style={{ padding: "4px 10px", minWidth: 36 }}
-                                      title={
-                                        slotsForItem > 1
-                                          ? "Use the rotation list to move each copy."
-                                          : undefined
-                                      }
-                                      aria-label={`Move ${item.skuCode || item.title} earlier in rotation`}
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        if (singleSlotIndex < 0) return;
-                                        moveManagedSlot(user.email, singleSlotIndex, "up");
-                                      }}
-                                    >
-                                      Up
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="button button-secondary"
-                                      disabled={
-                                        singleSlotIndex < 0 || singleSlotIndex >= currentOrder.length - 1
-                                      }
-                                      style={{ padding: "4px 10px", minWidth: 36 }}
-                                      title={
-                                        slotsForItem > 1
-                                          ? "Use the rotation list to move each copy."
-                                          : undefined
-                                      }
-                                      aria-label={`Move ${item.skuCode || item.title} later in rotation`}
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        if (singleSlotIndex < 0) return;
-                                        moveManagedSlot(user.email, singleSlotIndex, "down");
-                                      }}
-                                    >
-                                      Down
-                                    </button>
                                     <span style={{ minWidth: 52, textAlign: "center", color: "#6b7280" }}>
                                       ×{slotsForItem}/{MANAGED_MAX_SLOTS_PER_AUDIO}
                                     </span>
@@ -3098,8 +3088,8 @@ export default function AdminUsers() {
                           })}
                         </div>
                         <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
-                          To remove a track from this member: uncheck it (managed: clear all slots first or use −) and
-                          click Save Personalized Audios.
+                          To remove a track from this member: uncheck it (managed: removes every slot for that audio) or use
+                          −, then click Save Personalized Audios.
                         </p>
                         <div style={{ marginTop: 8, display: "flex", gap: 12 }}>
                           <button
