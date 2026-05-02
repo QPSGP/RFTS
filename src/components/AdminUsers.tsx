@@ -1154,16 +1154,19 @@ export default function AdminUsers() {
 
     const patchCount = libraryAssignmentChanges.length;
     const savedRotationOrder = orderToSave !== null;
+    const stepsSaved = savedRotationOrder ? (orderToSave ?? []).length : 0;
+    const stepsPhrase =
+      stepsSaved === 1 ? "1 rotation step" : `${stepsSaved} rotation steps`;
     let saveMsg: string;
     if (patchCount > 0 && savedRotationOrder) {
-      saveMsg = `Saved ${patchCount} personalized audio update(s) and rotation order.`;
+      saveMsg = `Saved ${patchCount} library access update(s) and ${stepsPhrase} to the server.`;
     } else if (patchCount > 0 && !savedRotationOrder) {
-      saveMsg = `Saved ${patchCount} personalized audio update(s).`;
+      saveMsg = `Saved ${patchCount} library access update(s).`;
     } else if (savedRotationOrder) {
       saveMsg =
         tierForSave === "platinum_managed"
-          ? "Saved managed rotation order (library access was already up to date — no checklist changes)."
-          : "Saved rotation order (library access unchanged).";
+          ? `Saved ${stepsPhrase} to the server. The checklist did not need updates — those recordings already included this member for library access (that is separate from rotation).`
+          : `Saved ${stepsPhrase} to the server (library access unchanged).`;
     } else {
       saveMsg = "Saved.";
     }
