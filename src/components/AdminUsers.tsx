@@ -2793,8 +2793,8 @@ export default function AdminUsers() {
                           <strong>Rotation order</strong> below — add at the end from the dropdown, or use{" "}
                           <strong>Play again after this</strong> on a row for a second/third play of the same recording (up to{" "}
                           {MANAGED_MAX_SLOTS_PER_AUDIO}× each, {MANAGED_MAX_ROTATION_SLOTS} slots total). The library checklist
-                          is for <strong>access</strong> and shows where each title appears in the rotation (<strong>#</strong>{" "}
-                          positions); it does not add steps.
+                          is for <strong>access</strong> only; it does not add steps. Step numbers appear only in{" "}
+                          <strong>Rotation order</strong> below.
                         </p>
                         {effectiveTier === "platinum_managed" && (
                           <div
@@ -2835,7 +2835,7 @@ export default function AdminUsers() {
                               </li>
                               <li>
                                 Reorder with <strong>Up / Down</strong>. The library checkboxes only control{" "}
-                                <strong>library access</strong> and show rotation positions — they do not insert steps.
+                                <strong>library access</strong> — they do not insert steps.
                               </li>
                               <li>
                                 Click <strong>Save Personalized Audios</strong>. If it fails, read the message for server
@@ -2881,7 +2881,15 @@ export default function AdminUsers() {
                                 their library.
                               </p>
                             ) : (
-                              <ol style={{ marginTop: 4, paddingLeft: 22, fontSize: 13 }}>
+                              <ol
+                                style={{
+                                  marginTop: 4,
+                                  marginLeft: 0,
+                                  paddingLeft: 0,
+                                  fontSize: 13,
+                                  listStyleType: "none"
+                                }}
+                              >
                                 {(audioOrder[user.email] || []).map((slotId, idx) => {
                                   const libItem = library.find((x) => x.id === slotId);
                                   const label =
@@ -2903,6 +2911,21 @@ export default function AdminUsers() {
                                         gap: 8
                                       }}
                                     >
+                                      <span
+                                        aria-label={`Step ${idx + 1}`}
+                                        title={`Night ${idx + 1}`}
+                                        style={{
+                                          flex: "0 0 auto",
+                                          minWidth: 44,
+                                          fontWeight: 700,
+                                          fontVariantNumeric: "tabular-nums",
+                                          color: "#15803d",
+                                          fontSize: 13,
+                                          alignSelf: "center"
+                                        }}
+                                      >
+                                        #{idx + 1}
+                                      </span>
                                       <span style={{ flex: "1 1 140px", minWidth: 0 }}>{label}</span>
                                       <span
                                         style={{
@@ -3085,14 +3108,6 @@ export default function AdminUsers() {
                               )
                               .map((i) => i.id);
                             const orderValue = getAudioOrder(user.email, item.id, fallbackOrder);
-                            const managedSlotPositions = currentOrder.reduce<number[]>((acc, id, i) => {
-                              if (id === item.id) acc.push(i + 1);
-                              return acc;
-                            }, []);
-                            const orderLabel =
-                              managedSlotPositions.length > 0
-                                ? managedSlotPositions.map((n) => `#${n}`).join(" · ")
-                                : "—";
                             return (
                               <div
                                 key={item.id}
@@ -3163,22 +3178,7 @@ export default function AdminUsers() {
                                     </span>
                                   </label>
                                 )}
-                                {isManagedMember ? (
-                                  <span
-                                    style={{
-                                      fontSize: 12,
-                                      fontWeight: 600,
-                                      color: slotsForItem > 0 ? "#15803d" : "#9ca3af",
-                                      flexShrink: 0,
-                                      fontVariantNumeric: "tabular-nums",
-                                      minWidth: 72,
-                                      textAlign: "right"
-                                    }}
-                                    title="Positions in Rotation order above (reference only)"
-                                  >
-                                    {slotsForItem > 0 ? `Steps ${orderLabel}` : "—"}
-                                  </span>
-                                ) : (
+                                {!isManagedMember ? (
                                   <input
                                     value={orderValue}
                                     onChange={(event) =>
@@ -3201,7 +3201,7 @@ export default function AdminUsers() {
                                       flexShrink: 0
                                     }}
                                   />
-                                )}
+                                ) : null}
                               </div>
                             );
                           })}

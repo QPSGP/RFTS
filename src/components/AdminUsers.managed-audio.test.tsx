@@ -153,9 +153,9 @@ describe("AdminUsers Platinum Managed rotation", () => {
       expect(items).toHaveLength(2);
       expect(items[0]).toHaveTextContent(/SKU-A/);
       expect(items[1]).toHaveTextContent(/SKU-A/);
+      expect(within(rotationCard as HTMLElement).getByLabelText(/step 1/i)).toBeInTheDocument();
+      expect(within(rotationCard as HTMLElement).getByLabelText(/step 2/i)).toBeInTheDocument();
     });
-
-    expect(screen.getByText(/Steps #1 · #2/)).toBeInTheDocument();
   });
 
   it("disables rotation controls until delayed saved rotation finishes loading", async () => {
