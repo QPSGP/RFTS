@@ -48,6 +48,64 @@ function countAudioSlotsInOrder(order: string[], itemId: string): number {
   return order.filter((id) => id === itemId).length;
 }
 
+/** Aligns with Postgres `member_audio_assignments.user_email` (lowercase). */
+function memberAudioEmailKey(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function memberRotationOrder(orderMap: Record<string, string[]>, emailRaw: string): string[] {
+  const key = memberAudioEmailKey(emailRaw);
+  const raw = emailRaw.trim();
+  return orderMap[key] ?? orderMap[raw] ?? [];
+}
+
+function memberAudioAssignmentsMap(
+  assignMap: Record<string, Record<string, boolean>>,
+  emailRaw: string
+): Record<string, boolean> {
+  const key = memberAudioEmailKey(emailRaw);
+  const raw = emailRaw.trim();
+  return assignMap[key] ?? assignMap[raw] ?? {};
+}
+
+function memberHasRotationSlot(orderMap: Record<string, string[]>, emailRaw: string): boolean {
+  const key = memberAudioEmailKey(emailRaw);
+  const raw = emailRaw.trim();
+  return key in orderMap || raw in orderMap;
+}
+
+function patchMemberOrderKeys(
+  prev: MemberAudioSnapshot,
+  emailRaw: string,
+  nextList: string[]
+): MemberAudioSnapshot {
+  const key = memberAudioEmailKey(emailRaw);
+  const raw = emailRaw.trim();
+  const nextOrder = { ...prev.order };
+  delete nextOrder[raw];
+  for (const k of Object.keys(nextOrder)) {
+    if (k !== key && memberAudioEmailKey(k) === key) delete nextOrder[k];
+  }
+  nextOrder[key] = nextList;
+  return { ...prev, order: nextOrder };
+}
+
+function patchMemberAssignmentsKeys(
+  prev: MemberAudioSnapshot,
+  emailRaw: string,
+  nextAssign: Record<string, boolean>
+): MemberAudioSnapshot {
+  const key = memberAudioEmailKey(emailRaw);
+  const raw = emailRaw.trim();
+  const nextAssignments = { ...prev.assignments };
+  delete nextAssignments[raw];
+  for (const k of Object.keys(nextAssignments)) {
+    if (k !== key && memberAudioEmailKey(k) === key) delete nextAssignments[k];
+  }
+  nextAssignments[key] = nextAssign;
+  return { ...prev, assignments: nextAssignments };
+}
+
 type MemberAudioSnapshot = {
   order: Record<string, string[]>;
   assignments: Record<string, Record<string, boolean>>;
@@ -55,10 +113,12 @@ type MemberAudioSnapshot = {
 
 function computeManagedRotationAppend(
   prev: MemberAudioSnapshot,
-  email: string,
+  emailRaw: string,
   itemId: string
 ): { next: MemberAudioSnapshot; outcome: "added" | "per_audio" | "full" } {
-  const cur = prev.order[email] || [];
+  const key = memberAudioEmailKey(emailRaw);
+  const raw = emailRaw.trim();
+  const cur = prev.order[key] ?? prev.order[raw] ?? [];
   const n = countAudioSlotsInOrder(cur, itemId);
   if (n >= MANAGED_MAX_SLOTS_PER_AUDIO) {
     return { next: prev, outcome: "per_audio" };
@@ -66,17 +126,10 @@ function computeManagedRotationAppend(
   if (cur.length >= MANAGED_MAX_ROTATION_SLOTS) {
     return { next: prev, outcome: "full" };
   }
-  return {
-    next: {
-      ...prev,
-      order: { ...prev.order, [email]: [...cur, itemId] },
-      assignments: {
-        ...prev.assignments,
-        [email]: { ...(prev.assignments[email] || {}), [itemId]: true }
-      }
-    },
-    outcome: "added"
-  };
+  const prevAssign = prev.assignments[key] ?? prev.assignments[raw] ?? {};
+  let next = patchMemberOrderKeys(prev, emailRaw, [...cur, itemId]);
+  next = patchMemberAssignmentsKeys(next, emailRaw, { ...prevAssign, [itemId]: true });
+  return { next, outcome: "added" };
 }
 
 const timeZones = [
@@ -872,32 +925,31 @@ export default function AdminUsers() {
   };
 
   const startMemberAudioHydration = (email: string) => {
-    memberAudioHydratingRef.current = { ...memberAudioHydratingRef.current, [email]: true };
-    setMemberAudioHydrating((p) => ({ ...p, [email]: true }));
+    const key = memberAudioEmailKey(email);
+    memberAudioHydratingRef.current = { ...memberAudioHydratingRef.current, [key]: true };
+    setMemberAudioHydrating((p) => ({ ...p, [key]: true }));
   };
 
   const finishMemberAudioHydration = (email: string) => {
-    memberAudioHydratingRef.current = { ...memberAudioHydratingRef.current, [email]: false };
-    setMemberAudioHydrating((p) => ({ ...p, [email]: false }));
+    const key = memberAudioEmailKey(email);
+    memberAudioHydratingRef.current = { ...memberAudioHydratingRef.current, [key]: false };
+    setMemberAudioHydrating((p) => ({ ...p, [key]: false }));
   };
 
   /** Managed: remove every rotation slot for this item and revoke library assignment. */
   const clearManagedAudioForItem = (email: string, itemId: string) => {
-    if (memberAudioHydratingRef.current[email]) {
+    const key = memberAudioEmailKey(email);
+    if (memberAudioHydratingRef.current[key]) {
       setStatus("Still loading saved rotation for this member — try again in a second.");
       return;
     }
-    setMemberAudio((prev) => ({
-      ...prev,
-      order: {
-        ...prev.order,
-        [email]: (prev.order[email] || []).filter((id) => id !== itemId)
-      },
-      assignments: {
-        ...prev.assignments,
-        [email]: { ...(prev.assignments[email] || {}), [itemId]: false }
-      }
-    }));
+    setMemberAudio((prev) => {
+      const cur = memberRotationOrder(prev.order, email).filter((id) => id !== itemId);
+      const prevAssign = memberAudioAssignmentsMap(prev.assignments, email);
+      let next = patchMemberOrderKeys(prev, email, cur);
+      next = patchMemberAssignmentsKeys(next, email, { ...prevAssign, [itemId]: false });
+      return next;
+    });
   };
 
   const toggleAudioAssignment = (
@@ -911,31 +963,29 @@ export default function AdminUsers() {
     }
 
     setMemberAudio((prev) => {
-      const current = prev.assignments[email]?.[itemId] ?? false;
+      const mapAssign = memberAudioAssignmentsMap(prev.assignments, email);
+      const current = mapAssign[itemId] ?? false;
       const newValue = !current;
-      const assignNext = {
-        ...prev.assignments,
-        [email]: { ...(prev.assignments[email] || {}), [itemId]: newValue }
-      };
-      const currentOrder = prev.order[email] || [];
-      let orderNext = prev.order;
+      const assignNext = { ...mapAssign, [itemId]: newValue };
+      const currentOrder = memberRotationOrder(prev.order, email);
+      let nextList = currentOrder;
       if (newValue) {
         if (!currentOrder.includes(itemId)) {
-          orderNext = { ...prev.order, [email]: [...currentOrder, itemId] };
+          nextList = [...currentOrder, itemId];
         }
       } else {
-        orderNext = {
-          ...prev.order,
-          [email]: currentOrder.filter((id) => id !== itemId)
-        };
+        nextList = currentOrder.filter((id) => id !== itemId);
       }
-      return { ...prev, assignments: assignNext, order: orderNext };
+      let next = patchMemberAssignmentsKeys(prev, email, assignNext);
+      next = patchMemberOrderKeys(next, email, nextList);
+      return next;
     });
   };
 
   /** Append one rotation slot (order + assignment flag in one state commit). Returns whether a row was added. */
   const incrementManagedAudioSlot = (email: string, itemId: string): boolean => {
-    if (memberAudioHydratingRef.current[email]) {
+    const key = memberAudioEmailKey(email);
+    if (memberAudioHydratingRef.current[key]) {
       setStatus("Still loading saved rotation for this member — try again in a second.");
       return false;
     }
@@ -960,35 +1010,33 @@ export default function AdminUsers() {
   };
 
   const removeManagedSlotAtIndex = (email: string, slotIndex: number) => {
-    if (memberAudioHydratingRef.current[email]) return;
+    const key = memberAudioEmailKey(email);
+    if (memberAudioHydratingRef.current[key]) return;
     setMemberAudio((prev) => {
-      const cur = prev.order[email] || [];
+      const cur = memberRotationOrder(prev.order, email);
       if (slotIndex < 0 || slotIndex >= cur.length) return prev;
       const removedId = cur[slotIndex];
-      const nextOrder = cur.filter((_, i) => i !== slotIndex);
-      const remaining = countAudioSlotsInOrder(nextOrder, removedId) > 0;
-      return {
-        ...prev,
-        order: { ...prev.order, [email]: nextOrder },
-        assignments: {
-          ...prev.assignments,
-          [email]: { ...(prev.assignments[email] || {}), [removedId]: remaining }
-        }
-      };
+      const nextOrderArr = cur.filter((_, i) => i !== slotIndex);
+      const remaining = countAudioSlotsInOrder(nextOrderArr, removedId) > 0;
+      const prevAssign = memberAudioAssignmentsMap(prev.assignments, email);
+      let next = patchMemberOrderKeys(prev, email, nextOrderArr);
+      next = patchMemberAssignmentsKeys(next, email, { ...prevAssign, [removedId]: remaining });
+      return next;
     });
   };
 
   /** Swap slot with neighbor so repeats can sit apart (e.g. same SKU in positions 1 and 10). */
   const moveManagedSlot = (email: string, slotIndex: number, direction: "up" | "down") => {
-    if (memberAudioHydratingRef.current[email]) return;
+    const key = memberAudioEmailKey(email);
+    if (memberAudioHydratingRef.current[key]) return;
     setMemberAudio((prev) => {
-      const cur = [...(prev.order[email] || [])];
+      const cur = [...memberRotationOrder(prev.order, email)];
       const j = direction === "up" ? slotIndex - 1 : slotIndex + 1;
       if (slotIndex < 0 || slotIndex >= cur.length || j < 0 || j >= cur.length) return prev;
       const t = cur[slotIndex];
       cur[slotIndex] = cur[j];
       cur[j] = t;
-      return { ...prev, order: { ...prev.order, [email]: cur } };
+      return patchMemberOrderKeys(prev, email, cur);
     });
   };
 
@@ -996,37 +1044,35 @@ export default function AdminUsers() {
     const parsed = Number(orderValue);
     if (!orderValue || Number.isNaN(parsed) || parsed <= 0) {
       setMemberAudio((prev) => {
-        const currentOrder = prev.order[email] || [];
-        return {
-          ...prev,
-          order: {
-            ...prev.order,
-            [email]: currentOrder.filter((id) => id !== itemId)
-          }
-        };
+        const currentOrder = memberRotationOrder(prev.order, email);
+        return patchMemberOrderKeys(prev, email, currentOrder.filter((id) => id !== itemId));
       });
       return;
     }
     setMemberAudio((prev) => {
-      const currentOrder = prev.order[email] || [];
+      const currentOrder = memberRotationOrder(prev.order, email);
       const without = currentOrder.filter((id) => id !== itemId);
       const next = [...without];
       next.splice(Math.min(parsed - 1, next.length), 0, itemId);
-      return {
-        ...prev,
-        order: { ...prev.order, [email]: next }
-      };
+      return patchMemberOrderKeys(prev, email, next);
     });
   };
 
   const getAudioOrder = (email: string, itemId: string, fallback: string[]) => {
-    const list = audioOrder[email] || fallback;
+    const list = memberHasRotationSlot(audioOrder, email)
+      ? memberRotationOrder(audioOrder, email)
+      : fallback;
     const index = list.indexOf(itemId);
     return index === -1 ? "" : String(index + 1);
   };
 
   const saveAudioAssignments = async (email: string) => {
-    const current = audioAssignments[email] || buildAudioAssignment(email);
+    const assignKey = memberAudioEmailKey(email);
+    const assignRaw = email.trim();
+    const current =
+      audioAssignments[assignKey] ??
+      audioAssignments[assignRaw] ??
+      buildAudioAssignment(email);
     const emailLower = email.toLowerCase();
     /** Library rows whose allowed-email list must be PATCHed (not the same as `updates` member-row draft state). */
     const libraryAssignmentChanges = library.filter((item) => {
@@ -1041,11 +1087,11 @@ export default function AdminUsers() {
       updates[email]?.subscriptionTier ??
       users.find((u) => u.email.toLowerCase() === emailLower)?.subscriptionTier ??
       "platinum";
-    const hasRotationKey = Object.prototype.hasOwnProperty.call(audioOrder, email);
+    const hasRotationKey = memberHasRotationSlot(audioOrder, email);
 
     if (
       libraryAssignmentChanges.length === 0 &&
-      !audioOrder[email] &&
+      !memberHasRotationSlot(audioOrder, email) &&
       !(tierForSave === "platinum_managed" && hasRotationKey)
     ) {
       setAudioSaveStatus((prev) => ({ ...prev, [email]: "No changes to save." }));
@@ -1081,7 +1127,9 @@ export default function AdminUsers() {
     );
 
     // Save order (managed: always persist when state exists, including empty rotation)
-    const orderArr = audioOrder[email];
+    const orderArr = memberHasRotationSlot(audioOrder, email)
+      ? memberRotationOrder(audioOrder, email)
+      : undefined;
     let orderToSave: string[] | null = null;
     if (tierForSave === "platinum_managed" && hasRotationKey) {
       orderToSave = Array.isArray(orderArr) ? orderArr : [];
@@ -1480,7 +1528,9 @@ export default function AdminUsers() {
                   /** Pending tier in membership dropdown (saved on Save) — drives managed rotation UI. */
                   const effectiveTier =
                     updates[user.email]?.subscriptionTier ?? user.subscriptionTier ?? "platinum";
-                  const audioHydrating = !!memberAudioHydrating[user.email];
+                  const audioKey = memberAudioEmailKey(user.email);
+                  const rotationOrder = memberRotationOrder(audioOrder, user.email);
+                  const audioHydrating = !!memberAudioHydrating[audioKey];
 
                   return (
                 <div key={user.id} className="card">
@@ -1512,11 +1562,11 @@ export default function AdminUsers() {
                           try {
                             const assignments = buildAudioAssignment(user.email);
                             const order = await buildAudioOrder(user.email);
-                            setMemberAudio((prev) => ({
-                              ...prev,
-                              assignments: { ...prev.assignments, [user.email]: assignments },
-                              order: { ...prev.order, [user.email]: order }
-                            }));
+                            setMemberAudio((prev) => {
+                              let next = patchMemberOrderKeys(prev, user.email, order);
+                              next = patchMemberAssignmentsKeys(next, user.email, assignments);
+                              return next;
+                            });
                           } catch {
                             setStatus("Could not load saved rotation. Refresh the page and try again.");
                           } finally {
@@ -1581,11 +1631,11 @@ export default function AdminUsers() {
                             try {
                               const assignments = buildAudioAssignment(user.email);
                               const order = await buildAudioOrder(user.email);
-                              setMemberAudio((prev) => ({
-                                ...prev,
-                                assignments: { ...prev.assignments, [user.email]: assignments },
-                                order: { ...prev.order, [user.email]: order }
-                              }));
+                              setMemberAudio((prev) => {
+                                let next = patchMemberOrderKeys(prev, user.email, order);
+                                next = patchMemberAssignmentsKeys(next, user.email, assignments);
+                                return next;
+                              });
                             } catch {
                               setStatus("Could not load saved rotation. Refresh the page and try again.");
                             } finally {
@@ -2360,70 +2410,55 @@ export default function AdminUsers() {
                                 );
                               })}
                             </div>
-                            <div style={{ marginTop: 12 }}>
-                              <label style={{ fontSize: 12 }}>Current audios play list</label>
-                              <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
-                                Up to 10 audios in this member&apos;s rotation (from goals or assigned).{" "}
-                                {effectiveTier === "platinum_managed" ? (
-                                  <span>
-                                    For Platinum Managed, order is the saved assignment order (same as the live
-                                    schedule and the schedule spreadsheet export), not the order rows appear in the
-                                    library list.
-                                  </span>
-                                ) : null}
+                            {effectiveTier === "platinum_managed" ? (
+                              <p
+                                style={{
+                                  fontSize: 12,
+                                  color: "#78350f",
+                                  marginTop: 12,
+                                  padding: 10,
+                                  background: "#fffbeb",
+                                  borderRadius: 8,
+                                  border: "1px solid #fcd34d",
+                                  lineHeight: 1.5
+                                }}
+                              >
+                                <strong>Platinum Managed:</strong> the editable rotation (including after{" "}
+                                <strong>Add at end</strong>) is always listed under section <strong>5</strong> —{" "}
+                                <strong>Rotation order (live schedule)</strong>. You do not need this Goals panel open to
+                                see new steps.
                               </p>
-                              <div className="goal-list">
-                                {(() => {
-                                  const isManaged = effectiveTier === "platinum_managed";
-                                  /**
-                                   * Must match GET /api/user/schedule / buildSchedulePreview: managed rotation uses
-                                   * member_audio_assignments order only — not `library` iteration order from
-                                   * allowedUserEmails.
-                                   */
-                                  const assignedForPlaylist = (() => {
-                                    if (!isManaged) return [];
-                                    const orderIds = audioOrder[user.email] ?? [];
-                                    const byId = new Map(library.map((item) => [item.id, item]));
-                                    if (orderIds.length > 0) {
-                                      return orderIds
-                                        .slice(0, 10)
-                                        .map((id) => byId.get(id))
-                                        .filter((item): item is LibraryItem => item != null);
-                                    }
-                                    const emailLower = user.email.toLowerCase();
-                                    return library
-                                      .filter((item) =>
-                                        (item.allowedUserEmails || []).some((e) => e.toLowerCase() === emailLower)
-                                      )
-                                      .slice(0, 10);
-                                  })();
-                                  const goalAudios = getDerivedAudios(user.goalIds || []).slice(0, 10);
-                                  const list = isManaged ? assignedForPlaylist : goalAudios;
-                                  return list.length === 0 ? (
-                                    <span style={{ color: "#6b7280", fontSize: 12 }}>
-                                      No audios in play list yet.
-                                    </span>
-                                  ) : (
-                                    list.map((item, playIdx) => (
-                                      <div
-                                        key={
-                                          isManaged
-                                            ? `managed-play-${user.email}-${playIdx}-${item.id}`
-                                            : item.id
-                                        }
-                                        className="goal-item"
-                                        style={{ display: "flex", gap: 8, alignItems: "center" }}
-                                      >
-                                        <span style={{ flex: 1 }}>
-                                          {item.skuCode ? `${item.skuCode} – ` : ""}
-                                          {item.title}
-                                        </span>
-                                      </div>
-                                    ))
-                                  );
-                                })()}
+                            ) : (
+                              <div style={{ marginTop: 12 }}>
+                                <label style={{ fontSize: 12 }}>Current audios play list</label>
+                                <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
+                                  Up to 10 audios in this member&apos;s rotation from assigned goals.
+                                </p>
+                                <div className="goal-list">
+                                  {(() => {
+                                    const goalAudios = getDerivedAudios(user.goalIds || []).slice(0, 10);
+                                    return goalAudios.length === 0 ? (
+                                      <span style={{ color: "#6b7280", fontSize: 12 }}>
+                                        No audios in play list yet.
+                                      </span>
+                                    ) : (
+                                      goalAudios.map((item) => (
+                                        <div
+                                          key={item.id}
+                                          className="goal-item"
+                                          style={{ display: "flex", gap: 8, alignItems: "center" }}
+                                        >
+                                          <span style={{ flex: 1 }}>
+                                            {item.skuCode ? `${item.skuCode} – ` : ""}
+                                            {item.title}
+                                          </span>
+                                        </div>
+                                      ))
+                                    );
+                                  })()}
+                                </div>
                               </div>
-                            </div>
+                            )}
                           </>
                         )}
                       </div>
@@ -2551,7 +2586,7 @@ export default function AdminUsers() {
                           const assigned = library.filter((item) =>
                             (item.allowedUserEmails || []).some((e) => e.toLowerCase() === emailLower)
                           );
-                          const order = audioOrder[user.email] || [];
+                          const order = rotationOrder;
                           const isManagedSec4 = effectiveTier === "platinum_managed";
                           const byIdLookup = new Map(library.map((item) => [item.id, item]));
                           /** Managed rotation may repeat the same id; expand order into rows (matches schedule). */
@@ -2843,7 +2878,7 @@ export default function AdminUsers() {
                               reorder. Then <strong>Save Personalized Audios</strong>.
                             </p>
                             <p style={{ fontSize: 12, color: "#6b7280", marginTop: 0, marginBottom: 8 }}>
-                              {(audioOrder[user.email] || []).length}/{MANAGED_MAX_ROTATION_SLOTS} slots · each audio max{" "}
+                              {rotationOrder.length}/{MANAGED_MAX_ROTATION_SLOTS} slots · each audio max{" "}
                               {MANAGED_MAX_SLOTS_PER_AUDIO}×
                             </p>
                             {audioHydrating ? (
@@ -2855,7 +2890,7 @@ export default function AdminUsers() {
                                 Loading saved rotation from server… Edit controls unlock in a moment.
                               </p>
                             ) : null}
-                            {(audioOrder[user.email] || []).length === 0 ? (
+                            {rotationOrder.length === 0 ? (
                               <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4, marginBottom: 10 }}>
                                 No steps yet — use <strong>Add at end of rotation</strong> below to choose a recording and
                                 append it. Grant library access in the checklist if this member should see those titles in
@@ -2864,7 +2899,7 @@ export default function AdminUsers() {
                             ) : (
                               <ol
                                 ref={(el) => {
-                                  managedRotationOlRefs.current[user.email] = el;
+                                  managedRotationOlRefs.current[audioKey] = el;
                                 }}
                                 style={{
                                   marginTop: 4,
@@ -2874,11 +2909,11 @@ export default function AdminUsers() {
                                   listStyleType: "none"
                                 }}
                               >
-                                {(audioOrder[user.email] || []).map((slotId, idx) => {
+                                {rotationOrder.map((slotId, idx) => {
                                   const libItem = library.find((x) => x.id === slotId);
                                   const label =
                                     [libItem?.skuCode, libItem?.title].filter(Boolean).join(" – ") || slotId;
-                                  const list = audioOrder[user.email] || [];
+                                  const list = rotationOrder;
                                   return (
                                     <li
                                       key={`managed-slot-${user.email}-${idx}-${slotId}`}
@@ -3013,25 +3048,31 @@ export default function AdminUsers() {
                                 className="button button-secondary"
                                 disabled={
                                   audioHydrating ||
-                                  !managedRotationPicker[user.email]?.trim() ||
-                                  (audioOrder[user.email] || []).length >= MANAGED_MAX_ROTATION_SLOTS
+                                  !(managedRotationPicker[audioKey] ?? managedRotationPicker[user.email])?.trim() ||
+                                  rotationOrder.length >= MANAGED_MAX_ROTATION_SLOTS
                                 }
                                 onClick={() => {
                                   const email = user.email;
-                                  const id = managedRotationPicker[email]?.trim();
+                                  const id = (
+                                    managedRotationPicker[audioKey] ?? managedRotationPicker[user.email]
+                                  )?.trim();
                                   if (!id) {
                                     setStatus("Choose a recording in the dropdown before Add at end.");
                                     return;
                                   }
                                   const added = incrementManagedAudioSlot(email, id);
                                   if (added) {
-                                    setManagedRotationPicker((p) => ({ ...p, [email]: "" }));
+                                    setManagedRotationPicker((p) => ({
+                                      ...p,
+                                      [audioKey]: "",
+                                      ...(audioKey !== user.email.trim() ? { [user.email]: "" } : {})
+                                    }));
                                     setStatus(
                                       "Added to end of rotation. Use Up / Down on that row to move it, then Save Personalized Audios."
                                     );
                                     requestAnimationFrame(() => {
                                       const last =
-                                        managedRotationOlRefs.current[email]?.lastElementChild ?? null;
+                                        managedRotationOlRefs.current[audioKey]?.lastElementChild ?? null;
                                       last?.scrollIntoView?.({
                                         behavior: "smooth",
                                         block: "nearest",
@@ -3076,13 +3117,13 @@ export default function AdminUsers() {
                             })
                             .map((item) => {
                             const emailLower = user.email.toLowerCase();
-                            const currentOrder = audioOrder[user.email] || [];
+                            const currentOrder = rotationOrder;
                             const slotsForItem = countAudioSlotsInOrder(currentOrder, item.id);
-                            const mappedAssign = audioAssignments[user.email]?.[item.id];
+                            const mappedAssign = memberAudioAssignmentsMap(audioAssignments, user.email)[item.id];
                             const isManagedMember = effectiveTier === "platinum_managed";
                             const isAssigned = isManagedMember
                               ? slotsForItem > 0 || mappedAssign === true
-                              : (audioAssignments[user.email]?.[item.id] ??
+                              : (memberAudioAssignmentsMap(audioAssignments, user.email)[item.id] ??
                                   item.allowedUserEmails?.some(
                                     (allowed) => allowed.toLowerCase() === emailLower
                                   ) ??
@@ -3118,20 +3159,20 @@ export default function AdminUsers() {
                                           clearManagedAudioForItem(user.email, item.id);
                                           return;
                                         }
-                                        if (memberAudioHydratingRef.current[user.email]) {
+                                        if (memberAudioHydratingRef.current[audioKey]) {
                                           setStatus("Still loading saved rotation — try again in a second.");
                                           return;
                                         }
-                                        setMemberAudio((prev) => ({
-                                          ...prev,
-                                          assignments: {
-                                            ...prev.assignments,
-                                            [user.email]: {
-                                              ...(prev.assignments[user.email] || {}),
-                                              [item.id]: true
-                                            }
-                                          }
-                                        }));
+                                        setMemberAudio((prev) => {
+                                          const prevAssign = memberAudioAssignmentsMap(
+                                            prev.assignments,
+                                            user.email
+                                          );
+                                          return patchMemberAssignmentsKeys(prev, user.email, {
+                                            ...prevAssign,
+                                            [item.id]: true
+                                          });
+                                        });
                                       }}
                                       aria-label={`Allow ${item.skuCode || item.title || "audio"} in this member's library (uncheck removes all rotation steps for this recording and revokes access)`}
                                       style={{ flex: "0 0 auto", marginTop: 2 }}
