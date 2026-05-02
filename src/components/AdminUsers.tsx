@@ -917,20 +917,6 @@ export default function AdminUsers() {
     });
   };
 
-  const reorderManagedSlotToPosition = (email: string, fromIndex: number, position1Based: number) => {
-    setMemberAudio((prev) => {
-      const cur = [...(prev.order[email] || [])];
-      if (fromIndex < 0 || fromIndex >= cur.length) return prev;
-      const p = Math.round(position1Based);
-      const [id] = cur.splice(fromIndex, 1);
-      let insertAt = Number.isFinite(p) ? p - 1 : fromIndex;
-      if (insertAt < 0) insertAt = 0;
-      if (insertAt > cur.length) insertAt = cur.length;
-      cur.splice(insertAt, 0, id);
-      return { ...prev, order: { ...prev.order, [email]: cur } };
-    });
-  };
-
   const decrementManagedAudioSlot = (email: string, itemId: string) => {
     setMemberAudio((prev) => {
       const cur = prev.order[email] || [];
@@ -976,17 +962,6 @@ export default function AdminUsers() {
       const t = cur[slotIndex];
       cur[slotIndex] = cur[j];
       cur[j] = t;
-      return { ...prev, order: { ...prev.order, [email]: cur } };
-    });
-  };
-
-  const moveManagedSlotToEdge = (email: string, slotIndex: number, edge: "top" | "bottom") => {
-    setMemberAudio((prev) => {
-      const cur = [...(prev.order[email] || [])];
-      if (slotIndex < 0 || slotIndex >= cur.length) return prev;
-      const [item] = cur.splice(slotIndex, 1);
-      if (edge === "top") cur.unshift(item);
-      else cur.push(item);
       return { ...prev, order: { ...prev.order, [email]: cur } };
     });
   };
@@ -2742,11 +2717,12 @@ export default function AdminUsers() {
                         <h4 style={{ marginBottom: 8 }}>5. Check audios designed for them</h4>
                         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
                           <strong>Gold:</strong> check audios and set <strong>#</strong> order (each audio once).{" "}
-                          <strong>Platinum Managed:</strong> use <strong>Rotation order</strong> first (like picking goals,
-                          then ordering): that numbered list is the live schedule. The same recording may appear up to{" "}
-                          {MANAGED_MAX_SLOTS_PER_AUDIO} times (max {MANAGED_MAX_ROTATION_SLOTS} slots). Grant library access
-                          in the checklist below; use <strong>Add to rotation</strong> or row <strong>+</strong> for extra
-                          copies. Set <strong>#</strong> on each rotation row or use Top / Bottom / Up / Down.
+                          <strong>Platinum Managed:</strong> the <strong>rotation list</strong> is the live schedule (Up /
+                          Down per row). The checklist shows each audio&apos;s slot numbers as you build it. The same
+                          recording may appear up to {MANAGED_MAX_SLOTS_PER_AUDIO} times (max {MANAGED_MAX_ROTATION_SLOTS}{" "}
+                          slots). Grant library access below; use <strong>Add to audio rotation</strong> at the bottom of the
+                          rotation card—or row <strong>+</strong>—for an extra copy. When an audio appears only once, you can
+                          also use Up / Down on its library row.
                         </p>
                         {effectiveTier === "platinum_managed" && (
                           <div
@@ -2760,10 +2736,90 @@ export default function AdminUsers() {
                           >
                             <strong style={{ fontSize: 14 }}>Rotation order (live schedule)</strong>
                             <p style={{ fontSize: 12, color: "#64748b", marginTop: 6, marginBottom: 8 }}>
-                              This list is what the member&apos;s nights run from—including duplicates. Save Personalized
-                              Audios when done.
+                              This list is what the member&apos;s nights run from—including duplicates. Use Up / Down on
+                              each row to change order. Save Personalized Audios when done.
                             </p>
-                            <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                            <p style={{ fontSize: 12, color: "#6b7280", marginTop: 0, marginBottom: 8 }}>
+                              {(audioOrder[user.email] || []).length}/{MANAGED_MAX_ROTATION_SLOTS} slots · each audio max{" "}
+                              {MANAGED_MAX_SLOTS_PER_AUDIO}×
+                            </p>
+                            {(audioOrder[user.email] || []).length === 0 ? (
+                              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4, marginBottom: 10 }}>
+                                No slots yet — check an audio in the library below, use <strong>+</strong>, or choose one in{" "}
+                                <strong>Add to audio rotation</strong> at the bottom, then save.
+                              </p>
+                            ) : (
+                              <ol style={{ marginTop: 4, paddingLeft: 22, fontSize: 13 }}>
+                                {(audioOrder[user.email] || []).map((slotId, idx) => {
+                                  const libItem = library.find((x) => x.id === slotId);
+                                  const label =
+                                    [libItem?.skuCode, libItem?.title].filter(Boolean).join(" – ") || slotId;
+                                  const list = audioOrder[user.email] || [];
+                                  return (
+                                    <li
+                                      key={`managed-slot-${user.email}-${idx}-${slotId}`}
+                                      style={{
+                                        marginBottom: 8,
+                                        display: "flex",
+                                        flexWrap: "wrap",
+                                        alignItems: "center",
+                                        gap: 8
+                                      }}
+                                    >
+                                      <span style={{ flex: "1 1 140px", minWidth: 0 }}>{label}</span>
+                                      <span
+                                        style={{
+                                          display: "inline-flex",
+                                          flexWrap: "wrap",
+                                          gap: 6,
+                                          alignItems: "center"
+                                        }}
+                                      >
+                                        <button
+                                          type="button"
+                                          className="button button-secondary"
+                                          style={{ padding: "2px 10px", fontSize: 12 }}
+                                          disabled={idx === 0}
+                                          aria-label={`Move ${label} earlier in rotation`}
+                                          onClick={() => moveManagedSlot(user.email, idx, "up")}
+                                        >
+                                          Up
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="button button-secondary"
+                                          style={{ padding: "2px 10px", fontSize: 12 }}
+                                          disabled={idx >= list.length - 1}
+                                          aria-label={`Move ${label} later in rotation`}
+                                          onClick={() => moveManagedSlot(user.email, idx, "down")}
+                                        >
+                                          Down
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="button button-secondary"
+                                          style={{ padding: "2px 10px", fontSize: 12 }}
+                                          onClick={() => removeManagedSlotAtIndex(user.email, idx)}
+                                        >
+                                          Remove
+                                        </button>
+                                      </span>
+                                    </li>
+                                  );
+                                })}
+                              </ol>
+                            )}
+                            <div
+                              style={{
+                                marginTop: 14,
+                                paddingTop: 12,
+                                borderTop: "1px solid #e2e8f0",
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: 8,
+                                alignItems: "center"
+                              }}
+                            >
                               <select
                                 aria-label="Choose audio to add to rotation"
                                 value={managedRotationPicker[user.email] || ""}
@@ -2819,130 +2875,9 @@ export default function AdminUsers() {
                                   setManagedRotationPicker((p) => ({ ...p, [user.email]: "" }));
                                 }}
                               >
-                                Add to rotation
+                                Add to audio rotation
                               </button>
                             </div>
-                            <p style={{ fontSize: 12, color: "#6b7280", marginTop: 10 }}>
-                              {(audioOrder[user.email] || []).length}/{MANAGED_MAX_ROTATION_SLOTS} slots · each audio max{" "}
-                              {MANAGED_MAX_SLOTS_PER_AUDIO}×
-                            </p>
-                            {(audioOrder[user.email] || []).length === 0 ? (
-                              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
-                                No slots yet — pick an audio above or check one below and use + , then save.
-                              </p>
-                            ) : (
-                              <ol style={{ marginTop: 8, paddingLeft: 22, fontSize: 13 }}>
-                                {(audioOrder[user.email] || []).map((slotId, idx) => {
-                                  const libItem = library.find((x) => x.id === slotId);
-                                  const label =
-                                    [libItem?.skuCode, libItem?.title].filter(Boolean).join(" – ") || slotId;
-                                  const list = audioOrder[user.email] || [];
-                                  return (
-                                    <li
-                                      key={`managed-slot-${user.email}-${idx}-${slotId}`}
-                                      style={{
-                                        marginBottom: 8,
-                                        display: "flex",
-                                        flexWrap: "wrap",
-                                        alignItems: "center",
-                                        gap: 8
-                                      }}
-                                    >
-                                      <label
-                                        style={{
-                                          display: "inline-flex",
-                                          alignItems: "center",
-                                          gap: 6,
-                                          fontSize: 12,
-                                          fontWeight: 600,
-                                          color: "#374151"
-                                        }}
-                                      >
-                                        #
-                                        <input
-                                          key={`managed-slot-pos-${user.email}-${idx}-${slotId}`}
-                                          type="number"
-                                          min={1}
-                                          max={list.length}
-                                          defaultValue={idx + 1}
-                                          style={{
-                                            width: 48,
-                                            textAlign: "center",
-                                            borderRadius: 6,
-                                            border: "1px solid #d1d5db",
-                                            padding: "4px 6px",
-                                            fontWeight: 600
-                                          }}
-                                          onBlur={(e) => {
-                                            const v = parseInt(e.target.value, 10);
-                                            if (!Number.isFinite(v) || v === idx + 1) return;
-                                            reorderManagedSlotToPosition(user.email, idx, v);
-                                          }}
-                                        />
-                                      </label>
-                                      <span style={{ flex: "1 1 140px", minWidth: 0 }}>{label}</span>
-                                      <span
-                                        style={{
-                                          display: "inline-flex",
-                                          flexWrap: "wrap",
-                                          gap: 6,
-                                          alignItems: "center"
-                                        }}
-                                      >
-                                        <button
-                                          type="button"
-                                          className="button button-secondary"
-                                          style={{ padding: "2px 10px", fontSize: 12 }}
-                                          disabled={idx === 0}
-                                          aria-label={`Move ${label} to start of rotation`}
-                                          onClick={() => moveManagedSlotToEdge(user.email, idx, "top")}
-                                        >
-                                          Top
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="button button-secondary"
-                                          style={{ padding: "2px 10px", fontSize: 12 }}
-                                          disabled={idx >= list.length - 1}
-                                          aria-label={`Move ${label} to end of rotation`}
-                                          onClick={() => moveManagedSlotToEdge(user.email, idx, "bottom")}
-                                        >
-                                          Bottom
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="button button-secondary"
-                                          style={{ padding: "2px 10px", fontSize: 12 }}
-                                          disabled={idx === 0}
-                                          aria-label={`Move ${label} earlier in rotation`}
-                                          onClick={() => moveManagedSlot(user.email, idx, "up")}
-                                        >
-                                          Up
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="button button-secondary"
-                                          style={{ padding: "2px 10px", fontSize: 12 }}
-                                          disabled={idx >= list.length - 1}
-                                          aria-label={`Move ${label} later in rotation`}
-                                          onClick={() => moveManagedSlot(user.email, idx, "down")}
-                                        >
-                                          Down
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="button button-secondary"
-                                          style={{ padding: "2px 10px", fontSize: 12 }}
-                                          onClick={() => removeManagedSlotAtIndex(user.email, idx)}
-                                        >
-                                          Remove
-                                        </button>
-                                      </span>
-                                    </li>
-                                  );
-                                })}
-                              </ol>
-                            )}
                           </div>
                         )}
                         <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, marginTop: 4 }}>
@@ -2992,6 +2927,16 @@ export default function AdminUsers() {
                               .map((i) => i.id);
                             const orderValue = getAudioOrder(user.email, item.id, fallbackOrder);
                             const totalSlots = currentOrder.length;
+                            const managedSlotPositions = currentOrder.reduce<number[]>((acc, id, i) => {
+                              if (id === item.id) acc.push(i + 1);
+                              return acc;
+                            }, []);
+                            const orderLabel =
+                              managedSlotPositions.length > 0
+                                ? managedSlotPositions.map((n) => `#${n}`).join(" · ")
+                                : "—";
+                            const singleSlotIndex =
+                              slotsForItem === 1 ? currentOrder.indexOf(item.id) : -1;
                             return (
                               <div
                                 key={item.id}
@@ -3028,10 +2973,68 @@ export default function AdminUsers() {
                                       fontSize: 12,
                                       fontWeight: 600,
                                       color: "#374151",
-                                      flexShrink: 0
+                                      flexShrink: 0,
+                                      flexWrap: "wrap"
                                     }}
                                   >
-                                    <span style={{ minWidth: 72, textAlign: "center" }}>
+                                    <span
+                                      style={{
+                                        minWidth: 88,
+                                        textAlign: "center",
+                                        fontVariantNumeric: "tabular-nums",
+                                        color: slotsForItem > 0 ? "#15803d" : "#9ca3af"
+                                      }}
+                                      title={
+                                        slotsForItem > 1
+                                          ? "Multiple slots: reorder each copy in the rotation list above."
+                                          : undefined
+                                      }
+                                    >
+                                      {orderLabel}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      className="button button-secondary"
+                                      disabled={singleSlotIndex <= 0}
+                                      style={{ padding: "4px 10px", minWidth: 36 }}
+                                      title={
+                                        slotsForItem > 1
+                                          ? "Use the rotation list to move each copy."
+                                          : undefined
+                                      }
+                                      aria-label={`Move ${item.skuCode || item.title} earlier in rotation`}
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (singleSlotIndex < 0) return;
+                                        moveManagedSlot(user.email, singleSlotIndex, "up");
+                                      }}
+                                    >
+                                      Up
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="button button-secondary"
+                                      disabled={
+                                        singleSlotIndex < 0 || singleSlotIndex >= currentOrder.length - 1
+                                      }
+                                      style={{ padding: "4px 10px", minWidth: 36 }}
+                                      title={
+                                        slotsForItem > 1
+                                          ? "Use the rotation list to move each copy."
+                                          : undefined
+                                      }
+                                      aria-label={`Move ${item.skuCode || item.title} later in rotation`}
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (singleSlotIndex < 0) return;
+                                        moveManagedSlot(user.email, singleSlotIndex, "down");
+                                      }}
+                                    >
+                                      Down
+                                    </button>
+                                    <span style={{ minWidth: 52, textAlign: "center", color: "#6b7280" }}>
                                       ×{slotsForItem}/{MANAGED_MAX_SLOTS_PER_AUDIO}
                                     </span>
                                     <button
