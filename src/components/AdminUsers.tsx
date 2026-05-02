@@ -368,14 +368,14 @@ export default function AdminUsers() {
   const [profileOpen, setProfileOpen] = useState<Record<string, boolean>>({});
   const [goalsSectionOpen, setGoalsSectionOpen] = useState<Record<string, boolean>>({});
   const [profileDrafts, setProfileDrafts] = useState<Record<string, ProfileDraft>>({});
-  /** Single atom for library checkboxes + rotation order so managed +/− cannot lose updates across two setStates. */
+  /** Single atom for library access flags + rotation order (managed edits stay one commit). */
   const [memberAudio, setMemberAudio] = useState<{
     order: Record<string, string[]>;
     assignments: Record<string, Record<string, boolean>>;
   }>({ order: {}, assignments: {} });
   const audioOrder = memberAudio.order;
   const audioAssignments = memberAudio.assignments;
-  /** Platinum Managed: pending library item id for “Add to rotation” dropdown (per member email). */
+  /** Platinum Managed: pending library item id for “Add at end of rotation” dropdown (per member email). */
   const [managedRotationPicker, setManagedRotationPicker] = useState<Record<string, string>>({});
   /** While true, rotation edits must not run — async hydrate would overwrite them (race with saved order). */
   const [memberAudioHydrating, setMemberAudioHydrating] = useState<Record<string, boolean>>({});
@@ -872,7 +872,7 @@ export default function AdminUsers() {
     tier: UserRow["subscriptionTier"]
   ) => {
     if (tier === "platinum_managed") {
-      /** Managed library uses checkbox + “click title to append” — do not route managed through here (see library row). */
+      /** Managed library uses its own checkbox handler — rotation is edited only in the rotation card. */
       return;
     }
 
@@ -937,23 +937,45 @@ export default function AdminUsers() {
     }
   };
 
-  const decrementManagedAudioSlot = (email: string, itemId: string) => {
-    if (memberAudioHydratingRef.current[email]) return;
+  /** Insert another play of the same recording immediately after this row (managed duplicates). */
+  const duplicateManagedSlotAfterIndex = (email: string, afterIndex: number) => {
+    if (memberAudioHydratingRef.current[email]) {
+      setStatus("Still loading saved rotation for this member — try again in a second.");
+      return;
+    }
+    let blocked: "per_audio" | "full" | null = null;
     setMemberAudio((prev) => {
-      const cur = prev.order[email] || [];
-      const idx = cur.lastIndexOf(itemId);
-      if (idx === -1) return prev;
-      const nextOrder = cur.filter((_, i) => i !== idx);
-      const remaining = countAudioSlotsInOrder(nextOrder, itemId) > 0;
+      const cur = [...(prev.order[email] || [])];
+      if (afterIndex < 0 || afterIndex >= cur.length) return prev;
+      const itemId = cur[afterIndex];
+      const n = countAudioSlotsInOrder(cur, itemId);
+      if (n >= MANAGED_MAX_SLOTS_PER_AUDIO) {
+        blocked = "per_audio";
+        return prev;
+      }
+      if (cur.length >= MANAGED_MAX_ROTATION_SLOTS) {
+        blocked = "full";
+        return prev;
+      }
+      cur.splice(afterIndex + 1, 0, itemId);
       return {
         ...prev,
-        order: { ...prev.order, [email]: nextOrder },
+        order: { ...prev.order, [email]: cur },
         assignments: {
           ...prev.assignments,
-          [email]: { ...(prev.assignments[email] || {}), [itemId]: remaining }
+          [email]: { ...(prev.assignments[email] || {}), [itemId]: true }
         }
       };
     });
+    if (blocked === "per_audio") {
+      setStatus(
+        `This audio is already in the rotation ${MANAGED_MAX_SLOTS_PER_AUDIO} times (maximum). Remove a slot or pick another track.`
+      );
+    } else if (blocked === "full") {
+      setStatus(
+        `Rotation is full (${MANAGED_MAX_ROTATION_SLOTS} slots). Remove a slot before adding another.`
+      );
+    }
   };
 
   const removeManagedSlotAtIndex = (email: string, slotIndex: number) => {
@@ -2766,11 +2788,12 @@ export default function AdminUsers() {
                         <h4 style={{ marginBottom: 8 }}>5. Check audios designed for them</h4>
                         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
                           <strong>Gold:</strong> check audios and set <strong>#</strong> order (each audio once).{" "}
-                          <strong>Platinum Managed:</strong> <strong>Click an audio&apos;s name</strong> to append it to the
-                          rotation list (each click adds another play in order, up to {MANAGED_MAX_SLOTS_PER_AUDIO}× per
-                          recording). Reorder with <strong>Up / Down</strong> on the rotation list. Uncheck the box to remove
-                          that audio from the member entirely. Optional: <strong>Add to audio rotation</strong> at the bottom,
-                          or <strong>+</strong> / <strong>−</strong> for slot count.
+                          <strong>Platinum Managed:</strong> build the night-by-night list only in{" "}
+                          <strong>Rotation order</strong> below — add at the end from the dropdown, or use{" "}
+                          <strong>Play again after this</strong> on a row for a second/third play of the same recording (up to{" "}
+                          {MANAGED_MAX_SLOTS_PER_AUDIO}× each, {MANAGED_MAX_ROTATION_SLOTS} slots total). The library checklist
+                          is for <strong>access</strong> and shows where each title appears in the rotation (<strong>#</strong>{" "}
+                          positions); it does not add steps.
                         </p>
                         {effectiveTier === "platinum_managed" && (
                           <div
@@ -2805,15 +2828,17 @@ export default function AdminUsers() {
                                 the member row yet.
                               </li>
                               <li>
-                                To schedule the same recording again: click its <strong>SKU / title</strong>, or{" "}
-                                <strong>+</strong>, or pick it under <strong>Add to audio rotation</strong> — each adds one
-                                slot (max {MANAGED_MAX_SLOTS_PER_AUDIO}× per recording, {MANAGED_MAX_ROTATION_SLOTS} slots
-                                total).
+                                Add recordings using <strong>Add at end of rotation</strong> (dropdown + button). For another
+                                play of the <em>same</em> recording, use <strong>Play again after this</strong> on that row in
+                                the numbered list (max {MANAGED_MAX_SLOTS_PER_AUDIO}× per recording).
                               </li>
                               <li>
-                                Reorder with <strong>Up / Down</strong> on the numbered list. Then click{" "}
-                                <strong>Save Personalized Audios</strong>. If it fails, the message includes the server
-                                detail (for example validation errors).
+                                Reorder with <strong>Up / Down</strong>. The library checkboxes only control{" "}
+                                <strong>library access</strong> and show rotation positions — they do not insert steps.
+                              </li>
+                              <li>
+                                Click <strong>Save Personalized Audios</strong>. If it fails, read the message for server
+                                detail.
                               </li>
                             </ol>
                           </div>
@@ -2830,8 +2855,10 @@ export default function AdminUsers() {
                           >
                             <strong style={{ fontSize: 14 }}>Rotation order (live schedule)</strong>
                             <p style={{ fontSize: 12, color: "#64748b", marginTop: 6, marginBottom: 8 }}>
-                              This list is what the member&apos;s nights run from—including duplicates. Use Up / Down on
-                              each row to change order. Save Personalized Audios when done.
+                              This numbered list is the member&apos;s schedule (same recording may appear more than once).
+                              Use <strong>Play again after this</strong> on a row to insert another play of that recording
+                              right below it. Use <strong>Add at end of rotation</strong> to append a different recording.
+                              Then <strong>Save Personalized Audios</strong>.
                             </p>
                             <p style={{ fontSize: 12, color: "#6b7280", marginTop: 0, marginBottom: 8 }}>
                               {(audioOrder[user.email] || []).length}/{MANAGED_MAX_ROTATION_SLOTS} slots · each audio max{" "}
@@ -2848,9 +2875,9 @@ export default function AdminUsers() {
                             ) : null}
                             {(audioOrder[user.email] || []).length === 0 ? (
                               <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4, marginBottom: 10 }}>
-                                No slots yet — <strong>click an audio name</strong> in the library below (each click adds one
-                                step), use <strong>+</strong>, or <strong>Add to audio rotation</strong> at the bottom, then
-                                save.
+                                No steps yet — use <strong>Add at end of rotation</strong> below to choose a recording and
+                                append it. Grant library access in the checklist if this member should see those titles in
+                                their library.
                               </p>
                             ) : (
                               <ol style={{ marginTop: 4, paddingLeft: 22, fontSize: 13 }}>
@@ -2859,6 +2886,11 @@ export default function AdminUsers() {
                                   const label =
                                     [libItem?.skuCode, libItem?.title].filter(Boolean).join(" – ") || slotId;
                                   const list = audioOrder[user.email] || [];
+                                  const copiesOfThis = countAudioSlotsInOrder(list, slotId);
+                                  const dupDisabled =
+                                    audioHydrating ||
+                                    copiesOfThis >= MANAGED_MAX_SLOTS_PER_AUDIO ||
+                                    list.length >= MANAGED_MAX_ROTATION_SLOTS;
                                   return (
                                     <li
                                       key={`managed-slot-${user.email}-${idx}-${slotId}`}
@@ -2903,6 +2935,23 @@ export default function AdminUsers() {
                                           type="button"
                                           className="button button-secondary"
                                           style={{ padding: "2px 10px", fontSize: 12 }}
+                                          disabled={dupDisabled}
+                                          title={
+                                            dupDisabled && !audioHydrating
+                                              ? copiesOfThis >= MANAGED_MAX_SLOTS_PER_AUDIO
+                                                ? `This recording is already scheduled ${MANAGED_MAX_SLOTS_PER_AUDIO} times (maximum).`
+                                                : "Rotation is full — remove a step first."
+                                              : `Insert another play of this recording after step ${idx + 1}`
+                                          }
+                                          aria-label={`Play again after this: ${label}`}
+                                          onClick={() => duplicateManagedSlotAfterIndex(user.email, idx)}
+                                        >
+                                          Play again after this
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="button button-secondary"
+                                          style={{ padding: "2px 10px", fontSize: 12 }}
                                           disabled={audioHydrating}
                                           onClick={() => removeManagedSlotAtIndex(user.email, idx)}
                                         >
@@ -2918,15 +2967,15 @@ export default function AdminUsers() {
                               style={{
                                 marginTop: 14,
                                 paddingTop: 12,
-                                borderTop: "1px solid #e2e8f0",
-                                display: "flex",
-                                flexWrap: "wrap",
-                                gap: 8,
-                                alignItems: "center"
+                                borderTop: "1px solid #e2e8f0"
                               }}
                             >
+                              <strong style={{ fontSize: 13, display: "block", marginBottom: 8 }}>
+                                Add at end of rotation
+                              </strong>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
                               <select
-                                aria-label="Choose audio to add to rotation"
+                                aria-label="Choose audio to add at end of rotation"
                                 disabled={audioHydrating}
                                 value={managedRotationPicker[user.email] || ""}
                                 onChange={(e) =>
@@ -2943,7 +2992,7 @@ export default function AdminUsers() {
                                   opacity: audioHydrating ? 0.6 : 1
                                 }}
                               >
-                                <option value="">Add audio to rotation…</option>
+                                <option value="">Choose recording…</option>
                                 {library
                                   .slice()
                                   .sort((a, b) => {
@@ -2983,14 +3032,15 @@ export default function AdminUsers() {
                                   setManagedRotationPicker((p) => ({ ...p, [user.email]: "" }));
                                 }}
                               >
-                                Add to audio rotation
+                                Add at end
                               </button>
+                              </div>
                             </div>
                           </div>
                         )}
                         <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, marginTop: 4 }}>
                           {effectiveTier === "platinum_managed"
-                            ? "Library access (personalized list)"
+                            ? "Library access (does not add rotation steps)"
                             : "Audios & order"}
                         </p>
                         <div className="goal-list">
@@ -3034,7 +3084,6 @@ export default function AdminUsers() {
                               )
                               .map((i) => i.id);
                             const orderValue = getAudioOrder(user.email, item.id, fallbackOrder);
-                            const totalSlots = currentOrder.length;
                             const managedSlotPositions = currentOrder.reduce<number[]>((acc, id, i) => {
                               if (id === item.id) acc.push(i + 1);
                               return acc;
@@ -3043,10 +3092,6 @@ export default function AdminUsers() {
                               managedSlotPositions.length > 0
                                 ? managedSlotPositions.map((n) => `#${n}`).join(" · ")
                                 : "—";
-                            const appendDisabled =
-                              audioHydrating ||
-                              slotsForItem >= MANAGED_MAX_SLOTS_PER_AUDIO ||
-                              totalSlots >= MANAGED_MAX_ROTATION_SLOTS;
                             return (
                               <div
                                 key={item.id}
@@ -3057,7 +3102,7 @@ export default function AdminUsers() {
                                   <div
                                     style={{
                                       display: "flex",
-                                      flex: "1 1 200px",
+                                      flex: "1 1 240px",
                                       alignItems: "center",
                                       gap: 8,
                                       minWidth: 0
@@ -3070,40 +3115,29 @@ export default function AdminUsers() {
                                       onChange={(e) => {
                                         if (!e.target.checked) {
                                           clearManagedAudioForItem(user.email, item.id);
-                                        } else {
-                                          incrementManagedAudioSlot(user.email, item.id);
+                                          return;
                                         }
+                                        if (memberAudioHydratingRef.current[user.email]) {
+                                          setStatus("Still loading saved rotation — try again in a second.");
+                                          return;
+                                        }
+                                        setMemberAudio((prev) => ({
+                                          ...prev,
+                                          assignments: {
+                                            ...prev.assignments,
+                                            [user.email]: {
+                                              ...(prev.assignments[user.email] || {}),
+                                              [item.id]: true
+                                            }
+                                          }
+                                        }));
                                       }}
-                                      aria-label={`Include ${item.skuCode || item.title || "audio"} for this member (uncheck removes all slots)`}
+                                      aria-label={`Allow ${item.skuCode || item.title || "audio"} in this member's library (uncheck removes all rotation steps for this recording and revokes access)`}
                                       style={{ flex: "0 0 auto", marginTop: 2 }}
                                     />
-                                    <button
-                                      type="button"
-                                      className="button button-secondary"
-                                      disabled={appendDisabled}
-                                      title={
-                                        audioHydrating
-                                          ? "Wait until saved rotation finishes loading."
-                                          : appendDisabled
-                                            ? "At max slots for this audio or rotation is full."
-                                            : "Add one step to the rotation list (click again for another copy)."
-                                      }
-                                      onClick={() => incrementManagedAudioSlot(user.email, item.id)}
-                                      style={{
-                                        flex: 1,
-                                        minWidth: 0,
-                                        textAlign: "left",
-                                        fontWeight: 600,
-                                        justifyContent: "flex-start",
-                                        border: "1px solid #e5e7eb",
-                                        background: "#fafafa",
-                                        padding: "8px 10px",
-                                        borderRadius: 8,
-                                        cursor: appendDisabled ? "not-allowed" : "pointer"
-                                      }}
-                                    >
+                                    <span style={{ flex: 1, minWidth: 0, fontWeight: 600 }}>
                                       {item.skuCode || item.title || "No SKU/Title"}
-                                    </button>
+                                    </span>
                                   </div>
                                 ) : (
                                   <label
@@ -3131,62 +3165,17 @@ export default function AdminUsers() {
                                 {isManagedMember ? (
                                   <span
                                     style={{
-                                      display: "inline-flex",
-                                      gap: 6,
-                                      alignItems: "center",
                                       fontSize: 12,
                                       fontWeight: 600,
-                                      color: "#374151",
+                                      color: slotsForItem > 0 ? "#15803d" : "#9ca3af",
                                       flexShrink: 0,
-                                      flexWrap: "wrap"
+                                      fontVariantNumeric: "tabular-nums",
+                                      minWidth: 72,
+                                      textAlign: "right"
                                     }}
+                                    title="Positions in Rotation order above (reference only)"
                                   >
-                                    <span
-                                      style={{
-                                        minWidth: 88,
-                                        textAlign: "center",
-                                        fontVariantNumeric: "tabular-nums",
-                                        color: slotsForItem > 0 ? "#15803d" : "#9ca3af"
-                                      }}
-                                      title="Slot positions in the rotation list above"
-                                    >
-                                      {orderLabel}
-                                    </span>
-                                    <span style={{ minWidth: 52, textAlign: "center", color: "#6b7280" }}>
-                                      ×{slotsForItem}/{MANAGED_MAX_SLOTS_PER_AUDIO}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      className="button button-secondary"
-                                      disabled={audioHydrating || slotsForItem === 0}
-                                      style={{ padding: "4px 10px", minWidth: 36 }}
-                                      aria-label={`Remove one slot for ${item.skuCode || item.title}`}
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        decrementManagedAudioSlot(user.email, item.id);
-                                      }}
-                                    >
-                                      −
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="button button-secondary"
-                                      disabled={
-                                        audioHydrating ||
-                                        slotsForItem >= MANAGED_MAX_SLOTS_PER_AUDIO ||
-                                        totalSlots >= MANAGED_MAX_ROTATION_SLOTS
-                                      }
-                                      style={{ padding: "4px 10px", minWidth: 36 }}
-                                      aria-label={`Add slot for ${item.skuCode || item.title} (adds to rotation list)`}
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        incrementManagedAudioSlot(user.email, item.id);
-                                      }}
-                                    >
-                                      +
-                                    </button>
+                                    {slotsForItem > 0 ? `Steps ${orderLabel}` : "—"}
                                   </span>
                                 ) : (
                                   <input
@@ -3217,8 +3206,9 @@ export default function AdminUsers() {
                           })}
                         </div>
                         <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
-                          To remove a track from this member: uncheck it (managed: removes every slot for that audio) or use
-                          −, then click Save Personalized Audios.
+                          Managed: unchecking a library row removes every rotation step for that recording and revokes access.
+                          To drop one step only, use <strong>Remove</strong> on that line in Rotation order. Then click Save
+                          Personalized Audios.
                         </p>
                         <div style={{ marginTop: 8, display: "flex", gap: 12 }}>
                           <button

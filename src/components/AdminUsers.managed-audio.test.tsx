@@ -1,5 +1,5 @@
 /**
- * Platinum Managed: clicking an audio title appends rotation slots (duplicates allowed).
+ * Platinum Managed: rotation-only adds; duplicate via "Play again after this".
  */
 jest.mock("@vercel/blob/client", () => ({
   put: jest.fn()
@@ -111,6 +111,19 @@ function setupFetchMock() {
   });
 }
 
+async function openManagedProfileAndWaitForHydration(user: ReturnType<typeof userEvent.setup>) {
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: /View \/ Edit member/i })).toBeInTheDocument();
+  });
+  await user.click(screen.getByRole("button", { name: /View \/ Edit member/i }));
+  await screen.findByText(/Check audios designed for them/i);
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("status", { name: /loading saved rotation from server/i })
+    ).not.toBeInTheDocument();
+  });
+}
+
 describe("AdminUsers Platinum Managed rotation", () => {
   beforeEach(() => {
     setupFetchMock();
@@ -120,28 +133,16 @@ describe("AdminUsers Platinum Managed rotation", () => {
     jest.restoreAllMocks();
   });
 
-  it("appends duplicate slots when the audio title button is clicked repeatedly", async () => {
+  it("adds at end then duplicates with Play again after this", async () => {
     const user = userEvent.setup();
     render(<AdminUsers />);
+    await openManagedProfileAndWaitForHydration(user);
 
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /View \/ Edit member/i })).toBeInTheDocument();
-    });
+    const combo = screen.getByRole("combobox", { name: /choose audio to add at end of rotation/i });
+    await user.selectOptions(combo, LIB_ALPHA.id);
+    await user.click(screen.getByRole("button", { name: /^Add at end$/i }));
 
-    await user.click(screen.getByRole("button", { name: /View \/ Edit member/i }));
-
-    await screen.findByText(/Check audios designed for them/i);
-
-    await waitFor(() => {
-      expect(
-        screen.queryByRole("status", { name: /loading saved rotation from server/i })
-      ).not.toBeInTheDocument();
-    });
-
-    /** Row label is `skuCode || title` — LIB_ALPHA uses SKU-A. */
-    const alphaBtn = await screen.findByRole("button", { name: /^SKU-A$/i });
-    await user.click(alphaBtn);
-    await user.click(alphaBtn);
+    await user.click(screen.getByRole("button", { name: /Play again after this:/i }));
 
     const rotationHeading = await screen.findByText(/Rotation order \(live schedule\)/i);
     const rotationCard = rotationHeading.closest(".card");
@@ -154,10 +155,10 @@ describe("AdminUsers Platinum Managed rotation", () => {
       expect(items[1]).toHaveTextContent(/SKU-A/);
     });
 
-    expect(screen.getByText(/#1 · #2/)).toBeInTheDocument();
+    expect(screen.getByText(/Steps #1 · #2/)).toBeInTheDocument();
   });
 
-  it("disables append controls until delayed saved rotation finishes loading", async () => {
+  it("disables rotation controls until delayed saved rotation finishes loading", async () => {
     let finishAudioFetch!: () => void;
     const audioFetchDone = new Promise<void>((resolve) => {
       finishAudioFetch = resolve;
@@ -240,8 +241,10 @@ describe("AdminUsers Platinum Managed rotation", () => {
 
     await screen.findByRole("status", { name: /loading saved rotation from server/i });
 
-    const alphaBtn = await screen.findByRole("button", { name: /^SKU-A$/i });
-    expect(alphaBtn).toBeDisabled();
+    expect(
+      screen.getByRole("combobox", { name: /choose audio to add at end of rotation/i })
+    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Add at end$/i })).toBeDisabled();
 
     finishAudioFetch();
 
@@ -251,10 +254,14 @@ describe("AdminUsers Platinum Managed rotation", () => {
       ).not.toBeInTheDocument();
     });
 
-    expect(alphaBtn).not.toBeDisabled();
+    expect(
+      screen.getByRole("combobox", { name: /choose audio to add at end of rotation/i })
+    ).not.toBeDisabled();
 
-    await user.click(alphaBtn);
-    await user.click(alphaBtn);
+    const combo = screen.getByRole("combobox", { name: /choose audio to add at end of rotation/i });
+    await user.selectOptions(combo, LIB_ALPHA.id);
+    await user.click(screen.getByRole("button", { name: /^Add at end$/i }));
+    await user.click(screen.getByRole("button", { name: /Play again after this:/i }));
 
     const rotationHeading = await screen.findByText(/Rotation order \(live schedule\)/i);
     const rotationCard = rotationHeading.closest(".card");
