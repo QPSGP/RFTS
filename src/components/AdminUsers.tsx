@@ -370,6 +370,8 @@ export default function AdminUsers() {
   const [profileDrafts, setProfileDrafts] = useState<Record<string, ProfileDraft>>({});
   const [audioAssignments, setAudioAssignments] = useState<Record<string, Record<string, boolean>>>({});
   const [audioOrder, setAudioOrder] = useState<Record<string, string[]>>({});
+  /** Platinum Managed: pending library item id for “Add to rotation” dropdown (per member email). */
+  const [managedRotationPicker, setManagedRotationPicker] = useState<Record<string, string>>({});
   const [audioSaveStatus, setAudioSaveStatus] = useState<Record<string, string>>({});
   const [uploadStatus, setUploadStatus] = useState<Record<string, string>>({});
   const [personalizedAudioUploading, setPersonalizedAudioUploading] = useState<Record<string, boolean>>({});
@@ -892,6 +894,7 @@ export default function AdminUsers() {
     });
   };
 
+  /** Append one rotation slot; sync assignment when append succeeds (nested setState runs with order update). */
   const incrementManagedAudioSlot = (email: string, itemId: string) => {
     setAudioOrder((prev) => {
       const cur = prev[email] || [];
@@ -905,6 +908,20 @@ export default function AdminUsers() {
         [email]: { ...(a[email] || {}), [itemId]: true }
       }));
       return { ...prev, [email]: nextOrder };
+    });
+  };
+
+  const reorderManagedSlotToPosition = (email: string, fromIndex: number, position1Based: number) => {
+    setAudioOrder((prev) => {
+      const cur = [...(prev[email] || [])];
+      if (fromIndex < 0 || fromIndex >= cur.length) return prev;
+      const p = Math.round(position1Based);
+      const [id] = cur.splice(fromIndex, 1);
+      let insertAt = Number.isFinite(p) ? p - 1 : fromIndex;
+      if (insertAt < 0) insertAt = 0;
+      if (insertAt > cur.length) insertAt = cur.length;
+      cur.splice(insertAt, 0, id);
+      return { ...prev, [email]: cur };
     });
   };
 
@@ -1002,7 +1019,11 @@ export default function AdminUsers() {
         false;
       return shouldHave !== hasEmail;
     });
-    if (updates.length === 0 && !audioOrder[email]) {
+    const tierForSave =
+      users.find((u) => u.email.toLowerCase() === emailLower)?.subscriptionTier ?? null;
+    const hasRotationKey = Object.prototype.hasOwnProperty.call(audioOrder, email);
+
+    if (updates.length === 0 && !audioOrder[email] && !(tierForSave === "platinum_managed" && hasRotationKey)) {
       setAudioSaveStatus((prev) => ({ ...prev, [email]: "No changes to save." }));
       return;
     }
@@ -1035,16 +1056,23 @@ export default function AdminUsers() {
       })
     );
 
-    // Save order
-    const order = audioOrder[email] || [];
-    if (order.length > 0) {
+    // Save order (managed: always persist when state exists, including empty rotation)
+    const orderArr = audioOrder[email];
+    let orderToSave: string[] | null = null;
+    if (tierForSave === "platinum_managed" && hasRotationKey) {
+      orderToSave = Array.isArray(orderArr) ? orderArr : [];
+    } else if (tierForSave !== "platinum_managed") {
+      const o = orderArr || [];
+      if (o.length > 0) orderToSave = o;
+    }
+    if (orderToSave !== null) {
       const orderResponse = await fetch("/api/admin/member-audio-order", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
-          order
+          order: orderToSave
         })
       });
       if (!orderResponse.ok) {
@@ -1059,7 +1087,7 @@ export default function AdminUsers() {
 
     setAudioSaveStatus((prev) => ({
       ...prev,
-      [email]: `Saved ${updates.length} personalized audio update(s)${order.length > 0 ? ` and order` : ""}.`
+      [email]: `Saved ${updates.length} personalized audio update(s)${orderToSave !== null ? ` and order` : ""}.`
     }));
     await load();
   };
@@ -2336,9 +2364,13 @@ export default function AdminUsers() {
                                       No audios in play list yet.
                                     </span>
                                   ) : (
-                                    list.map((item) => (
+                                    list.map((item, playIdx) => (
                                       <div
-                                        key={item.id}
+                                        key={
+                                          isManaged
+                                            ? `managed-play-${user.email}-${playIdx}-${item.id}`
+                                            : item.id
+                                        }
                                         className="goal-item"
                                         style={{ display: "flex", gap: 8, alignItems: "center" }}
                                       >
@@ -2479,16 +2511,23 @@ export default function AdminUsers() {
                           const assigned = library.filter((item) =>
                             (item.allowedUserEmails || []).some((e) => e.toLowerCase() === emailLower)
                           );
-                          // Sort by the order they were selected (from audioOrder state)
                           const order = audioOrder[user.email] || [];
-                          const assignedOrdered = assigned.slice().sort((a, b) => {
-                            const indexA = order.indexOf(a.id);
-                            const indexB = order.indexOf(b.id);
-                            if (indexA === -1 && indexB === -1) return 0;
-                            if (indexA === -1) return 1;
-                            if (indexB === -1) return -1;
-                            return indexA - indexB;
-                          });
+                          const isManagedSec4 = user.subscriptionTier === "platinum_managed";
+                          const byIdLookup = new Map(library.map((item) => [item.id, item]));
+                          /** Managed rotation may repeat the same id; expand order into rows (matches schedule). */
+                          const assignedOrdered =
+                            isManagedSec4 && order.length > 0
+                              ? order
+                                  .map((id) => byIdLookup.get(id))
+                                  .filter((item): item is LibraryItem => item != null)
+                              : assigned.slice().sort((a, b) => {
+                                  const indexA = order.indexOf(a.id);
+                                  const indexB = order.indexOf(b.id);
+                                  if (indexA === -1 && indexB === -1) return 0;
+                                  if (indexA === -1) return 1;
+                                  if (indexB === -1) return -1;
+                                  return indexA - indexB;
+                                });
                           const hasCat = (item: LibraryItem, cat: string) =>
                             (item.categories || []).some((c) => c.toLowerCase() === cat.toLowerCase());
                           /** Personalized CGMR only — matches member schedule API (not first assigned track). */
@@ -2541,7 +2580,10 @@ export default function AdminUsers() {
                                     {displayList.map((item, index) => {
                                       const isDefault = isNonManaged && fallbackItem?.id === item.id;
                                       return (
-                                        <div key={item.id} style={{ marginBottom: 4, fontSize: 12 }}>
+                                        <div
+                                          key={`assign-row-${user.email}-${index}-${item.id}`}
+                                          style={{ marginBottom: 4, fontSize: 12 }}
+                                        >
                                           <strong>{index + 1}.</strong> {item.skuCode || item.title || "No SKU/Title"}
                                           {isDefault && (
                                             <span style={{ color: "#047857", marginLeft: 6 }}>
@@ -2687,12 +2729,214 @@ export default function AdminUsers() {
                       <div style={{ marginTop: 12 }}>
                         <h4 style={{ marginBottom: 8 }}>5. Check audios designed for them</h4>
                         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
-                          Check which audios this member can access.{" "}
-                          <strong>Platinum Managed:</strong> rotation follows the ordered list below; you may include the
-                          same audio up to {MANAGED_MAX_SLOTS_PER_AUDIO} times (total up to {MANAGED_MAX_ROTATION_SLOTS}{" "}
-                          slots). + adds a copy at the end — use Move up / down (or Top / Bottom) on each numbered line to
-                          spread repeats (for example slot 1 and slot 10). Use − on each row or Remove on the list.{" "}
-                          <strong>Gold:</strong> use # for position (each audio once).
+                          <strong>Gold:</strong> check audios and set <strong>#</strong> order (each audio once).{" "}
+                          <strong>Platinum Managed:</strong> use <strong>Rotation order</strong> first (like picking goals,
+                          then ordering): that numbered list is the live schedule. The same recording may appear up to{" "}
+                          {MANAGED_MAX_SLOTS_PER_AUDIO} times (max {MANAGED_MAX_ROTATION_SLOTS} slots). Grant library access
+                          in the checklist below; use <strong>Add to rotation</strong> or row <strong>+</strong> for extra
+                          copies. Set <strong>#</strong> on each rotation row or use Top / Bottom / Up / Down.
+                        </p>
+                        {user.subscriptionTier === "platinum_managed" && (
+                          <div
+                            className="card"
+                            style={{
+                              marginBottom: 16,
+                              padding: 12,
+                              background: "#f8fafc",
+                              border: "1px solid #e2e8f0"
+                            }}
+                          >
+                            <strong style={{ fontSize: 14 }}>Rotation order (live schedule)</strong>
+                            <p style={{ fontSize: 12, color: "#64748b", marginTop: 6, marginBottom: 8 }}>
+                              This list is what the member&apos;s nights run from—including duplicates. Save Personalized
+                              Audios when done.
+                            </p>
+                            <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                              <select
+                                aria-label="Choose audio to add to rotation"
+                                value={managedRotationPicker[user.email] || ""}
+                                onChange={(e) =>
+                                  setManagedRotationPicker((p) => ({
+                                    ...p,
+                                    [user.email]: e.target.value
+                                  }))
+                                }
+                                style={{
+                                  ...inputStyle,
+                                  maxWidth: 360,
+                                  width: "100%",
+                                  flex: "1 1 240px"
+                                }}
+                              >
+                                <option value="">Add audio to rotation…</option>
+                                {library
+                                  .slice()
+                                  .sort((a, b) => {
+                                    const skuA = (a.skuCode || "").trim();
+                                    const skuB = (b.skuCode || "").trim();
+                                    const hasSkuA = !!skuA;
+                                    const hasSkuB = !!skuB;
+                                    if (hasSkuA && !hasSkuB) return -1;
+                                    if (!hasSkuA && hasSkuB) return 1;
+                                    if (hasSkuA && hasSkuB) {
+                                      return skuA.localeCompare(skuB, undefined, {
+                                        numeric: true,
+                                        sensitivity: "base"
+                                      });
+                                    }
+                                    return (a.title || "").localeCompare(b.title || "");
+                                  })
+                                  .map((opt) => (
+                                    <option key={opt.id} value={opt.id}>
+                                      {opt.skuCode ? `${opt.skuCode} — ` : ""}
+                                      {opt.title || opt.id}
+                                    </option>
+                                  ))}
+                              </select>
+                              <button
+                                type="button"
+                                className="button button-secondary"
+                                disabled={
+                                  !managedRotationPicker[user.email]?.trim() ||
+                                  (audioOrder[user.email] || []).length >= MANAGED_MAX_ROTATION_SLOTS
+                                }
+                                onClick={() => {
+                                  const id = managedRotationPicker[user.email]?.trim();
+                                  if (!id) return;
+                                  incrementManagedAudioSlot(user.email, id);
+                                  setManagedRotationPicker((p) => ({ ...p, [user.email]: "" }));
+                                }}
+                              >
+                                Add to rotation
+                              </button>
+                            </div>
+                            <p style={{ fontSize: 12, color: "#6b7280", marginTop: 10 }}>
+                              {(audioOrder[user.email] || []).length}/{MANAGED_MAX_ROTATION_SLOTS} slots · each audio max{" "}
+                              {MANAGED_MAX_SLOTS_PER_AUDIO}×
+                            </p>
+                            {(audioOrder[user.email] || []).length === 0 ? (
+                              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
+                                No slots yet — pick an audio above or check one below and use + , then save.
+                              </p>
+                            ) : (
+                              <ol style={{ marginTop: 8, paddingLeft: 22, fontSize: 13 }}>
+                                {(audioOrder[user.email] || []).map((slotId, idx) => {
+                                  const libItem = library.find((x) => x.id === slotId);
+                                  const label =
+                                    [libItem?.skuCode, libItem?.title].filter(Boolean).join(" – ") || slotId;
+                                  const list = audioOrder[user.email] || [];
+                                  return (
+                                    <li
+                                      key={`managed-slot-${user.email}-${idx}-${slotId}`}
+                                      style={{
+                                        marginBottom: 8,
+                                        display: "flex",
+                                        flexWrap: "wrap",
+                                        alignItems: "center",
+                                        gap: 8
+                                      }}
+                                    >
+                                      <label
+                                        style={{
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: 6,
+                                          fontSize: 12,
+                                          fontWeight: 600,
+                                          color: "#374151"
+                                        }}
+                                      >
+                                        #
+                                        <input
+                                          key={`managed-slot-pos-${user.email}-${idx}-${slotId}`}
+                                          type="number"
+                                          min={1}
+                                          max={list.length}
+                                          defaultValue={idx + 1}
+                                          style={{
+                                            width: 48,
+                                            textAlign: "center",
+                                            borderRadius: 6,
+                                            border: "1px solid #d1d5db",
+                                            padding: "4px 6px",
+                                            fontWeight: 600
+                                          }}
+                                          onBlur={(e) => {
+                                            const v = parseInt(e.target.value, 10);
+                                            if (!Number.isFinite(v) || v === idx + 1) return;
+                                            reorderManagedSlotToPosition(user.email, idx, v);
+                                          }}
+                                        />
+                                      </label>
+                                      <span style={{ flex: "1 1 140px", minWidth: 0 }}>{label}</span>
+                                      <span
+                                        style={{
+                                          display: "inline-flex",
+                                          flexWrap: "wrap",
+                                          gap: 6,
+                                          alignItems: "center"
+                                        }}
+                                      >
+                                        <button
+                                          type="button"
+                                          className="button button-secondary"
+                                          style={{ padding: "2px 10px", fontSize: 12 }}
+                                          disabled={idx === 0}
+                                          aria-label={`Move ${label} to start of rotation`}
+                                          onClick={() => moveManagedSlotToEdge(user.email, idx, "top")}
+                                        >
+                                          Top
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="button button-secondary"
+                                          style={{ padding: "2px 10px", fontSize: 12 }}
+                                          disabled={idx >= list.length - 1}
+                                          aria-label={`Move ${label} to end of rotation`}
+                                          onClick={() => moveManagedSlotToEdge(user.email, idx, "bottom")}
+                                        >
+                                          Bottom
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="button button-secondary"
+                                          style={{ padding: "2px 10px", fontSize: 12 }}
+                                          disabled={idx === 0}
+                                          aria-label={`Move ${label} earlier in rotation`}
+                                          onClick={() => moveManagedSlot(user.email, idx, "up")}
+                                        >
+                                          Up
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="button button-secondary"
+                                          style={{ padding: "2px 10px", fontSize: 12 }}
+                                          disabled={idx >= list.length - 1}
+                                          aria-label={`Move ${label} later in rotation`}
+                                          onClick={() => moveManagedSlot(user.email, idx, "down")}
+                                        >
+                                          Down
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="button button-secondary"
+                                          style={{ padding: "2px 10px", fontSize: 12 }}
+                                          onClick={() => removeManagedSlotAtIndex(user.email, idx)}
+                                        >
+                                          Remove
+                                        </button>
+                                      </span>
+                                    </li>
+                                  );
+                                })}
+                              </ol>
+                            )}
+                          </div>
+                        )}
+                        <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, marginTop: 4 }}>
+                          {user.subscriptionTier === "platinum_managed"
+                            ? "Library access (personalized list)"
+                            : "Audios & order"}
                         </p>
                         <div className="goal-list">
                           {library
@@ -2784,11 +3028,10 @@ export default function AdminUsers() {
                                       className="button button-secondary"
                                       disabled={
                                         slotsForItem >= MANAGED_MAX_SLOTS_PER_AUDIO ||
-                                        totalSlots >= MANAGED_MAX_ROTATION_SLOTS ||
-                                        !isAssigned
+                                        totalSlots >= MANAGED_MAX_ROTATION_SLOTS
                                       }
                                       style={{ padding: "4px 10px", minWidth: 36 }}
-                                      aria-label={`Add another slot for ${item.skuCode || item.title}`}
+                                      aria-label={`Add slot for ${item.skuCode || item.title} (adds to rotation list)`}
                                       onClick={(e) => {
                                         e.preventDefault();
                                         incrementManagedAudioSlot(user.email, item.id);
@@ -2824,92 +3067,6 @@ export default function AdminUsers() {
                             );
                           })}
                         </div>
-                        {user.subscriptionTier === "platinum_managed" && (
-                          <div style={{ marginTop: 12 }}>
-                            <strong style={{ fontSize: 13 }}>
-                              Rotation order ({(audioOrder[user.email] || []).length}/
-                              {MANAGED_MAX_ROTATION_SLOTS} slots)
-                            </strong>
-                            {(audioOrder[user.email] || []).length === 0 ? (
-                              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
-                                No slots yet — check audios and use + to build the rotation, then save.
-                              </p>
-                            ) : (
-                              <ol style={{ marginTop: 8, paddingLeft: 22, fontSize: 13 }}>
-                                {(audioOrder[user.email] || []).map((slotId, idx) => {
-                                  const libItem = library.find((x) => x.id === slotId);
-                                  const label =
-                                    [libItem?.skuCode, libItem?.title].filter(Boolean).join(" – ") || slotId;
-                                  const list = audioOrder[user.email] || [];
-                                  return (
-                                    <li
-                                      key={`managed-slot-${user.email}-${idx}-${slotId}`}
-                                      style={{
-                                        marginBottom: 8,
-                                        display: "flex",
-                                        flexWrap: "wrap",
-                                        alignItems: "center",
-                                        gap: 8
-                                      }}
-                                    >
-                                      <span style={{ flex: "1 1 140px", minWidth: 0 }}>{label}</span>
-                                      <span style={{ display: "inline-flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-                                        <button
-                                          type="button"
-                                          className="button button-secondary"
-                                          style={{ padding: "2px 10px", fontSize: 12 }}
-                                          disabled={idx === 0}
-                                          aria-label={`Move ${label} to start of rotation`}
-                                          onClick={() => moveManagedSlotToEdge(user.email, idx, "top")}
-                                        >
-                                          Top
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="button button-secondary"
-                                          style={{ padding: "2px 10px", fontSize: 12 }}
-                                          disabled={idx >= list.length - 1}
-                                          aria-label={`Move ${label} to end of rotation`}
-                                          onClick={() => moveManagedSlotToEdge(user.email, idx, "bottom")}
-                                        >
-                                          Bottom
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="button button-secondary"
-                                          style={{ padding: "2px 10px", fontSize: 12 }}
-                                          disabled={idx === 0}
-                                          aria-label={`Move ${label} earlier in rotation`}
-                                          onClick={() => moveManagedSlot(user.email, idx, "up")}
-                                        >
-                                          Up
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="button button-secondary"
-                                          style={{ padding: "2px 10px", fontSize: 12 }}
-                                          disabled={idx >= list.length - 1}
-                                          aria-label={`Move ${label} later in rotation`}
-                                          onClick={() => moveManagedSlot(user.email, idx, "down")}
-                                        >
-                                          Down
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="button button-secondary"
-                                          style={{ padding: "2px 10px", fontSize: 12 }}
-                                          onClick={() => removeManagedSlotAtIndex(user.email, idx)}
-                                        >
-                                          Remove
-                                        </button>
-                                      </span>
-                                    </li>
-                                  );
-                                })}
-                              </ol>
-                            )}
-                          </div>
-                        )}
                         <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
                           To remove a track from this member: uncheck it (managed: clear all slots first or use −) and
                           click Save Personalized Audios.
