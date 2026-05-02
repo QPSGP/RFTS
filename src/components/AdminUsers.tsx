@@ -840,7 +840,7 @@ export default function AdminUsers() {
     tier: UserRow["subscriptionTier"]
   ) => {
     if (tier === "platinum_managed") {
-      const curOrder = audioOrder[email] || [];
+      const curOrder = (audioOrderRef.current[email] ?? audioOrder[email]) || [];
       const slots = countAudioSlotsInOrder(curOrder, itemId);
       const mapped = audioAssignments[email]?.[itemId];
       /** Rotation slots or explicit assign flag — not “allowed on library” alone (legacy access without order). */
@@ -935,11 +935,13 @@ export default function AdminUsers() {
       const idx = cur.lastIndexOf(itemId);
       if (idx === -1) return prev;
       const nextOrder = cur.filter((_, i) => i !== idx);
-      const remaining = countAudioSlotsInOrder(nextOrder, itemId);
-      setAudioAssignments((a) => ({
-        ...a,
-        [email]: { ...(a[email] || {}), [itemId]: remaining > 0 }
-      }));
+      const remaining = countAudioSlotsInOrder(nextOrder, itemId) > 0;
+      queueMicrotask(() => {
+        setAudioAssignments((a) => ({
+          ...a,
+          [email]: { ...(a[email] || {}), [itemId]: remaining }
+        }));
+      });
       return { ...prev, [email]: nextOrder };
     });
   };
@@ -950,11 +952,13 @@ export default function AdminUsers() {
       if (slotIndex < 0 || slotIndex >= cur.length) return prev;
       const removedId = cur[slotIndex];
       const nextOrder = cur.filter((_, i) => i !== slotIndex);
-      const remaining = countAudioSlotsInOrder(nextOrder, removedId);
-      setAudioAssignments((a) => ({
-        ...a,
-        [email]: { ...(a[email] || {}), [removedId]: remaining > 0 }
-      }));
+      const remaining = countAudioSlotsInOrder(nextOrder, removedId) > 0;
+      queueMicrotask(() => {
+        setAudioAssignments((a) => ({
+          ...a,
+          [email]: { ...(a[email] || {}), [removedId]: remaining }
+        }));
+      });
       return { ...prev, [email]: nextOrder };
     });
   };
@@ -2985,21 +2989,32 @@ export default function AdminUsers() {
                             const orderValue = getAudioOrder(user.email, item.id, fallbackOrder);
                             const totalSlots = currentOrder.length;
                             return (
-                              <label
+                              <div
                                 key={item.id}
                                 className="goal-item"
                                 style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}
                               >
-                                <input
-                                  type="checkbox"
-                                  checked={isAssigned}
-                                  onChange={() =>
-                                    toggleAudioAssignment(user.email, item.id, user.subscriptionTier)
-                                  }
-                                />
-                                <span style={{ flex: 1 }}>
-                                  {item.skuCode || item.title || "No SKU/Title"}
-                                </span>
+                                <label
+                                  style={{
+                                    display: "flex",
+                                    flex: "1 1 200px",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    minWidth: 0,
+                                    cursor: "pointer"
+                                  }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isAssigned}
+                                    onChange={() =>
+                                      toggleAudioAssignment(user.email, item.id, user.subscriptionTier)
+                                    }
+                                  />
+                                  <span style={{ flex: 1, minWidth: 0 }}>
+                                    {item.skuCode || item.title || "No SKU/Title"}
+                                  </span>
+                                </label>
                                 {isManagedMember ? (
                                   <span
                                     style={{
@@ -3008,7 +3023,8 @@ export default function AdminUsers() {
                                       alignItems: "center",
                                       fontSize: 12,
                                       fontWeight: 600,
-                                      color: "#374151"
+                                      color: "#374151",
+                                      flexShrink: 0
                                     }}
                                   >
                                     <span style={{ minWidth: 72, textAlign: "center" }}>
@@ -3022,6 +3038,7 @@ export default function AdminUsers() {
                                       aria-label={`Remove one slot for ${item.skuCode || item.title}`}
                                       onClick={(e) => {
                                         e.preventDefault();
+                                        e.stopPropagation();
                                         decrementManagedAudioSlot(user.email, item.id);
                                       }}
                                     >
@@ -3038,6 +3055,7 @@ export default function AdminUsers() {
                                       aria-label={`Add slot for ${item.skuCode || item.title} (adds to rotation list)`}
                                       onClick={(e) => {
                                         e.preventDefault();
+                                        e.stopPropagation();
                                         incrementManagedAudioSlot(user.email, item.id);
                                       }}
                                     >
@@ -3063,11 +3081,12 @@ export default function AdminUsers() {
                                       padding: "4px 6px",
                                       background: orderValue ? "#16a34a" : "#ffffff",
                                       color: orderValue ? "#ffffff" : "#111827",
-                                      fontWeight: 600
+                                      fontWeight: 600,
+                                      flexShrink: 0
                                     }}
                                   />
                                 )}
-                              </label>
+                              </div>
                             );
                           })}
                         </div>
