@@ -5,6 +5,10 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER } from "@/lib/member-audio-activity";
 import { formatFullSessionsFraction } from "@/lib/session-progress-format";
+import {
+  MANAGED_MAX_ROTATION_SLOTS,
+  MANAGED_MAX_SLOTS_PER_AUDIO
+} from "@/lib/managed-rotation-limits";
 import type { LibraryItem } from "@/lib/types";
 
 
@@ -41,8 +45,6 @@ const inputStyle = {
 };
 
 /** Platinum Managed rotation list persisted to member_audio_assignments (order may repeat IDs). */
-const MANAGED_MAX_ROTATION_SLOTS = 10;
-const MANAGED_MAX_SLOTS_PER_AUDIO = 3;
 
 function countAudioSlotsInOrder(order: string[], itemId: string): number {
   return order.filter((id) => id === itemId).length;
@@ -2996,18 +2998,37 @@ export default function AdminUsers() {
                               </strong>
                               <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 8px 0" }}>
                                 After each add the dropdown goes back to <strong>Choose recording…</strong> so you can pick the
-                                next step (including the same recording again). The list scrolls to the new row at the bottom —
-                                use <strong>Up / Down</strong> to move it, then <strong>Save Personalized Audios</strong>.
+                                next step (including the same recording again). The page scrolls the new row into view when the
+                                browser supports it — use <strong>Up / Down</strong> to move it, then{" "}
+                                <strong>Save Personalized Audios</strong>.
                               </p>
+                              {rotationOrder.length >= MANAGED_MAX_ROTATION_SLOTS ? (
+                                <p
+                                  role="status"
+                                  style={{
+                                    fontSize: 12,
+                                    color: "#9a3412",
+                                    margin: "0 0 8px 0",
+                                    fontWeight: 600,
+                                    padding: 8,
+                                    background: "#fff7ed",
+                                    borderRadius: 6,
+                                    border: "1px solid #fdba74"
+                                  }}
+                                >
+                                  Rotation is full ({rotationOrder.length}/{MANAGED_MAX_ROTATION_SLOTS} slots). Remove a step
+                                  before <strong>Add at end</strong> is available again.
+                                </p>
+                              ) : null}
                               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
                               <select
                                 aria-label="Choose audio to add at end of rotation"
                                 disabled={audioHydrating}
-                                value={managedRotationPicker[user.email] || ""}
+                                value={managedRotationPicker[audioKey] ?? managedRotationPicker[user.email] ?? ""}
                                 onChange={(e) =>
                                   setManagedRotationPicker((p) => ({
                                     ...p,
-                                    [user.email]: e.target.value
+                                    [audioKey]: e.target.value
                                   }))
                                 }
                                 style={{

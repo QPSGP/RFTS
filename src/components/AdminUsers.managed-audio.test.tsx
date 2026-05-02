@@ -21,8 +21,9 @@ const MANAGED_USER = {
   playsPerNight: 2
 };
 
+/** Valid UUIDs — API route validates POST bodies with z.string().uuid(). */
 const LIB_ALPHA = {
-  id: "audio-alpha",
+  id: "11111111-1111-4111-8111-111111111111",
   title: "Alpha Track",
   description: "",
   skuCode: "SKU-A",
@@ -35,7 +36,7 @@ const LIB_ALPHA = {
 };
 
 const LIB_BETA = {
-  id: "audio-beta",
+  id: "22222222-2222-4222-8222-222222222222",
   title: "Beta Track",
   description: "",
   skuCode: "SKU-B",
@@ -275,5 +276,111 @@ describe("AdminUsers Platinum Managed rotation", () => {
     await waitFor(() => {
       expect(within(rotationCard as HTMLElement).getAllByRole("listitem")).toHaveLength(2);
     });
+  });
+
+  it("Add at end stays available after loading 16 saved slots (real accounts exceeded old 10-slot cap)", async () => {
+    const yahooUser = {
+      ...MANAGED_USER,
+      id: "u-yahoo",
+      email: "KimDeBraux@yahoo.com",
+      firstName: "Kim",
+      lastName: "Test"
+    };
+    const savedOrder = Array.from({ length: 16 }, () => LIB_ALPHA.id);
+
+    global.fetch = jest.fn((input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url.includes("/api/admin/users") && url.split("?")[0].endsWith("/api/admin/users")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ users: [yahooUser] })
+        } as Response);
+      }
+      if (url.includes("/api/interests")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ interests: [] })
+        } as Response);
+      }
+      if (url.includes("/api/library")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ library: [LIB_ALPHA, LIB_BETA] })
+        } as Response);
+      }
+      if (url.includes("/api/playback-settings")) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              settings: { fallbackTrackId: "T-18", cgmrTrackId: "" }
+            })
+        } as Response);
+      }
+      if (url.includes("/api/admin/member-profile")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ profile: {} })
+        } as Response);
+      }
+      if (url.includes("/api/admin/member-activity")) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              activityLog: [],
+              scheduleProgress: null,
+              serverTime: new Date().toISOString(),
+              newestActivityAt: null
+            })
+        } as Response);
+      }
+      if (url.includes("/api/admin/member-audio-order") && url.includes("email=")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ order: savedOrder })
+        } as Response);
+      }
+
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+        json: () => Promise.resolve({ error: "unmocked " + url })
+      } as Response);
+    });
+
+    const user = userEvent.setup();
+    render(<AdminUsers />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /View \/ Edit member/i })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole("button", { name: /View \/ Edit member/i }));
+    await screen.findByText(/Check audios designed for them/i);
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("status", { name: /loading saved rotation from server/i })
+      ).not.toBeInTheDocument();
+    });
+
+    const rotationHeading = await screen.findByText(/Rotation order \(live schedule\)/i);
+    const rotationCard = rotationHeading.closest(".card");
+    expect(rotationCard).toBeTruthy();
+
+    await waitFor(() => {
+      expect(within(rotationCard as HTMLElement).getAllByRole("listitem")).toHaveLength(16);
+    });
+
+    const addBtn = screen.getByRole("button", { name: /^Add at end$/i });
+    const combo = screen.getByRole("combobox", { name: /choose audio to add at end of rotation/i });
+    await user.selectOptions(combo, LIB_BETA.id);
+    expect(addBtn).not.toBeDisabled();
+
+    await user.click(addBtn);
+    await waitFor(() => {
+      expect(within(rotationCard as HTMLElement).getAllByRole("listitem")).toHaveLength(17);
+    });
+    expect(within(rotationCard as HTMLElement).getByLabelText(/step 17/i)).toBeInTheDocument();
   });
 });

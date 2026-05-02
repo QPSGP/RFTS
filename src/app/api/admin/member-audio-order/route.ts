@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
 import { sql } from "@vercel/postgres";
+import {
+  MANAGED_MAX_ROTATION_SLOTS,
+  MANAGED_MAX_SLOTS_PER_AUDIO
+} from "@/lib/managed-rotation-limits";
 
 const querySchema = z.object({
   email: z.string().email()
 });
-
-const MANAGED_MAX_ROTATION_SLOTS = 10;
-const MANAGED_MAX_SLOTS_PER_AUDIO = 3;
 
 const updateSchema = z.object({
   email: z.string().email(),
