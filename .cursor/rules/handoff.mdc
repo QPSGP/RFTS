@@ -27,6 +27,12 @@ When the user asks for **Resend** info, **Resend setup**, or **email env / BCC /
 
 1. **Read `RESEND.md`** in this folder and answer from that document (env vars, what is in code vs dashboard, flows, Vercel steps).
 
-## Git: push after corrections
+## Git: test before push, then commit and push
 
-After any code corrections or feature changes, **automatically commit and push** to `origin/main`. Do not wait for the user to ask. Run: stage all changes, commit with a clear message, then `git push origin main`.
+After any code corrections or feature changes:
+
+1. **Run tests before pushing** — from `rfts-platform`, run `npm test` and fix failures. Do not push if tests fail.
+2. For non-trivial UI or build-sensitive changes, also run `npm run build` and fix compile/type errors before push.
+3. **Then** stage, commit with a clear message, and `git push origin main`. Do not wait for the user to ask to push, but **do not skip the test run** to save time.
+
+This catches regressions (e.g. admin rotation, hydration) before they reach `main`.
