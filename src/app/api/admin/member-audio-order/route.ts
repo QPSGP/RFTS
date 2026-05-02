@@ -55,7 +55,7 @@ function orderSaveErrorMessage(error: unknown): string {
   if (pg?.code === "23505") {
     const hint =
       pg.constraint?.includes("library_item") || pg.detail?.includes("library_item")
-        ? "Your database may still enforce only one row per recording per member. Run the latest scripts/schema.sql migration (member_audio_assignments) so the same audio can appear in multiple rotation slots."
+        ? "Your database may still enforce only one row per recording per member. Run scripts/fix-managed-rotation-duplicate-slots.sql on Postgres (or the matching blocks in scripts/schema.sql) so the same audio can appear in multiple rotation slots."
         : "A uniqueness constraint rejected this order. Check assignment_order conflicts or run schema migrations.";
     return `Order save failed: ${hint}`;
   }
