@@ -370,6 +370,11 @@ export default function AdminUsers() {
   const [profileDrafts, setProfileDrafts] = useState<Record<string, ProfileDraft>>({});
   const [audioAssignments, setAudioAssignments] = useState<Record<string, Record<string, boolean>>>({});
   const [audioOrder, setAudioOrder] = useState<Record<string, string[]>>({});
+  /** Latest committed rotation (avoids stale closures on checkbox / + between renders). */
+  const audioOrderRef = useRef<Record<string, string[]>>({});
+  useEffect(() => {
+    audioOrderRef.current = audioOrder;
+  }, [audioOrder]);
   /** Platinum Managed: pending library item id for “Add to rotation” dropdown (per member email). */
   const [managedRotationPicker, setManagedRotationPicker] = useState<Record<string, string>>({});
   const [audioSaveStatus, setAudioSaveStatus] = useState<Record<string, string>>({});
@@ -894,7 +899,7 @@ export default function AdminUsers() {
     });
   };
 
-  /** Append one rotation slot; sync assignment when append succeeds (nested setState runs with order update). */
+  /** Append one rotation slot. Do not call setAudioAssignments inside setAudioOrder (React can drop/batch badly). */
   const incrementManagedAudioSlot = (email: string, itemId: string) => {
     setAudioOrder((prev) => {
       const cur = prev[email] || [];
@@ -902,13 +907,12 @@ export default function AdminUsers() {
       if (n >= MANAGED_MAX_SLOTS_PER_AUDIO || cur.length >= MANAGED_MAX_ROTATION_SLOTS) {
         return prev;
       }
-      const nextOrder = [...cur, itemId];
-      setAudioAssignments((a) => ({
-        ...a,
-        [email]: { ...(a[email] || {}), [itemId]: true }
-      }));
-      return { ...prev, [email]: nextOrder };
+      return { ...prev, [email]: [...cur, itemId] };
     });
+    setAudioAssignments((a) => ({
+      ...a,
+      [email]: { ...(a[email] || {}), [itemId]: true }
+    }));
   };
 
   const reorderManagedSlotToPosition = (email: string, fromIndex: number, position1Based: number) => {
