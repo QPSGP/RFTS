@@ -1152,10 +1152,22 @@ export default function AdminUsers() {
       }
     }
 
-    setAudioSaveStatus((prev) => ({
-      ...prev,
-      [email]: `Saved ${libraryAssignmentChanges.length} personalized audio update(s)${orderToSave !== null ? ` and order` : ""}.`
-    }));
+    const patchCount = libraryAssignmentChanges.length;
+    const savedRotationOrder = orderToSave !== null;
+    let saveMsg: string;
+    if (patchCount > 0 && savedRotationOrder) {
+      saveMsg = `Saved ${patchCount} personalized audio update(s) and rotation order.`;
+    } else if (patchCount > 0 && !savedRotationOrder) {
+      saveMsg = `Saved ${patchCount} personalized audio update(s).`;
+    } else if (savedRotationOrder) {
+      saveMsg =
+        tierForSave === "platinum_managed"
+          ? "Saved managed rotation order (library access was already up to date — no checklist changes)."
+          : "Saved rotation order (library access unchanged).";
+    } else {
+      saveMsg = "Saved.";
+    }
+    setAudioSaveStatus((prev) => ({ ...prev, [email]: saveMsg }));
     await load();
   };
 
