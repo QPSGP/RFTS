@@ -1025,25 +1025,33 @@ export default function AdminUsers() {
   const saveAudioAssignments = async (email: string) => {
     const current = audioAssignments[email] || buildAudioAssignment(email);
     const emailLower = email.toLowerCase();
-    const updates = library.filter((item) => {
+    /** Library rows whose allowed-email list must be PATCHed (not the same as `updates` member-row draft state). */
+    const libraryAssignmentChanges = library.filter((item) => {
       const shouldHave = !!current[item.id];
       const hasEmail =
         item.allowedUserEmails?.some((allowed) => allowed.toLowerCase() === emailLower) ||
         false;
       return shouldHave !== hasEmail;
     });
-    const tierForSave =
-      users.find((u) => u.email.toLowerCase() === emailLower)?.subscriptionTier ?? null;
+    /** Must match admin dropdown (`updates`) so rotation persists before “Save” on the member row. */
+    const tierForSave: UserRow["subscriptionTier"] =
+      updates[email]?.subscriptionTier ??
+      users.find((u) => u.email.toLowerCase() === emailLower)?.subscriptionTier ??
+      "platinum";
     const hasRotationKey = Object.prototype.hasOwnProperty.call(audioOrder, email);
 
-    if (updates.length === 0 && !audioOrder[email] && !(tierForSave === "platinum_managed" && hasRotationKey)) {
+    if (
+      libraryAssignmentChanges.length === 0 &&
+      !audioOrder[email] &&
+      !(tierForSave === "platinum_managed" && hasRotationKey)
+    ) {
       setAudioSaveStatus((prev) => ({ ...prev, [email]: "No changes to save." }));
       return;
     }
     
     // Save assignments
     await Promise.all(
-      updates.map((item) => {
+      libraryAssignmentChanges.map((item) => {
         const allowed = item.allowedUserEmails || [];
         const shouldHave = !!current[item.id];
         const nextAllowed = shouldHave
@@ -1089,9 +1097,12 @@ export default function AdminUsers() {
         })
       });
       if (!orderResponse.ok) {
+        const errPayload = await orderResponse.json().catch(() => ({} as { error?: string }));
+        const detail =
+          typeof errPayload?.error === "string" ? errPayload.error : `HTTP ${orderResponse.status}`;
         setAudioSaveStatus((prev) => ({
           ...prev,
-          [email]: `Saved ${updates.length} assignment(s), but order save failed.`
+          [email]: `Saved ${libraryAssignmentChanges.length} assignment(s), but order save failed: ${detail}`
         }));
         await load();
         return;
@@ -1100,7 +1111,7 @@ export default function AdminUsers() {
 
     setAudioSaveStatus((prev) => ({
       ...prev,
-      [email]: `Saved ${updates.length} personalized audio update(s)${orderToSave !== null ? ` and order` : ""}.`
+      [email]: `Saved ${libraryAssignmentChanges.length} personalized audio update(s)${orderToSave !== null ? ` and order` : ""}.`
     }));
     await load();
   };
@@ -2765,6 +2776,52 @@ export default function AdminUsers() {
                           <div
                             className="card"
                             style={{
+                              marginBottom: 12,
+                              padding: 12,
+                              background: "#fffbeb",
+                              border: "1px solid #fcd34d"
+                            }}
+                          >
+                            <strong style={{ fontSize: 13, color: "#78350f" }}>
+                              Admin checklist — Platinum Managed rotation
+                            </strong>
+                            <ol
+                              style={{
+                                margin: "8px 0 0 0",
+                                paddingLeft: 20,
+                                fontSize: 12,
+                                color: "#78350f",
+                                lineHeight: 1.55
+                              }}
+                            >
+                              <li>
+                                After <strong>View / Edit member</strong>, wait until the blue status line under{" "}
+                                <strong>Rotation order</strong> clears (saved order finished loading). Buttons stay disabled
+                                until then so nothing overwrites your edits.
+                              </li>
+                              <li>
+                                Set <strong>Platinum Managed Member</strong> in section 1 when this member should use this
+                                rotation; saves use that dropdown value even if you have not clicked <strong>Save</strong> on
+                                the member row yet.
+                              </li>
+                              <li>
+                                To schedule the same recording again: click its <strong>SKU / title</strong>, or{" "}
+                                <strong>+</strong>, or pick it under <strong>Add to audio rotation</strong> — each adds one
+                                slot (max {MANAGED_MAX_SLOTS_PER_AUDIO}× per recording, {MANAGED_MAX_ROTATION_SLOTS} slots
+                                total).
+                              </li>
+                              <li>
+                                Reorder with <strong>Up / Down</strong> on the numbered list. Then click{" "}
+                                <strong>Save Personalized Audios</strong>. If it fails, the message includes the server
+                                detail (for example validation errors).
+                              </li>
+                            </ol>
+                          </div>
+                        )}
+                        {effectiveTier === "platinum_managed" && (
+                          <div
+                            className="card"
+                            style={{
                               marginBottom: 16,
                               padding: 12,
                               background: "#f8fafc",
@@ -2781,7 +2838,11 @@ export default function AdminUsers() {
                               {MANAGED_MAX_SLOTS_PER_AUDIO}×
                             </p>
                             {audioHydrating ? (
-                              <p style={{ fontSize: 12, color: "#2563eb", marginTop: 4, marginBottom: 10 }} role="status">
+                              <p
+                                role="status"
+                                aria-label="Loading saved rotation from server"
+                                style={{ fontSize: 12, color: "#2563eb", marginTop: 4, marginBottom: 10 }}
+                              >
                                 Loading saved rotation from server… Edit controls unlock in a moment.
                               </p>
                             ) : null}

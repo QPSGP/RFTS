@@ -133,7 +133,9 @@ describe("AdminUsers Platinum Managed rotation", () => {
     await screen.findByText(/Check audios designed for them/i);
 
     await waitFor(() => {
-      expect(screen.queryByText(/Loading saved rotation from server/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("status", { name: /loading saved rotation from server/i })
+      ).not.toBeInTheDocument();
     });
 
     /** Row label is `skuCode || title` — LIB_ALPHA uses SKU-A. */
@@ -236,7 +238,7 @@ describe("AdminUsers Platinum Managed rotation", () => {
 
     await user.click(screen.getByRole("button", { name: /View \/ Edit member/i }));
 
-    await screen.findByText(/Loading saved rotation from server/i);
+    await screen.findByRole("status", { name: /loading saved rotation from server/i });
 
     const alphaBtn = await screen.findByRole("button", { name: /^SKU-A$/i });
     expect(alphaBtn).toBeDisabled();
@@ -244,7 +246,9 @@ describe("AdminUsers Platinum Managed rotation", () => {
     finishAudioFetch();
 
     await waitFor(() => {
-      expect(screen.queryByText(/Loading saved rotation from server/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("status", { name: /loading saved rotation from server/i })
+      ).not.toBeInTheDocument();
     });
 
     expect(alphaBtn).not.toBeDisabled();
