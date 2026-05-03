@@ -12,7 +12,7 @@ type ScreenWakeToggleProps = {
 export default function ScreenWakeToggle({
   title = "Keep Screen Awake",
   description =
-    "Enables when you start your session (tapping Start Session) so the screen can stay on through preparation and the first track — and through the long gap to the second recording. Phones often require this moment (user action) to grant wake lock. Use Disable for normal screen sleep when you do not need it."
+    "Enables when you start your session (tapping Start Session) so the screen can stay on through preparation and the first track — and through the long gap to the second recording. Phones often require this moment (user action) to grant wake lock. It turns off again when your session ends (or use Disable anytime)."
 }: ScreenWakeToggleProps) {
   const [wakeLockSupported, setWakeLockSupported] = useState(true);
   const [wakeLockActive, setWakeLockActive] = useState(false);
@@ -28,7 +28,9 @@ export default function ScreenWakeToggle({
     }
   }, []);
 
-  const releaseWakeLock = useCallback(async () => {
+  const releaseWakeLock = useCallback(async (opts?: { afterSession?: boolean }) => {
+    sessionStartRetryIdsRef.current.forEach((id) => clearTimeout(id));
+    sessionStartRetryIdsRef.current = [];
     userWantsWakeLockRef.current = false;
     try {
       if (wakeLockRef.current) {
@@ -39,7 +41,11 @@ export default function ScreenWakeToggle({
     } finally {
       wakeLockRef.current = null;
       setWakeLockActive(false);
-      setFeedback("Screen wake disabled.");
+      setFeedback(
+        opts?.afterSession
+          ? "Screen wake released after your session ended."
+          : "Screen wake disabled."
+      );
     }
   }, []);
 
@@ -107,15 +113,21 @@ export default function ScreenWakeToggle({
         void requestWakeLock();
       }
     };
+    const handleSessionEnd = () => {
+      clearSessionStartRetries();
+      void releaseWakeLock({ afterSession: true });
+    };
     document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("rfts-session-start", handleSessionStart);
     window.addEventListener("rfts-inter-half-gap", handleInterHalfGap);
+    window.addEventListener("rfts-session-end", handleSessionEnd);
     return () => {
       clearSessionStartRetries();
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("rfts-session-start", handleSessionStart);
       window.removeEventListener("rfts-inter-half-gap", handleInterHalfGap);
-      releaseWakeLock();
+      window.removeEventListener("rfts-session-end", handleSessionEnd);
+      void releaseWakeLock();
     };
   }, [requestWakeLock, releaseWakeLock]);
 

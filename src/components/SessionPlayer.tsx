@@ -38,6 +38,13 @@ function displayNameForSessionTrack(t: SessionTrack): string {
   return sku ? `${sku} – ${title}` : title;
 }
 
+/** Tells `ScreenWakeToggle` to release the wake lock when a listening session fully stops. */
+function dispatchRftsSessionEnd() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("rfts-session-end"));
+  }
+}
+
 type SessionPlayerProps = {
   prepAudio?: SessionTrack | null;
   firstTrack?: SessionTrack | null;
@@ -561,6 +568,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         "No second recording was scheduled. Reload Play Options or check your lineup has two tracks for tonight."
       );
       setPhase("idle");
+      dispatchRftsSessionEnd();
       return;
     }
     const prep = prepAudioRef.current;
@@ -649,6 +657,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     setQueue([]);
     setCurrent(null);
     setMessage("Session ended. You can start again when you’re ready.");
+    dispatchRftsSessionEnd();
   }, [clearWaitTimers]);
 
   const handleEnded = useCallback(() => {
@@ -774,6 +783,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       if (playsPerNight === 1) {
         setOnePerNightComplete(true);
       }
+      dispatchRftsSessionEnd();
     }
   }, [phase, gapHours, playsPerNight, queue, clearWaitTimers, prepAudio, scheduleNightNumber, onScheduleNightComplete, beginSecondAfterGap]);
 
