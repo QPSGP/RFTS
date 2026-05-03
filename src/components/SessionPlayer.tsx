@@ -418,6 +418,9 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       countdownIntervalRef.current = null;
     }
     pendingNextTrackRef.current = null;
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("rfts-session-start"));
+    }
     setPhase("second");
     const nextQueue = [prepAudio, secondTrack].filter(
       (track): track is SessionTrack => !!track

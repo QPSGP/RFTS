@@ -12,7 +12,7 @@ type ScreenWakeToggleProps = {
 export default function ScreenWakeToggle({
   title = "Keep Screen Awake",
   description =
-    "On by default so overnight sessions keep running — especially the second recording after the gap on phones that pause timers when the screen locks. Use Disable if you prefer your normal screen sleep."
+    "Enables when you start your session (tapping Start Session) so the screen can stay on through preparation and the first track — and through the long gap to the second recording. Phones often require this moment (user action) to grant wake lock. Use Disable for normal screen sleep when you do not need it."
 }: ScreenWakeToggleProps) {
   const [wakeLockSupported, setWakeLockSupported] = useState(true);
   const [wakeLockActive, setWakeLockActive] = useState(false);
@@ -20,7 +20,7 @@ export default function ScreenWakeToggle({
   const userWantsWakeLockRef = useRef(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const hasAutoEnabledRef = useRef(false);
+  const sessionStartRetryIdsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
     if (typeof navigator !== "undefined" && !("wakeLock" in navigator)) {
@@ -73,37 +73,33 @@ export default function ScreenWakeToggle({
     }
   }, []);
 
-  /** Default on: narrow-mobile-only auto-enable missed Android landscape and many tablets; timers + second-half playback need the tab to stay awake. */
   useEffect(() => {
-    if (hasAutoEnabledRef.current) return;
-    if (typeof navigator === "undefined" || !("wakeLock" in navigator)) return;
-    hasAutoEnabledRef.current = true;
-    userWantsWakeLockRef.current = true;
-
-    const tryEnable = () => {
-      if (document.visibilityState === "visible") {
+    const clearSessionStartRetries = () => {
+      sessionStartRetryIdsRef.current.forEach((id) => clearTimeout(id));
+      sessionStartRetryIdsRef.current = [];
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && userWantsWakeLockRef.current) {
         void requestWakeLock();
       }
     };
-
-    tryEnable();
-    const t1 = setTimeout(tryEnable, 250);
-    const t2 = setTimeout(tryEnable, 2000);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, [requestWakeLock]);
-
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible" && userWantsWakeLockRef.current) {
-        requestWakeLock();
-      }
-    };
+    /**
+     * Fired when the member taps Start Session (or Plays the second half) — a user-gesture
+     * path where `navigator.wakeLock.request()` is more likely to succeed on Android than
+     * requesting on page load, and early enough to cover prep + first track before auto-lock.
+     */
     const handleSessionStart = () => {
-      if (!wakeLockRef.current) {
-        requestWakeLock();
+      userWantsWakeLockRef.current = true;
+      clearSessionStartRetries();
+      const tryRequest = () => {
+        if (!userWantsWakeLockRef.current) return;
+        if (document.visibilityState !== "visible") return;
+        void requestWakeLock();
+      };
+      tryRequest();
+      for (const ms of [250, 2000]) {
+        const id = setTimeout(tryRequest, ms);
+        sessionStartRetryIdsRef.current.push(id);
       }
     };
     const handleInterHalfGap = () => {
@@ -115,6 +111,7 @@ export default function ScreenWakeToggle({
     window.addEventListener("rfts-session-start", handleSessionStart);
     window.addEventListener("rfts-inter-half-gap", handleInterHalfGap);
     return () => {
+      clearSessionStartRetries();
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("rfts-session-start", handleSessionStart);
       window.removeEventListener("rfts-inter-half-gap", handleInterHalfGap);
