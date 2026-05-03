@@ -583,6 +583,26 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     // `<audio>` was unmounted during "waiting" — do not set skipEffectPlayRef; the `current` effect starts playback.
   }, [prepAudio, clearWaitTimers]);
 
+  /**
+   * Android often freezes long `setTimeout` / `setInterval` while the screen is locked; the second half then
+   * appeared to start only on unlock. `timeupdate` follows the playing silent bridge and often keeps waking
+   * this check even when main-thread timers are stalled.
+   */
+  useLayoutEffect(() => {
+    if (phase !== "waiting" || playsPerNight !== 2) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+    const gapEpoch = sessionEpochRef.current;
+    const bumpSecondHalfIfDue = () => {
+      if (sessionEpochRef.current !== gapEpoch) return;
+      if (phaseRef.current !== "waiting") return;
+      if (Date.now() < secondStartAtRef.current) return;
+      beginSecondAfterGap();
+    };
+    audio.addEventListener("timeupdate", bumpSecondHalfIfDue);
+    return () => audio.removeEventListener("timeupdate", bumpSecondHalfIfDue);
+  }, [phase, playsPerNight, beginSecondAfterGap]);
+
   useEffect(() => {
     if (typeof document === "undefined" || typeof window === "undefined" || phase !== "waiting") {
       return;
@@ -594,8 +614,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       if (Date.now() < secondStartAtRef.current) return;
       beginSecondAfterGap();
     };
+    /** Run on hidden too: if the deadline passed while locked, start the second half without waiting for unlock. */
     const onVisibility = () => {
-      if (document.visibilityState !== "visible") return;
       tryResumeSecondHalf();
     };
     /** bfcache restore / tab wake — long gap timers can be unreliable without this */
