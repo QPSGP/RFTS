@@ -127,16 +127,20 @@ function startPlaybackWithIOSAutoplayGuard(
 
 let silentGapLoopDataUriCache: string | null = null;
 
-/** Short looping silence during the first→second gap keeps `<audio>` in a playing state for mobile autoplay handoff. */
+/**
+ * Short looping silence during the first→second gap keeps `<audio>` in a playing state for mobile autoplay handoff.
+ * Uses 16-bit signed PCM at zero — correct digital silence. (Older builds used 8-bit WAV with sample bytes left at 0;
+ * in unsigned 8-bit WAV silence is 128, so 0 caused DC offset / rhythmic clicks when looping — often heard as a “heartbeat”.)
+ */
 function getSilentGapLoopDataUri(): string {
   if (silentGapLoopDataUriCache) return silentGapLoopDataUriCache;
   if (typeof window === "undefined") return "";
   const sampleRate = 8000;
   const durationMs = 250;
-  const numSamples = Math.ceil((durationMs / 1000) * sampleRate);
-  const bitsPerSample = 8;
+  const bitsPerSample = 16;
   const numChannels = 1;
   const blockAlign = numChannels * (bitsPerSample / 8);
+  const numSamples = Math.ceil((durationMs / 1000) * sampleRate);
   const byteRate = sampleRate * blockAlign;
   const dataSize = numSamples * blockAlign;
   const buffer = new ArrayBuffer(44 + dataSize);
@@ -169,6 +173,10 @@ function getSilentGapLoopDataUri(): string {
   write("data");
   v.setUint32(o, dataSize, true);
   o += 4;
+  for (let i = 0; i < numSamples; i++) {
+    v.setInt16(o, 0, true);
+    o += 2;
+  }
   const u8 = new Uint8Array(buffer);
   let bin = "";
   for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
@@ -320,6 +328,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     const epoch = sessionEpochRef.current;
     audio.loop = true;
     audio.volume = 0;
+    audio.muted = true;
     if (audio.src !== silent) {
       audio.src = silent;
       audio.load();
@@ -344,6 +353,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     if (!audio || !track) {
       return;
     }
+    audio.muted = false;
     if (audio.src !== track.url) {
       audio.src = track.url;
     }
@@ -445,6 +455,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         sessionEpochRef.current === epochAtStart && currentRef.current?.url === trackUrl;
       audio.loop = false;
       audio.volume = 1;
+      audio.muted = false;
       startTrackFromBeginning(audio);
       cancelAutoplayCheck = startPlaybackWithIOSAutoplayGuard(
         audio,
