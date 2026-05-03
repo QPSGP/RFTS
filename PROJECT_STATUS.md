@@ -8,6 +8,17 @@ Use this file to get up to speed when opening the project in the **rfts-platform
 
 Use this block to resume the next session without re-reading the whole thread.
 
+### Resume here — Play Options mobile session & screen wake (April 2026)
+
+When you open the project again, this is the **most recent shipped work** before pausing for other projects:
+
+- **Android issue:** Second nightly recording sometimes **did not start until the phone was unlocked** (long-gap `setTimeout` / `setInterval` throttled when locked; visibility resume previously ran only when the tab became **visible**).
+- **`src/components/SessionPlayer.tsx`:** **`rfts-inter-half-gap`** event when entering **waiting** (for wake re-request on iOS path). **`timeupdate`** on the **silent gap bridge** `<audio>` checks wall clock vs **`secondStartAtRef`** and calls **`beginSecondAfterGap()`** when due. **`visibilitychange`** runs the overdue check on **every** transition (including **hidden**), not only when visible. **`dispatchRftsSessionEnd()`** / **`rfts-session-end`** when a listening session **fully stops** (End session, natural idle after last track, or gap with no second scheduled) — **not** during the inter-half gap.
+- **`src/components/ScreenWakeToggle.tsx`:** **iPhone / iPad** (`shouldAutoEnableWakeOnSessionStart()`): auto **wake lock** on **`rfts-session-start`** with retries; gap can re-request via **`rfts-inter-half-gap`** if the user already wants wake. **Android:** **opt-in only** (no auto wake on session start) — **Enable Screen Wake** if they still want the LCD forced on. Session end releases lock; **no** “released after session” message if wake was never held.
+- **Tests:** `npm test -- --testPathPattern=SessionPlayer` — gap and end-session cases still covered.
+- **Product note:** Owner uses **iPhone**; **screen on + iOS default wake** has been fine in daily use.
+- **Optional next steps:** More **Android** field testing (screen off, battery saver); short **Play Options** tips if members confuse iOS vs Android; unrelated open file **`scripts/fix-managed-rotation-duplicate-slots.sql`** if resuming managed-rotation DB cleanup.
+
 ### Schedule & verification
 - **`src/lib/scheduler.ts`:** Each `ScheduleNight` can include **`rotationAdded`**, **`rotationSessionDrop`** (Gold only, session-count bands), **`rotationRemovedAfterPlays`** (play-cap after that night’s plays). Used by the app schedule JSON and by the local export (optional fields; clients can ignore).
 - **Schedule export (one member):** Admin **Content Console** → **Schedule algorithm (member)**, or CLI `npm run schedule:spreadsheet` with **`SCHEDULE_EMAIL`** (optional **`SCHEDULE_NIGHTS`**). Same **`buildSchedulePreview`** as the member app. Legacy **`SCHEDULE_GOLD_EMAIL`** still works as a fallback in the script. Writes **`scripts/output/schedule-algorithm.csv/html`**. See **`scripts/SCHEDULE_SPREADSHEET.md`**. **`GET /api/admin/member-activity?email=…&limit=`** supports up to 500 rows for admin.
@@ -16,7 +27,7 @@ Use this block to resume the next session without re-reading the whole thread.
 ### Member & admin UX
 - **Admin → Members → Member activity:** Filter **All / Library plays / Session plays / Other**; row cap **20 / 50 / 100**; **`formatPlayedAudioTitle`** tolerates dash variants and multiline titles; loads up to **500** events when refreshing.
 - **Library `AudioPlayer`:** **Close library audio** stops and clears the element; mobile fixed bar hides until playback resumes; copy clarifies **Play second recording** vs library. **`PlaySecondRecordingCta`** placement/copy updated on library pages.
-- **`SessionPlayer`:** **End session** no longer restarts audio (overlay no longer bubbles `handlePlay` to parent; **`sessionEpochRef`** cancels stale `canplaythrough` / gap timers). **`AdminUsers`** member activity shows recording titles reliably.
+- **`SessionPlayer`:** **End session** no longer restarts audio (overlay no longer bubbles `handlePlay` to parent; **`sessionEpochRef`** cancels stale `canplaythrough` / gap timers). **April 2026:** gap / second-half reliability on locked Android (`timeupdate` bridge, visibility resume, `rfts-inter-half-gap` / `rfts-session-end`) — see **“Resume here”** below. **`AdminUsers`** member activity shows recording titles reliably.
 
 ### Member issue reports
 - **`PATCH /api/admin/member-issue-reports`:** Member gets email the **first** time a report reaches **resolved** or **closed** (not a second email on resolved→closed). Template supports **`outcome`** in **`src/lib/email-templates.ts`**.
@@ -95,10 +106,10 @@ Use this block to resume the next session without re-reading the whole thread.
 ### Play Options copy
 - Meditation session description: "A second recording is scheduled X hours later **if you have enabled** 2 sessions per night" (was "if the admin has enabled …"). Updated in `src/app/play-options/page.tsx` and `PlayOptionsClient.tsx`.
 
-### Keep Screen Awake (ScreenWakeToggle)
-- **Unsupported only when API missing:** `wakeLockSupported` is set to false only when `!("wakeLock" in navigator)`. If `navigator.wakeLock.request()` fails (e.g. tab not visible), we show an error but keep the button so the user can retry.
-- **Detect on load:** Effect on mount sets `wakeLockSupported` to false when Wake Lock is not in navigator, so the fallback message shows immediately on unsupported browsers.
-- **Fallback message:** When unsupported: "Set your device's auto-lock to 'Never' (e.g. Settings → Display → Sleep), or keep this app in the foreground."
+### Keep Screen Awake (ScreenWakeToggle) — current behavior
+- **iOS (iPhone / iPad):** Wake lock is **requested automatically** on **`rfts-session-start`** (Start Session / second-half start gesture), with **250ms and 2s retries**; **`rfts-inter-half-gap`** can re-request if the member already wants wake. **`rfts-session-end`** releases and clears retries (see “Resume here” above).
+- **Android:** **No auto wake** on session start — **Enable Screen Wake** is optional. Gap reliability leans on **SessionPlayer** (silent bridge, `timeupdate`, visibility) without forcing the LCD on.
+- **Unsupported browsers:** `wakeLockSupported` false when `!("wakeLock" in navigator)`; fallback copy still suggests device sleep settings / foreground tab. Failed `request()` keeps the button for retry when the tab is visible.
 
 ### SessionPlayer — mobile and button colors
 - **Mobile (≤768px):** When a session is playing, the **fixed bar at the bottom** includes:
