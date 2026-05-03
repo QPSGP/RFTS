@@ -720,6 +720,10 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       setQueue([]);
       setCurrent(null);
       setPhase("waiting");
+      /** Lets ScreenWakeToggle re-request wake lock right before the long gap (Android timer/sleep issues). */
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("rfts-inter-half-gap"));
+      }
       const gapMs = gapHours * 60 * 60 * 1000;
       secondStartAtRef.current = Date.now() + gapMs;
       setRemainingSeconds(Math.round(gapMs / 1000));

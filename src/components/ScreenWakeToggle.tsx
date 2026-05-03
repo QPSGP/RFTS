@@ -3,12 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const buttonStyle = { marginTop: 12 };
-const MOBILE_MAX_WIDTH = 768;
-
-function isMobileViewport(): boolean {
-  if (typeof window === "undefined") return false;
-  return window.innerWidth <= MOBILE_MAX_WIDTH;
-}
 
 type ScreenWakeToggleProps = {
   title?: string;
@@ -17,7 +11,8 @@ type ScreenWakeToggleProps = {
 
 export default function ScreenWakeToggle({
   title = "Keep Screen Awake",
-  description = "Use this if you are listening overnight on a phone and want to prevent the screen from sleeping while playback is active."
+  description =
+    "On by default so overnight sessions keep running — especially the second recording after the gap on phones that pause timers when the screen locks. Use Disable if you prefer your normal screen sleep."
 }: ScreenWakeToggleProps) {
   const [wakeLockSupported, setWakeLockSupported] = useState(true);
   const [wakeLockActive, setWakeLockActive] = useState(false);
@@ -78,17 +73,26 @@ export default function ScreenWakeToggle({
     }
   }, []);
 
+  /** Default on: narrow-mobile-only auto-enable missed Android landscape and many tablets; timers + second-half playback need the tab to stay awake. */
   useEffect(() => {
     if (hasAutoEnabledRef.current) return;
-    if (!isMobileViewport() || !("wakeLock" in navigator)) return;
+    if (typeof navigator === "undefined" || !("wakeLock" in navigator)) return;
     hasAutoEnabledRef.current = true;
     userWantsWakeLockRef.current = true;
-    const t = setTimeout(() => {
+
+    const tryEnable = () => {
       if (document.visibilityState === "visible") {
-        requestWakeLock();
+        void requestWakeLock();
       }
-    }, 100);
-    return () => clearTimeout(t);
+    };
+
+    tryEnable();
+    const t1 = setTimeout(tryEnable, 250);
+    const t2 = setTimeout(tryEnable, 2000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [requestWakeLock]);
 
   useEffect(() => {
@@ -102,11 +106,18 @@ export default function ScreenWakeToggle({
         requestWakeLock();
       }
     };
+    const handleInterHalfGap = () => {
+      if (userWantsWakeLockRef.current) {
+        void requestWakeLock();
+      }
+    };
     document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("rfts-session-start", handleSessionStart);
+    window.addEventListener("rfts-inter-half-gap", handleInterHalfGap);
     return () => {
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("rfts-session-start", handleSessionStart);
+      window.removeEventListener("rfts-inter-half-gap", handleInterHalfGap);
       releaseWakeLock();
     };
   }, [requestWakeLock, releaseWakeLock]);
