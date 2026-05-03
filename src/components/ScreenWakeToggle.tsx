@@ -4,6 +4,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const buttonStyle = { marginTop: 12 };
 
+/** Screen wake on session start helps iPhone Safari through prep + long gap; Android keeps the screen on unnecessarily and our gap timing fixes target locked-screen behavior — wake stays opt-in there. */
+function shouldAutoEnableWakeOnSessionStart(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+  const iPadDesktopUa = platform === "MacIntel" && navigator.maxTouchPoints > 1;
+  return /iPhone|iPod|iPad/i.test(ua) || iPadDesktopUa;
+}
+
 type ScreenWakeToggleProps = {
   title?: string;
   description?: string;
@@ -12,7 +21,7 @@ type ScreenWakeToggleProps = {
 export default function ScreenWakeToggle({
   title = "Keep Screen Awake",
   description =
-    "Enables when you start your session (tapping Start Session) so the screen can stay on through preparation and the first track — and through the long gap to the second recording. Phones often require this moment (user action) to grant wake lock. It turns off again when your session ends (or use Disable anytime)."
+    "On iPhone and iPad, screen wake turns on when you start your session and off when the session ends. On Android it stays off unless you tap Enable — use that if the second recording did not start until you unlocked the phone. Anyone can use Disable anytime."
 }: ScreenWakeToggleProps) {
   const [wakeLockSupported, setWakeLockSupported] = useState(true);
   const [wakeLockActive, setWakeLockActive] = useState(false);
@@ -32,6 +41,7 @@ export default function ScreenWakeToggle({
     sessionStartRetryIdsRef.current.forEach((id) => clearTimeout(id));
     sessionStartRetryIdsRef.current = [];
     userWantsWakeLockRef.current = false;
+    const hadLock = wakeLockRef.current !== null;
     try {
       if (wakeLockRef.current) {
         await wakeLockRef.current.release();
@@ -41,11 +51,11 @@ export default function ScreenWakeToggle({
     } finally {
       wakeLockRef.current = null;
       setWakeLockActive(false);
-      setFeedback(
-        opts?.afterSession
-          ? "Screen wake released after your session ended."
-          : "Screen wake disabled."
-      );
+      if (opts?.afterSession) {
+        setFeedback(hadLock ? "Screen wake released after your session ended." : null);
+      } else {
+        setFeedback("Screen wake disabled.");
+      }
     }
   }, []);
 
@@ -90,11 +100,11 @@ export default function ScreenWakeToggle({
       }
     };
     /**
-     * Fired when the member taps Start Session (or Plays the second half) — a user-gesture
-     * path where `navigator.wakeLock.request()` is more likely to succeed on Android than
-     * requesting on page load, and early enough to cover prep + first track before auto-lock.
+     * iOS: enable wake at Start Session / second-half gesture (battery tradeoff worth it).
+     * Android: opt-in via button only — gap resume uses audio `timeupdate` + visibility without keeping the LCD on.
      */
     const handleSessionStart = () => {
+      if (!shouldAutoEnableWakeOnSessionStart()) return;
       userWantsWakeLockRef.current = true;
       clearSessionStartRetries();
       const tryRequest = () => {
