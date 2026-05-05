@@ -265,6 +265,7 @@ function activityDetailsNonLinearPlayback(details: string | null | undefined): b
 
 /** Library vs Play Options session vs everything else (for admin activity filters). */
 function classifyMemberActivityRow(row: MemberActivityRow): "library" | "session" | "other" {
+  if (row.action === "session_gap" && row.details?.trim()) return "session";
   if (row.action === "audio_playback_outcome" && row.details?.trim()) {
     const t = String(row.details).trim();
     if (/^Play\s+Options/i.test(t)) return "session";
@@ -298,6 +299,8 @@ function formatActivityAction(action: string): string {
       return "Played audio";
     case "audio_playback_outcome":
       return "Playback result";
+    case "session_gap":
+      return "Play Options · gap";
     case "admin_schedule_adjusted":
       return "Admin: schedule progress";
     default:
@@ -1981,12 +1984,19 @@ export default function AdminUsers() {
                                 <tbody>
                                   {displayedActivity.map((row: MemberActivityRow) => {
                                     const nonlinear = activityDetailsNonLinearPlayback(row.details);
+                                    const gapDiag =
+                                      row.action === "session_gap" &&
+                                      String(row.details || "").includes("Diag:");
                                     return (
                                     <tr
                                       key={row.id}
                                       style={{
                                         borderBottom: "1px solid #f3f4f6",
-                                        ...(nonlinear ? { backgroundColor: "#fef2f2" } : {})
+                                        ...(nonlinear
+                                          ? { backgroundColor: "#fef2f2" }
+                                          : gapDiag
+                                            ? { backgroundColor: "#fffbeb" }
+                                            : {})
                                       }}
                                     >
                                       <td style={{ padding: "8px 6px", whiteSpace: "nowrap", color: "#374151" }}>
@@ -1995,7 +2005,7 @@ export default function AdminUsers() {
                                       <td
                                         style={{
                                           padding: "8px 6px",
-                                          color: nonlinear ? "#b91c1c" : "#111827"
+                                          color: nonlinear || gapDiag ? "#b45309" : "#111827"
                                         }}
                                       >
                                         {formatActivityAction(row.action)}
@@ -2003,7 +2013,7 @@ export default function AdminUsers() {
                                       <td
                                         style={{
                                           padding: "8px 6px",
-                                          color: nonlinear ? "#b91c1c" : "#111827",
+                                          color: nonlinear ? "#b91c1c" : gapDiag ? "#b45309" : "#111827",
                                           wordBreak: "break-word",
                                           maxWidth: 220,
                                           fontWeight:
@@ -2016,12 +2026,14 @@ export default function AdminUsers() {
                                         {row.action === "played_audio" ||
                                         row.action === "audio_playback_outcome"
                                           ? playedAudioTitleForAdminCell(row.action, row.details) || "—"
-                                          : "—"}
+                                          : row.action === "session_gap"
+                                            ? "Gap / schedule"
+                                            : "—"}
                                       </td>
                                       <td
                                         style={{
                                           padding: "8px 6px",
-                                          color: nonlinear ? "#b91c1c" : "#4b5563",
+                                          color: nonlinear ? "#b91c1c" : gapDiag ? "#92400e" : "#4b5563",
                                           wordBreak: "break-word",
                                           maxWidth: 260
                                         }}

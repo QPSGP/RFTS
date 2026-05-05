@@ -10,6 +10,7 @@ import {
   useState
 } from "react";
 import {
+  logMemberActivity,
   logMemberAudioOutcome,
   logMemberPlayedAudio,
   MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER
@@ -36,6 +37,16 @@ function displayNameForSessionTrack(t: SessionTrack): string {
   const title = (t.title || "").trim() || defaultTitleFromUrl(t.url);
   const sku = (t.skuCode || "").trim();
   return sku ? `${sku} – ${title}` : title;
+}
+
+function coarseMobilePlatform(): string {
+  if (typeof navigator === "undefined") return "unknown";
+  const ua = navigator.userAgent || "";
+  if (/Android/i.test(ua)) return "Android";
+  if (/iPhone|iPod/i.test(ua)) return "iOS";
+  if (/iPad/i.test(ua)) return "iPad";
+  if (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) return "iPadOS";
+  return "desktop/other";
 }
 
 /** Tells `ScreenWakeToggle` to release the wake lock when a listening session fully stops. */
@@ -249,6 +260,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   /** 2 per night: both main segments finished; distinct from 1/night `onePerNightComplete`. */
   const [fullNightSessionComplete, setFullNightSessionComplete] = useState(false);
   const secondFromGapInFlightRef = useRef(false);
+  /** One diag row per gap when overdue recovery happens with tab visible (explains Android lock-screen stalls). */
+  const gapOverdueDiagLoggedRef = useRef(false);
   const pauseForResumeRef = useRef(false);
   const suppressResumeForRestartRef = useRef(false);
   /** Last known `currentTime` for detecting forward seeks (admin activity). */
@@ -556,7 +569,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     }
   }, []);
 
-  const beginSecondAfterGap = useCallback(() => {
+  const beginSecondAfterGap = useCallback((trigger?: string) => {
     if (phaseRef.current !== "waiting") return;
     if (secondFromGapInFlightRef.current) return;
     secondFromGapInFlightRef.current = true;
@@ -570,6 +583,13 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       setPhase("idle");
       dispatchRftsSessionEnd();
       return;
+    }
+    if (trigger && typeof window !== "undefined") {
+      const vis = typeof document !== "undefined" ? document.visibilityState : "?";
+      logMemberActivity(
+        "session_gap",
+        `Second half auto-start | trigger=${trigger} visibility=${vis} platform=${coarseMobilePlatform()}`
+      );
     }
     const prep = prepAudioRef.current;
     const nextQueue = [prep, tr].filter(
@@ -597,7 +617,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       if (sessionEpochRef.current !== gapEpoch) return;
       if (phaseRef.current !== "waiting") return;
       if (Date.now() < secondStartAtRef.current) return;
-      beginSecondAfterGap();
+      beginSecondAfterGap("timeupdate");
     };
     audio.addEventListener("timeupdate", bumpSecondHalfIfDue);
     return () => audio.removeEventListener("timeupdate", bumpSecondHalfIfDue);
@@ -608,19 +628,38 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       return;
     }
     const gapEpoch = sessionEpochRef.current;
-    const tryResumeSecondHalf = () => {
+    const tryResumeSecondHalf = (trigger: string) => {
       if (sessionEpochRef.current !== gapEpoch) return;
       if (phaseRef.current !== "waiting") return;
       if (Date.now() < secondStartAtRef.current) return;
-      beginSecondAfterGap();
+      const now = Date.now();
+      const due = secondStartAtRef.current;
+      if (
+        !gapOverdueDiagLoggedRef.current &&
+        now >= due + 60_000 &&
+        typeof document !== "undefined" &&
+        document.visibilityState === "visible"
+      ) {
+        gapOverdueDiagLoggedRef.current = true;
+        const minsLate = Math.round((now - due) / 60000);
+        logMemberActivity(
+          "session_gap",
+          `Diag: second half was ${minsLate}m past schedule when tab became visible — JS timers / silent bridge often stall when the screen is locked (common on Android). Suggest Enable Screen Wake on Play Options or keep Chrome in the foreground.`
+        );
+      }
+      beginSecondAfterGap(trigger);
     };
     /** Run on hidden too: if the deadline passed while locked, start the second half without waiting for unlock. */
     const onVisibility = () => {
-      tryResumeSecondHalf();
+      tryResumeSecondHalf(
+        typeof document !== "undefined" && document.visibilityState === "visible"
+          ? "visibility_visible"
+          : "visibility_hidden"
+      );
     };
     /** bfcache restore / tab wake — long gap timers can be unreliable without this */
     const onPageShow = () => {
-      tryResumeSecondHalf();
+      tryResumeSecondHalf("pageshow");
     };
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("pageshow", onPageShow);
@@ -758,19 +797,24 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       }
       const gapMs = gapHours * 60 * 60 * 1000;
       secondStartAtRef.current = Date.now() + gapMs;
+      gapOverdueDiagLoggedRef.current = false;
+      logMemberActivity(
+        "session_gap",
+        `Inter-half gap started | gap_hours=${gapHours} second_scheduled_utc=${new Date(secondStartAtRef.current).toISOString()} platform=${coarseMobilePlatform()}`
+      );
       setRemainingSeconds(Math.round(gapMs / 1000));
       countdownIntervalRef.current = setInterval(() => {
         const left = Math.max(0, Math.round((secondStartAtRef.current - Date.now()) / 1000));
         setRemainingSeconds(left);
         /** Backup if long `setTimeout` was throttled or dropped (mobile background). */
         if (phaseRef.current === "waiting" && Date.now() >= secondStartAtRef.current) {
-          beginSecondAfterGap();
+          beginSecondAfterGap("interval");
         }
       }, 1000);
       const epochAtGapStart = sessionEpochRef.current;
       waitTimeoutRef.current = setTimeout(() => {
         if (epochAtGapStart !== sessionEpochRef.current) return;
-        beginSecondAfterGap();
+        beginSecondAfterGap("timeout");
       }, gapMs);
     } else {
       const nightFullyListened =
@@ -931,6 +975,11 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           {isMobile && (
             <p style={{ margin: "10px 0 0", color: "#15803d" }}>
               On a phone, tap Play if the second half (including preparation) does not start when the wait ends.
+            </p>
+          )}
+          {coarseMobilePlatform() === "Android" && (
+            <p style={{ margin: "10px 0 0", color: "#92400e", fontSize: 13 }}>
+              If the second recording only starts after you unlock your phone, turn on <strong>Enable Screen Wake</strong> on this page or keep Chrome in the foreground — Android often pauses long timers while the screen is off.
             </p>
           )}
           <button
