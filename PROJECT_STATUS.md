@@ -8,6 +8,17 @@ Use this file to get up to speed when opening the project in the **rfts-platform
 
 Use this block to resume the next session without re-reading the whole thread.
 
+### Resume here — Current 10 vs tonight + Gold playback (Feb 2026 chat)
+
+Read this after a **Cursor update** if chat history was lost.
+
+- **Current “10 audios” vs tonight’s two:** Both come from the **same** API schedule. **`nextInCue`** is built in `src/app/api/user/schedule/route.ts` starting at **`tonightIndex = Math.max(0, Math.min(currentNight - 1, schedule.length - 1))`** — **same formula as the client** (`play-options` / `PlayOptionsClient.tsx`). First two items in “Current audios play list” must equal tonight’s session tracks. Older bug used a separate long cue schedule (`scheduleForCue` + `initialTracksOverride`), which misaligned lists.
+- **Prep → first track (Gold vs Managed):** **SessionPlayer** is identical for both tiers. Managed tracks usually pass `/api/stream/audio` via **allowedEmailsMatch** (email on library item). Gold needs **goalMatch** (member `goalIds` ∩ item `interestIds`, case-insensitive) or **isCgmrFallback** (category `cgmr`) or empty **allowedUserEmails** list. If the stream returns **403/401/404**, the UI can show the title but audio never loads — check Network on `/api/stream/audio?id=…` and response headers **`X-Stream-Access-Reason`** / **`X-Stream-Deny-Reason`** (see `src/app/api/stream/audio/route.ts`).
+- **SessionPlayer file:** `src/components/SessionPlayer.tsx` — no React-controlled `<audio src>` (only imperative `src`); **`pendingNextTrackRef`** for Tap play after advance; **`hasAutoStartedRef`** so auto-start doesn’t replay prep; **`play()`** after advance and in **handlePlay** with **`canplaythrough`** fallback; **Start Session** while first track is cued calls **`attemptPlay(current)`** instead of restarting from prep.
+- **Tests:** `npm test` — `src/components/SessionPlayer.test.tsx`.
+- **Push / deploy:** `npm run push-deploy` (commit + push if dirty; Vercel auto-deploys from GitHub). `npm run deploy` = `vercel --prod` only.
+- **Optional DB script:** `scripts/fix-managed-rotation-duplicate-slots.sql` if revisiting managed rotation cleanup.
+
 ### Resume here — Play Options mobile session & screen wake (April 2026)
 
 When you open the project again, this is the **most recent shipped work** before pausing for other projects:
