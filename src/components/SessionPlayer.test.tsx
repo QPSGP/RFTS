@@ -1,6 +1,14 @@
 /**
  * SessionPlayer tests: advance from prep to first track and "Tap play" uses first track.
  */
+jest.mock("nosleep.js", () => ({
+  __esModule: true,
+  default: class {
+    enable = jest.fn().mockResolvedValue(undefined);
+    disable = jest.fn();
+  }
+}));
+
 import "@testing-library/jest-dom";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";

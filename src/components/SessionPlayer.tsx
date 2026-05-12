@@ -9,6 +9,7 @@ import {
   useRef,
   useState
 } from "react";
+import NoSleep from "nosleep.js";
 import {
   logMemberActivity,
   logMemberAudioOutcome,
@@ -262,6 +263,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const secondFromGapInFlightRef = useRef(false);
   /** One diag row per gap when overdue recovery happens with tab visible (explains Android lock-screen stalls). */
   const gapOverdueDiagLoggedRef = useRef(false);
+  /** Android: legacy Sirius-style keep-awake while a session phase is active (complements Screen Wake Lock during the gap). */
+  const noSleepRef = useRef<NoSleep | null>(null);
   const pauseForResumeRef = useRef(false);
   const suppressResumeForRestartRef = useRef(false);
   /** Last known `currentTime` for detecting forward seeks (admin activity). */
@@ -274,6 +277,25 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   currentRef.current = current;
   phaseRef.current = phase;
   prepAudioRef.current = prepAudio ?? null;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const android = coarseMobilePlatform() === "Android";
+    const sessionOpen = phase !== "idle";
+    if (!android || !sessionOpen) {
+      noSleepRef.current?.disable();
+      return;
+    }
+    if (!noSleepRef.current) {
+      noSleepRef.current = new NoSleep();
+    }
+    void noSleepRef.current.enable().catch(() => {
+      // Often requires a user gesture on first run; Start Session path usually satisfies it.
+    });
+    return () => {
+      noSleepRef.current?.disable();
+    };
+  }, [phase]);
 
   /** “Now playing” and full transport — not while waiting (unless using silent gap bridge, see `sessionAudioMounted`). */
   const showActivePlaybackUi = Boolean(current && (phase === "first" || phase === "second"));
@@ -584,6 +606,9 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       dispatchRftsSessionEnd();
       return;
     }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("rfts-second-half-started"));
+    }
     if (trigger && typeof window !== "undefined") {
       const vis = typeof document !== "undefined" ? document.visibilityState : "?";
       logMemberActivity(
@@ -644,7 +669,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         const minsLate = Math.round((now - due) / 60000);
         logMemberActivity(
           "session_gap",
-          `Diag: second half was ${minsLate}m past schedule when tab became visible — JS timers / silent bridge often stall when the screen is locked (common on Android). Suggest Enable Screen Wake on Play Options or keep Chrome in the foreground.`
+          `Diag: second half was ${minsLate}m past schedule when tab became visible — JS timers / silent bridge often stall when the screen is locked (common on Android). Android now auto-enables screen wake during the gap when supported; if issues persist use Enable Screen Wake on Play Options or keep Chrome in the foreground.`
         );
       }
       beginSecondAfterGap(trigger);
