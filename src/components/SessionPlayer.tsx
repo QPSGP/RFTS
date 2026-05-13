@@ -7,7 +7,8 @@ import {
   useImperativeHandle,
   useLayoutEffect,
   useRef,
-  useState
+  useState,
+  type CSSProperties
 } from "react";
 import NoSleep from "nosleep.js";
 import {
@@ -16,6 +17,11 @@ import {
   logMemberPlayedAudio,
   MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER
 } from "@/lib/member-audio-activity";
+import {
+  clearSessionMediaSession,
+  registerSessionMediaSessionActionHandlers,
+  syncSessionMediaSession
+} from "@/lib/session-player-media-session";
 
 type SessionTrack = {
   title: string;
@@ -280,9 +286,11 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const android = coarseMobilePlatform() === "Android";
+    const p = coarseMobilePlatform();
+    const mobileKeepAwake =
+      p === "Android" || p === "iOS" || p === "iPad" || p === "iPadOS";
     const sessionOpen = phase !== "idle";
-    if (!android || !sessionOpen) {
+    if (!mobileKeepAwake || !sessionOpen) {
       noSleepRef.current?.disable();
       return;
     }
@@ -302,6 +310,49 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   /** Keep `<audio>` mounted during the inter-half gap: silent loop + same element handoff to second-half prep. */
   const sessionAudioMounted =
     showActivePlaybackUi || (phase === "waiting" && playsPerNight === 2);
+
+  /** Lock screen / Control Center / Android media surface — improves background HTML audio. */
+  useEffect(() => {
+    syncSessionMediaSession({
+      phase,
+      playsPerNight,
+      gapHours,
+      remainingSeconds,
+      current,
+      prep: prepAudio ?? null,
+      isPlaying,
+      audio: audioRef.current
+    });
+  }, [
+    phase,
+    playsPerNight,
+    gapHours,
+    remainingSeconds,
+    current,
+    prepAudio,
+    isPlaying,
+    sessionAudioMounted
+  ]);
+
+  /** Refresh scrubber position on lock screen while playing (metadata title already updates from state). */
+  useEffect(() => {
+    if (phase === "idle" || phase === "waiting" || !isPlaying || !sessionAudioMounted) {
+      return;
+    }
+    const id = window.setInterval(() => {
+      syncSessionMediaSession({
+        phase: phaseRef.current,
+        playsPerNight,
+        gapHours,
+        remainingSeconds,
+        current: currentRef.current,
+        prep: prepAudioRef.current,
+        isPlaying: true,
+        audio: audioRef.current
+      });
+    }, 8000);
+    return () => window.clearInterval(id);
+  }, [phase, isPlaying, sessionAudioMounted, playsPerNight, gapHours, remainingSeconds]);
 
   /** useLayoutEffect + play/playing: attach before paint, log on the first event some browsers only emit. */
   useLayoutEffect(() => {
@@ -741,6 +792,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     setQueue([]);
     setCurrent(null);
     setMessage("Session ended. You can start again when you’re ready.");
+    clearSessionMediaSession();
     dispatchRftsSessionEnd();
   }, [clearWaitTimers]);
 
@@ -950,6 +1002,48 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     void audio.play();
   };
 
+  const handlePlayRef = useRef(handlePlay);
+  const handlePauseRef = useRef(handlePause);
+  const endSessionRef = useRef(endSession);
+  handlePlayRef.current = handlePlay;
+  handlePauseRef.current = handlePause;
+  endSessionRef.current = endSession;
+
+  useEffect(() => {
+    const unregister = registerSessionMediaSessionActionHandlers({
+      onPlay: () => {
+        handlePlayRef.current();
+      },
+      onPause: () => {
+        handlePauseRef.current();
+      },
+      onStop: () => {
+        endSessionRef.current();
+      }
+    });
+    return () => {
+      unregister();
+      clearSessionMediaSession();
+    };
+  }, []);
+
+  const audioSurfaceStyle: CSSProperties =
+    showActivePlaybackUi && current
+      ? { width: "100%", marginTop: 8, display: "block" }
+      : sessionAudioMounted
+        ? {
+            display: "block",
+            position: "fixed",
+            width: 4,
+            height: 4,
+            bottom: 0,
+            right: 0,
+            opacity: 0.02,
+            pointerEvents: "none",
+            clipPath: "inset(50%)"
+          }
+        : { display: "none" };
+
   return (
     <div className="card">
       <h3>Tonight&apos;s Audio</h3>
@@ -1076,11 +1170,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
             onEnded={handleEnded}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
-            style={{
-              width: "100%",
-              marginTop: 8,
-              display: showActivePlaybackUi && current ? "block" : "none"
-            }}
+            style={audioSurfaceStyle}
           />
           {needsUserPlay && (
             <>
