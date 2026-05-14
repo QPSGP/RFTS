@@ -45,4 +45,25 @@ describe("buildSchedulePreview — managed assigned order", () => {
     expect(nights[2].tracks.map((t) => t.id)).toEqual(["t26", "t36"]);
     expect(nights[3].tracks.map((t) => t.id)).toEqual(["s01", "t18"]);
   });
+
+  it("appends new assigned audio to the back so it does not play until after a full cycle of the prior list", () => {
+    const settingsFastAdd: PlaybackSettings = {
+      ...settings,
+      addNewTrackEveryNights: 6
+    };
+    const nights = buildSchedulePreview({
+      interests: [],
+      library,
+      settings: settingsFastAdd,
+      tier: "platinum_managed",
+      nights: 7,
+      playsPerNight: 2,
+      assignedAudioIds: ["t26", "t36", "s01", "t23"]
+    });
+    expect(nights[3].tracks.some((t) => t.id === "t23")).toBe(false);
+    expect(nights[3].tracks.map((t) => t.id)).toEqual(["s01", "t18"]);
+    expect(nights[4].tracks.some((t) => t.id === "t23")).toBe(false);
+    expect(nights[4].tracks.map((t) => t.id)).toEqual(["t26", "t36"]);
+    expect(nights[5].tracks.map((t) => t.id)).toEqual(["t23", "t18"]);
+  });
 });
