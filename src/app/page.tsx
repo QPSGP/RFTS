@@ -1,7 +1,9 @@
 /* eslint-disable react/no-unescaped-entities */
 import SiteFooter from "@/components/SiteFooter";
 
-// Local goal images from /Images
+// Local goal images from /Images — each links to signup step 1 (subscription selection)
+const SIGNUP_STEP1_HREF = "/signup/step-1-subscription-selection";
+
 const GOAL_IMAGES: Record<string, string> = {
   Health: "/Images/Health.jpg",
   Wealth: "/Images/Wealth.jpeg",
@@ -11,6 +13,28 @@ const GOAL_IMAGES: Record<string, string> = {
   Spirituality: "/Images/Spirtuality.jpg",
   "Balanced Life": "/Images/BalancedLife.jpg"
 };
+
+function GoalImageLink({ label, src }: { label: string; src: string }) {
+  return (
+    <a
+      href={SIGNUP_STEP1_HREF}
+      aria-label={`${label}: Begin membership — subscription selection (step 1)`}
+      style={{
+        display: "block",
+        aspectRatio: "16/10",
+        marginBottom: 12,
+        borderRadius: 8,
+        overflow: "hidden",
+        background: "#f3f4f6",
+        textDecoration: "none",
+        outlineOffset: 2
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+    </a>
+  );
+}
 
 export default function HomePage() {
   return (
@@ -92,86 +116,37 @@ export default function HomePage() {
         </div>
         <section className="grid grid-3" style={{ marginTop: 16 }}>
           <div className="card glow">
-            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={GOAL_IMAGES.Health}
-                alt="Health"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </div>
+            <GoalImageLink label="Health" src={GOAL_IMAGES.Health} />
             <h3>Health</h3>
             <p>Healthy longevity, vibrant energy, a body to delight in</p>
           </div>
           <div className="card glow">
-            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={GOAL_IMAGES.Wealth}
-                alt="Wealth"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </div>
+            <GoalImageLink label="Wealth" src={GOAL_IMAGES.Wealth} />
             <h3>Wealth</h3>
             <p>Financial Abundance</p>
           </div>
           <div className="card glow">
-            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={GOAL_IMAGES.Relationship}
-                alt="Relationship"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </div>
+            <GoalImageLink label="Relationship" src={GOAL_IMAGES.Relationship} />
             <h3>Relationship</h3>
             <p>A joyful new or enhanced present relationship</p>
           </div>
           <div className="card">
-            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={GOAL_IMAGES.Memory}
-                alt="Memory"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </div>
+            <GoalImageLink label="Memory" src={GOAL_IMAGES.Memory} />
             <h3>Memory</h3>
             <p>The memory and mental focus you want now and lifelong</p>
           </div>
           <div className="card">
-            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={GOAL_IMAGES.Inspiration}
-                alt="Inspiration"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </div>
+            <GoalImageLink label="Inspiration" src={GOAL_IMAGES.Inspiration} />
             <h3>Inspiration</h3>
             <p>Inspiration at Will for creative and entrepreneurial endeavors</p>
           </div>
           <div className="card">
-            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={GOAL_IMAGES.Spirituality}
-                alt="Spirituality"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </div>
+            <GoalImageLink label="Spirituality" src={GOAL_IMAGES.Spirituality} />
             <h3>Spirituality</h3>
             <p>A greater connection with your spirituality</p>
           </div>
           <div className="card">
-            <div style={{ aspectRatio: "16/10", marginBottom: 12, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={GOAL_IMAGES["Balanced Life"]}
-                alt="Balanced Life"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </div>
+            <GoalImageLink label="Balanced Life" src={GOAL_IMAGES["Balanced Life"]} />
             <h3>Balanced Life</h3>
             <p>A life free of smoking, overeating, and other bad habits</p>
           </div>
