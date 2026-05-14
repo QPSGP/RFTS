@@ -868,9 +868,17 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       setQueue([]);
       setCurrent(null);
       setPhase("waiting");
+      const epochAtGapStart = sessionEpochRef.current;
       /** Lets ScreenWakeToggle re-request wake lock right before the long gap (Android timer/sleep issues). */
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("rfts-inter-half-gap"));
+        for (const ms of [120, 400, 1200, 3500]) {
+          window.setTimeout(() => {
+            if (epochAtGapStart !== sessionEpochRef.current) return;
+            if (phaseRef.current !== "waiting") return;
+            window.dispatchEvent(new Event("rfts-gap-wake-nudge"));
+          }, ms);
+        }
       }
       const gapMs = gapHours * 60 * 60 * 1000;
       secondStartAtRef.current = Date.now() + gapMs;
@@ -888,7 +896,6 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           beginSecondAfterGap("interval");
         }
       }, 1000);
-      const epochAtGapStart = sessionEpochRef.current;
       waitTimeoutRef.current = setTimeout(() => {
         if (epochAtGapStart !== sessionEpochRef.current) return;
         beginSecondAfterGap("timeout");
