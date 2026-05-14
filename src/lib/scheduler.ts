@@ -135,12 +135,17 @@ export const buildSchedulePreview = ({
   const playCounts = new Map<string, number>();
   
   // For managed members: use assigned audios; for regular members: use goals
-  /** `initialTracks` is total rotation width: (goal slots) + 1 for the CGMR/T-18 session (every 4th play). So 4 ⇒ 3 goals. */
+  /**
+   * `initialTracks` is meant as total rotation width: (content slots) + 1 for the CGMR/T-18 session (every 4th play).
+   * So 4 ⇒ 3 content slots. If admin/DB still has `initialTracks === 3`, `initialMax - 1` is only 2 and the third
+   * assigned priority never enters rotation (looks like "the first track keeps coming back"). When the pool has
+   * at least three items, never use fewer than three slots so T-26 / T-36 / S-01 style lineups rotate correctly.
+   */
   const initialMax = initialTracksOverride ?? settings.initialTracks;
-  const goalSlots = Math.max(1, initialMax - 1);
-  const goalCount = isManagedMember
-    ? Math.max(1, Math.min(assignedAudios.length, goalSlots))
-    : Math.max(1, Math.min(orderedGoals.length, goalSlots));
+  const configuredSlots = Math.max(1, initialMax - 1);
+  const poolLen = isManagedMember ? assignedAudios.length : orderedGoals.length;
+  const rotationFloor = poolLen >= 3 ? 3 : Math.max(1, poolLen);
+  const goalCount = Math.min(poolLen, Math.max(configuredSlots, rotationFloor));
   const activeGoals = isManagedMember ? [] : orderedGoals.slice(0, goalCount);
   const activeAssignedAudios = isManagedMember ? assignedAudios.slice(0, goalCount) : [];
   let nextIndex = isManagedMember ? activeAssignedAudios.length : activeGoals.length;

@@ -84,6 +84,11 @@ export default function AdminPlaybackSettings() {
               update("addNewTrackEveryNights", Number(event.target.value))
             }
           />
+          <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
+            N counts each <strong>main play</strong> in order (not “nights”). With 2 plays per night,{" "}
+            <strong>7 ⇒ first add after 4 full nights</strong> (8 plays). For “every 7 nights” at 2/night, use{" "}
+            <strong>14</strong>.
+          </span>
         </label>
         <label>
           Initial tracks in rotation (total)
