@@ -262,8 +262,10 @@ export const buildSchedulePreview = ({
     const isSpecialSessionSecond = sessionIndexSecond % 4 === 0;
 
     /**
-     * When the CGMR/T-18 slot replaces a normal main play, we still consume one step in the rotation.
-     * Otherwise the pointer never advances for that session and the first assigned goal repeats too often.
+     * When the CGMR/T-18 slot replaces the second main play, the goal-based path still consumes one goal step so
+     * the goal pointer does not stall. For managed assigned audio, the first main play already advanced the pointer;
+     * T-18 is not in the rotation list, so do not advance again — otherwise the next night starts on the second
+     * assigned item instead of wrapping back to the first (T-26 → T-36 → S-01 then T-26 after T-18).
      */
     const advanceAssignedSlotForSpecialSecond = () => {
       if (!activeAssignedAudios.length) return;
@@ -307,9 +309,7 @@ export const buildSchedulePreview = ({
           })();
       if (isSpecialSessionSecond && specialTrack) {
         second = specialTrack;
-        if (isManagedMember) {
-          advanceAssignedSlotForSpecialSecond();
-        } else {
+        if (!isManagedMember) {
           advanceGoalSlotForSpecialSecond();
         }
       } else if (isManagedMember) {

@@ -42,7 +42,7 @@ describe("buildSchedulePreview — managed assigned order", () => {
 
     expect(nights[0].tracks.map((t) => t.id)).toEqual(["t26", "t36"]);
     expect(nights[1].tracks.map((t) => t.id)).toEqual(["s01", "t18"]);
-    expect(nights[2].tracks.map((t) => t.id)).toEqual(["t36", "s01"]);
-    expect(nights[3].tracks.map((t) => t.id)).toEqual(["t26", "t18"]);
+    expect(nights[2].tracks.map((t) => t.id)).toEqual(["t26", "t36"]);
+    expect(nights[3].tracks.map((t) => t.id)).toEqual(["s01", "t18"]);
   });
 });
