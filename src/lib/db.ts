@@ -915,6 +915,24 @@ const ensurePlaybackSettingsSeeded = async () => {
   `;
 };
 
+/** Product default for `add_new_track_every_nights` (main plays before next priority joins). Single source: seed. */
+const canonicalAddNewTrackEveryMainPlays = () => defaultPlaybackSettings.addNewTrackEveryNights;
+
+/** Migrates legacy installs (e.g. 7) to the current product default so schedule add-rules match the algorithm. */
+const normalizePlaybackAddTrackEveryMainPlays = async () => {
+  const target = canonicalAddNewTrackEveryMainPlays();
+  try {
+    await sql`
+      UPDATE playback_settings
+      SET add_new_track_every_nights = ${target}
+      WHERE id = 1
+        AND add_new_track_every_nights IS DISTINCT FROM ${target}
+    `;
+  } catch {
+    // Table may not exist in some test / partial environments
+  }
+};
+
 const ensureLibrarySeeded = async () => {
   try {
     await sql`ALTER TABLE library_items ADD COLUMN file_name text NOT NULL DEFAULT ''`;
@@ -2221,6 +2239,7 @@ export const saveSubscriptionPlans = async (plans: SubscriptionPlan[]) => {
 
 export const getPlaybackSettings = async () => {
   await ensurePlaybackSettingsSeeded();
+  await normalizePlaybackAddTrackEveryMainPlays();
   const { rows } = await sql<PlaybackSettings>`
     SELECT
       plays_per_recording as "playsPerRecording",
@@ -2237,12 +2256,13 @@ export const getPlaybackSettings = async () => {
 };
 
 export const savePlaybackSettings = async (settings: PlaybackSettings) => {
+  const addEvery = canonicalAddNewTrackEveryMainPlays();
   await sql`
     INSERT INTO playback_settings
       (id, plays_per_recording, nightly_gap_hours, add_new_track_every_nights, initial_tracks, cgmr_track_id, fallback_track_id)
     VALUES
       (1, ${settings.playsPerRecording}, ${settings.nightlyGapHours},
-       ${settings.addNewTrackEveryNights}, ${settings.initialTracks},
+       ${addEvery}, ${settings.initialTracks},
        ${settings.cgmrTrackId}, ${settings.fallbackTrackId})
     ON CONFLICT (id)
     DO UPDATE SET

@@ -85,22 +85,21 @@ export default function AdminPlaybackSettings() {
           </span>
         </label>
         <label>
-          Add new track every X main plays
+          Add new track every {settings.addNewTrackEveryNights} main plays (fixed)
           <input
             type="number"
-            min={1}
-            max={60}
-            style={inputStyle}
+            style={{ ...inputStyle, background: "#f1f5f9", color: "#475569" }}
             value={settings.addNewTrackEveryNights}
-            onChange={(event) =>
-              update("addNewTrackEveryNights", Number(event.target.value))
-            }
+            readOnly
+            aria-readonly="true"
+            title="Product default; legacy databases update automatically on first read."
           />
           <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
-            <strong>X</strong> = completed <strong>main plays</strong> before the next goal or assigned audio joins the
-            bottom of the rotation. Same unit as above. In <strong>listening sessions</strong>: if they use 2 main
-            plays per night, divide by 2 for nights (e.g. <strong>14</strong> main plays ≈ <strong>7</strong> full
-            nights); if they use 1 per night, <strong>X</strong> equals nights.
+            Completed <strong>main plays</strong> before the next goal or assigned audio joins the bottom of the
+            rotation. With <strong>2</strong> main plays per night, <strong>{settings.addNewTrackEveryNights}</strong>{" "}
+            plays ≈ <strong>{Math.round(settings.addNewTrackEveryNights / 2)}</strong> full nights; with{" "}
+            <strong>1</strong> per night, it equals nights. This value is always stored as the product default; existing
+            installs are updated when settings load.
           </span>
         </label>
         <label>
