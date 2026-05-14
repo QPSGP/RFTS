@@ -384,7 +384,7 @@ export const getPlaybackSettings = () =>
   readJson<PlaybackSettings>("playback-settings.json", {
     playsPerRecording: 21,
     nightlyGapHours: 2.5,
-    addNewTrackEveryNights: 7,
+    addNewTrackEveryNights: 14,
     /** Total rotation size = goal slots + 1 CGMR/T-18 slot; 4 ⇒ three goals (matches defaultPlaybackSettings in content-seed). */
     initialTracks: 4,
     cgmrTrackId: "",

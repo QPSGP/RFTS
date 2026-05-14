@@ -57,7 +57,7 @@ export const defaultSubscriptionPlans: SubscriptionPlan[] = [
 export const defaultPlaybackSettings: PlaybackSettings = {
   playsPerRecording: 21,
   nightlyGapHours: 2.5,
-  addNewTrackEveryNights: 7,
+  addNewTrackEveryNights: 14,
   initialTracks: 4,
   cgmrTrackId: "",
   fallbackTrackId: "T-18"

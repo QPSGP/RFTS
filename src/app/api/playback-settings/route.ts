@@ -6,7 +6,7 @@ import { getPlaybackSettings, savePlaybackSettings } from "@/lib/db";
 const schema = z.object({
   playsPerRecording: z.number().int().min(1).max(365),
   nightlyGapHours: z.number().min(0).max(12),
-  addNewTrackEveryNights: z.number().int().min(1).max(30),
+  addNewTrackEveryNights: z.number().int().min(1).max(60),
   initialTracks: z.number().int().min(1).max(10),
   cgmrTrackId: z.string().optional().default(""),
   fallbackTrackId: z.string().optional().default("T-18")
