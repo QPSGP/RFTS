@@ -101,7 +101,7 @@ export default function AdminContentPage() {
             type="button"
             onClick={() => toggleSection("playback", "admin-playback")}
           >
-            Playback Schedule Section
+            Playback schedule settings
           </button>
           <button
             className="button button-secondary"

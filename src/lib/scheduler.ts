@@ -6,16 +6,16 @@ export type ScheduleNight = {
   note?: string;
   /** New goal (Gold) or assigned audio (Managed) enters the active rotation this night (add-new-track rule). */
   rotationAdded?: string[];
-  /** Non-managed only: a goal leaves the active set at night start (session-count drop bands). */
+  /** Non-managed only: a goal leaves the active set at night start (main-play-count drop bands). */
   rotationSessionDrop?: string[];
   /** After this night’s plays: items removed when play-count hits `playsPerRecording` (both tiers). */
   rotationRemovedAfterPlays?: string[];
 };
 
 /**
- * Schedule is session-based (plays), not night-based. One play = one session.
- * playsPerNight 2 = two sessions per night; playsPerNight 1 = one session per night (same rotation, double the nights).
- * Add-new-track and goal drops are by session count. T18/CGMR plays every 4th session (play).
+ * Schedule is built in **main play** order (each first/second slot on a schedule night when 2/night counts as one play).
+ * playsPerNight 2 = two main plays per schedule night; playsPerNight 1 = one main play per schedule night.
+ * Add-new-track and goal drops use the same main-play counter. CGMR/T-18 is every 4th main play.
  */
 type ScheduleInput = {
   interests: string[];
@@ -24,7 +24,7 @@ type ScheduleInput = {
   settings: PlaybackSettings;
   tier: "platinum" | "platinum_managed";
   nights: number;
-  /** 2 = one full session (two plays) per night; 1 = half a session (one play) per night. */
+  /** 2 = two main plays per schedule night; 1 = one main play per schedule night (same rotation, schedule runs twice as many nights). */
   playsPerNight?: 1 | 2;
   /** When set, used as the special/CGMR track (every 4th play) instead of global cgmr/fallback. */
   userAssignedTrack?: LibraryItem | null;
@@ -136,7 +136,7 @@ export const buildSchedulePreview = ({
   
   // For managed members: use assigned audios; for regular members: use goals
   /**
-   * `initialTracks` is meant as total rotation width: (content slots) + 1 for the CGMR/T-18 session (every 4th play).
+   * `initialTracks` is meant as total rotation width: (content slots) + 1 for the CGMR/T-18 slot (every 4th main play).
    * So 4 ⇒ 3 content slots. If admin/DB still has `initialTracks === 3`, `initialMax - 1` is only 2 and the third
    * assigned priority never enters rotation (looks like "the first track keeps coming back"). When the pool has
    * at least three items, never use fewer than three slots so T-26 / T-36 / S-01 style lineups rotate correctly.
@@ -188,7 +188,7 @@ export const buildSchedulePreview = ({
     playCounts.set(item.id, count + 1);
   };
 
-  // Drop goals by session count so rotation is the same for 1 or 2 plays per night (1 per night = double the nights)
+  // Drop goals by main-play count so rotation matches 1 or 2 plays per night (1 per night doubles schedule nights)
   const dropGoalBySession: [number, number][] = [
     [88, 1], [90, 2], [92, 3], [110, 4], [124, 5], [138, 6], [152, 7], [166, 8], [178, 9], [180, 10]
   ];
@@ -209,7 +209,7 @@ export const buildSchedulePreview = ({
   for (let night = 1; night <= nights; night += 1) {
     const nightAdditions: string[] = [];
     const nightSessionDrops: string[] = [];
-    // Add new goal/audio every N sessions (sessions so far = (night - 1) * playsPerNight)
+    // Add new goal/audio every N main plays (completed main plays before this night = (night - 1) * playsPerNight)
     const sessionsSoFar = (night - 1) * playsPerNight;
     if (isManagedMember) {
       while (
@@ -220,7 +220,7 @@ export const buildSchedulePreview = ({
         const adding = assignedAudios[nextIndex];
         activeAssignedAudios.push(adding);
         nightAdditions.push(
-          `${adding.title} — new assigned audio enters rotation (after ${sessionsSoFar} sessions completed)`
+          `${adding.title} — new assigned audio enters rotation (after ${sessionsSoFar} main plays completed)`
         );
         nextIndex += 1;
         nextAddAtSession += settings.addNewTrackEveryNights;
@@ -234,7 +234,7 @@ export const buildSchedulePreview = ({
         const gid = orderedGoals[nextIndex];
         activeGoals.push(gid);
         nightAdditions.push(
-          `${goalLabel(gid)} — new goal enters rotation (after ${sessionsSoFar} sessions completed)`
+          `${goalLabel(gid)} — new goal enters rotation (after ${sessionsSoFar} main plays completed)`
         );
         nextIndex += 1;
         nextAddAtSession += settings.addNewTrackEveryNights;
@@ -248,21 +248,21 @@ export const buildSchedulePreview = ({
         const dropIdx = activeGoals.indexOf(dropId);
         if (dropIdx !== -1) {
           nightSessionDrops.push(
-            `${goalLabel(dropId)} — leaves active rotation (session-drop rule; slot ${dropGoalIndex}; sessions at night start: ${sessionsSoFar})`
+            `${goalLabel(dropId)} — leaves active rotation (main-play drop rule; slot ${dropGoalIndex}; main plays at night start: ${sessionsSoFar})`
           );
           activeGoals.splice(dropIdx, 1);
         }
       }
     }
 
-    // T-18/CGMR plays every 4th session (play), regardless of 1 or 2 per night
+    // T-18/CGMR on every 4th main play in order, regardless of 1 or 2 plays per schedule night
     const sessionIndexFirst = (night - 1) * playsPerNight + 1;
     const sessionIndexSecond = (night - 1) * playsPerNight + 2;
     const isSpecialSessionFirst = sessionIndexFirst % 4 === 0;
     const isSpecialSessionSecond = sessionIndexSecond % 4 === 0;
 
     /**
-     * When the CGMR/T-18 slot replaces a normal play, we still consume one step in the rotation.
+     * When the CGMR/T-18 slot replaces a normal main play, we still consume one step in the rotation.
      * Otherwise the pointer never advances for that session and the first assigned goal repeats too often.
      */
     const advanceAssignedSlotForSpecialSecond = () => {
@@ -290,7 +290,7 @@ export const buildSchedulePreview = ({
           first = firstGoal ? takeNextTrackForGoal(firstGoal) : null;
         }
       }
-      /** One session still consumes one rotation step when the whole night is CGMR/T-18 (same as 2-play fix). */
+      /** One main play still consumes one rotation step when the whole night is CGMR/T-18 (same as 2-play fix). */
       if (skipTakeFirst && specialTrack) {
         if (isManagedMember) {
           advanceAssignedSlotForSpecialSecond();
@@ -345,8 +345,7 @@ export const buildSchedulePreview = ({
     tracks.forEach((item) => markPlayed(item));
 
     const isSpecialThisNight = playsPerNight === 1 ? isSpecialSessionFirst : isSpecialSessionSecond;
-    const noteSpecial =
-      playsPerNight === 1 ? "T18/CGMR session" : "T18/CGMR night";
+    const noteSpecial = "T18/CGMR (every 4th main play)";
     const entry: ScheduleNight = {
       night,
       tracks,
@@ -354,7 +353,7 @@ export const buildSchedulePreview = ({
         playsPerNight === 1
           ? isSpecialSessionFirst
             ? noteSpecial
-            : "One session per night"
+            : "One main play per schedule night"
           : isSpecialThisNight
             ? noteSpecial
             : `Rotation night (${settings.nightlyGapHours} hour gap)`

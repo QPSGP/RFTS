@@ -45,12 +45,16 @@ export default function AdminPlaybackSettings() {
   return (
     <div className="card">
       <h2>Playback Schedule Settings</h2>
-      <p style={{ fontSize: 14, color: "#4b5563", marginBottom: 12 }}>
-        Schedule is built by <strong>sessions</strong> (not nights). Rotation adds a new goal track every N sessions.
+      <p style={{ fontSize: 14, color: "#4b5563", marginBottom: 12, lineHeight: 1.5 }}>
+        All fields use the same rule: a <strong>main play</strong> is one scheduled listening slot (first or second
+        recording on a schedule night when the member uses 2 per night, or the single recording when they use 1 per
+        night). Preparation audio does not count. A <strong>listening session</strong> is one full schedule night
+        (1 or 2 main plays, depending on their setting). CGMR or the default code fills every{" "}
+        <strong>4th main play</strong> in order; other numbers below count <strong>main plays</strong> only.
       </p>
       <div className="grid">
         <label>
-          Plays per recording
+          Max main plays per recording
           <input
             type="number"
             min={1}
@@ -59,9 +63,13 @@ export default function AdminPlaybackSettings() {
             value={settings.playsPerRecording}
             onChange={(event) => update("playsPerRecording", Number(event.target.value))}
           />
+          <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
+            After a library item has been heard this many times as a <strong>main play</strong>, it leaves the active
+            rotation (CGMR / default code is not removed this way).
+          </span>
         </label>
         <label>
-          Hours between sessions
+          Hours between main plays (same night)
           <input
             type="number"
             min={0}
@@ -71,9 +79,13 @@ export default function AdminPlaybackSettings() {
             value={settings.nightlyGapHours}
             onChange={(event) => update("nightlyGapHours", Number(event.target.value))}
           />
+          <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
+            Wait time between the first and second <strong>main play</strong> when the member uses 2 per night. Ignored
+            when they use 1 per night.
+          </span>
         </label>
         <label>
-          Add new track every N sessions
+          Add new track every X main plays
           <input
             type="number"
             min={1}
@@ -85,9 +97,10 @@ export default function AdminPlaybackSettings() {
             }
           />
           <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
-            N counts each <strong>main play</strong> in order (not “nights”). With 2 plays per night,{" "}
-            <strong>7 ⇒ first add after 4 full nights</strong> (8 plays). For “every 7 nights” at 2/night, use{" "}
-            <strong>14</strong>.
+            <strong>X</strong> = completed <strong>main plays</strong> before the next goal or assigned audio joins the
+            bottom of the rotation. Same unit as above. In <strong>listening sessions</strong>: if they use 2 main
+            plays per night, divide by 2 for nights (e.g. <strong>14</strong> main plays ≈ <strong>7</strong> full
+            nights); if they use 1 per night, <strong>X</strong> equals nights.
           </span>
         </label>
         <label>
@@ -101,8 +114,10 @@ export default function AdminPlaybackSettings() {
             onChange={(event) => update("initialTracks", Number(event.target.value))}
           />
           <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
-            This number includes the CGMR/T-18 slot: goal slots = value − 1. Standard is 4 (three goal priorities + special
-            every fourth session). If this is 3 you only get two goals plus T-18.
+            Total width of the rotation including the CGMR / default slot: content slots = value − 1{" "}
+            <strong>main plays</strong> before the repeating special. Standard is <strong>4</strong> (three content
+            priorities + one special every 4th <strong>main play</strong>). If this is 3 you only get two content slots
+            plus T-18.
           </span>
         </label>
         <label>
@@ -113,9 +128,13 @@ export default function AdminPlaybackSettings() {
             onChange={(event) => update("cgmrTrackId", event.target.value)}
             placeholder="CGMR code (optional)"
           />
+          <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
+            Library code for the member&apos;s custom CGMR when assigned; otherwise the default code below is used as
+            the every-4th-<strong>main play</strong> special.
+          </span>
         </label>
         <label>
-          Default code
+          Default code (fallback special)
           <input
             style={inputStyle}
             value={settings.fallbackTrackId}
@@ -123,7 +142,8 @@ export default function AdminPlaybackSettings() {
             placeholder="T-18"
           />
           <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
-            Used when no CGMR is assigned (for all members, including membership).
+            Used when no CGMR is assigned (all members). Plays as the special on every 4th <strong>main play</strong> in
+            order.
           </span>
         </label>
       </div>
