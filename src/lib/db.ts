@@ -515,6 +515,57 @@ export const adminSetMemberCompletedScheduleNights = async (
   }
 };
 
+/**
+ * Admin / internal testing: clear stored schedule anchor so the member effectively restarts at night 1.
+ * Next `/api/user/schedule` load sets `schedule_started_at` to today and does not backfill from old session rows.
+ * Does not change goals, plays-per-night, or subscriptions.
+ */
+export const adminResetMemberScheduleAnchorForTesting = async (
+  userId: string
+): Promise<{ ok: true } | { ok: false; error: string }> => {
+  try {
+    await sql`
+      INSERT INTO member_profiles (user_id, schedule_started_at, completed_schedule_nights, updated_at)
+      VALUES (${userId}, NULL, 0, now())
+      ON CONFLICT (user_id) DO UPDATE SET
+        schedule_started_at = NULL,
+        completed_schedule_nights = 0,
+        updated_at = now()
+    `;
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Could not reset schedule anchor." };
+  }
+};
+
+/**
+ * If global `initial_tracks` is below 4, set to 4 so rotation uses three goal slots plus the CGMR/T-18 cadence.
+ * Single-row table (`id = 1`). No-op when already ≥ 4.
+ */
+export const adminBumpPlaybackInitialTracksToStandardIfLow = async (): Promise<
+  { ok: true; initialTracks: number; changed: boolean } | { ok: false; error: string }
+> => {
+  try {
+    const { rows } = await sql<{ initialTracks: string }>`
+      UPDATE playback_settings
+      SET initial_tracks = 4
+      WHERE id = 1 AND initial_tracks < 4
+      RETURNING initial_tracks::text AS "initialTracks"
+    `;
+    if (rows[0]) {
+      return {
+        ok: true,
+        initialTracks: parseInt(rows[0].initialTracks, 10) || 4,
+        changed: true
+      };
+    }
+    const cur = await getPlaybackSettings();
+    return { ok: true, initialTracks: cur.initialTracks, changed: false };
+  } catch {
+    return { ok: false, error: "Could not update playback settings." };
+  }
+};
+
 export const getUserProfile = async (email: string) => {
   const { rows } = await sql<UserProfile>`
     SELECT

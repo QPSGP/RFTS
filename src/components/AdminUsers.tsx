@@ -507,6 +507,7 @@ export default function AdminUsers() {
   >({});
   const [memberScheduleDraft, setMemberScheduleDraft] = useState<Record<string, string>>({});
   const [memberScheduleSaving, setMemberScheduleSaving] = useState<Record<string, boolean>>({});
+  const [memberScheduleResetting, setMemberScheduleResetting] = useState<Record<string, boolean>>({});
   /** Non-fatal: interests/library failed but member list may still have loaded */
   const [dataLoadNotice, setDataLoadNotice] = useState<string | null>(null);
 
@@ -892,6 +893,47 @@ export default function AdminUsers() {
       await loadMemberActivity(email);
     } finally {
       setMemberScheduleSaving((prev) => ({ ...prev, [email]: false }));
+    }
+  };
+
+  const resetMemberScheduleForInternalTesting = async (email: string) => {
+    if (
+      !window.confirm(
+        `Reset schedule testing state for ${email}?\n\n` +
+          "This clears completed schedule nights and the rotation start date so they begin again at night 1. " +
+          "It also sets global Playback “Initial tracks” to 4 if it is still below 4 (fixes two-goals + T-18). " +
+          "Goals and subscription are unchanged."
+      )
+    ) {
+      return;
+    }
+    setMemberScheduleResetting((prev) => ({ ...prev, [email]: true }));
+    setStatus(null);
+    try {
+      const res = await fetch("/api/admin/member-schedule-reset-testing", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStatus(typeof data?.error === "string" ? data.error : "Could not reset schedule testing state.");
+        return;
+      }
+      const pb = data?.playback as { initialTracks?: number; changed?: boolean } | undefined;
+      setStatus(
+        `Schedule testing reset for ${email}: next night #1. ` +
+          (pb && typeof pb.initialTracks === "number"
+            ? pb.changed
+              ? `Global initial tracks set to ${pb.initialTracks}. `
+              : `Global initial tracks unchanged (${pb.initialTracks}). `
+            : "") +
+          "Have them open Play Options once to anchor the rotation date."
+      );
+      await loadMemberActivity(email);
+    } finally {
+      setMemberScheduleResetting((prev) => ({ ...prev, [email]: false }));
     }
   };
 
@@ -1956,11 +1998,33 @@ export default function AdminUsers() {
                                 >
                                   {memberScheduleSaving[user.email] ? "Saving…" : "Apply"}
                                 </button>
+                                <button
+                                  type="button"
+                                  className="button button-secondary"
+                                  style={{ fontSize: 13, padding: "6px 12px" }}
+                                  title="Clears nights completed and rotation anchor; bumps global initial tracks to 4 if still low"
+                                  disabled={
+                                    !!memberScheduleSaving[user.email] ||
+                                    !!memberScheduleResetting[user.email]
+                                  }
+                                  onClick={() => void resetMemberScheduleForInternalTesting(user.email)}
+                                >
+                                  {memberScheduleResetting[user.email]
+                                    ? "Resetting…"
+                                    : "Reset for internal testing"}
+                                </button>
                               </div>
                               <p style={{ margin: "10px 0 0", fontSize: 12, color: "#64748b" }}>
                                 This updates stored progress in the app (steps in half-session mode, nights in
                                 full-session mode). It does not change goals, session length setting, or rotation
                                 start date.
+                              </p>
+                              <p style={{ margin: "8px 0 0", fontSize: 12, color: "#64748b" }}>
+                                <strong>Reset for internal testing</strong> clears progress and the rotation anchor
+                                (they show as night 1 again), and sets global Playback initial tracks to{" "}
+                                <strong>4</strong> if the database still has{" "}
+                                <strong>3</strong>. They still need at least <strong>three</strong> selected goals
+                                for three goal audios plus the T-18/CGMR cadence.
                               </p>
                             </div>
                           )}
