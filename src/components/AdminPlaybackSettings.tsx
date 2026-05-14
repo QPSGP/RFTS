@@ -96,7 +96,8 @@ export default function AdminPlaybackSettings() {
             onChange={(event) => update("initialTracks", Number(event.target.value))}
           />
           <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
-            4 = 3 from goals + 1 CGMR (or T-18 if no CGMR). Editable.
+            This number includes the CGMR/T-18 slot: goal slots = value − 1. Standard is 4 (three goal priorities + special
+            every fourth session). If this is 3 you only get two goals plus T-18.
           </span>
         </label>
         <label>

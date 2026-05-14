@@ -135,10 +135,12 @@ export const buildSchedulePreview = ({
   const playCounts = new Map<string, number>();
   
   // For managed members: use assigned audios; for regular members: use goals
+  /** `initialTracks` is total rotation width: (goal slots) + 1 for the CGMR/T-18 session (every 4th play). So 4 ⇒ 3 goals. */
   const initialMax = initialTracksOverride ?? settings.initialTracks;
+  const goalSlots = Math.max(1, initialMax - 1);
   const goalCount = isManagedMember
-    ? Math.max(1, Math.min(assignedAudios.length, initialMax - 1))
-    : Math.max(1, Math.min(orderedGoals.length, initialMax - 1));
+    ? Math.max(1, Math.min(assignedAudios.length, goalSlots))
+    : Math.max(1, Math.min(orderedGoals.length, goalSlots));
   const activeGoals = isManagedMember ? [] : orderedGoals.slice(0, goalCount);
   const activeAssignedAudios = isManagedMember ? assignedAudios.slice(0, goalCount) : [];
   let nextIndex = isManagedMember ? activeAssignedAudios.length : activeGoals.length;

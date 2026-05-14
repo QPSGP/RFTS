@@ -385,7 +385,8 @@ export const getPlaybackSettings = () =>
     playsPerRecording: 21,
     nightlyGapHours: 2.5,
     addNewTrackEveryNights: 7,
-    initialTracks: 3,
+    /** Total rotation size = goal slots + 1 CGMR/T-18 slot; 4 ⇒ three goals (matches defaultPlaybackSettings in content-seed). */
+    initialTracks: 4,
     cgmrTrackId: "",
     fallbackTrackId: "T-18"
   });
