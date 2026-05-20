@@ -1,13 +1,11 @@
-/** Nights returned from `/api/user/schedule` (tracks subset is enough for cue building). */
-export type ScheduleNightForCue = {
-  night: number;
-  tracks: { id: string; title: string; skuCode?: string }[];
-};
+import { buildNextPlaylistCue, type PlaylistCueItem, type ScheduleNightForCue } from "@/lib/schedule-progress";
+import type { PlaysPerNightSetting } from "@/lib/session-progress-format";
 
-export type PlaylistCueItem = { id: string; title: string; skuCode?: string };
+export type { PlaylistCueItem, ScheduleNightForCue } from "@/lib/schedule-progress";
 
 /**
- * Next plays in calendar order starting at currentNight, flattened across nights (managed rotation may repeat IDs).
+ * Next plays starting at currentNight (legacy: first track of that schedule night).
+ * Prefer {@link buildNextPlaylistCue} with completed main-play count for accurate cues.
  */
 export function buildPlaylistCueFromSchedule(
   schedule: ScheduleNightForCue[],
@@ -26,4 +24,14 @@ export function buildPlaylistCueFromSchedule(
     }
   }
   return cue;
+}
+
+/** Client/server helper: next cue from stored progress and audios-per-night setting. */
+export function buildPlaylistCueFromProgress(
+  schedule: ScheduleNightForCue[],
+  completedScheduleNights: number,
+  playsPerNight: PlaysPerNightSetting,
+  maxItems: number
+): PlaylistCueItem[] {
+  return buildNextPlaylistCue(schedule, completedScheduleNights, playsPerNight, maxItems);
 }

@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getUserProfile, recordMemberActivity, setScheduleStartedToToday, setUserGoals, setUserPlaysPerNight } from "@/lib/db";
+import {
+  adminSetMemberCompletedScheduleNights,
+  getMemberProfileByUserId,
+  getUserProfile,
+  recordMemberActivity,
+  setScheduleStartedToToday,
+  setUserGoals,
+  setUserPlaysPerNight
+} from "@/lib/db";
 import { goalIdsSequenceEqual } from "@/lib/goal-ids";
+import { convertCompletedNightsForPlaysPerNightChange } from "@/lib/schedule-progress";
 
 const schema = z.object({
   goalIds: z.array(z.string()).min(1).max(10).optional(),
@@ -91,7 +100,15 @@ export async function PUT(request: Request) {
     const nextPpn = parsed.data.playsPerNight === 1 ? 1 : 2;
     const currentPpn = profile.playsPerNight === 1 ? 1 : 2;
     if (nextPpn !== currentPpn) {
+      const memberProfile = await getMemberProfileByUserId(profile.id);
+      const completed = Math.max(0, memberProfile?.completedScheduleNights ?? 0);
+      const converted = convertCompletedNightsForPlaysPerNightChange(
+        completed,
+        currentPpn,
+        nextPpn
+      );
       await setUserPlaysPerNight(profile.id, nextPpn);
+      await adminSetMemberCompletedScheduleNights(profile.id, converted);
       await recordMemberActivity(profile.id, "updated_plays_per_night");
     }
   }

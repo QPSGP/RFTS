@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import SessionPlayer, { SessionPlayerHandle } from "@/components/SessionPlayer";
 import { formatFullSessionsFraction } from "@/lib/session-progress-format";
-import { buildPlaylistCueFromSchedule } from "@/lib/schedule-playlist-cue";
+import { buildPlaylistCueFromProgress } from "@/lib/schedule-playlist-cue";
 
 export type PlayOptionsProfile = {
   email: string;
@@ -26,6 +26,7 @@ export default function PlayOptionsClient({
     { night: number; tracks: { id: string; title: string; skuCode?: string; audioUrl: string }[]; note?: string }[]
   >([]);
   const [currentNight, setCurrentNight] = useState(1);
+  const [completedScheduleNights, setCompletedScheduleNights] = useState(0);
   const [prepAudio, setPrepAudio] = useState<{ title: string; url: string } | null>(null);
   const [gapHours, setGapHours] = useState(2.5);
   const [autoStart, setAutoStart] = useState(false);
@@ -44,14 +45,26 @@ export default function PlayOptionsClient({
     const data = await scheduleRes.json();
     setSchedule(data?.schedule || []);
     setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
+    setCompletedScheduleNights(
+      typeof data?.completedScheduleNights === "number"
+        ? data.completedScheduleNights
+        : Math.max(0, (typeof data?.currentNight === "number" ? data.currentNight : 1) - 1)
+    );
     setNextInCue(Array.isArray(data?.nextInCue) ? data.nextInCue : []);
     setPrepAudio(data?.prepAudio || null);
     setGapHours(typeof data?.gapHours === "number" ? data.gapHours : 2.5);
   }, []);
 
+  const playsPerNightSetting = (profile?.playsPerNight ?? 2) === 1 ? 1 : 2;
   const currentPlaylistFallback = useMemo(
-    () => buildPlaylistCueFromSchedule(schedule, currentNight, 10),
-    [schedule, currentNight]
+    () =>
+      buildPlaylistCueFromProgress(
+        schedule,
+        completedScheduleNights,
+        playsPerNightSetting,
+        10
+      ),
+    [schedule, completedScheduleNights, playsPerNightSetting]
   );
 
   const currentPlaylist = nextInCue.length > 0 ? nextInCue : currentPlaylistFallback;
@@ -77,6 +90,11 @@ export default function PlayOptionsClient({
         .then((data) => {
           setSchedule(data?.schedule || []);
           setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
+          setCompletedScheduleNights(
+            typeof data?.completedScheduleNights === "number"
+              ? data.completedScheduleNights
+              : Math.max(0, (typeof data?.currentNight === "number" ? data.currentNight : 1) - 1)
+          );
           setPrepAudio(data?.prepAudio || null);
           setGapHours(data?.gapHours ?? 2.5);
           setNextInCue(Array.isArray(data?.nextInCue) ? data.nextInCue : []);
@@ -205,7 +223,7 @@ export default function PlayOptionsClient({
               Full sessions complete so far:{" "}
               <strong style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
                 {formatFullSessionsFraction(
-                  Math.max(0, currentNight - 1),
+                  completedScheduleNights,
                   (profile.playsPerNight ?? 2) === 1 ? 1 : 2
                 )}
               </strong>
@@ -331,6 +349,14 @@ export default function PlayOptionsClient({
                         const data = await scheduleRes.json();
                         setSchedule(data?.schedule || []);
                         setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
+                        setCompletedScheduleNights(
+                          typeof data?.completedScheduleNights === "number"
+                            ? data.completedScheduleNights
+                            : Math.max(
+                                0,
+                                (typeof data?.currentNight === "number" ? data.currentNight : 1) - 1
+                              )
+                        );
                         setNextInCue(Array.isArray(data?.nextInCue) ? data.nextInCue : []);
                       }
                     }
@@ -360,6 +386,14 @@ export default function PlayOptionsClient({
                         const data = await scheduleRes.json();
                         setSchedule(data?.schedule || []);
                         setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
+                        setCompletedScheduleNights(
+                          typeof data?.completedScheduleNights === "number"
+                            ? data.completedScheduleNights
+                            : Math.max(
+                                0,
+                                (typeof data?.currentNight === "number" ? data.currentNight : 1) - 1
+                              )
+                        );
                         setNextInCue(Array.isArray(data?.nextInCue) ? data.nextInCue : []);
                       }
                     }

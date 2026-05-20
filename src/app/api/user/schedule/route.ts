@@ -14,6 +14,10 @@ import {
   trySeedCompletedNightsFromLegacySessions
 } from "@/lib/db";
 import { buildSchedulePreview } from "@/lib/scheduler";
+import {
+  buildNextPlaylistCue,
+  resolveCurrentScheduleNight
+} from "@/lib/schedule-progress";
 
 const schema = z.object({
   /** Preview length; server extends this when the member has passed more nights than requested (see currentNight). */
@@ -122,10 +126,12 @@ export async function GET(request: Request) {
       completedNights = await trySeedCompletedNightsFromLegacySessions(profile.id, dateStr);
     }
   }
+  const playsPerNight = profile.playsPerNight === 1 ? 1 : 2;
   const maxBuildNights = 366;
-  const currentNight = Math.min(maxBuildNights, Math.max(1, completedNights + 1));
-
-  const nights = Math.min(maxBuildNights, Math.max(requestedNights, currentNight));
+  const nights = Math.min(
+    maxBuildNights,
+    Math.max(requestedNights, Math.max(1, completedNights + 1))
+  );
 
   const schedule = buildSchedulePreview({
     interests: profile.goalIds || [],
@@ -134,29 +140,21 @@ export async function GET(request: Request) {
     settings,
     tier: profile.subscriptionTier || "platinum",
     nights,
-    playsPerNight: profile.playsPerNight === 1 ? 1 : 2,
+    playsPerNight,
     userAssignedTrack: userAssignedTrack ?? undefined,
     assignedAudioIds
   });
+
+  const currentNight = Math.min(
+    maxBuildNights,
+    Math.max(1, resolveCurrentScheduleNight(schedule, completedNights, playsPerNight))
+  );
+
   if (currentNight === 1 && !startedAtRaw) {
     await setScheduleStartedToToday(profile.id);
   }
 
-  // Next 10 plays: start with tonight's two (same index the client uses: currentNight - 1), then continue in order
-  const tonightIndex = Math.max(0, Math.min(currentNight - 1, schedule.length - 1));
-  const nextInCue: { id: string; title: string; skuCode?: string }[] = [];
-  for (let i = 0; i < schedule.length && nextInCue.length < 10; i++) {
-    const nightIndex = (tonightIndex + i) % schedule.length;
-    const night = schedule[nightIndex];
-    for (const track of night.tracks) {
-      nextInCue.push({
-        id: track.id,
-        title: track.title,
-        skuCode: track.skuCode ?? undefined
-      });
-      if (nextInCue.length >= 10) break;
-    }
-  }
+  const nextInCue = buildNextPlaylistCue(schedule, completedNights, playsPerNight, 10);
 
   const blobAssets = readJson<{ audios?: Record<string, string> }>(
     "blob-assets.json",
@@ -195,8 +193,9 @@ export async function GET(request: Request) {
   return NextResponse.json({
     schedule: scheduleWithStreamUrls,
     currentNight,
+    completedScheduleNights: completedNights,
     nights,
-    playsPerNight: profile.playsPerNight === 1 ? 1 : 2,
+    playsPerNight,
     gapHours: settings.nightlyGapHours,
     prepAudio,
     fallbackTrack: fallbackTrackSummary,
