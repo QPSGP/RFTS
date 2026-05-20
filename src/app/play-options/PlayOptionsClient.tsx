@@ -67,7 +67,8 @@ export default function PlayOptionsClient({
     [schedule, completedScheduleNights, playsPerNightSetting]
   );
 
-  const currentPlaylist = nextInCue.length > 0 ? nextInCue : currentPlaylistFallback;
+  const currentPlaylist =
+    currentPlaylistFallback.length > 0 ? currentPlaylistFallback : nextInCue;
 
   const logout = async () => {
     await fetch("/api/user/logout", { method: "POST", credentials: "include" });

@@ -55,4 +55,18 @@ describe("schedule progress / playlist cue", () => {
     expect(convertCompletedNightsForPlaysPerNightChange(3, 2, 1)).toBe(6);
     expect(convertCompletedNightsForPlaysPerNightChange(6, 1, 2)).toBe(3);
   });
+
+  it("always returns 10 cue items by wrapping the rotation", () => {
+    const schedule = buildSchedulePreview({
+      interests: [],
+      library,
+      settings,
+      tier: "platinum_managed",
+      nights: 3,
+      playsPerNight: 2,
+      assignedAudioIds: ["t26", "t36", "s01"]
+    });
+    const cue = buildNextPlaylistCue(schedule, 2, 2, 10);
+    expect(cue).toHaveLength(10);
+  });
 });

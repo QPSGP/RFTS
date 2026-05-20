@@ -45,7 +45,20 @@ export function resolveCurrentScheduleNight(
   return schedule[schedule.length - 1]!.night;
 }
 
-/** Next plays in rotation order, skipping finished main plays (T-18 every 4th main play stays aligned). */
+/** Minimum schedule nights to build so the rotation has enough future main plays (before wrap). */
+export function minScheduleNightsForCue(
+  completedScheduleNights: number,
+  playsPerNight: PlaysPerNightSetting,
+  cueLength: number
+): number {
+  const skip = completedNightsToMainPlaysDone(completedScheduleNights, playsPerNight);
+  return Math.ceil((skip + cueLength) / playsPerNight);
+}
+
+/**
+ * Next plays in rotation order, skipping finished main plays.
+ * Wraps at the end of the built schedule so callers always get up to `maxItems` (e.g. 10).
+ */
 export function buildNextPlaylistCue(
   schedule: ScheduleNightForCue[],
   completedScheduleNights: number,
@@ -60,5 +73,10 @@ export function buildNextPlaylistCue(
       flat.push({ id: track.id, title: track.title, skuCode: track.skuCode });
     }
   }
-  return flat.slice(skip, skip + maxItems);
+  if (!flat.length) return [];
+  const cue: PlaylistCueItem[] = [];
+  for (let i = 0; i < maxItems; i++) {
+    cue.push(flat[(skip + i) % flat.length]!);
+  }
+  return cue;
 }

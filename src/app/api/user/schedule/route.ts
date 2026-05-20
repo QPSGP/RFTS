@@ -16,6 +16,7 @@ import {
 import { buildSchedulePreview } from "@/lib/scheduler";
 import {
   buildNextPlaylistCue,
+  minScheduleNightsForCue,
   resolveCurrentScheduleNight
 } from "@/lib/schedule-progress";
 
@@ -128,9 +129,14 @@ export async function GET(request: Request) {
   }
   const playsPerNight = profile.playsPerNight === 1 ? 1 : 2;
   const maxBuildNights = 366;
+  const cueLength = 10;
   const nights = Math.min(
     maxBuildNights,
-    Math.max(requestedNights, Math.max(1, completedNights + 1))
+    Math.max(
+      requestedNights,
+      Math.max(1, completedNights + 1),
+      minScheduleNightsForCue(completedNights, playsPerNight, cueLength)
+    )
   );
 
   const schedule = buildSchedulePreview({
@@ -154,7 +160,7 @@ export async function GET(request: Request) {
     await setScheduleStartedToToday(profile.id);
   }
 
-  const nextInCue = buildNextPlaylistCue(schedule, completedNights, playsPerNight, 10);
+  const nextInCue = buildNextPlaylistCue(schedule, completedNights, playsPerNight, cueLength);
 
   const blobAssets = readJson<{ audios?: Record<string, string> }>(
     "blob-assets.json",
