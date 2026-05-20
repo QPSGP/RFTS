@@ -371,7 +371,7 @@ export const getMemberProfileByUserId = async (userId: string): Promise<MemberPr
   } as MemberProfile;
 };
 
-/** Set schedule start to today (UTC date). Used when first loading schedule or when goals/plays-per-night change so rotation restarts. Resets play-based night progress. Upserts so rotation works even if member_profiles row was missing. */
+/** Set schedule start to today (UTC date). Used when first loading schedule or when goals change so rotation restarts. Resets play-based night progress. Upserts so rotation works even if member_profiles row was missing. */
 export const setScheduleStartedToToday = async (userId: string): Promise<void> => {
   await sql`
     INSERT INTO member_profiles (user_id, schedule_started_at, completed_schedule_nights, updated_at)
