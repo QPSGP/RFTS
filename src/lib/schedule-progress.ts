@@ -54,14 +54,54 @@ export function resolveCurrentScheduleNight(
   return schedule[schedule.length - 1]!.night;
 }
 
-/** Minimum schedule nights to build so the rotation has enough future main plays (before wrap). */
+/** Flat main-play order (always build schedule with 2 plays per night for this). */
+export function flattenScheduleMainPlays(schedule: ScheduleNightForCue[]): PlaylistCueItem[] {
+  const flat: PlaylistCueItem[] = [];
+  for (const night of schedule) {
+    for (const track of night.tracks) {
+      flat.push({ id: track.id, title: track.title, skuCode: track.skuCode });
+    }
+  }
+  return flat;
+}
+
+/**
+ * Tracks for the member's current session lineup.
+ * Schedule preview is always built at 2/night; 1/night members get the single next main play only.
+ */
+export function getMemberTonightTrackItems(
+  schedule: ScheduleNightForCue[],
+  completedMainAudios: number,
+  playsPerNight: PlaysPerNightSetting
+): PlaylistCueItem[] {
+  if (!schedule.length) return [];
+  const completed = completedMainAudiosPlayed(completedMainAudios);
+  if (playsPerNight === 1) {
+    const flat = flattenScheduleMainPlays(schedule);
+    if (!flat.length) return [];
+    return [flat[completed % flat.length]!];
+  }
+  const nightNum = resolveCurrentScheduleNight(schedule, completedMainAudios, 2);
+  const night = schedule.find((n) => n.night === nightNum);
+  if (!night?.tracks.length) {
+    const flat = flattenScheduleMainPlays(schedule);
+    return flat.length ? [flat[completed % flat.length]!] : [];
+  }
+  return night.tracks.map((t) => ({
+    id: t.id,
+    title: t.title,
+    skuCode: t.skuCode
+  }));
+}
+
+/** Minimum schedule nights to build (canonical 2 main plays per schedule night). */
 export function minScheduleNightsForCue(
   completedMainAudios: number,
-  playsPerNight: PlaysPerNightSetting,
-  cueLength: number
+  _playsPerNight?: PlaysPerNightSetting,
+  cueLength: number = 10
 ): number {
   const skip = completedMainAudiosPlayed(completedMainAudios);
-  return Math.ceil((skip + cueLength) / playsPerNight);
+  return Math.ceil((skip + cueLength) / 2);
 }
 
 /**
@@ -76,12 +116,7 @@ export function buildNextPlaylistCue(
 ): PlaylistCueItem[] {
   if (!schedule.length || maxItems <= 0) return [];
   const skip = completedMainAudiosPlayed(completedMainAudios);
-  const flat: PlaylistCueItem[] = [];
-  for (const night of schedule) {
-    for (const track of night.tracks) {
-      flat.push({ id: track.id, title: track.title, skuCode: track.skuCode });
-    }
-  }
+  const flat = flattenScheduleMainPlays(schedule);
   if (!flat.length) return [];
   const cue: PlaylistCueItem[] = [];
   for (let i = 0; i < maxItems; i++) {

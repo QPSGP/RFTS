@@ -135,9 +135,10 @@ export async function GET(request: Request) {
   const currentAudioNumber = Math.min(maxBuildNights * 2, Math.max(1, completedNights + 1));
   const nights = Math.min(
     maxBuildNights,
-    Math.max(requestedNights, minScheduleNightsForCue(completedNights, playsPerNight, cueLength))
+    Math.max(requestedNights, minScheduleNightsForCue(completedNights, 2, cueLength))
   );
 
+  /** Canonical 2/night rotation so playlist + lineup stay the same when member toggles 1 vs 2 per night. */
   const schedule = buildSchedulePreview({
     interests: profile.goalIds || [],
     library: filteredLibrary,
@@ -145,7 +146,7 @@ export async function GET(request: Request) {
     settings,
     tier: profile.subscriptionTier || "platinum",
     nights,
-    playsPerNight,
+    playsPerNight: 2,
     userAssignedTrack: userAssignedTrack ?? undefined,
     assignedAudioIds
   });

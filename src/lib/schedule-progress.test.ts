@@ -86,4 +86,20 @@ describe("schedule progress / playlist cue", () => {
       buildNextPlaylistCue(at1, completed, 1, 1)[0]?.id
     );
   });
+
+  it("full next-10 cue is unchanged when toggling 1 vs 2 per night if schedule is built at 2/night", () => {
+    const base = {
+      interests: [] as string[],
+      library,
+      settings,
+      tier: "platinum_managed" as const,
+      nights: 21,
+      assignedAudioIds: ["t26", "t36", "s01"]
+    };
+    const canonical = buildSchedulePreview({ ...base, playsPerNight: 2 });
+    const completed = 10;
+    const at2 = buildNextPlaylistCue(canonical, completed, 2, 10).map((t) => t.id);
+    const at1 = buildNextPlaylistCue(canonical, completed, 1, 10).map((t) => t.id);
+    expect(at1).toEqual(at2);
+  });
 });

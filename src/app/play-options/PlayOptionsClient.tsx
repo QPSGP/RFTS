@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import SessionPlayer, { SessionPlayerHandle } from "@/components/SessionPlayer";
-import { buildPlaylistCueFromProgress } from "@/lib/schedule-playlist-cue";
+import { getMemberTonightTrackItems } from "@/lib/schedule-progress";
 
 export type PlayOptionsProfile = {
   email: string;
@@ -63,19 +63,31 @@ export default function PlayOptionsClient({
   }, []);
 
   const playsPerNightSetting = (profile?.playsPerNight ?? 2) === 1 ? 1 : 2;
-  const currentPlaylistFallback = useMemo(
-    () =>
-      buildPlaylistCueFromProgress(
-        schedule,
-        completedScheduleNights,
-        playsPerNightSetting,
-        10
-      ),
+  const currentPlaylist = nextInCue;
+
+  const tonightTrackItems = useMemo(
+    () => getMemberTonightTrackItems(schedule, completedScheduleNights, playsPerNightSetting),
     [schedule, completedScheduleNights, playsPerNightSetting]
   );
 
-  const currentPlaylist =
-    currentPlaylistFallback.length > 0 ? currentPlaylistFallback : nextInCue;
+  const tonightTracksWithUrls = useMemo(() => {
+    const byId = new Map<
+      string,
+      { id: string; title: string; skuCode?: string; audioUrl: string }
+    >();
+    for (const night of schedule) {
+      for (const track of night.tracks) {
+        byId.set(track.id, track);
+      }
+    }
+    return tonightTrackItems
+      .map((item) => {
+        const full = byId.get(item.id);
+        if (!full) return null;
+        return full;
+      })
+      .filter((t): t is { id: string; title: string; skuCode?: string; audioUrl: string } => !!t);
+  }, [schedule, tonightTrackItems]);
 
   const logout = async () => {
     await fetch("/api/user/logout", { method: "POST", credentials: "include" });
@@ -232,10 +244,7 @@ export default function PlayOptionsClient({
             enabled 2 audios per night (it also uses preparation audio when it starts). Your schedule
             audio advances after you finish listening.
           </p>
-          {schedule.length > 0 && (() => {
-            const tonightIndex = Math.max(0, Math.min(currentNight - 1, schedule.length - 1));
-            const tonight = schedule[tonightIndex];
-            return (
+          {schedule.length > 0 && tonightTracksWithUrls.length > 0 && (
               <div style={{ marginTop: 12 }}>
                 <strong>Current Lineup (Audio {currentAudioNumber})</strong>
                 <div className="stack" style={{ marginTop: 8 }}>
@@ -244,13 +253,16 @@ export default function PlayOptionsClient({
                       Preparation audio: {prepAudio.title}
                     </span>
                   )}
-                  {tonight.tracks.map((track, index) => (
+                  {tonightTracksWithUrls.map((track, index) => (
                     <a
-                      key={`${tonight.night}-${index}-${track.id}`}
+                      key={`${currentNight}-${index}-${track.id}`}
                       className="button button-secondary"
                       href={`/library/${track.id}`}
                     >
-                      Play {index === 1 ? "Second" : "First"}:{" "}
+                      Play
+                      {playsPerNightSetting === 2
+                        ? ` ${index === 1 ? "Second" : "First"}:`
+                        : ":"}{" "}
                       {[track.skuCode, track.title].filter((x) => String(x || "").trim()).join(" – ")}
                     </a>
                   ))}
@@ -268,41 +280,37 @@ export default function PlayOptionsClient({
                   </div>
                 )}
               </div>
-            );
-          })()}
+          )}
         </div>
-        {schedule.length > 0 && (() => {
-          const tonightIndex = Math.max(0, Math.min(currentNight - 1, schedule.length - 1));
-          const tonight = schedule[tonightIndex];
-          return (
+        {schedule.length > 0 && tonightTracksWithUrls.length > 0 && (
             <SessionPlayer
               ref={sessionRef}
               prepAudio={prepAudio}
               firstTrack={
-                tonight.tracks[0]
+                tonightTracksWithUrls[0]
                   ? {
-                      title: tonight.tracks[0].title,
-                      url: tonight.tracks[0].audioUrl,
-                      skuCode: tonight.tracks[0].skuCode
+                      title: tonightTracksWithUrls[0].title,
+                      url: tonightTracksWithUrls[0].audioUrl,
+                      skuCode: tonightTracksWithUrls[0].skuCode
                     }
                   : null
               }
               secondTrack={
-                tonight.tracks[1]
+                tonightTracksWithUrls[1]
                   ? {
-                      title: tonight.tracks[1].title,
-                      url: tonight.tracks[1].audioUrl,
-                      skuCode: tonight.tracks[1].skuCode
+                      title: tonightTracksWithUrls[1].title,
+                      url: tonightTracksWithUrls[1].audioUrl,
+                      skuCode: tonightTracksWithUrls[1].skuCode
                     }
                   : null
               }
               gapHours={gapHours}
-              playsPerNight={(profile?.playsPerNight ?? 2) === 1 ? 1 : 2}
+              playsPerNight={playsPerNightSetting}
               autoStart={autoStart}
               onSessionStart={() => {
                 fetch("/api/user/session-used", { method: "POST", credentials: "include" }).catch(() => {});
               }}
-              scheduleNightNumber={tonight.night}
+              scheduleNightNumber={currentNight}
               onScheduleNightComplete={(night) => {
                 /* Only after a full night is listened (both main audios when 2/night, or the single when 1/night). */
                 fetch("/api/user/schedule-night-complete", {
@@ -315,8 +323,7 @@ export default function PlayOptionsClient({
                   .catch(() => {});
               }}
             />
-          );
-        })()}
+        )}
         {status === "active" && profile && (
           <div className="card">
             <h3>Audios per night</h3>
@@ -337,7 +344,6 @@ export default function PlayOptionsClient({
                       credentials: "include"
                     });
                     if (res.ok && profile) {
-                      setProfile({ ...profile, playsPerNight: 2 });
                       const scheduleRes = await fetch(
                         `/api/user/schedule?nights=21&_t=${Date.now()}`,
                         { credentials: "include", cache: "no-store" }
@@ -363,6 +369,7 @@ export default function PlayOptionsClient({
                               )
                         );
                         setNextInCue(Array.isArray(data?.nextInCue) ? data.nextInCue : []);
+                        setProfile({ ...profile, playsPerNight: 2 });
                       }
                     }
                   }}
@@ -382,7 +389,6 @@ export default function PlayOptionsClient({
                       credentials: "include"
                     });
                     if (res.ok && profile) {
-                      setProfile({ ...profile, playsPerNight: 1 });
                       const scheduleRes = await fetch(
                         `/api/user/schedule?nights=21&_t=${Date.now()}`,
                         { credentials: "include", cache: "no-store" }
@@ -408,6 +414,7 @@ export default function PlayOptionsClient({
                               )
                         );
                         setNextInCue(Array.isArray(data?.nextInCue) ? data.nextInCue : []);
+                        setProfile({ ...profile, playsPerNight: 1 });
                       }
                     }
                   }}
