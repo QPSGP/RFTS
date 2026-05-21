@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import SessionPlayer, { SessionPlayerHandle } from "@/components/SessionPlayer";
-import { formatFullSessionsFraction } from "@/lib/session-progress-format";
 import { buildPlaylistCueFromProgress } from "@/lib/schedule-playlist-cue";
 
 export default function PlayOptionsPage() {
@@ -24,6 +23,7 @@ export default function PlayOptionsPage() {
     { night: number; tracks: { id: string; title: string; skuCode?: string; audioUrl: string }[]; note?: string }[]
   >([]);
   const [currentNight, setCurrentNight] = useState(1);
+  const [currentAudioNumber, setCurrentAudioNumber] = useState(1);
   const [completedScheduleNights, setCompletedScheduleNights] = useState(0);
   const [prepAudio, setPrepAudio] = useState<{ title: string; url: string } | null>(
     null
@@ -46,10 +46,17 @@ export default function PlayOptionsPage() {
     const data = await scheduleRes.json();
     setSchedule(data?.schedule || []);
     setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
+    setCurrentAudioNumber(
+      typeof data?.currentAudioNumber === "number"
+        ? data.currentAudioNumber
+        : typeof data?.completedScheduleNights === "number"
+          ? data.completedScheduleNights + 1
+          : 1
+    );
     setCompletedScheduleNights(
       typeof data?.completedScheduleNights === "number"
         ? data.completedScheduleNights
-        : Math.max(0, (typeof data?.currentNight === "number" ? data.currentNight : 1) - 1)
+        : Math.max(0, (typeof data?.currentAudioNumber === "number" ? data.currentAudioNumber : 1) - 1)
     );
     setNextInCue(Array.isArray(data?.nextInCue) ? data.nextInCue : []);
     setPrepAudio(data?.prepAudio || null);
@@ -108,10 +115,17 @@ export default function PlayOptionsPage() {
             .then((data) => {
               setSchedule(data?.schedule || []);
               setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
+              setCurrentAudioNumber(
+                typeof data?.currentAudioNumber === "number"
+                  ? data.currentAudioNumber
+                  : typeof data?.completedScheduleNights === "number"
+                    ? data.completedScheduleNights + 1
+                    : 1
+              );
               setCompletedScheduleNights(
                 typeof data?.completedScheduleNights === "number"
                   ? data.completedScheduleNights
-                  : Math.max(0, (typeof data?.currentNight === "number" ? data.currentNight : 1) - 1)
+                  : Math.max(0, (typeof data?.currentAudioNumber === "number" ? data.currentAudioNumber : 1) - 1)
               );
               setPrepAudio(data?.prepAudio || null);
               setGapHours(data?.gapHours || 2.5);
@@ -321,7 +335,7 @@ export default function PlayOptionsPage() {
         <div className="card">
           <h3>Current audios play list</h3>
           <p>
-            The next 10 audios in your queue (starting from tonight), by SKU and title. The same recording can appear
+            The next 10 audios in your queue (starting from your current audio), by SKU and title. The same recording can appear
             more than once when it is on multiple steps in your rotation.
           </p>
           {currentPlaylist.length === 0 ? (
@@ -344,37 +358,19 @@ export default function PlayOptionsPage() {
           </a>
         </div>
         <div className="card" id="meditation-session">
-          <h3>Meditation Session</h3>
+          <h3>Guided Meditation Audios</h3>
           <p>
-            Start a guided session tailored to your goals. A preparation audio is played first, then
-            your first goal audio starts. A second audio is scheduled {gapHours} hours later if you have
-            enabled 2 sessions per night (it also uses preparation audio when it starts). Your
-            schedule night advances after you finish listening for that night. A session equals 2
-            audios, so if you listen to one audio per night that is a half session.
+            Start a guided audio tailored to your goals. A preparation audio is played first, then your
+            first goal audio starts. A second audio is scheduled {gapHours} hours later if you have
+            enabled 2 audios per night (it also uses preparation audio when it starts). Your schedule
+            audio advances after you finish listening.
           </p>
-          {schedule.length > 0 && profile && (
-            <p style={{ marginTop: 12, fontSize: 16, color: "#0f172a" }}>
-              Full sessions complete so far:{" "}
-              <strong style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
-                {formatFullSessionsFraction(
-                  completedScheduleNights,
-                  (profile.playsPerNight ?? 2) === 1 ? 1 : 2
-                )}
-              </strong>
-              {(profile.playsPerNight ?? 2) === 1 ? (
-                <span style={{ fontSize: 14, fontWeight: 400, color: "#64748b" }}>
-                  {" "}
-                  — half session: two steps = one full session
-                </span>
-              ) : null}
-            </p>
-          )}
           {schedule.length > 0 && (() => {
             const tonightIndex = Math.max(0, Math.min(currentNight - 1, schedule.length - 1));
             const tonight = schedule[tonightIndex];
             return (
             <div style={{ marginTop: 12 }}>
-              <strong>Tonight&apos;s lineup{schedule.length > 1 ? ` (Night ${tonight.night})` : ""}</strong>
+              <strong>Current Lineup (Audio {currentAudioNumber})</strong>
               <div className="stack" style={{ marginTop: 8 }}>
                 {prepAudio && (
                   <span>
@@ -458,7 +454,7 @@ export default function PlayOptionsPage() {
           <div className="card">
             <h3>Audios per night</h3>
             <p style={{ color: "#4b5563", marginBottom: 12 }}>
-              A session is two audios — you can play both in one night or one per night over two nights. Choose 1 or 2 audios per night (default is 2). You can change this anytime.
+              Choose 1 or 2 audios per night (default is 2). You can change this anytime.
             </p>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -483,12 +479,20 @@ export default function PlayOptionsPage() {
                         const data = await scheduleRes.json();
                         setSchedule(data?.schedule || []);
                         setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
+                        setCurrentAudioNumber(
+                          typeof data?.currentAudioNumber === "number"
+                            ? data.currentAudioNumber
+                            : typeof data?.completedScheduleNights === "number"
+                              ? data.completedScheduleNights + 1
+                              : 1
+                        );
                         setCompletedScheduleNights(
                           typeof data?.completedScheduleNights === "number"
                             ? data.completedScheduleNights
                             : Math.max(
                                 0,
-                                (typeof data?.currentNight === "number" ? data.currentNight : 1) - 1
+                                (typeof data?.currentAudioNumber === "number" ? data.currentAudioNumber : 1) -
+                                  1
                               )
                         );
                         setNextInCue(Array.isArray(data?.nextInCue) ? data.nextInCue : []);
@@ -520,12 +524,20 @@ export default function PlayOptionsPage() {
                         const data = await scheduleRes.json();
                         setSchedule(data?.schedule || []);
                         setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
+                        setCurrentAudioNumber(
+                          typeof data?.currentAudioNumber === "number"
+                            ? data.currentAudioNumber
+                            : typeof data?.completedScheduleNights === "number"
+                              ? data.completedScheduleNights + 1
+                              : 1
+                        );
                         setCompletedScheduleNights(
                           typeof data?.completedScheduleNights === "number"
                             ? data.completedScheduleNights
                             : Math.max(
                                 0,
-                                (typeof data?.currentNight === "number" ? data.currentNight : 1) - 1
+                                (typeof data?.currentAudioNumber === "number" ? data.currentAudioNumber : 1) -
+                                  1
                               )
                         );
                         setNextInCue(Array.isArray(data?.nextInCue) ? data.nextInCue : []);

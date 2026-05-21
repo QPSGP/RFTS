@@ -453,12 +453,22 @@ export type RecordScheduleNightResult =
   | { ok: true; completedScheduleNights: number }
   | { ok: false; error: string };
 
-/** Mark a schedule night as fully listened. Only accepts the next night in sequence (or repeats the same idempotently). */
+/**
+ * Mark a schedule step as fully listened. Stores **main goal audios completed** (not schedule-night index)
+ * so playlist/lineup stay the same when the member switches 1 vs 2 audios per night.
+ */
 export const recordScheduleNightCompleted = async (
   userId: string,
-  nightCompleted: number
+  scheduleNightCompleted: number,
+  playsPerNight: 1 | 2
 ): Promise<RecordScheduleNightResult> => {
-  if (!Number.isFinite(nightCompleted) || nightCompleted < 1 || nightCompleted > 366) {
+  if (!Number.isFinite(scheduleNightCompleted) || scheduleNightCompleted < 1 || scheduleNightCompleted > 366) {
+    return { ok: false, error: "Invalid night." };
+  }
+  const ppn = playsPerNight === 1 ? 1 : 2;
+  const mainAudiosAfter = scheduleNightCompleted * ppn;
+  const maxMain = 366 * 2;
+  if (mainAudiosAfter > maxMain) {
     return { ok: false, error: "Invalid night." };
   }
   try {
@@ -472,19 +482,19 @@ export const recordScheduleNightCompleted = async (
       return { ok: false, error: "Member profile not found." };
     }
     const completed = parseInt(existing[0].c || "0", 10) || 0;
-    if (nightCompleted <= completed) {
+    if (mainAudiosAfter <= completed) {
       return { ok: true, completedScheduleNights: completed };
     }
-    if (nightCompleted > completed + 1) {
+    if (mainAudiosAfter !== completed + ppn) {
       return { ok: false, error: "Night is out of sequence." };
     }
     await sql`
       UPDATE member_profiles
-      SET completed_schedule_nights = ${nightCompleted},
+      SET completed_schedule_nights = ${mainAudiosAfter},
           updated_at = now()
       WHERE user_id = ${userId}
     `;
-    return { ok: true, completedScheduleNights: nightCompleted };
+    return { ok: true, completedScheduleNights: mainAudiosAfter };
   } catch {
     return { ok: false, error: "Could not save progress." };
   }

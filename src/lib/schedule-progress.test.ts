@@ -2,7 +2,7 @@ import { buildSchedulePreview } from "./scheduler";
 import type { LibraryItem, PlaybackSettings } from "./types";
 import {
   buildNextPlaylistCue,
-  convertCompletedNightsForPlaysPerNightChange,
+  completedMainAudiosPlayed,
   completedNightsToMainPlaysDone
 } from "./schedule-progress";
 
@@ -45,15 +45,15 @@ describe("schedule progress / playlist cue", () => {
       playsPerNight: 2,
       assignedAudioIds: ["t26", "t36", "s01"]
     });
-    expect(completedNightsToMainPlaysDone(1, 2)).toBe(2);
-    const cue = buildNextPlaylistCue(schedule, 1, 2, 10);
+    expect(completedMainAudiosPlayed(2)).toBe(2);
+    const cue = buildNextPlaylistCue(schedule, 2, 2, 10);
     expect(cue.slice(0, 4).map((t) => t.id)).toEqual(["s01", "t18", "t26", "t36"]);
     expect(cue[1]?.id).toBe("t18");
   });
 
-  it("converts completed nights when switching audios-per-night mode", () => {
-    expect(convertCompletedNightsForPlaysPerNightChange(3, 2, 1)).toBe(6);
-    expect(convertCompletedNightsForPlaysPerNightChange(6, 1, 2)).toBe(3);
+  it("completed main audios is unchanged when plays-per-night label changes (same stored count)", () => {
+    expect(completedNightsToMainPlaysDone(5, 2)).toBe(5);
+    expect(completedNightsToMainPlaysDone(5, 1)).toBe(5);
   });
 
   it("always returns 10 cue items by wrapping the rotation", () => {
@@ -68,5 +68,22 @@ describe("schedule progress / playlist cue", () => {
     });
     const cue = buildNextPlaylistCue(schedule, 2, 2, 10);
     expect(cue).toHaveLength(10);
+  });
+
+  it("same completed main audios yields the same next track when plays per night changes", () => {
+    const base = {
+      interests: [] as string[],
+      library,
+      settings,
+      tier: "platinum_managed" as const,
+      nights: 8,
+      assignedAudioIds: ["t26", "t36", "s01"]
+    };
+    const at2 = buildSchedulePreview({ ...base, playsPerNight: 2 });
+    const at1 = buildSchedulePreview({ ...base, playsPerNight: 1 });
+    const completed = 2;
+    expect(buildNextPlaylistCue(at2, completed, 2, 1)[0]?.id).toBe(
+      buildNextPlaylistCue(at1, completed, 1, 1)[0]?.id
+    );
   });
 });

@@ -29,7 +29,12 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const result = await recordScheduleNightCompleted(profile.id, parsed.data.nightCompleted);
+  const playsPerNight = profile.playsPerNight === 1 ? 1 : 2;
+  const result = await recordScheduleNightCompleted(
+    profile.id,
+    parsed.data.nightCompleted,
+    playsPerNight
+  );
   if (!result.ok) {
     const status = result.error === "Member profile not found." ? 404 : 400;
     return NextResponse.json({ error: result.error }, { status });

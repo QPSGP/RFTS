@@ -7,35 +7,30 @@ export type ScheduleNightForCue = {
 
 export type PlaylistCueItem = { id: string; title: string; skuCode?: string };
 
-/** Main plays finished (each first/second slot when 2/night; one per schedule night when 1/night). */
+/**
+ * Main goal audios finished (stored in `completed_schedule_nights`).
+ * Same count whether the member uses 1 or 2 audios per night — switching mode does not change position.
+ */
+export function completedMainAudiosPlayed(storedCompleted: number): number {
+  return Math.max(0, Math.floor(storedCompleted));
+}
+
+/** @deprecated Use completedMainAudiosPlayed — kept for callers passing playsPerNight (ignored). */
 export function completedNightsToMainPlaysDone(
   completedScheduleNights: number,
-  playsPerNight: PlaysPerNightSetting
+  _playsPerNight?: PlaysPerNightSetting
 ): number {
-  const n = Math.max(0, Math.floor(completedScheduleNights));
-  return n * playsPerNight;
+  return completedMainAudiosPlayed(completedScheduleNights);
 }
 
-/** Keep the same listening position when switching audios-per-night mode. */
-export function convertCompletedNightsForPlaysPerNightChange(
-  completed: number,
-  from: PlaysPerNightSetting,
-  to: PlaysPerNightSetting
-): number {
-  const c = Math.max(0, Math.min(366, Math.floor(completed)));
-  if (from === to) return c;
-  if (from === 2 && to === 1) return Math.min(366, c * 2);
-  return Math.min(366, Math.floor(c / 2));
-}
-
-/** Schedule night that contains the next main play (for tonight's lineup). */
+/** Schedule night that contains the next main play (for current lineup). */
 export function resolveCurrentScheduleNight(
   schedule: ScheduleNightForCue[],
-  completedScheduleNights: number,
-  playsPerNight: PlaysPerNightSetting
+  completedMainAudios: number,
+  _playsPerNight?: PlaysPerNightSetting
 ): number {
   if (!schedule.length) return 1;
-  const mainPlaysDone = completedNightsToMainPlaysDone(completedScheduleNights, playsPerNight);
+  const mainPlaysDone = completedMainAudiosPlayed(completedMainAudios);
   let played = 0;
   for (const night of schedule) {
     const count = night.tracks.length;
@@ -47,11 +42,11 @@ export function resolveCurrentScheduleNight(
 
 /** Minimum schedule nights to build so the rotation has enough future main plays (before wrap). */
 export function minScheduleNightsForCue(
-  completedScheduleNights: number,
+  completedMainAudios: number,
   playsPerNight: PlaysPerNightSetting,
   cueLength: number
 ): number {
-  const skip = completedNightsToMainPlaysDone(completedScheduleNights, playsPerNight);
+  const skip = completedMainAudiosPlayed(completedMainAudios);
   return Math.ceil((skip + cueLength) / playsPerNight);
 }
 
@@ -61,12 +56,12 @@ export function minScheduleNightsForCue(
  */
 export function buildNextPlaylistCue(
   schedule: ScheduleNightForCue[],
-  completedScheduleNights: number,
-  playsPerNight: PlaysPerNightSetting,
-  maxItems: number
+  completedMainAudios: number,
+  _playsPerNight?: PlaysPerNightSetting,
+  maxItems: number = 10
 ): PlaylistCueItem[] {
   if (!schedule.length || maxItems <= 0) return [];
-  const skip = completedNightsToMainPlaysDone(completedScheduleNights, playsPerNight);
+  const skip = completedMainAudiosPlayed(completedMainAudios);
   const flat: PlaylistCueItem[] = [];
   for (const night of schedule) {
     for (const track of night.tracks) {

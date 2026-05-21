@@ -130,13 +130,10 @@ export async function GET(request: Request) {
   const playsPerNight = profile.playsPerNight === 1 ? 1 : 2;
   const maxBuildNights = 366;
   const cueLength = 10;
+  const currentAudioNumber = Math.min(maxBuildNights * 2, Math.max(1, completedNights + 1));
   const nights = Math.min(
     maxBuildNights,
-    Math.max(
-      requestedNights,
-      Math.max(1, completedNights + 1),
-      minScheduleNightsForCue(completedNights, playsPerNight, cueLength)
-    )
+    Math.max(requestedNights, minScheduleNightsForCue(completedNights, playsPerNight, cueLength))
   );
 
   const schedule = buildSchedulePreview({
@@ -199,6 +196,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     schedule: scheduleWithStreamUrls,
     currentNight,
+    currentAudioNumber,
     completedScheduleNights: completedNights,
     nights,
     playsPerNight,
