@@ -254,6 +254,11 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   /** When we advance from prep to first track, store the track we're loading so "Tap play" uses it (avoids replaying prep if state is stale). */
   const pendingNextTrackRef = useRef<SessionTrack | null>(null);
   const lastAttemptAutoplayCancelRef = useRef<(() => void) | null>(null);
+  /** Mirrors `queue` state for ended-handler / tap-play (avoids stale closure after gap clears queue). */
+  const queueRef = useRef<SessionTrack[]>([]);
+  /** Prep in the current segment already finished — tap play should load the main track, not restart prep. */
+  const segmentPrepDoneRef = useRef(false);
+  const handlingEndedRef = useRef(false);
 
   const [queue, setQueue] = useState<SessionTrack[]>([]);
   const [current, setCurrent] = useState<SessionTrack | null>(null);
@@ -283,6 +288,15 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   currentRef.current = current;
   phaseRef.current = phase;
   prepAudioRef.current = prepAudio ?? null;
+
+  const applyQueue = useCallback((nextQueue: SessionTrack[]) => {
+    queueRef.current = nextQueue;
+    setQueue(nextQueue);
+  }, []);
+
+  useEffect(() => {
+    queueRef.current = queue;
+  }, [queue]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -477,6 +491,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     }
     /** Always start tonight’s session from prep (or first) at 0, not mid–first main. */
     pendingNextTrackRef.current = null;
+    segmentPrepDoneRef.current = false;
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("rfts-session-start"));
     }
@@ -490,12 +505,12 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     );
     // Only skip the `current` effect when `<audio>` is already mounted and attemptPlay will run; otherwise the effect must start playback after mount (e.g. first load, gap/waiting → second).
     skipEffectPlayRef.current = Boolean(audioRef.current);
-    setQueue(nextQueue);
+    applyQueue(nextQueue);
     setCurrent(nextQueue[0] || null);
     setMessage(null);
     setNeedsUserPlay(false);
     attemptPlay(nextQueue[0]);
-  }, [firstTrack, prepAudio, onSessionStart]);
+  }, [firstTrack, prepAudio, onSessionStart, applyQueue]);
 
   const playSecond = useCallback(() => {
     if (!secondTrack) {
@@ -511,6 +526,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       countdownIntervalRef.current = null;
     }
     pendingNextTrackRef.current = null;
+    segmentPrepDoneRef.current = false;
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("rfts-session-start"));
     }
@@ -519,12 +535,12 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       (track): track is SessionTrack => !!track
     );
     skipEffectPlayRef.current = Boolean(audioRef.current);
-    setQueue(nextQueue);
+    applyQueue(nextQueue);
     setCurrent(nextQueue[0] || null);
     setMessage(null);
     setNeedsUserPlay(false);
     attemptPlay(nextQueue[0]);
-  }, [secondTrack, prepAudio]);
+  }, [secondTrack, prepAudio, applyQueue]);
 
   useImperativeHandle(ref, () => ({ startSession, playSecond }), [startSession, playSecond]);
 
@@ -671,13 +687,22 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     const nextQueue = [prep, tr].filter(
       (track): track is SessionTrack => !!track
     );
+    segmentPrepDoneRef.current = false;
     setPhase("second");
-    setQueue(nextQueue);
+    applyQueue(nextQueue);
     setCurrent(nextQueue[0] || null);
     setMessage(null);
     setNeedsUserPlay(false);
-    // `<audio>` was unmounted during "waiting" — do not set skipEffectPlayRef; the `current` effect starts playback.
-  }, [prepAudio, clearWaitTimers]);
+    const audio = audioRef.current;
+    if (nextQueue[0] && audio) {
+      audio.loop = false;
+      audio.muted = false;
+      audio.volume = 1;
+      skipEffectPlayRef.current = true;
+      attemptPlay(nextQueue[0]);
+    }
+    secondFromGapInFlightRef.current = false;
+  }, [clearWaitTimers, applyQueue]);
 
   /**
    * Android often freezes long `setTimeout` / `setInterval` while the screen is locked; the second half then
@@ -788,15 +813,37 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     setIsPlaying(false);
     setNeedsUserPlay(false);
     setFullNightSessionComplete(false);
+    segmentPrepDoneRef.current = false;
     setPhase("idle");
-    setQueue([]);
+    applyQueue([]);
     setCurrent(null);
     setMessage("Session ended. You can start again when you’re ready.");
     clearSessionMediaSession();
     dispatchRftsSessionEnd();
-  }, [clearWaitTimers]);
+  }, [clearWaitTimers, applyQueue]);
+
+  const resolvePlayTarget = useCallback((): SessionTrack | null => {
+    if (pendingNextTrackRef.current) return pendingNextTrackRef.current;
+    const q = queueRef.current;
+    const cur = currentRef.current;
+    const prep = prepAudioRef.current;
+    const audio = audioRef.current;
+    if (cur && prep && cur.url === prep.url && q.length > 1) {
+      const prepFinished =
+        segmentPrepDoneRef.current ||
+        Boolean(audio?.ended) ||
+        (Number.isFinite(audio?.duration) &&
+          (audio?.duration ?? 0) > 0 &&
+          (audio?.currentTime ?? 0) / (audio?.duration ?? 1) >= 0.98);
+      if (prepFinished) return q[1] ?? null;
+    }
+    return cur;
+  }, []);
 
   const handleEnded = useCallback(() => {
+    if (handlingEndedRef.current) return;
+    handlingEndedRef.current = true;
+    try {
     {
       const c0 = currentRef.current;
       const ph0 = phaseRef.current;
@@ -808,16 +855,23 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         }
       }
     }
-    if (queue.length > 1) {
+    const q = queueRef.current;
+    if (q.length > 1) {
       const epochAtAdvance = sessionEpochRef.current;
-      const [, ...rest] = queue;
+      const [, ...rest] = q;
       const nextTrack = rest[0] || null;
-      setQueue(rest);
+      const prep0 = prepAudioRef.current;
+      const finishedPrep = prep0 && currentRef.current?.url === prep0.url;
+      if (finishedPrep) segmentPrepDoneRef.current = true;
+      applyQueue(rest);
       setCurrent(nextTrack);
       pendingNextTrackRef.current = nextTrack;
       skipEffectPlayRef.current = true;
       const audio = audioRef.current;
       if (nextTrack && audio) {
+        audio.loop = false;
+        audio.muted = false;
+        audio.volume = 1;
         audio.src = nextTrack.url;
         audio.load();
         const playWhenReady = () => {
@@ -859,13 +913,14 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     }
     // Last track in queue just ended — close and optionally queue second (only when 2 per night)
     const hasSecond = !!secondTrackRef.current;
-    const doSecondAfterGap = playsPerNight === 2 && phase === "first" && hasSecond;
+    const ph = phaseRef.current;
+    const doSecondAfterGap = playsPerNight === 2 && ph === "first" && hasSecond;
     if (doSecondAfterGap) {
       secondFromGapInFlightRef.current = false;
       clearWaitTimers();
       setIsPlaying(false);
       setNeedsUserPlay(false);
-      setQueue([]);
+      applyQueue([]);
       setCurrent(null);
       setPhase("waiting");
       const epochAtGapStart = sessionEpochRef.current;
@@ -903,8 +958,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     } else {
       const nightFullyListened =
         playsPerNight === 1 ||
-        phase === "second" ||
-        (phase === "first" && !hasSecond);
+        ph === "second" ||
+        (ph === "first" && !hasSecond);
       if (
         nightFullyListened &&
         typeof scheduleNightNumber === "number" &&
@@ -925,15 +980,27 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       }
       setIsPlaying(false);
       setNeedsUserPlay(false);
+      segmentPrepDoneRef.current = false;
       setPhase("idle");
-      setQueue([]);
+      applyQueue([]);
       setCurrent(null);
       if (playsPerNight === 1) {
         setOnePerNightComplete(true);
       }
       dispatchRftsSessionEnd();
     }
-  }, [phase, gapHours, playsPerNight, queue, clearWaitTimers, prepAudio, scheduleNightNumber, onScheduleNightComplete, beginSecondAfterGap]);
+    } finally {
+      handlingEndedRef.current = false;
+    }
+  }, [
+    gapHours,
+    playsPerNight,
+    clearWaitTimers,
+    scheduleNightNumber,
+    onScheduleNightComplete,
+    beginSecondAfterGap,
+    applyQueue
+  ]);
 
   const handlePause = () => {
     audioRef.current?.pause();
@@ -942,7 +1009,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const handlePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
-    const toPlay = pendingNextTrackRef.current || current;
+    const toPlay = resolvePlayTarget();
     if (toPlay) {
       const epochAtPlay = sessionEpochRef.current;
       audio.src = toPlay.url;
@@ -995,6 +1062,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const handleRestart = () => {
     const audio = audioRef.current;
     if (!audio) return;
+    segmentPrepDoneRef.current = false;
     const c0 = currentRef.current;
     const ph0 = phaseRef.current;
     const prep0 = prepAudioRef.current;

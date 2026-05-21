@@ -133,6 +133,44 @@ describe("SessionPlayer", () => {
     });
   });
 
+  it("after prep ends, tap play loads the main track (not preparation again)", async () => {
+    render(
+      <SessionPlayer
+        prepAudio={PREP}
+        firstTrack={FIRST_TRACK}
+        gapHours={2.5}
+        playsPerNight={2}
+        autoStart={true}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(PREP.title);
+    });
+
+    const audio = document.querySelector("audio") as HTMLAudioElement;
+    Object.defineProperty(audio, "ended", { value: true, configurable: true });
+    Object.defineProperty(audio, "duration", { value: 60, configurable: true });
+    Object.defineProperty(audio, "currentTime", { value: 60, configurable: true });
+
+    await act(async () => {
+      audio.dispatchEvent(new Event("ended"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(FIRST_TRACK.title);
+    });
+
+    mockAudio.src = PREP.url;
+    mockAudio.play.mockClear();
+    const playButton = screen.getByRole("button", { name: /^Play$/i });
+    await userEvent.click(playButton);
+
+    await waitFor(() => {
+      expect(mockAudio.src).toBe(FIRST_TRACK.url);
+    });
+  });
+
   it("when first track loads after advance, play() is called (autoplay path)", async () => {
     render(
       <SessionPlayer
