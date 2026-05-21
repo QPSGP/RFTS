@@ -454,6 +454,67 @@ export type RecordScheduleNightResult =
   | { ok: false; error: string };
 
 /**
+ * Convert legacy progress (schedule-night index) to main audios played for all members not yet migrated.
+ * Safe to run repeatedly — only updates rows with schedule_progress_model <> 1.
+ */
+export const migrateAllMembersScheduleProgressToMainAudios = async (): Promise<{
+  ok: true;
+  updated: number;
+}> => {
+  try {
+    const { rowCount } = await sql`
+      UPDATE member_profiles mp
+      SET
+        completed_schedule_nights = CASE
+          WHEN COALESCE(u.plays_per_night, 2) = 1 THEN LEAST(732, COALESCE(mp.completed_schedule_nights, 0))
+          ELSE LEAST(732, COALESCE(mp.completed_schedule_nights, 0) * 2)
+        END,
+        schedule_progress_model = 1,
+        updated_at = now()
+      FROM users u
+      WHERE u.id = mp.user_id
+        AND COALESCE(mp.schedule_progress_model, 0) <> 1
+    `;
+    return { ok: true, updated: rowCount ?? 0 };
+  } catch {
+    return { ok: true, updated: 0 };
+  }
+};
+
+/** Per-member migration on schedule load when bulk migration has not run yet. */
+export const ensureMemberScheduleProgressMigrated = async (
+  userId: string,
+  playsPerNight: 1 | 2
+): Promise<number> => {
+  const ppn = playsPerNight === 1 ? 1 : 2;
+  try {
+    const { rows } = await sql<{ c: string | null; model: string | null }>`
+      SELECT COALESCE(completed_schedule_nights, 0)::text AS c,
+             COALESCE(schedule_progress_model, 0)::text AS model
+      FROM member_profiles
+      WHERE user_id = ${userId}
+      LIMIT 1
+    `;
+    if (!rows[0]) return 0;
+    const model = parseInt(rows[0].model || "0", 10) || 0;
+    const completed = parseInt(rows[0].c || "0", 10) || 0;
+    if (model === 1) return completed;
+    const main =
+      ppn === 1 ? completed : Math.min(732, completed * 2);
+    await sql`
+      UPDATE member_profiles
+      SET completed_schedule_nights = ${main},
+          schedule_progress_model = 1,
+          updated_at = now()
+      WHERE user_id = ${userId}
+    `;
+    return main;
+  } catch {
+    return 0;
+  }
+};
+
+/**
  * Mark a schedule step as fully listened. Stores **main goal audios completed** (not schedule-night index)
  * so playlist/lineup stay the same when the member switches 1 vs 2 audios per night.
  */
@@ -491,6 +552,7 @@ export const recordScheduleNightCompleted = async (
     await sql`
       UPDATE member_profiles
       SET completed_schedule_nights = ${mainAudiosAfter},
+          schedule_progress_model = 1,
           updated_at = now()
       WHERE user_id = ${userId}
     `;
@@ -500,19 +562,20 @@ export const recordScheduleNightCompleted = async (
   }
 };
 
-/** Admin: set completed schedule nights directly (0–366). Does not change schedule_started_at. */
+/** Admin: set completed main audios played (0–732). Does not change schedule_started_at. */
 export const adminSetMemberCompletedScheduleNights = async (
   userId: string,
   completedScheduleNights: number
 ): Promise<{ ok: true; completedScheduleNights: number } | { ok: false; error: string }> => {
   const n = Math.floor(completedScheduleNights);
-  if (!Number.isFinite(n) || n < 0 || n > 366) {
-    return { ok: false, error: "Completed nights must be between 0 and 366." };
+  if (!Number.isFinite(n) || n < 0 || n > 732) {
+    return { ok: false, error: "Completed audios must be between 0 and 732." };
   }
   try {
     const { rowCount } = await sql`
       UPDATE member_profiles
       SET completed_schedule_nights = ${n},
+          schedule_progress_model = 1,
           updated_at = now()
       WHERE user_id = ${userId}
     `;

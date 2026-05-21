@@ -5,6 +5,7 @@ import path from "path";
 import { getUserSessionEmail } from "@/lib/user-auth";
 import {
   getMemberAudioOrder,
+  ensureMemberScheduleProgressMigrated,
   getMemberProfileByUserId,
   getPlaybackSettings,
   getUserProfile,
@@ -120,14 +121,15 @@ export async function GET(request: Request) {
 
   // "Tonight" = next night after fully completed listening nights (stored), not calendar days.
   const startedAtRaw = memberProfile?.scheduleStartedAt;
+  const playsPerNight = profile.playsPerNight === 1 ? 1 : 2;
   let completedNights = Math.max(0, memberProfile?.completedScheduleNights ?? 0);
+  completedNights = await ensureMemberScheduleProgressMigrated(profile.id, playsPerNight);
   if (startedAtRaw && completedNights === 0) {
     const dateStr = String(startedAtRaw).trim().slice(0, 10);
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
       completedNights = await trySeedCompletedNightsFromLegacySessions(profile.id, dateStr);
     }
   }
-  const playsPerNight = profile.playsPerNight === 1 ? 1 : 2;
   const maxBuildNights = 366;
   const cueLength = 10;
   const currentAudioNumber = Math.min(maxBuildNights * 2, Math.max(1, completedNights + 1));

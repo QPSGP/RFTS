@@ -7,12 +7,26 @@ export type ScheduleNightForCue = {
 
 export type PlaylistCueItem = { id: string; title: string; skuCode?: string };
 
+/** `member_profiles.schedule_progress_model`: 0 = legacy schedule-night index, 1 = main audios played. */
+export const SCHEDULE_PROGRESS_MODEL_MAIN_AUDIOS = 1;
+
 /**
- * Main goal audios finished (stored in `completed_schedule_nights`).
+ * Main goal audios finished (stored in `completed_schedule_nights` when model = 1).
  * Same count whether the member uses 1 or 2 audios per night — switching mode does not change position.
  */
 export function completedMainAudiosPlayed(storedCompleted: number): number {
   return Math.max(0, Math.floor(storedCompleted));
+}
+
+/** One-time conversion from legacy stored schedule-night index to main audios played. */
+export function legacyStoredProgressToMainAudios(
+  storedCompleted: number,
+  playsPerNight: PlaysPerNightSetting
+): number {
+  const n = Math.max(0, Math.floor(storedCompleted));
+  if (n === 0) return 0;
+  if (playsPerNight === 1) return n;
+  return Math.min(366 * 2, n * 2);
 }
 
 /** @deprecated Use completedMainAudiosPlayed — kept for callers passing playsPerNight (ignored). */

@@ -9,6 +9,7 @@
     "lint": "next lint",
     "upload:blob": "node scripts/upload_blob.js",
     "db:schema": "node scripts/run-schema.js",
+    "db:migrate-progress": "node scripts/migrate-schedule-progress-main-audios.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:login": "node scripts/test-login-flow.js http://localhost:3000",

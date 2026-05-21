@@ -223,8 +223,10 @@ ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS schedule_started_at date;
 -- Migration: full birth date (day/month/year) for calendar picker; age still derived from year (safe to run on existing DBs)
 ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS birth_date date;
 
--- Migration: highest schedule night number fully listened (play-based progression; safe on existing DBs)
+-- Migration: main goal audios completed (play-based progression; safe on existing DBs)
 ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS completed_schedule_nights integer NOT NULL DEFAULT 0;
+-- 0 = legacy schedule-night index; 1 = main audios played (see scripts/migrate-schedule-progress-main-audios.sql)
+ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS schedule_progress_model smallint NOT NULL DEFAULT 0;
 
 -- Member audio assignments with order (for managed members).
 -- Same library_item_id may repeat up to admin UI limits (multiple rotation slots).

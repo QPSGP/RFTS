@@ -219,7 +219,7 @@ export default function PlayOptionsClient({
         </div>
         <div className="card" id="meditation-library">
           <h3>Meditation Library</h3>
-          <p>Browse the full audio library and play any track on demand. This will not affect your sessions!</p>
+          <p>Browse the full audio library and play any track on demand. This will not affect your guided audio set!</p>
           <a className="button" href="/library" style={{ marginTop: 12 }}>
             Open Library
           </a>
