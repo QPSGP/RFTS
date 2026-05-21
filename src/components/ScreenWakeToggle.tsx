@@ -4,8 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const buttonStyle = { marginTop: 12 };
 
-/** Screen wake on session start helps iPhone Safari through prep + long gap. */
-function shouldAutoEnableWakeOnSessionStart(): boolean {
+function isAppleMobileUa(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent || "";
   const platform = navigator.platform || "";
@@ -18,6 +17,11 @@ function isAndroidUa(): boolean {
   return /Android/i.test(navigator.userAgent || "");
 }
 
+/** Auto screen wake for the full guided session (prep, main audios, and inter-half wait). */
+function shouldAutoEnableWakeOnSessionStart(): boolean {
+  return isAppleMobileUa() || isAndroidUa();
+}
+
 type ScreenWakeToggleProps = {
   title?: string;
   description?: string;
@@ -26,13 +30,15 @@ type ScreenWakeToggleProps = {
 export default function ScreenWakeToggle({
   title = "Keep Screen Awake",
   description =
-    "On iPhone and iPad, screen wake turns on when you start your session and off when the session ends. On Android, screen wake also turns on automatically during the wait between your first and second audio (when your browser supports it), then turns off when the second half starts. While that wait runs, the app periodically retries the wake request if the browser drops it. You can still tap Enable anytime to keep the screen on for the whole session, or Disable to turn it off."
+    "On iPhone and iPad, screen wake turns on when you start your session and off when the session ends. On Android, screen wake turns on in your browser automatically when you start playing and stays on through your entire session—including the wait between audios—even if your phone is locked. Tap Enable anytime to keep the screen on outside a session, or Disable to turn it off early."
 }: ScreenWakeToggleProps) {
   const [wakeLockSupported, setWakeLockSupported] = useState(true);
   const [wakeLockActive, setWakeLockActive] = useState(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const userWantsWakeLockRef = useRef(false);
-  /** Android-only: auto wake lock for the long inter-half gap (legacy Sirius-style); released when second half starts unless the user chose full-session wake. */
+  /** Android: auto wake for the full guided session (not only the inter-half gap). */
+  const androidSessionWakeActiveRef = useRef(false);
+  /** Legacy flag: gap nudge polling when inter-half wait runs (Android session wake already covers this). */
   const gapAutoWakeActiveRef = useRef(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -83,7 +89,8 @@ export default function ScreenWakeToggle({
           setWakeLockActive(false);
           const wantWake =
             userWantsWakeLockRef.current ||
-            (gapAutoWakeActiveRef.current && isAndroidUa() && "wakeLock" in navigator);
+            androidSessionWakeActiveRef.current ||
+            gapAutoWakeActiveRef.current;
           if (wantWake && document.visibilityState === "visible" && acquireScreenWakeLockRef.current) {
             void acquireScreenWakeLockRef.current({
               setUserIntent: userWantsWakeLockRef.current,
@@ -111,7 +118,7 @@ export default function ScreenWakeToggle({
       gapWakePollIntervalRef.current = null;
     }
     gapAutoWakeActiveRef.current = false;
-    if (userWantsWakeLockRef.current) {
+    if (userWantsWakeLockRef.current || androidSessionWakeActiveRef.current) {
       return;
     }
     sessionStartRetryIdsRef.current.forEach((id) => clearTimeout(id));
@@ -136,6 +143,7 @@ export default function ScreenWakeToggle({
     sessionStartRetryIdsRef.current.forEach((id) => clearTimeout(id));
     sessionStartRetryIdsRef.current = [];
     gapAutoWakeActiveRef.current = false;
+    androidSessionWakeActiveRef.current = false;
     userWantsWakeLockRef.current = false;
     const hadLock = wakeLockRef.current !== null;
     try {
@@ -187,13 +195,17 @@ export default function ScreenWakeToggle({
       sessionStartRetryIdsRef.current.forEach((id) => clearTimeout(id));
       sessionStartRetryIdsRef.current = [];
     };
-    const beginGapWakePolling = () => {
+    const wantsWakeLockHeld = () =>
+      userWantsWakeLockRef.current ||
+      androidSessionWakeActiveRef.current ||
+      gapAutoWakeActiveRef.current;
+
+    const beginWakeLockPolling = () => {
       clearGapWakePoll();
       if (typeof navigator === "undefined" || !("wakeLock" in navigator)) return;
-      if (!gapAutoWakeActiveRef.current && !userWantsWakeLockRef.current) return;
+      if (!wantsWakeLockHeld()) return;
       gapWakePollIntervalRef.current = window.setInterval(() => {
-        const wantWake = userWantsWakeLockRef.current || gapAutoWakeActiveRef.current;
-        if (!wantWake) {
+        if (!wantsWakeLockHeld()) {
           clearGapWakePoll();
           return;
         }
@@ -206,10 +218,7 @@ export default function ScreenWakeToggle({
       }, GAP_WAKE_POLL_MS);
     };
     const handleVisibility = () => {
-      if (
-        document.visibilityState === "visible" &&
-        (userWantsWakeLockRef.current || gapAutoWakeActiveRef.current)
-      ) {
+      if (document.visibilityState === "visible" && wantsWakeLockHeld()) {
         void acquireScreenWakeLock({
           setUserIntent: userWantsWakeLockRef.current,
           feedbackOnError: userWantsWakeLockRef.current
@@ -218,22 +227,32 @@ export default function ScreenWakeToggle({
     };
     const handleSessionStart = () => {
       if (!shouldAutoEnableWakeOnSessionStart()) return;
-      userWantsWakeLockRef.current = true;
+      if (isAndroidUa()) {
+        androidSessionWakeActiveRef.current = true;
+      } else {
+        userWantsWakeLockRef.current = true;
+      }
       clearSessionStartRetries();
       const tryRequest = () => {
-        if (!userWantsWakeLockRef.current) return;
+        if (!wantsWakeLockHeld()) return;
         if (document.visibilityState !== "visible") return;
-        void acquireScreenWakeLock({ setUserIntent: true, feedbackOnError: false });
+        void acquireScreenWakeLock({
+          setUserIntent: userWantsWakeLockRef.current,
+          feedbackOnError: false
+        });
       };
       tryRequest();
-      for (const ms of [250, 2000]) {
+      for (const ms of [250, 2000, 5000, 15000]) {
         const id = setTimeout(tryRequest, ms);
         sessionStartRetryIdsRef.current.push(id);
+      }
+      if (isAndroidUa() && "wakeLock" in navigator) {
+        beginWakeLockPolling();
       }
     };
     const handleGapWakeNudge = () => {
       if (typeof navigator === "undefined" || !("wakeLock" in navigator)) return;
-      if (!gapAutoWakeActiveRef.current && !userWantsWakeLockRef.current) return;
+      if (!wantsWakeLockHeld()) return;
       if (document.visibilityState !== "visible") return;
       void acquireScreenWakeLock({
         setUserIntent: userWantsWakeLockRef.current,
@@ -242,28 +261,18 @@ export default function ScreenWakeToggle({
     };
     const handlePageShow = () => {
       if (typeof navigator === "undefined" || !("wakeLock" in navigator)) return;
-      if (!gapAutoWakeActiveRef.current && !userWantsWakeLockRef.current) return;
+      if (!wantsWakeLockHeld()) return;
       void acquireScreenWakeLock({
         setUserIntent: userWantsWakeLockRef.current,
         feedbackOnError: false
       });
     };
     const handleInterHalfGap = () => {
-      clearGapWakePoll();
       if (isAndroidUa() && "wakeLock" in navigator) {
         gapAutoWakeActiveRef.current = true;
-        clearSessionStartRetries();
-        const tryGapWake = () => {
-          if (!gapAutoWakeActiveRef.current) return;
-          if (document.visibilityState !== "visible") return;
-          void acquireScreenWakeLock({
-            setUserIntent: userWantsWakeLockRef.current,
-            feedbackOnError: false
-          });
-        };
-        tryGapWake();
+        handleGapWakeNudge();
         for (const ms of [250, 2000, 5000, 15000]) {
-          const id = setTimeout(tryGapWake, ms);
+          const id = setTimeout(() => handleGapWakeNudge(), ms);
           sessionStartRetryIdsRef.current.push(id);
         }
       } else {
@@ -272,8 +281,8 @@ export default function ScreenWakeToggle({
       if (userWantsWakeLockRef.current) {
         void acquireScreenWakeLock({ setUserIntent: true, feedbackOnError: false });
       }
-      if ("wakeLock" in navigator && (gapAutoWakeActiveRef.current || userWantsWakeLockRef.current)) {
-        beginGapWakePolling();
+      if ("wakeLock" in navigator && wantsWakeLockHeld()) {
+        beginWakeLockPolling();
       }
     };
     const handleSecondHalfStarted = () => {
@@ -281,6 +290,7 @@ export default function ScreenWakeToggle({
     };
     const handleSessionEnd = () => {
       clearSessionStartRetries();
+      androidSessionWakeActiveRef.current = false;
       void releaseWakeLock({ afterSession: true });
     };
     document.addEventListener("visibilitychange", handleVisibility);

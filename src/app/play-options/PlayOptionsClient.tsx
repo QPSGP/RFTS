@@ -248,11 +248,6 @@ export default function PlayOptionsClient({
               <div style={{ marginTop: 12 }}>
                 <strong>Current Lineup (Audio {currentAudioNumber})</strong>
                 <div className="stack" style={{ marginTop: 8 }}>
-                  {prepAudio && (
-                    <span>
-                      Preparation audio: {prepAudio.title}
-                    </span>
-                  )}
                   {tonightTracksWithUrls.map((track, index) => (
                     <a
                       key={`${currentNight}-${index}-${track.id}`}

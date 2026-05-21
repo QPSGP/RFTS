@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 
 const TIME_ZONES = [
   "Pacific Time",
@@ -407,6 +408,10 @@ export default function MemberProfilePage() {
               {saveMessage}
             </span>
           )}
+        </div>
+
+        <div style={{ marginTop: 32 }}>
+          <ScreenWakeToggle />
         </div>
 
         <p style={{ marginTop: 24, marginBottom: 0 }}>

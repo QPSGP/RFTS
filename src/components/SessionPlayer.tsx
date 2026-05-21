@@ -745,7 +745,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         const minsLate = Math.round((now - due) / 60000);
         logMemberActivity(
           "session_gap",
-          `Diag: second half was ${minsLate}m past schedule when tab became visible — JS timers / silent bridge often stall when the screen is locked (common on Android). Android now auto-enables screen wake during the gap when supported; if issues persist use Enable Screen Wake on Play Options or keep Chrome in the foreground.`
+          `Diag: second half was ${minsLate}m past schedule when tab became visible — JS timers / silent bridge often stall when the screen is locked (common on Android). Screen wake is requested automatically for the full session on Android when supported; keep listening in Chrome if the second half is late.`
         );
       }
       beginSecondAfterGap(trigger);
@@ -1173,7 +1173,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           )}
           {coarseMobilePlatform() === "Android" && (
             <p style={{ margin: "10px 0 0", color: "#92400e", fontSize: 13 }}>
-              If the second recording only starts after you unlock your phone, turn on <strong>Enable Screen Wake</strong> on this page or keep Chrome in the foreground — Android often pauses long timers while the screen is off.
+              Screen wake is turned on automatically for this session. If the second recording is late, unlock your phone or tap Play above—some Android browsers pause long timers while the screen is locked.
             </p>
           )}
           <button
