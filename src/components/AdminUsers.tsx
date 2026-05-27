@@ -900,9 +900,9 @@ export default function AdminUsers() {
     if (
       !window.confirm(
         `Reset schedule testing state for ${email}?\n\n` +
-          "This clears completed schedule nights and the rotation start date so they begin again at night 1. " +
-          "It also sets global Playback “Initial tracks” to 4 if it is still below 4 (fixes two-goals + T-18). " +
-          "Goals and subscription are unchanged."
+          "This clears completed schedule progress and the rotation start date so they begin again at audio 1. " +
+          "It also sets global Playback “Initial tracks” to 4 if it is still below 4 (three rotation slots + T-18/CGMR cadence). " +
+          "Goals, rotation order, and subscription are unchanged."
       )
     ) {
       return;
@@ -2021,10 +2021,23 @@ export default function AdminUsers() {
                               </p>
                               <p style={{ margin: "8px 0 0", fontSize: 12, color: "#64748b" }}>
                                 <strong>Reset for internal testing</strong> clears progress and the rotation anchor
-                                (they show as night 1 again), and sets global Playback initial tracks to{" "}
+                                (they show as audio 1 again), and sets global Playback initial tracks to{" "}
                                 <strong>4</strong> if the database still has{" "}
-                                <strong>3</strong>. They still need at least <strong>three</strong> selected goals
-                                for three goal audios plus the T-18/CGMR cadence.
+                                <strong>3</strong>.{" "}
+                                {effectiveTier === "platinum_managed" ? (
+                                  <>
+                                    For <strong>Platinum Managed</strong>, build at least{" "}
+                                    <strong>three rotation steps</strong> in <strong>Rotation order</strong> below
+                                    (three assigned audios in the list, plus T-18/CGMR every 4th main play). Goals are
+                                    not used.
+                                  </>
+                                ) : (
+                                  <>
+                                    For <strong>Gold</strong>, they still need at least{" "}
+                                    <strong>three selected goals</strong> for three goal audios plus the T-18/CGMR
+                                    cadence.
+                                  </>
+                                )}
                               </p>
                             </div>
                           )}

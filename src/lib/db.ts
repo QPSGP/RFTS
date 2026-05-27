@@ -520,18 +520,11 @@ export const ensureMemberScheduleProgressMigrated = async (
  */
 export const recordScheduleNightCompleted = async (
   userId: string,
-  scheduleNightCompleted: number,
+  _scheduleNightCompleted: number,
   playsPerNight: 1 | 2
 ): Promise<RecordScheduleNightResult> => {
-  if (!Number.isFinite(scheduleNightCompleted) || scheduleNightCompleted < 1 || scheduleNightCompleted > 366) {
-    return { ok: false, error: "Invalid night." };
-  }
   const ppn = playsPerNight === 1 ? 1 : 2;
-  const mainAudiosAfter = scheduleNightCompleted * ppn;
   const maxMain = 366 * 2;
-  if (mainAudiosAfter > maxMain) {
-    return { ok: false, error: "Invalid night." };
-  }
   try {
     const { rows: existing } = await sql<{ c: string | null }>`
       SELECT COALESCE(completed_schedule_nights, 0)::text AS c
@@ -543,11 +536,9 @@ export const recordScheduleNightCompleted = async (
       return { ok: false, error: "Member profile not found." };
     }
     const completed = parseInt(existing[0].c || "0", 10) || 0;
+    const mainAudiosAfter = Math.min(maxMain, completed + ppn);
     if (mainAudiosAfter <= completed) {
       return { ok: true, completedScheduleNights: completed };
-    }
-    if (mainAudiosAfter !== completed + ppn) {
-      return { ok: false, error: "Night is out of sequence." };
     }
     await sql`
       UPDATE member_profiles
