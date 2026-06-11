@@ -84,6 +84,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   const [libraryAddStatus, setLibraryAddStatus] = useState<string | null>(null);
   const [libraryAddSuccess, setLibraryAddSuccess] = useState<string | null>(null);
   const [addFormPreviewUrl, setAddFormPreviewUrl] = useState<string | null>(null);
+  const [addNewAudioOpen, setAddNewAudioOpen] = useState(false);
   const addLibraryFormRef = useRef<HTMLFormElement>(null);
   const editCoverInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -250,6 +251,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   };
 
   const fillAddFormFromUpload = async (fileName: string, audioUrl: string) => {
+    setAddNewAudioOpen(true);
     const addForm = addLibraryFormRef.current;
     if (!addForm || !audioUrl) return;
     (addForm.elements.namedItem("audioUrl") as HTMLInputElement).value = audioUrl;
@@ -434,6 +436,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
       setUploadCoverStatus(`Uploaded: ${file.name}. Cover URL was filled in Step 2.`);
       const addForm = addLibraryFormRef.current;
       if (addForm && url) {
+        setAddNewAudioOpen(true);
         (addForm.elements.namedItem("coverUrl") as HTMLInputElement).value = url;
         addForm.scrollIntoView({ behavior: "smooth", block: "start" });
       }
@@ -819,7 +822,37 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
 
       {openLibrary && (
         <section id="admin-audio-library" className="card">
-        <h2 style={{ marginTop: 0 }}>Add new audio</h2>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            flexWrap: "wrap",
+            gap: 12,
+            marginBottom: addNewAudioOpen ? 16 : 0
+          }}
+        >
+          <div>
+            <h2 style={{ marginTop: 0, marginBottom: addNewAudioOpen ? 8 : 0 }}>Audio library</h2>
+            {!addNewAudioOpen && (
+              <p style={{ color: "#4b5563", margin: 0, fontSize: 14 }}>
+                Search and edit tracks below. Use <strong>Add new audio</strong> when uploading a
+                recording.
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            className="button"
+            onClick={() => setAddNewAudioOpen((open) => !open)}
+            aria-expanded={addNewAudioOpen}
+            aria-controls="admin-add-new-audio-panel"
+          >
+            {addNewAudioOpen ? "Hide add new audio" : "Add new audio"}
+          </button>
+        </div>
+        {addNewAudioOpen && (
+        <div id="admin-add-new-audio-panel">
         <p style={{ color: "#4b5563", marginBottom: 16 }}>
           Upload → review auto-filled details → Add Audio → assign to goals (A/B/C) or members.
         </p>
@@ -973,6 +1006,8 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             <p style={{ marginTop: 8, color: "#b91c1c", fontWeight: 500 }}>{libraryAddStatus}</p>
           )}
         </form>
+        </div>
+        )}
         {isFirstAdmin && (
           <>
             <p style={{ color: "#4b5563" }}>
