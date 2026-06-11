@@ -142,8 +142,8 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
         Choose up to {limit} priorities you want your sessions to focus on.
       </p>
       <p style={{ color: "#4b5563" }}>
-        You can change your goals at any time. For best results, stick with your goals
-        until you complete the full 21-times cycle when possible.
+        Though you can change your goals at any time. For best results, we encourage and recommend you stick
+        with your goals for at least 90 days before changing them. Repetition is the key for success.
       </p>
       <p style={{ color: "#4b5563" }}>
         Changes save when you click &quot;Save Goals&quot;.

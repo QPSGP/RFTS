@@ -2290,7 +2290,10 @@ export default function AdminUsers() {
                                 }
                                 style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
                               />
-                              <span>I am interested in a Life Guidance Discovery Session.</span>
+                              <span>
+                                I am interested in more information on a Life Guidance Discovery Session to get
+                                customized &quot;Goal Manifestation&quot; audios specific for you!
+                              </span>
                             </label>
                             {(() => {
                               const y = profileDrafts[user.email].yearBorn;
@@ -2347,7 +2350,10 @@ export default function AdminUsers() {
                                 }
                                 style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
                               />
-                              <span>I am or would like to be a therapist, healer, or coach.</span>
+                              <span>
+                                I am interested in building my practice as a Hypnotherapist, Healer, or Life Coach
+                                using the tools offered here.
+                              </span>
                             </label>
                             <input
                               style={inputStyle}
