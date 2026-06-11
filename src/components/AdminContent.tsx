@@ -82,6 +82,8 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   const [editCoverStatus, setEditCoverStatus] = useState<string | null>(null);
   const [editCoverLoading, setEditCoverLoading] = useState(false);
   const [libraryAddStatus, setLibraryAddStatus] = useState<string | null>(null);
+  const [libraryAddSuccess, setLibraryAddSuccess] = useState<string | null>(null);
+  const [addFormPreviewUrl, setAddFormPreviewUrl] = useState<string | null>(null);
   const addLibraryFormRef = useRef<HTMLFormElement>(null);
   const editCoverInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -247,6 +249,42 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     }
   };
 
+  const fillAddFormFromUpload = async (fileName: string, audioUrl: string) => {
+    const addForm = addLibraryFormRef.current;
+    if (!addForm || !audioUrl) return;
+    (addForm.elements.namedItem("audioUrl") as HTMLInputElement).value = audioUrl;
+    (addForm.elements.namedItem("fileName") as HTMLInputElement).value = fileName || "";
+    setAddFormPreviewUrl(audioUrl);
+    setLibraryAddSuccess(null);
+    setLibraryAddStatus(null);
+    try {
+      const res = await fetch(
+        `/api/admin/recording-metadata?fileName=${encodeURIComponent(fileName)}`,
+        { credentials: "include" }
+      );
+      if (res.ok) {
+        const data = (await res.json()) as {
+          title?: string;
+          description?: string;
+          skuCode?: string | null;
+          coverUrl?: string;
+        };
+        const titleEl = addForm.elements.namedItem("title") as HTMLInputElement;
+        const descEl = addForm.elements.namedItem("description") as HTMLTextAreaElement;
+        const skuEl = addForm.elements.namedItem("skuCode") as HTMLInputElement;
+        const coverEl = addForm.elements.namedItem("coverUrl") as HTMLInputElement;
+        if (data.title && !titleEl.value.trim()) titleEl.value = data.title;
+        if (data.description && !descEl.value.trim()) descEl.value = data.description;
+        if (data.skuCode && !skuEl.value.trim()) skuEl.value = data.skuCode;
+        if (data.coverUrl && !coverEl.value.trim()) coverEl.value = data.coverUrl;
+      }
+    } catch {
+      // Metadata lookup is optional; upload still succeeded.
+    }
+    addForm.scrollIntoView({ behavior: "smooth", block: "start" });
+    (addForm.elements.namedItem("title") as HTMLInputElement)?.focus();
+  };
+
   const addLibraryItem = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -259,6 +297,16 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     let categories = categoriesRaw
       ? categoriesRaw.split(",").map((category) => category.trim()).filter(Boolean)
       : [];
+    if (formData.get("categoryGeneral") === "on") {
+      if (!categories.some((c) => c.toLowerCase() === "general")) categories.push("General");
+    }
+    if (formData.get("categorySpecial") === "on") {
+      if (!categories.some((c) => c.toLowerCase() === "special")) categories.push("Special");
+    }
+    if (formData.get("categoryCgmr") === "on") {
+      if (!categories.some((c) => c.toLowerCase() === "cgmr")) categories.push("CGMR");
+    }
+    if (categories.length === 0) categories = ["General"];
     if (formData.get("buildPractice") === "on") {
       if (!categories.some((c) => c.toLowerCase() === "special")) categories = [...categories, "special"];
     }
@@ -282,11 +330,14 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     if (response.ok) {
       setStatus(null);
       setLibraryAddStatus(null);
+      setLibraryAddSuccess("Audio added to the library. Assign it to goals below if needed.");
+      setAddFormPreviewUrl(null);
       event.currentTarget.reset();
       await load();
     } else {
       const data = await response.json().catch(() => ({}));
       const err = data?.error || "Failed to add item.";
+      setLibraryAddSuccess(null);
       setLibraryAddStatus(err);
       setStatus(err);
     }
@@ -335,12 +386,13 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
         multipart: useMultipart
       });
       const url = blob?.url || "";
-      setUploadAudioStatus(url ? `Uploaded: ${file.name}. Scroll to Step 2, add title & description, then click Add Audio.` : "Upload completed but no URL returned.");
-      const addForm = addLibraryFormRef.current;
-      if (addForm && url) {
-        (addForm.elements.namedItem("audioUrl") as HTMLInputElement).value = url;
-        (addForm.elements.namedItem("fileName") as HTMLInputElement).value = file.name || "";
-        addForm.scrollIntoView({ behavior: "smooth", block: "start" });
+      setUploadAudioStatus(
+        url
+          ? `Uploaded: ${file.name}. Title, SKU, and description were filled in Step 2 when available — review and click Add Audio.`
+          : "Upload completed but no URL returned."
+      );
+      if (url) {
+        await fillAddFormFromUpload(file.name, url);
       }
       if (fileInput) fileInput.value = "";
     } catch (e) {
@@ -767,6 +819,10 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
 
       {openLibrary && (
         <section id="admin-audio-library" className="card">
+        <h2 style={{ marginTop: 0 }}>Add new audio</h2>
+        <p style={{ color: "#4b5563", marginBottom: 16 }}>
+          Upload → review auto-filled details → Add Audio → assign to goals (A/B/C) or members.
+        </p>
         <div className="card" style={{ marginBottom: 16 }}>
           <h3 style={{ marginTop: 0 }}>Step 1: Upload an audio file (optional)</h3>
           <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>
@@ -815,6 +871,108 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
           </form>
           {uploadCoverStatus && <p style={{ marginTop: 12, marginBottom: 0 }}>{uploadCoverStatus}</p>}
         </div>
+        <form
+          ref={addLibraryFormRef}
+          id="step-2-add-audio"
+          onSubmit={addLibraryItem}
+          className="card grid"
+          style={{ marginBottom: 16 }}
+        >
+          <h3 style={{ marginTop: 0, marginBottom: 4 }}>Step 2: Add audio to the library</h3>
+          <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>
+            After Step 1, title, SKU, and description are filled when we recognize the file (e.g.{" "}
+            <code>T-18</code>). Review, attach goals if needed, then click <strong>Add Audio</strong>.
+          </p>
+          <label style={{ fontSize: 13, fontWeight: 600 }}>Title</label>
+          <input name="title" placeholder="Title" required style={inputStyle} />
+          <label style={{ fontSize: 13, fontWeight: 600 }}>Description</label>
+          <textarea
+            name="description"
+            placeholder="Description"
+            required
+            rows={4}
+            style={{ ...inputStyle, resize: "vertical", minHeight: 88 }}
+          />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600 }}>SKU</label>
+              <input name="skuCode" placeholder="e.g. T-01" style={inputStyle} />
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600 }}>File name</label>
+              <input name="fileName" placeholder="Filled by upload" style={inputStyle} />
+            </div>
+          </div>
+          <span style={{ fontSize: 13, fontWeight: 600 }}>Categories</span>
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input type="checkbox" name="categoryGeneral" defaultChecked />
+              General
+            </label>
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input type="checkbox" name="categorySpecial" />
+              Special
+            </label>
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input type="checkbox" name="categoryCgmr" />
+              CGMR (personalized)
+            </label>
+          </div>
+          <label style={{ fontSize: 13, fontWeight: 600 }}>Cover URL (optional)</label>
+          <input name="coverUrl" placeholder="Filled by Step 1B or catalog sync" style={inputStyle} />
+          <label style={{ fontSize: 13, fontWeight: 600 }}>
+            Audio URL{" "}
+            <span style={{ color: "#6b7280", fontWeight: 400 }}>(required; filled by Step 1)</span>
+          </label>
+          <input
+            name="audioUrl"
+            placeholder="Paste URL or upload in Step 1"
+            style={inputStyle}
+            onChange={(event) => {
+              const url = event.target.value.trim();
+              setAddFormPreviewUrl(url || null);
+            }}
+          />
+          {addFormPreviewUrl && (
+            <div className="card" style={{ padding: 12, background: "#f8fafc" }}>
+              <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 600 }}>Preview</p>
+              <audio controls preload="metadata" src={addFormPreviewUrl} style={{ width: "100%" }} />
+            </div>
+          )}
+          <label style={{ fontSize: 13, fontWeight: 600 }}>Allowed member emails (optional)</label>
+          <input
+            name="allowedUserEmails"
+            placeholder="email@example.com, other@example.com — limits who can hear this track"
+            style={inputStyle}
+          />
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center" }}>
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input type="checkbox" name="adultContent" />
+              Adult content (18+)
+            </label>
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input type="checkbox" name="buildPractice" />
+              Build Practice (adds Special category)
+            </label>
+          </div>
+          <label style={{ fontSize: 13, fontWeight: 600 }}>Attach goals (optional — Ctrl/Cmd+click for several)</label>
+          <select name="interestIds" multiple style={{ ...inputStyle, minHeight: 120 }}>
+            {interestOptions.map((interest) => (
+              <option key={interest.value} value={interest.value}>
+                {interest.label}
+              </option>
+            ))}
+          </select>
+          <button className="button" type="submit">
+            Add Audio
+          </button>
+          {libraryAddSuccess && (
+            <p style={{ marginTop: 8, color: "#059669", fontWeight: 500 }}>{libraryAddSuccess}</p>
+          )}
+          {libraryAddStatus && (
+            <p style={{ marginTop: 8, color: "#b91c1c", fontWeight: 500 }}>{libraryAddStatus}</p>
+          )}
+        </form>
         {isFirstAdmin && (
           <>
             <p style={{ color: "#4b5563" }}>
@@ -980,62 +1138,6 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
           </div>
           </>
         )}
-        <form ref={addLibraryFormRef} id="step-2-add-audio" onSubmit={addLibraryItem} className="grid">
-          <h3 style={{ marginTop: 16, marginBottom: 4 }}>Step 2: Add audio to the library</h3>
-          <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>
-            Fill in title and description (Audio URL is filled by Step 1). Click <strong>Add Audio</strong> to save. The track will appear in the list below and in <strong>Assign Audios by Goal</strong> so you can assign it to goals (A/B/C) and, if needed, to specific members in the Members section.
-          </p>
-          <input name="title" placeholder="Title" required style={inputStyle} />
-          <input
-            name="description"
-            placeholder="Description"
-            required
-            style={inputStyle}
-          />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <input name="skuCode" placeholder="SKU (e.g., T-01)" style={inputStyle} />
-            <input name="fileName" placeholder="File name" style={inputStyle} />
-          </div>
-          <input
-            name="categories"
-            placeholder="Categories (comma-separated)"
-            style={inputStyle}
-          />
-          <input name="coverUrl" placeholder="Cover URL (optional)" style={inputStyle} />
-          <label style={{ fontSize: 13 }}>
-            Audio URL <span style={{ color: "#6b7280", fontWeight: 400 }}>(required for playback; filled by Step 1)</span>
-          </label>
-          <input name="audioUrl" placeholder="Paste URL or upload in Step 1" style={inputStyle} />
-          <input
-            name="allowedUserEmails"
-            placeholder="Allowed user emails (comma-separated, optional)"
-            style={inputStyle}
-          />
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center" }}>
-            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <input type="checkbox" name="adultContent" />
-              Adult content (18+)
-            </label>
-            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <input type="checkbox" name="buildPractice" />
-              Build Practice
-            </label>
-          </div>
-          <label style={{ fontSize: 13 }}>Attach goals</label>
-          <select name="interestIds" multiple style={inputStyle}>
-            {interestOptions.map((interest) => (
-              <option key={interest.value} value={interest.value}>
-                {interest.label}
-              </option>
-            ))}
-          </select>
-          <button className="button" type="submit">
-            Add Audio
-          </button>
-          {libraryAddStatus && (
-            <p style={{ marginTop: 8, color: "#b91c1c", fontWeight: 500 }}>{libraryAddStatus}</p>
-          )}
-        </form>
         <div className="grid" style={{ marginTop: 16 }}>
           {searchFilteredLibrary.map((item) => (
             <div key={item.id} id={`audio-${item.id}`} className="card">

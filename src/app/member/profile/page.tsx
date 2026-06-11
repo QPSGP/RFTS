@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import MemberBillingSection, {
+  type MemberBillingInfo
+} from "@/components/MemberBillingSection";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 
 const TIME_ZONES = [
@@ -105,6 +108,7 @@ export default function MemberProfilePage() {
   const [profile, setProfile] = useState<ProfileState>(emptyProfile);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [billing, setBilling] = useState<MemberBillingInfo | null>(null);
 
   const showAdultContent = useMemo(() => {
     const dateStr = profile.birthDate.trim() || (profile.yearBorn.trim() ? `${profile.yearBorn}-01-01` : "");
@@ -127,6 +131,7 @@ export default function MemberProfilePage() {
     }
     const data = await res.json();
     setProfile(toState(data.profile ?? {}));
+    setBilling(data.billing ?? null);
     setStatus("ready");
   }, []);
 
@@ -415,6 +420,8 @@ export default function MemberProfilePage() {
             </span>
           )}
         </div>
+
+        <MemberBillingSection billing={billing} returnPath="/member/profile" />
 
         <div style={{ marginTop: 32 }}>
           <ScreenWakeToggle />

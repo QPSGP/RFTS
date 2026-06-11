@@ -6,6 +6,7 @@ import {
   getUserProfile,
   upsertMemberProfile
 } from "@/lib/db";
+import { getMemberBillingSummary } from "@/lib/member-billing";
 import { getWelcomeEmailCcRecipients, sendEmail } from "@/lib/email";
 import {
   getLgdInterestEmailContent,
@@ -60,9 +61,11 @@ export async function GET() {
   if (!user) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
+  const billing = await getMemberBillingSummary(user);
   const memberProfile = await getMemberProfileByUserId(user.id);
   if (!memberProfile) {
     return NextResponse.json({
+      billing,
       profile: {
         email: user.email,
         firstName: null,
@@ -85,6 +88,7 @@ export async function GET() {
   const yearBornNum = memberProfile.yearBorn ?? null;
   const birthDate = memberProfile.birthDate ?? null;
   return NextResponse.json({
+    billing,
     profile: {
       email: user.email,
       firstName: memberProfile.firstName ?? null,
