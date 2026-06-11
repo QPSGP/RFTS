@@ -472,6 +472,7 @@ export default function AdminUsers() {
   const [newAudioDrafts, setNewAudioDrafts] = useState<Record<string, NewAudioDraft>>({});
   const [memberSearchTerm, setMemberSearchTerm] = useState("");
   const [memberTierFilter, setMemberTierFilter] = useState<"all" | "platinum" | "platinum_managed">("all");
+  const [addNewMemberOpen, setAddNewMemberOpen] = useState(false);
   const [memberActivity, setMemberActivity] = useState<Record<string, MemberActivityRow[]>>({});
   const [memberActivityLoading, setMemberActivityLoading] = useState<Record<string, boolean>>({});
   const [memberActivityError, setMemberActivityError] = useState<Record<string, string | null>>({});
@@ -1452,21 +1453,50 @@ export default function AdminUsers() {
     "div",
     { className: "card" },
     <>
-      <h2>Member Accounts</h2>
-      <p style={{ color: "#4b5563" }}>
-        Create member accounts, assign tiers, and activate subscriptions. Member passwords are stored as a secure hash;
-        you cannot view an existing password—enter a new one below or in the expanded profile to reset login for any
-        member.
-      </p>
+      <div style={{ marginBottom: addNewMemberOpen ? 8 : 0 }}>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 8
+          }}
+        >
+          <h2 style={{ margin: 0 }}>Member Accounts</h2>
+          <button
+            type="button"
+            className="button"
+            onClick={() => setAddNewMemberOpen((open) => !open)}
+            aria-expanded={addNewMemberOpen}
+            aria-controls="admin-add-new-member-panel"
+          >
+            {addNewMemberOpen ? "Hide add new member" : "Add new member"}
+          </button>
+        </div>
+        {!addNewMemberOpen && (
+          <p style={{ color: "#4b5563", margin: 0 }}>
+            Search and manage members below, or use <strong>Add new member</strong> to create an
+            account.
+          </p>
+        )}
+      </div>
+      {addNewMemberOpen && (
+        <p style={{ color: "#4b5563", marginTop: 0 }}>
+          Create member accounts, assign tiers, and activate subscriptions. Member passwords are
+          stored as a secure hash; you cannot view an existing password—enter a new one below or in
+          the expanded profile to reset login for any member.
+        </p>
+      )}
       {dataLoadNotice && (
         <p style={{ color: "#b45309", marginTop: 8, marginBottom: 0 }} role="status">
           {dataLoadNotice}
         </p>
       )}
       {status && <p>{status}</p>}
-      <div className="grid" style={{ marginTop: 16 }}>
-        <div className="card">
-          <h3>Create Member</h3>
+      {addNewMemberOpen && (
+        <div id="admin-add-new-member-panel" className="card" style={{ marginTop: 16 }}>
+          <h3 style={{ marginTop: 0 }}>Create member</h3>
           <div className="grid">
             <input
               style={inputStyle}
@@ -1527,13 +1557,14 @@ export default function AdminUsers() {
               <option value={2}>Full session — 2 main audios per schedule night (default)</option>
               <option value={1}>Half session — 1 main audio per step (2 steps = 1 full session)</option>
             </select>
-            <button className="button" onClick={createUser}>
+            <button className="button" type="button" onClick={createUser}>
               Create Member
             </button>
           </div>
         </div>
+      )}
 
-        <div className="card">
+      <div className="card" style={{ marginTop: 16 }}>
           <h3>Existing Members</h3>
           {users.length === 0 ? (
             <p>No member accounts yet.</p>
@@ -3406,7 +3437,6 @@ export default function AdminUsers() {
             </>
           )}
         </div>
-      </div>
     </>
   );
 }
