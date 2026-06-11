@@ -314,8 +314,8 @@ export default function MemberProfilePage() {
               style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
             />
             <span>
-              I am interested in more information on a Life Guidance Discovery Session to get customized
-              &quot;Goal Manifestation&quot; audios specific for you!
+              I am interested in more information on a &quot;Life Guidance Discovery Session&quot; to receive a
+              customized &quot;Goal Manifestation&quot; audio specific for me!
             </span>
           </label>
           {showAdultContent && (

@@ -142,8 +142,8 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
         Choose up to {limit} priorities you want your sessions to focus on.
       </p>
       <p style={{ color: "#4b5563" }}>
-        Though you can change your goals at any time. For best results, we encourage and recommend you stick
-        with your goals for at least 90 days before changing them. Repetition is the key for success.
+        Though you can change your goals at any time, for best results, we encourage and recommend you stick
+        with your goals for at least 90 days before changing them. Repetition is the key for success!
       </p>
       <p style={{ color: "#4b5563" }}>
         Changes save when you click &quot;Save Goals&quot;.
