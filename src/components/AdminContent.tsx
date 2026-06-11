@@ -822,34 +822,33 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
 
       {openLibrary && (
         <section id="admin-audio-library" className="card">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            flexWrap: "wrap",
-            gap: 12,
-            marginBottom: addNewAudioOpen ? 16 : 0
-          }}
-        >
-          <div>
-            <h2 style={{ marginTop: 0, marginBottom: addNewAudioOpen ? 8 : 0 }}>Audio library</h2>
-            {!addNewAudioOpen && (
-              <p style={{ color: "#4b5563", margin: 0, fontSize: 14 }}>
-                Search and edit tracks below. Use <strong>Add new audio</strong> when uploading a
-                recording.
-              </p>
-            )}
-          </div>
-          <button
-            type="button"
-            className="button"
-            onClick={() => setAddNewAudioOpen((open) => !open)}
-            aria-expanded={addNewAudioOpen}
-            aria-controls="admin-add-new-audio-panel"
+        <div style={{ marginBottom: addNewAudioOpen ? 16 : 0 }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: 12,
+              marginBottom: 8
+            }}
           >
-            {addNewAudioOpen ? "Hide add new audio" : "Add new audio"}
-          </button>
+            <h2 style={{ margin: 0 }}>Audio library</h2>
+            <button
+              type="button"
+              className="button"
+              onClick={() => setAddNewAudioOpen((open) => !open)}
+              aria-expanded={addNewAudioOpen}
+              aria-controls="admin-add-new-audio-panel"
+            >
+              {addNewAudioOpen ? "Hide add new audio" : "Add new audio"}
+            </button>
+          </div>
+          {!addNewAudioOpen && (
+            <p style={{ color: "#4b5563", margin: 0, fontSize: 14 }}>
+              Search and edit tracks below, or use <strong>Add new audio</strong> to upload a
+              recording.
+            </p>
+          )}
         </div>
         {addNewAudioOpen && (
         <div id="admin-add-new-audio-panel">
