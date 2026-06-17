@@ -12,6 +12,7 @@ import AdminAdmins from "@/components/AdminAdmins";
 import AdminLogoutButton from "@/components/AdminLogoutButton";
 import AffiliateAdmin from "@/components/AffiliateAdmin";
 import ScheduleAlgorithmTool from "@/components/ScheduleAlgorithmTool";
+import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 
 export default function AdminContentPage() {
   const [isFirstAdmin, setIsFirstAdmin] = useState<boolean | null>(null);
@@ -76,65 +77,74 @@ export default function AdminContentPage() {
       <section style={{ marginBottom: 24 }}>
         <div className="grid grid-2" style={{ gap: 12 }}>
           <button
-            className="button button-secondary"
+            className={adminSectionToggleClass(openSections.members, true)}
             type="button"
+            aria-expanded={openSections.members}
             onClick={() => toggleSection("members", "admin-members")}
           >
             Members Section
           </button>
           <button
-            className="button button-secondary"
+            className={adminSectionToggleClass(openSections.moderators, true)}
             type="button"
+            aria-expanded={openSections.moderators}
             onClick={() => toggleSection("moderators", "admin-moderators")}
           >
             Facilitators Section
           </button>
           <button
-            className="button button-secondary"
+            className={adminSectionToggleClass(openSections.affiliates, true)}
             type="button"
+            aria-expanded={openSections.affiliates}
             onClick={() => toggleSection("affiliates", "admin-affiliates")}
           >
             Affiliate Section
           </button>
           <button
-            className="button button-secondary"
+            className={adminSectionToggleClass(openSections.playback, true)}
             type="button"
+            aria-expanded={openSections.playback}
             onClick={() => toggleSection("playback", "admin-playback")}
           >
             Playback schedule settings
           </button>
           <button
-            className="button button-secondary"
+            className={adminSectionToggleClass(openSections.subscriptions, true)}
             type="button"
+            aria-expanded={openSections.subscriptions}
             onClick={() => toggleSection("subscriptions", "admin-subscriptions")}
           >
             Subscription Plans Section
           </button>
           <button
-            className="button button-secondary"
+            className={adminSectionToggleClass(openSections.goals, true)}
             type="button"
+            aria-expanded={openSections.goals}
             onClick={() => toggleSection("goals", "admin-goals")}
           >
             Goals Section
           </button>
           <button
-            className="button button-secondary"
+            className={adminSectionToggleClass(openSections.library, true)}
             type="button"
+            aria-expanded={openSections.library}
             onClick={() => toggleSection("library", "admin-audio-library")}
           >
             Audio Library Section
           </button>
           <button
-            className="button button-secondary"
+            className={adminSectionToggleClass(openSections.scheduleAlgorithm, true)}
             type="button"
+            aria-expanded={openSections.scheduleAlgorithm}
             onClick={() => toggleSection("scheduleAlgorithm", "admin-schedule-algorithm")}
           >
             Schedule algorithm (member)
           </button>
           {isFirstAdmin && (
             <button
-              className="button button-secondary"
+              className={adminSectionToggleClass(openSections.admins, true)}
               type="button"
+              aria-expanded={openSections.admins}
               onClick={() => toggleSection("admins", "admin-admins")}
             >
               Administrators Section

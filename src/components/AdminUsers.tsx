@@ -7,6 +7,7 @@ import { MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER } from "@/lib/member-audio-activi
 import { formatFullSessionsFraction } from "@/lib/session-progress-format";
 import { MANAGED_MAX_SLOTS_PER_AUDIO } from "@/lib/managed-rotation-limits";
 import type { LibraryItem } from "@/lib/types";
+import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 
 
 function sanitizePathSegment(name: string): string {
@@ -509,6 +510,7 @@ export default function AdminUsers() {
   const [memberScheduleDraft, setMemberScheduleDraft] = useState<Record<string, string>>({});
   const [memberScheduleSaving, setMemberScheduleSaving] = useState<Record<string, boolean>>({});
   const [memberScheduleResetting, setMemberScheduleResetting] = useState<Record<string, boolean>>({});
+  const [memberGoalSearch, setMemberGoalSearch] = useState<Record<string, string>>({});
   /** Non-fatal: interests/library failed but member list may still have loaded */
   const [dataLoadNotice, setDataLoadNotice] = useState<string | null>(null);
 
@@ -1407,6 +1409,49 @@ export default function AdminUsers() {
     setStatus(data?.error || `Profile save failed. (status ${response.status})`);
   };
 
+  const getMemberGoalIds = (email: string, fallback: string[]) =>
+    updates[email]?.goalIds ?? fallback ?? [];
+
+  const toggleMemberGoal = (email: string, fallback: string[], goalId: string) => {
+    setUpdates((prev) => {
+      const current = prev[email]?.goalIds ?? fallback ?? [];
+      if (current.includes(goalId)) {
+        return {
+          ...prev,
+          [email]: { ...prev[email], goalIds: current.filter((id) => id !== goalId) }
+        };
+      }
+      if (current.length >= 10) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [email]: { ...prev[email], goalIds: [...current, goalId] }
+      };
+    });
+  };
+
+  const moveMemberGoal = (
+    email: string,
+    fallback: string[],
+    fromIndex: number,
+    toIndex: number
+  ) => {
+    setUpdates((prev) => {
+      const current = prev[email]?.goalIds ?? fallback ?? [];
+      if (toIndex < 0 || toIndex >= current.length) {
+        return prev;
+      }
+      const next = [...current];
+      const [item] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, item);
+      return {
+        ...prev,
+        [email]: { ...prev[email], goalIds: next }
+      };
+    });
+  };
+
   const getDerivedAudios = (goalIds: string[]) => {
     if (!goalIds || goalIds.length === 0) {
       return [];
@@ -1414,41 +1459,6 @@ export default function AdminUsers() {
     return library.filter((item) => item.interestIds?.some((id) => goalIds.includes(id)));
   };
 
-  const updateOrderedGoals = (email: string, goalId: string, orderValue: string) => {
-    const parsed = Number(orderValue);
-    if (!orderValue || Number.isNaN(parsed) || parsed <= 0) {
-      setUpdates((prev) => {
-        const current = prev[email]?.goalIds || [];
-        return {
-          ...prev,
-          [email]: {
-            ...prev[email],
-            goalIds: current.filter((id) => id !== goalId)
-          }
-        };
-      });
-      return;
-    }
-    setUpdates((prev) => {
-      const current = prev[email]?.goalIds || [];
-      const without = current.filter((id) => id !== goalId);
-      const next = [...without];
-      next.splice(Math.min(parsed - 1, next.length), 0, goalId);
-      return {
-        ...prev,
-        [email]: {
-          ...prev[email],
-          goalIds: next
-        }
-      };
-    });
-  };
-
-  const getGoalOrder = (email: string, goalId: string, fallback: string[]) => {
-    const list = updates[email]?.goalIds || fallback;
-    const index = list.indexOf(goalId);
-    return index === -1 ? "" : String(index + 1);
-  };
   return React.createElement(
     "div",
     { className: "card" },
@@ -1466,7 +1476,7 @@ export default function AdminUsers() {
           <h2 style={{ margin: 0 }}>Member Accounts</h2>
           <button
             type="button"
-            className="button"
+            className={adminSectionToggleClass(addNewMemberOpen)}
             onClick={() => setAddNewMemberOpen((open) => !open)}
             aria-expanded={addNewMemberOpen}
             aria-controls="admin-add-new-member-panel"
@@ -1636,7 +1646,7 @@ export default function AdminUsers() {
                   {!profileOpen[user.email] && (
                     <>
                       <button
-                        className="button button-secondary"
+                        className={adminSectionToggleClass(false)}
                         type="button"
                         onClick={async () => {
                           setProfileOpen({ ...profileOpen, [user.email]: true });
@@ -1703,8 +1713,9 @@ export default function AdminUsers() {
                   {profileOpen[user.email] && (
                     <>
                       <button
-                        className="button button-secondary"
+                        className={adminSectionToggleClass(true)}
                         type="button"
+                        aria-expanded={true}
                         onClick={async () => {
                           const next = !profileOpen[user.email];
                           setProfileOpen({ ...profileOpen, [user.email]: next });
@@ -2467,25 +2478,14 @@ export default function AdminUsers() {
                         <h4 style={{ marginBottom: 8 }}>2. Goals</h4>
                         <button
                           type="button"
+                          className={adminSectionToggleClass(!!goalsSectionOpen[user.email], true)}
+                          aria-expanded={!!goalsSectionOpen[user.email]}
                           onClick={() =>
                             setGoalsSectionOpen((prev) => ({
                               ...prev,
                               [user.email]: !prev[user.email]
                             }))
                           }
-                          style={{
-                            background: "none",
-                            border: "1px solid #d1d5db",
-                            borderRadius: 8,
-                            padding: "8px 12px",
-                            cursor: "pointer",
-                            fontSize: 12,
-                            width: "100%",
-                            textAlign: "left",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8
-                          }}
                         >
                           {goalsSectionOpen[user.email] ? "▼" : "▶"}
                           Assigned goals (up to 10)
@@ -2493,56 +2493,124 @@ export default function AdminUsers() {
                         </button>
                         {goalsSectionOpen[user.email] && (
                           <>
-                            <div className="goal-list" style={{ marginTop: 8 }}>
-                              {sortedInterests.map((interest) => {
-                                const orderValue = getGoalOrder(
-                                  user.email,
-                                  interest.id,
-                                  user.goalIds || []
-                                );
-                                return (
-                                  <label
-                                    key={interest.id}
-                                    className="goal-item"
-                                    style={{ display: "flex", gap: 8, alignItems: "center" }}
-                                  >
+                            {(() => {
+                              const memberGoalIds = getMemberGoalIds(user.email, user.goalIds || []);
+                              const orderedGoals = memberGoalIds.map((id) => ({
+                                id,
+                                name:
+                                  interests.find((goal) => goal.id === id)?.name || "Unknown goal"
+                              }));
+                              const searchTerm = (memberGoalSearch[user.email] || "").trim().toLowerCase();
+                              const filteredGoals = searchTerm
+                                ? sortedInterests.filter((interest) =>
+                                    interest.name.toLowerCase().includes(searchTerm)
+                                  )
+                                : sortedInterests;
+                              return (
+                                <>
+                                  <div className="card" style={{ marginTop: 8 }}>
+                                    <h5 style={{ marginTop: 0, marginBottom: 8 }}>
+                                      Selected goals (saved order)
+                                    </h5>
+                                    {orderedGoals.length === 0 ? (
+                                      <p style={{ color: "#6b7280", margin: 0, fontSize: 13 }}>
+                                        No goals selected yet.
+                                      </p>
+                                    ) : (
+                                      <div className="goal-stack">
+                                        {orderedGoals.map((goal, index) => (
+                                          <div
+                                            key={goal.id}
+                                            className="goal-item"
+                                            style={{
+                                              display: "flex",
+                                              alignItems: "center",
+                                              gap: 10
+                                            }}
+                                          >
+                                            <strong style={{ minWidth: 24 }}>{index + 1}.</strong>
+                                            <span style={{ flex: 1 }}>{goal.name}</span>
+                                            <button
+                                              className="button button-secondary"
+                                              type="button"
+                                              onClick={() =>
+                                                moveMemberGoal(
+                                                  user.email,
+                                                  user.goalIds || [],
+                                                  index,
+                                                  index - 1
+                                                )
+                                              }
+                                              disabled={index === 0}
+                                              style={{ padding: "6px 10px", fontSize: 12 }}
+                                            >
+                                              Up
+                                            </button>
+                                            <button
+                                              className="button button-secondary"
+                                              type="button"
+                                              onClick={() =>
+                                                moveMemberGoal(
+                                                  user.email,
+                                                  user.goalIds || [],
+                                                  index,
+                                                  index + 1
+                                                )
+                                              }
+                                              disabled={index === orderedGoals.length - 1}
+                                              style={{ padding: "6px 10px", fontSize: 12 }}
+                                            >
+                                              Down
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="card" style={{ marginTop: 12 }}>
+                                    <h5 style={{ marginTop: 0, marginBottom: 8 }}>Find goals</h5>
                                     <input
-                                      type="checkbox"
-                                      checked={orderValue !== ""}
+                                      style={inputStyle}
+                                      placeholder="Search goals"
+                                      value={memberGoalSearch[user.email] || ""}
                                       onChange={(event) =>
-                                        updateOrderedGoals(
-                                          user.email,
-                                          interest.id,
-                                          event.target.checked ? "1" : ""
-                                        )
+                                        setMemberGoalSearch((prev) => ({
+                                          ...prev,
+                                          [user.email]: event.target.value
+                                        }))
                                       }
                                     />
-                                    <span style={{ flex: 1 }}>{interest.name}</span>
-                                    <input
-                                      value={orderValue}
-                                      onChange={(event) =>
-                                        updateOrderedGoals(
-                                          user.email,
-                                          interest.id,
-                                          event.target.value
-                                        )
-                                      }
-                                      placeholder="#"
-                                      style={{
-                                        width: 44,
-                                        textAlign: "center",
-                                        borderRadius: 6,
-                                        border: "1px solid #d1d5db",
-                                        padding: "4px 6px",
-                                        background: orderValue ? "#16a34a" : "#ffffff",
-                                        color: orderValue ? "#ffffff" : "#111827",
-                                        fontWeight: 600
-                                      }}
-                                    />
-                                  </label>
-                                );
-                              })}
-                            </div>
+                                    <div
+                                      className="card goal-see-all-list"
+                                      style={{ marginTop: 12 }}
+                                    >
+                                      <div className="goal-all-scroll">
+                                        {filteredGoals.map((interest) => (
+                                          <label key={interest.id} className="goal-all-row">
+                                            <input
+                                              type="checkbox"
+                                              checked={memberGoalIds.includes(interest.id)}
+                                              disabled={
+                                                !memberGoalIds.includes(interest.id) &&
+                                                memberGoalIds.length >= 10
+                                              }
+                                              onChange={() =>
+                                                toggleMemberGoal(
+                                                  user.email,
+                                                  user.goalIds || [],
+                                                  interest.id
+                                                )
+                                              }
+                                            />
+                                            <span className="goal-all-name">{interest.name}</span>
+                                          </label>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </>
+                              );
+                            })()}
                             {effectiveTier === "platinum_managed" ? (
                               <p
                                 style={{
@@ -2569,7 +2637,9 @@ export default function AdminUsers() {
                                 </p>
                                 <div className="goal-list">
                                   {(() => {
-                                    const goalAudios = getDerivedAudios(user.goalIds || []).slice(0, 10);
+                                    const goalAudios = getDerivedAudios(
+                                      getMemberGoalIds(user.email, user.goalIds || [])
+                                    ).slice(0, 10);
                                     return goalAudios.length === 0 ? (
                                       <span style={{ color: "#6b7280", fontSize: 12 }}>
                                         No audios in play list yet.

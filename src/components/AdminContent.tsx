@@ -3,6 +3,7 @@
 import { put } from "@vercel/blob/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Interest } from "@/lib/types";
+import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 
 function sanitizePathSegment(name: string): string {
   return name
@@ -835,7 +836,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             <h2 style={{ margin: 0 }}>Audio library</h2>
             <button
               type="button"
-              className="button"
+              className={adminSectionToggleClass(addNewAudioOpen)}
               onClick={() => setAddNewAudioOpen((open) => !open)}
               aria-expanded={addNewAudioOpen}
               aria-controls="admin-add-new-audio-panel"
