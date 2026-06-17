@@ -67,3 +67,42 @@ describe("buildSchedulePreview — managed assigned order", () => {
     expect(nights[5].tracks.map((t) => t.id)).toEqual(["t23", "t18"]);
   });
 });
+
+describe("buildSchedulePreview — gold (platinum) duplicate tracks per night", () => {
+  const settings: PlaybackSettings = {
+    playsPerRecording: 21,
+    nightlyGapHours: 2.5,
+    addNewTrackEveryNights: 99,
+    initialTracks: 3,
+    cgmrTrackId: "T-18",
+    fallbackTrackId: "T-18"
+  };
+
+  const t18 = mk("t18", "T-18 Abundance");
+  const goalTrack = mk("g1", "Goal track");
+  goalTrack.interestIds = ["goal-1"];
+
+  it("keeps both slots when the same recording would appear twice in one night", () => {
+    const nights = buildSchedulePreview({
+      interests: ["goal-1"],
+      library: [goalTrack, t18],
+      interestRecords: [
+        {
+          id: "goal-1",
+          name: "Abundance",
+          createdAt: "",
+          audioIdA: "t18",
+          audioIdB: null,
+          audioIdC: null
+        }
+      ],
+      settings,
+      tier: "platinum",
+      nights: 4,
+      playsPerNight: 2
+    });
+    const specialNight = nights.find((n) => n.tracks.length === 2 && n.tracks.every((t) => t.id === "t18"));
+    expect(specialNight).toBeDefined();
+    expect(specialNight!.tracks).toHaveLength(2);
+  });
+});

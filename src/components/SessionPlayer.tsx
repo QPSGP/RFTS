@@ -101,6 +101,28 @@ function startTrackFromBeginning(audio: HTMLMediaElement) {
   }
 }
 
+/** Assign stream URL and reset element so the same recording can play again in sequence. */
+function prepareAudioForTrackStart(
+  audio: HTMLMediaElement,
+  url: string,
+  opts?: { forceLoad?: boolean }
+) {
+  const currentSrc = audio.src || "";
+  const sameUrl =
+    url.length > 0 &&
+    currentSrc.length > 0 &&
+    (currentSrc === url ||
+      currentSrc.endsWith(url) ||
+      url.endsWith(currentSrc));
+  if (!sameUrl && audio.src !== url) {
+    audio.src = url;
+  }
+  if (sameUrl || opts?.forceLoad) {
+    audio.load();
+  }
+  startTrackFromBeginning(audio);
+}
+
 /**
  * Mobile browsers often fulfill `play()` but leave the element paused without a user gesture
  * (iOS Safari, Chrome/Android WebView, Samsung Internet, etc.).
@@ -461,15 +483,12 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       return;
     }
     audio.muted = false;
-    if (audio.src !== track.url) {
-      audio.src = track.url;
-    }
     lastAttemptAutoplayCancelRef.current?.();
     const trackUrl = track.url;
     const epoch0 = sessionEpochRef.current;
     const isValid = () =>
       sessionEpochRef.current === epoch0 && currentRef.current?.url === trackUrl;
-    startTrackFromBeginning(audio);
+    prepareAudioForTrackStart(audio, trackUrl);
     lastAttemptAutoplayCancelRef.current = startPlaybackWithIOSAutoplayGuard(
       audio,
       isValid,
@@ -568,7 +587,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       audio.loop = false;
       audio.volume = 1;
       audio.muted = false;
-      startTrackFromBeginning(audio);
+      prepareAudioForTrackStart(audio, trackUrl);
       cancelAutoplayCheck = startPlaybackWithIOSAutoplayGuard(
         audio,
         isValid,
@@ -872,8 +891,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         audio.loop = false;
         audio.muted = false;
         audio.volume = 1;
-        audio.src = nextTrack.url;
-        audio.load();
+        prepareAudioForTrackStart(audio, nextTrack.url, { forceLoad: true });
         const playWhenReady = () => {
           if (epochAtAdvance !== sessionEpochRef.current) return;
           clearTimeout(fallbackId);

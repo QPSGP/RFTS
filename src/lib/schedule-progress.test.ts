@@ -3,7 +3,8 @@ import type { LibraryItem, PlaybackSettings } from "./types";
 import {
   buildNextPlaylistCue,
   completedMainAudiosPlayed,
-  completedNightsToMainPlaysDone
+  completedNightsToMainPlaysDone,
+  getMemberTonightTrackItems
 } from "./schedule-progress";
 
 const mk = (id: string, title: string, sku?: string): LibraryItem => ({
@@ -101,5 +102,20 @@ describe("schedule progress / playlist cue", () => {
     const at2 = buildNextPlaylistCue(canonical, completed, 2, 10).map((t) => t.id);
     const at1 = buildNextPlaylistCue(canonical, completed, 1, 10).map((t) => t.id);
     expect(at1).toEqual(at2);
+  });
+
+  it("tonight lineup includes both plays when the same id appears twice in one schedule night", () => {
+    const schedule = [
+      {
+        night: 1,
+        tracks: [
+          { id: "dup", title: "Same", skuCode: "T-01" },
+          { id: "dup", title: "Same", skuCode: "T-01" }
+        ]
+      }
+    ];
+    const tonight = getMemberTonightTrackItems(schedule, 0, 2);
+    expect(tonight).toHaveLength(2);
+    expect(tonight.map((t) => t.id)).toEqual(["dup", "dup"]);
   });
 });

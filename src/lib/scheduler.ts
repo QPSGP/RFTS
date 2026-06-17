@@ -330,19 +330,8 @@ export const buildSchedulePreview = ({
     const filtered = selectedTracks.filter(
       (item): item is LibraryItem => !!item
     );
-    // Non-managed: dedupe by id so the same track (e.g. T-18 in both goal and special slot) appears once.
-    // Managed: allow the same assigned audio twice in one night when the rotation intentionally repeats it.
-    let tracks: LibraryItem[];
-    if (isManagedMember) {
-      tracks = filtered;
-    } else {
-      const seenIds = new Set<string>();
-      tracks = filtered.filter((item) => {
-        if (seenIds.has(item.id)) return false;
-        seenIds.add(item.id);
-        return true;
-      });
-    }
+    // Keep both slots when the same recording appears twice in one night (e.g. goal + CGMR/T-18).
+    const tracks = filtered;
 
     tracks.forEach((item) => markPlayed(item));
 
