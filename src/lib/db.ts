@@ -141,10 +141,12 @@ export const deletePasswordResetToken = async (token: string) => {
 };
 
 export const updateUserPassword = async (userId: string, passwordHash: string): Promise<boolean> => {
-  const result = await sql`
-    UPDATE users SET password_hash = ${passwordHash} WHERE id = ${userId}
+  const { rows } = await sql<{ id: string }>`
+    UPDATE users SET password_hash = ${passwordHash}
+    WHERE id = ${userId}
+    RETURNING id
   `;
-  return (result.rowCount ?? 0) > 0;
+  return rows.length > 0;
 };
 
 /** Set `users.email` to lowercase trimmed form (fixes legacy ALL-CAPS rows; safe if already normalized). */
