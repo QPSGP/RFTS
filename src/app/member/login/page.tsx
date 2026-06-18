@@ -12,6 +12,7 @@ type MemberLoginPageProps = {
 };
 
 export default function MemberLoginPage({ searchParams = {} }: MemberLoginPageProps) {
+  const err = firstQuery(searchParams.error);
   const resetOk = firstQuery(searchParams.reset) === "success";
   const initialErrorInvalid = err === "invalid";
   const nextRaw = firstQuery(searchParams.next);
