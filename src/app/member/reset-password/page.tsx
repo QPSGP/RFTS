@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState, Suspense, type CSSProperties } from "react";
+import { useState, Suspense, useEffect, type CSSProperties } from "react";
 import SiteFooter from "@/components/SiteFooter";
 
 const inputStyle = {
@@ -72,7 +72,9 @@ function ResetPasswordForm() {
         body: JSON.stringify({ token: t, newPassword: password })
       });
       const data = await res.json().catch(() => ({}));
-      if (res.ok) {
+      if (res.ok && (data.ok || data.message)) {
+        setPassword("");
+        setConfirm("");
         setStatus("success");
         setMessage(data.message || "Password updated. You can sign in now.");
       } else {
@@ -85,13 +87,24 @@ function ResetPasswordForm() {
     }
   };
 
+  useEffect(() => {
+    if (status !== "success") return;
+    const timer = window.setTimeout(() => {
+      window.location.href = "/member/login?reset=success";
+    }, 2500);
+    return () => window.clearTimeout(timer);
+  }, [status]);
+
   if (status === "success") {
     return (
       <div className="card">
         <h2>Password updated</h2>
         <p style={{ color: "#166534" }}>{message}</p>
+        <p style={{ color: "#64748b", fontSize: 14 }}>
+          Redirecting to sign in…
+        </p>
         <p style={{ marginTop: 24 }}>
-          <Link className="button" href="/member/login">Sign in</Link>
+          <Link className="button" href="/member/login?reset=success">Sign in now</Link>
         </p>
       </div>
     );

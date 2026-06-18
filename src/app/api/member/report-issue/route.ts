@@ -46,14 +46,20 @@ export async function POST(request: Request) {
   `;
   const text = `Report from: ${email}\nCategory: ${categoryLabel}\nSubject: ${parsed.data.subject}\n\n${parsed.data.message}`;
   const { ok, error } = await sendEmail({ to, subject, html, text });
+  let storedInAdmin = false;
   if (ok) {
-    await insertMemberIssueReport({
+    storedInAdmin = await insertMemberIssueReport({
       userId: user.id,
       memberEmail: user.email,
       category: categoryLabel,
       subject: parsed.data.subject,
       message: parsed.data.message
     });
+    if (!storedInAdmin) {
+      console.error(
+        "[report-issue] Email sent but member_issue_reports insert failed — run db:schema on production DB"
+      );
+    }
   }
   if (!ok) {
     const isNotConfigured = error?.includes("RESEND_API_KEY");
@@ -85,5 +91,14 @@ export async function POST(request: Request) {
   if (!confirmResult.ok) {
     console.error("[report-issue] Confirmation email failed:", confirmResult.error);
   }
-  return NextResponse.json({ message: "Thank you. We received your report and will look into it." });
+  return NextResponse.json({
+    message: "Thank you. We received your report and will look into it.",
+    storedInAdmin,
+    ...(storedInAdmin
+      ? {}
+      : {
+          warning:
+            "Your message was emailed to our team, but the admin queue could not be updated. Ask support to run the latest database schema."
+        })
+  });
 }

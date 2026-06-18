@@ -140,10 +140,11 @@ export const deletePasswordResetToken = async (token: string) => {
   await sql`DELETE FROM password_reset_tokens WHERE token = ${token}`;
 };
 
-export const updateUserPassword = async (userId: string, passwordHash: string) => {
-  await sql`
+export const updateUserPassword = async (userId: string, passwordHash: string): Promise<boolean> => {
+  const result = await sql`
     UPDATE users SET password_hash = ${passwordHash} WHERE id = ${userId}
   `;
+  return (result.rowCount ?? 0) > 0;
 };
 
 /** Set `users.email` to lowercase trimmed form (fixes legacy ALL-CAPS rows; safe if already normalized). */
@@ -1489,7 +1490,7 @@ export const insertMemberIssueReport = async (params: {
   category: string;
   subject: string;
   message: string;
-}): Promise<void> => {
+}): Promise<boolean> => {
   try {
     await sql`
       INSERT INTO member_issue_reports (user_id, member_email, category, subject, message)
@@ -1501,8 +1502,10 @@ export const insertMemberIssueReport = async (params: {
         ${params.message}
       )
     `;
+    return true;
   } catch (err) {
     console.error("[insertMemberIssueReport]", err);
+    return false;
   }
 };
 

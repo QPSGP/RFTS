@@ -12,7 +12,7 @@ type MemberLoginPageProps = {
 };
 
 export default function MemberLoginPage({ searchParams = {} }: MemberLoginPageProps) {
-  const err = firstQuery(searchParams.error);
+  const resetOk = firstQuery(searchParams.reset) === "success";
   const initialErrorInvalid = err === "invalid";
   const nextRaw = firstQuery(searchParams.next);
   const initialNextPath =
@@ -28,6 +28,19 @@ export default function MemberLoginPage({ searchParams = {} }: MemberLoginPagePr
           status.
         </p>
       </section>
+      {resetOk && (
+        <div
+          className="card"
+          style={{
+            marginBottom: 16,
+            borderColor: "#86efac",
+            background: "#f0fdf4",
+            color: "#166534"
+          }}
+        >
+          Your password was updated. Sign in with your new password.
+        </div>
+      )}
       <UserAuth initialErrorInvalid={initialErrorInvalid} initialNextPath={initialNextPath} />
       <SiteFooter showCta={false} />
     </main>
