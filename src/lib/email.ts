@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { getPublicAppUrl } from "./site-url";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -97,11 +98,5 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ ok: boolea
 
 /** Base URL for links in emails (e.g. password reset). Set NEXT_PUBLIC_APP_URL or pass request origin. */
 export function getBaseUrl(origin?: string | null): string {
-  if (typeof process.env.NEXT_PUBLIC_APP_URL === "string" && process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
-  }
-  if (origin) {
-    return origin.replace(/\/$/, "");
-  }
-  return "https://reachforthestars.today";
+  return getPublicAppUrl(origin);
 }

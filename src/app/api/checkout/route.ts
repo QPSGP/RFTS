@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSubscriptionStripeIdsForUser, getUserByEmail } from "@/lib/db";
 import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
 import { getStripe } from "@/lib/stripe";
+import { getPublicSiteUrl } from "@/lib/site-url";
 import { getUserSessionEmail } from "@/lib/user-auth";
 
 const schema = z.object({
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
     );
   }
   const { priceId, trialDays, successPath, cancelPath } = parsed.data;
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = getPublicSiteUrl();
 
   const memberEmail = await getUserSessionEmail();
   if (memberEmail) {

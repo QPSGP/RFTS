@@ -1,3 +1,11 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.reachforthestars.today" }],
+      "destination": "https://reachforthestars.today/:path*",
+      "permanent": true
+    }
+  ]
 }

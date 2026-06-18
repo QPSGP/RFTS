@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getMemberProfileByUserId, getUserProfile, normalizeMemberEmail } from "@/lib/db";
+import { getProductionCookieDomain } from "@/lib/site-url";
 
 const sessionCookie = "rfts_user_session";
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
@@ -70,14 +71,7 @@ function memberCookieSecure(request?: CookieRequestHint): boolean {
 }
 
 function memberCookieDomain(request?: CookieRequestHint): string | undefined {
-  const fromEnv = process.env.MEMBER_SESSION_COOKIE_DOMAIN?.trim();
-  if (fromEnv) return fromEnv;
-  const host = request?.headers.get("host")?.split(":")[0]?.toLowerCase();
-  if (!host || host.endsWith(".vercel.app")) return undefined;
-  if (host === "www.reachforthestars.today" || host === "reachforthestars.today") {
-    return ".reachforthestars.today";
-  }
-  return undefined;
+  return getProductionCookieDomain(request?.headers.get("host"));
 }
 
 function memberSessionCookieOptions(request?: CookieRequestHint) {

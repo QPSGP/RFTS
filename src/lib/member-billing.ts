@@ -5,6 +5,7 @@ import {
 } from "@/lib/db";
 import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
 import { getStripe } from "@/lib/stripe";
+import { getPublicSiteUrl } from "@/lib/site-url";
 
 export function getSubscriptionTierLabel(tier: string | null | undefined): string {
   if (tier === "platinum_managed") return "Platinum Managed";
@@ -22,11 +23,7 @@ export function formatSubscriptionStatus(status: string | null | undefined): str
 }
 
 export function getStripeBillingBaseUrl(): string {
-  const raw =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    "http://localhost:3000";
-  return raw.replace(/\/$/, "");
+  return getPublicSiteUrl();
 }
 
 export function isStripeBillingConfigured(): boolean {

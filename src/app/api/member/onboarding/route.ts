@@ -19,6 +19,7 @@ import {
 } from "@/lib/db";
 import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
 import { getWelcomeEmailCcRecipients, sendEmail } from "@/lib/email";
+import { getPublicSiteUrl } from "@/lib/site-url";
 import {
   getWelcomeEmailContent,
   getLgdInterestEmailContent,
@@ -188,7 +189,7 @@ export async function POST(request: Request) {
   }
 
   const token = createUserSessionToken(user.email);
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = getPublicSiteUrl();
 
   if (isDemoSkip) {
     const res = NextResponse.json({ url: "/play-options" });
