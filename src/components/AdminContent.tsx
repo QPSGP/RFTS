@@ -82,12 +82,15 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   const [uploadCoverLoading, setUploadCoverLoading] = useState(false);
   const [editCoverStatus, setEditCoverStatus] = useState<string | null>(null);
   const [editCoverLoading, setEditCoverLoading] = useState(false);
+  const [editAudioStatus, setEditAudioStatus] = useState<string | null>(null);
+  const [editAudioLoading, setEditAudioLoading] = useState(false);
   const [libraryAddStatus, setLibraryAddStatus] = useState<string | null>(null);
   const [libraryAddSuccess, setLibraryAddSuccess] = useState<string | null>(null);
   const [addFormPreviewUrl, setAddFormPreviewUrl] = useState<string | null>(null);
   const [addNewAudioOpen, setAddNewAudioOpen] = useState(false);
   const addLibraryFormRef = useRef<HTMLFormElement>(null);
   const editCoverInputRef = useRef<HTMLInputElement | null>(null);
+  const editAudioInputRef = useRef<HTMLInputElement | null>(null);
 
   const load = async () => {
     const [interestRes, libraryRes] = await Promise.all([
@@ -346,6 +349,42 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     }
   };
 
+  const uploadAudioFileToBlob = async (file: File): Promise<string> => {
+    const pathname = `audios/${sanitizePathSegment(file.name.replace(/\.[^.]+$/, "") || "audio")}${file.name.match(/\.[^.]+$/)?.[0] || ".mp3"}`;
+    const useMultipart = file.size > 5 * 1024 * 1024;
+    const tokenRes = await fetch("/api/admin/upload-audio-handler", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "blob.generate-client-token",
+        payload: { pathname, clientPayload: null, multipart: useMultipart }
+      }),
+      credentials: "include"
+    });
+    const tokenData = await tokenRes.json().catch(() => ({}));
+    if (!tokenRes.ok) {
+      throw new Error(
+        tokenRes.status === 401
+          ? "Log in as admin and try again."
+          : tokenData?.error || tokenRes.statusText || String(tokenRes.status)
+      );
+    }
+    const clientToken = tokenData?.clientToken;
+    if (!clientToken) {
+      throw new Error("No token from server.");
+    }
+    const blob = await put(pathname, file, {
+      access: "public",
+      token: clientToken,
+      multipart: useMultipart
+    });
+    const url = blob?.url || "";
+    if (!url) {
+      throw new Error("Upload completed but no URL returned.");
+    }
+    return url;
+  };
+
   const uploadAudio = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
@@ -357,46 +396,12 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     }
     setUploadAudioStatus(null);
     setUploadAudioLoading(true);
-    const pathname = `audios/${sanitizePathSegment(file.name.replace(/\.[^.]+$/, "") || "audio")}${file.name.match(/\.[^.]+$/)?.[0] || ".mp3"}`;
-    const useMultipart = file.size > 5 * 1024 * 1024;
     try {
-      const tokenRes = await fetch("/api/admin/upload-audio-handler", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "blob.generate-client-token",
-          payload: { pathname, clientPayload: null, multipart: useMultipart }
-        }),
-        credentials: "include"
-      });
-      const tokenData = await tokenRes.json().catch(() => ({}));
-      if (!tokenRes.ok) {
-        setUploadAudioStatus(
-          tokenRes.status === 401
-            ? "Upload failed: Log in as admin and try again."
-            : `Upload failed: ${tokenData?.error || tokenRes.statusText || tokenRes.status}. Check BLOB_READ_WRITE_TOKEN in Vercel if deployed.`
-        );
-        return;
-      }
-      const clientToken = tokenData?.clientToken;
-      if (!clientToken) {
-        setUploadAudioStatus("Upload failed: No token from server.");
-        return;
-      }
-      const blob = await put(pathname, file, {
-        access: "public",
-        token: clientToken,
-        multipart: useMultipart
-      });
-      const url = blob?.url || "";
+      const url = await uploadAudioFileToBlob(file);
       setUploadAudioStatus(
-        url
-          ? `Uploaded: ${file.name}. Title, SKU, and description were filled in Step 2 when available — review and click Add Audio.`
-          : "Upload completed but no URL returned."
+        `Uploaded: ${file.name}. Title, SKU, and description were filled in Step 2 when available — review and click Add Audio.`
       );
-      if (url) {
-        await fillAddFormFromUpload(file.name, url);
-      }
+      await fillAddFormFromUpload(file.name, url);
       if (fileInput) fileInput.value = "";
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -447,6 +452,38 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
       setUploadCoverStatus(`Upload failed: ${msg}`);
     } finally {
       setUploadCoverLoading(false);
+    }
+  };
+
+  const uploadAudioForEdit = async () => {
+    if (!editDraft) {
+      setEditAudioStatus("Open an audio in Edit mode first.");
+      return;
+    }
+    const fileInput = editAudioInputRef.current;
+    const file = fileInput?.files?.[0];
+    if (!file) {
+      setEditAudioStatus("Choose an audio file first.");
+      return;
+    }
+    setEditAudioStatus(null);
+    setEditAudioLoading(true);
+    try {
+      const url = await uploadAudioFileToBlob(file);
+      setEditDraft({
+        ...editDraft,
+        audioUrl: url,
+        fileName: file.name
+      });
+      setEditAudioStatus(
+        `Uploaded: ${file.name}. Audio URL and file name were updated — click Save to keep changes.`
+      );
+      if (fileInput) fileInput.value = "";
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setEditAudioStatus(`Upload failed: ${msg}. Ensure you're logged in as admin and BLOB_READ_WRITE_TOKEN is set.`);
+    } finally {
+      setEditAudioLoading(false);
     }
   };
 
@@ -538,7 +575,9 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     setEditDraft({ ...item });
     setEditInterestIds(item.interestIds);
     setEditCoverStatus(null);
+    setEditAudioStatus(null);
     if (editCoverInputRef.current) editCoverInputRef.current.value = "";
+    if (editAudioInputRef.current) editAudioInputRef.current.value = "";
   };
 
   const cancelEdit = () => {
@@ -547,7 +586,10 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     setEditInterestIds([]);
     setEditCoverStatus(null);
     setEditCoverLoading(false);
+    setEditAudioStatus(null);
+    setEditAudioLoading(false);
     if (editCoverInputRef.current) editCoverInputRef.current.value = "";
+    if (editAudioInputRef.current) editAudioInputRef.current.value = "";
   };
 
   const saveEdit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -1178,6 +1220,43 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             <div key={item.id} id={`audio-${item.id}`} className="card">
               {editingId === item.id && editDraft ? (
                 <form onSubmit={saveEdit} className="grid">
+                  <div className="card" style={{ marginBottom: 8 }}>
+                    <h4 style={{ marginTop: 0, marginBottom: 8 }}>Replace audio file</h4>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <span style={{ fontSize: 13 }}>Audio file</span>
+                        <input
+                          ref={editAudioInputRef}
+                          name="editAudioFile"
+                          type="file"
+                          accept="audio/*,.mp3,.m4a,.wav,.webm,.ogg"
+                          style={{ ...inputStyle, maxWidth: 340 }}
+                          disabled={editAudioLoading}
+                        />
+                      </label>
+                      <button
+                        className="button button-secondary"
+                        type="button"
+                        onClick={() => void uploadAudioForEdit()}
+                        disabled={editAudioLoading}
+                      >
+                        {editAudioLoading ? "Uploading…" : "Upload audio"}
+                      </button>
+                    </div>
+                    {editAudioStatus && <p style={{ marginTop: 10, marginBottom: 0 }}>{editAudioStatus}</p>}
+                    {editDraft.audioUrl ? (
+                      <>
+                        <p style={{ marginTop: 8, marginBottom: 8, fontSize: 12, color: "#6b7280" }}>
+                          Current audio URL is set below. Click <strong>Save</strong> to keep uploaded changes.
+                        </p>
+                        <audio controls preload="metadata" src={editDraft.audioUrl} style={{ width: "100%" }} />
+                      </>
+                    ) : (
+                      <p style={{ marginTop: 8, marginBottom: 0, fontSize: 12, color: "#6b7280" }}>
+                        No audio URL yet — upload a file or paste a URL below, then click <strong>Save</strong>.
+                      </p>
+                    )}
+                  </div>
                   <div className="card" style={{ marginBottom: 8 }}>
                     <h4 style={{ marginTop: 0, marginBottom: 8 }}>Upload cover from computer</h4>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
