@@ -10,9 +10,11 @@ import {
   ensureSubscription,
   getUserByEmail,
   getUserProfile,
+  getSubscriptionStripeIdsForUser,
   listUsers,
   setUserGoals,
   setUserPlaysPerNight,
+  updateSubscriptionStripeIdsForUser,
   upsertMemberProfile
 } from "@/lib/db";
 
@@ -32,7 +34,9 @@ const updateSchema = z.object({
   status: z.enum(["inactive", "active", "past_due", "canceled"]).optional(),
   goalIds: z.array(z.string()).max(10).optional(),
   playsPerNight: z.number().int().min(1).max(2).optional(),
-  resetPassword: z.string().min(6).optional()
+  resetPassword: z.string().min(6).optional(),
+  stripeCustomerId: z.string().trim().optional(),
+  stripeSubscriptionId: z.string().trim().optional()
 });
 
 export async function GET() {
@@ -102,6 +106,27 @@ export async function PATCH(request: Request) {
   const tier = parsed.data.tier ?? profile?.subscriptionTier ?? "platinum";
   const status = parsed.data.status ?? profile?.subscriptionStatus ?? "inactive";
   await ensureSubscription(user.id, tier, status);
+  if (
+    parsed.data.stripeCustomerId !== undefined ||
+    parsed.data.stripeSubscriptionId !== undefined
+  ) {
+    const existing = await getSubscriptionStripeIdsForUser(user.id);
+    const customerId =
+      parsed.data.stripeCustomerId !== undefined
+        ? parsed.data.stripeCustomerId || null
+        : existing?.stripeCustomerId ?? null;
+    const subscriptionId =
+      parsed.data.stripeSubscriptionId !== undefined
+        ? parsed.data.stripeSubscriptionId || null
+        : existing?.stripeSubscriptionId ?? null;
+    if (customerId && !customerId.startsWith("cus_")) {
+      return NextResponse.json({ error: "Stripe Customer ID must start with cus_" }, { status: 400 });
+    }
+    if (subscriptionId && !subscriptionId.startsWith("sub_")) {
+      return NextResponse.json({ error: "Stripe Subscription ID must start with sub_" }, { status: 400 });
+    }
+    await updateSubscriptionStripeIdsForUser(user.id, customerId, subscriptionId);
+  }
   if (parsed.data.goalIds) {
     await setUserGoals(user.id, parsed.data.goalIds);
   }

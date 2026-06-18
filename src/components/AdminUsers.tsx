@@ -33,6 +33,8 @@ type UserRow = {
   subscriptionStatus: "inactive" | "active" | "past_due" | "canceled" | null;
   subscriptionTier: "platinum" | "platinum_managed" | null;
   playsPerNight: number;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
 };
 
 const inputStyle = {
@@ -450,6 +452,9 @@ export default function AdminUsers() {
   const [createPlaysPerNight, setCreatePlaysPerNight] = useState<1 | 2>(2);
   const [updates, setUpdates] = useState<Record<string, Partial<UserRow>>>({});
   const [resetPasswords, setResetPasswords] = useState<Record<string, string>>({});
+  const [stripeEdits, setStripeEdits] = useState<
+    Record<string, { stripeCustomerId?: string; stripeSubscriptionId?: string }>
+  >({});
   const [profileOpen, setProfileOpen] = useState<Record<string, boolean>>({});
   const [goalsSectionOpen, setGoalsSectionOpen] = useState<Record<string, boolean>>({});
   const [profileDrafts, setProfileDrafts] = useState<Record<string, ProfileDraft>>({});
@@ -698,8 +703,12 @@ export default function AdminUsers() {
     const update = updates[email];
     const newPassword = (resetPasswords[email] || "").trim();
     const hasPasswordChange = newPassword.length >= 6;
-    if (!update && !hasPasswordChange) {
-      setStatus("Change tier/status or enter a new password (6+ characters), then Save.");
+    const stripeDraft = stripeEdits[email];
+    const hasStripeEdit =
+      stripeDraft?.stripeCustomerId !== undefined ||
+      stripeDraft?.stripeSubscriptionId !== undefined;
+    if (!update && !hasPasswordChange && !hasStripeEdit) {
+      setStatus("Change tier/status, Stripe IDs, or enter a new password (6+ characters), then Save.");
       return;
     }
     const body: Record<string, unknown> = {
@@ -712,6 +721,12 @@ export default function AdminUsers() {
     if (hasPasswordChange) {
       body.resetPassword = newPassword;
     }
+    if (stripeDraft?.stripeCustomerId !== undefined) {
+      body.stripeCustomerId = stripeDraft.stripeCustomerId.trim();
+    }
+    if (stripeDraft?.stripeSubscriptionId !== undefined) {
+      body.stripeSubscriptionId = stripeDraft.stripeSubscriptionId.trim();
+    }
     const response = await fetch("/api/admin/users", {
       method: "PATCH",
       credentials: "include",
@@ -721,6 +736,11 @@ export default function AdminUsers() {
     if (response.ok) {
       setStatus(hasPasswordChange ? "Password updated (and membership saved)." : "User updated.");
       setResetPasswords((prev) => ({ ...prev, [email]: "" }));
+      setStripeEdits((prev) => {
+        const next = { ...prev };
+        delete next[email];
+        return next;
+      });
       await load();
       return;
     }
@@ -2673,6 +2693,45 @@ export default function AdminUsers() {
                           Current password cannot be shown (one-way hash). Enter a new password (6+ characters) and click
                           Save to reset member login—you can update password alone without changing tier or goals.
                         </p>
+                        <p style={{ fontSize: 12, color: "#0f766e", marginBottom: 8 }}>
+                          <strong>Existing Stripe members:</strong> paste Customer ID (<code>cus_…</code>) and Subscription ID (<code>sub_…</code>) from the Stripe Dashboard before they sign up or pay again. That links their current billing and prevents a second subscription.
+                        </p>
+                        <input
+                          style={inputStyle}
+                          placeholder="Stripe Customer ID (cus_...) — from Stripe Dashboard"
+                          value={
+                            stripeEdits[user.email]?.stripeCustomerId ??
+                            user.stripeCustomerId ??
+                            ""
+                          }
+                          onChange={(event) =>
+                            setStripeEdits({
+                              ...stripeEdits,
+                              [user.email]: {
+                                ...stripeEdits[user.email],
+                                stripeCustomerId: event.target.value
+                              }
+                            })
+                          }
+                        />
+                        <input
+                          style={inputStyle}
+                          placeholder="Stripe Subscription ID (sub_...) — active subscription"
+                          value={
+                            stripeEdits[user.email]?.stripeSubscriptionId ??
+                            user.stripeSubscriptionId ??
+                            ""
+                          }
+                          onChange={(event) =>
+                            setStripeEdits({
+                              ...stripeEdits,
+                              [user.email]: {
+                                ...stripeEdits[user.email],
+                                stripeSubscriptionId: event.target.value
+                              }
+                            })
+                          }
+                        />
                         <select
                           style={inputStyle}
                           value={

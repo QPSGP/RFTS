@@ -178,12 +178,12 @@ If they complete **full signup including Stripe Checkout** before IDs are linked
 | **Webhook** | `checkout.session.completed` → activate tier, store Stripe IDs, send subscription-active email. |
 | **My Profile → Payment & subscription** | Plan, status, **Manage billing** / **Complete payment** → `POST /api/member/billing-portal`. |
 | **Play Options** | **Complete payment** (inactive) or **Manage billing** (active) → same API. |
-| **Admin** | Set tier + subscription status per member (does not yet expose Stripe ID fields in UI). |
+| **Admin** | Set tier + subscription status; link Stripe IDs in **3. Membership** (Customer `cus_…`, Subscription `sub_…`). |
 
 ### Optional next
 
 1. **Admin → Members**  
-   - Fields to paste `stripe_customer_id` and `stripe_subscription_id` for migrations without raw SQL.
+   - Paste `stripe_customer_id` and `stripe_subscription_id` in section **3. Membership** (implemented — no raw SQL required for routine migration).
 
 2. **Onboarding copy**  
    - Step 3 can mention profile billing for card updates after signup.

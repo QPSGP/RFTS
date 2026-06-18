@@ -74,6 +74,8 @@ export type UserProfile = {
   playsPerNight: number;
   subscriptionStatus: DbSubscription["status"] | null;
   subscriptionTier: DbSubscription["tier"] | null;
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
 };
 
 /** Canonical form for member emails in `users` and matching related data. */
@@ -201,6 +203,21 @@ export const setSubscriptionStripeIdsForUser = async (
     SET
       stripe_customer_id = ${stripeCustomerId},
       stripe_subscription_id = ${stripeSubscriptionId}
+    WHERE user_id = ${userId}
+  `;
+};
+
+/** Admin migration: link existing Stripe customer/subscription without a new Checkout. */
+export const updateSubscriptionStripeIdsForUser = async (
+  userId: string,
+  stripeCustomerId: string | null,
+  stripeSubscriptionId: string | null
+) => {
+  await sql`
+    UPDATE subscriptions
+    SET
+      stripe_customer_id = ${stripeCustomerId?.trim() || null},
+      stripe_subscription_id = ${stripeSubscriptionId?.trim() || null}
     WHERE user_id = ${userId}
   `;
 };
@@ -639,7 +656,9 @@ export const getUserProfile = async (email: string) => {
       u.goal_updated_at AS "goalUpdatedAt",
       COALESCE(u.plays_per_night, 2) AS "playsPerNight",
       s.status AS "subscriptionStatus",
-      s.tier AS "subscriptionTier"
+      s.tier AS "subscriptionTier",
+      s.stripe_customer_id AS "stripeCustomerId",
+      s.stripe_subscription_id AS "stripeSubscriptionId"
     FROM users u
     LEFT JOIN subscriptions s ON s.user_id = u.id
     WHERE LOWER(u.email) = LOWER(${email})
@@ -663,6 +682,8 @@ export const listUsers = async (): Promise<UserRowWithName[]> => {
       COALESCE(u.plays_per_night, 2) AS "playsPerNight",
       s.status AS "subscriptionStatus",
       s.tier AS "subscriptionTier",
+      s.stripe_customer_id AS "stripeCustomerId",
+      s.stripe_subscription_id AS "stripeSubscriptionId",
       mp.first_name AS "firstName",
       mp.last_name AS "lastName"
     FROM users u
@@ -727,6 +748,8 @@ export const getMemberActivityAnalytics = async (): Promise<{
       u.goal_updated_at AS "goalUpdatedAt",
       s.status AS "subscriptionStatus",
       s.tier AS "subscriptionTier",
+      s.stripe_customer_id AS "stripeCustomerId",
+      s.stripe_subscription_id AS "stripeSubscriptionId",
       s.current_period_end AS "currentPeriodEnd",
       COALESCE(u.goal_ids, ARRAY[]::text[]) AS "goalIds",
       COALESCE(u.plays_per_night, 2) AS "playsPerNight"
