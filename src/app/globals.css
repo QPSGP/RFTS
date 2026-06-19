@@ -223,6 +223,8 @@ main {
   border: 1px solid #0f766e;
   background: #0f766e;
   color: #fff;
+  font-family: inherit;
+  font-size: inherit;
   font-weight: 600;
   cursor: pointer;
 }
