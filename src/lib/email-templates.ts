@@ -120,7 +120,9 @@ export function getWelcomeEmailContent(
   We’d love to help. Call the Success Center, Inc. office at <strong>(800) GOAL NOW (462-5669)</strong>, internationally: <strong>+1 818-989-2923</strong>, or send an email to <a href="mailto:customerservice@reachforthestars.today">customerservice@reachforthestars.today</a></p>
 
   <h2 style="font-size: 1.05em; margin-top: 28px; margin-bottom: 8px;">Payment and Cancellation</h2>
-  <p>The Platinum Package has a <strong>14-day free trial</strong> period, after which <strong>$39.95 per month</strong> will be charged to the payment card you entered. To make changes to your plan, update your credit card or billing information, and see your payment history please go to your profile in your console.</p>
+  <p><strong>Gold Member membership:</strong> The Gold Member package has a <strong>14-day free trial</strong> period, after which <strong>$19.95 per month</strong> will be charged to the payment card you entered. Gold membership includes tailored recordings scheduled from your goals, access to the Success Center library, and a 15-minute private goal-setting consultation every 90 days with a Success Center hypnotherapist or coach.</p>
+  <p><strong>Platinum Managed membership:</strong> The Platinum Managed package has a <strong>14-day free trial</strong> period, after which <strong>$39.95 per month</strong> will be charged to the payment card you entered. Platinum Managed includes curated sessions and assigned audios managed by your hypnotherapist, plus the benefits described for Gold membership.</p>
+  <p>To make changes to your plan, update your credit card or billing information, and see your payment history please go to your profile in your console.</p>
   <p>You can cancel at any time, being responsible only for the current month you signed up for. Please see the ReachForTheStars.Today Terms and Conditions for details. If you wish to talk to someone directly, feel free to call <strong>(818) 264-9760</strong>.</p>
 
   <h2 style="font-size: 1.05em; margin-top: 28px; margin-bottom: 8px;">Technical Support</h2>
@@ -158,7 +160,11 @@ Have any questions or concerns?
 We'd love to help. Call the Success Center, Inc. office at (800) GOAL NOW (462-5669), internationally: +1 818-989-2923, or send an email to customerservice@reachforthestars.today
 
 Payment and Cancellation
-The Platinum Package has a 14-day free trial period, after which $39.95 per month will be charged to the payment card you entered. To make changes to your plan, update your credit card or billing information, and see your payment history please go to your profile in your console.
+Gold Member membership: The Gold Member package has a 14-day free trial period, after which $19.95 per month will be charged to the payment card you entered. Gold membership includes tailored recordings scheduled from your goals, access to the Success Center library, and a 15-minute private goal-setting consultation every 90 days with a Success Center hypnotherapist or coach.
+
+Platinum Managed membership: The Platinum Managed package has a 14-day free trial period, after which $39.95 per month will be charged to the payment card you entered. Platinum Managed includes curated sessions and assigned audios managed by your hypnotherapist, plus the benefits described for Gold membership.
+
+To make changes to your plan, update your credit card or billing information, and see your payment history please go to your profile in your console.
 
 You can cancel at any time, being responsible only for the current month you signed up for. Please see the ReachForTheStars.Today Terms and Conditions for details. If you wish to talk to someone directly, feel free to call (818) 264-9760.
 

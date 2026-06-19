@@ -78,6 +78,8 @@ DEMO_SKIP_STRIPE=true   # when true: all signups skip Stripe and go straight to 
 
 ## Go-live: link old-system Stripe customers (no double charge)
 
+**Step-by-step (non-expert):** `docs/STRIPE_STEP_BY_STEP.md` — Parts B–G cover webhooks, Vercel, and linking each member.
+
 Use this when members already pay in **Stripe** on the legacy site and you are moving them to this platform **without** a second subscription or lost cards.
 
 ### How the new platform avoids double billing (already in code)

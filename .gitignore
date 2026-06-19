@@ -11,3 +11,4 @@ data/*.json
 /Covers/
 # Local schedule algorithm CSV/HTML exports (see npm run schedule:spreadsheet)
 scripts/output/
+.vercel

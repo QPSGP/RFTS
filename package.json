@@ -14,6 +14,8 @@
     "test:watch": "jest --watch",
     "test:login": "node scripts/test-login-flow.js http://localhost:3000",
     "test:login:json": "node scripts/test-member-login-json.js http://localhost:3000",
+    "test:signup-emails": "tsx scripts/test-signup-emails.ts",
+    "stripe:verify": "node scripts/verify-stripe-ready.js",
     "deploy": "vercel --prod",
     "push-deploy": "node scripts/push-and-deploy.js",
     "covers:review": "node scripts/generate-covers-review.js",

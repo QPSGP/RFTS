@@ -50,7 +50,7 @@ See **`RESEND.md`**. Full domain verify waits for Phase 3 DNS.
 
 ## Phase 2 — Stripe live, email, member migration
 
-See **`STRIPE_SETUP.md`** and **`RESEND.md`**.
+See **`STRIPE_SETUP.md`**, **`docs/STRIPE_GO_LIVE_NOW.md`**, and **`RESEND.md`**.
 
 ### Stripe
 
