@@ -18,6 +18,7 @@ import {
   upsertMemberProfile
 } from "@/lib/db";
 import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
+import { getBillingPortalReturnPath } from "@/lib/member-billing";
 import { getWelcomeEmailCcRecipients, sendEmail } from "@/lib/email";
 import { getPublicSiteUrl } from "@/lib/site-url";
 import {
@@ -208,7 +209,7 @@ export async function POST(request: Request) {
           stripeCustomerId: stripeRow?.stripeCustomerId,
           stripeSubscriptionId: stripeRow?.stripeSubscriptionId,
           baseUrl,
-          returnPath: "/play-options"
+          returnPath: getBillingPortalReturnPath(user.email)
         });
         if (portalUrl) {
           const res = NextResponse.json({ url: portalUrl, billingPortal: true });

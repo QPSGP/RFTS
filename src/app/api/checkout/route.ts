@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSubscriptionStripeIdsForUser, getUserByEmail } from "@/lib/db";
 import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
+import { getBillingPortalReturnPath } from "@/lib/member-billing";
 import { getStripe } from "@/lib/stripe";
 import { getPublicSiteUrl } from "@/lib/site-url";
 import { getUserSessionEmail } from "@/lib/user-auth";
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
             stripeCustomerId: stripeRow?.stripeCustomerId,
             stripeSubscriptionId: stripeRow?.stripeSubscriptionId,
             baseUrl,
-            returnPath: successPath || "/play-options"
+            returnPath: getBillingPortalReturnPath(memberEmail)
           });
           if (portalUrl) {
             return NextResponse.json({ url: portalUrl, billingPortal: true });

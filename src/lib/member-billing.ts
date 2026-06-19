@@ -8,6 +8,7 @@ import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
 import { resolveStripeBillingByEmail } from "@/lib/stripe-resolve";
 import { getStripe } from "@/lib/stripe";
 import { getPublicSiteUrl } from "@/lib/site-url";
+import { createBillingReturnToken } from "@/lib/user-auth";
 
 export function getSubscriptionTierLabel(tier: string | null | undefined): string {
   if (tier === "platinum_managed") return "Platinum Managed";
@@ -89,6 +90,17 @@ function normalizeReturnPath(returnPath: string | undefined): string {
   return path.startsWith("/") ? path : `/${path}`;
 }
 
+export function getBillingPortalReturnPath(userEmail: string | null | undefined): string {
+  const email = userEmail?.trim();
+  if (!email) return "/play-options";
+  const token = createBillingReturnToken(email);
+  return `/member/billing-return?t=${encodeURIComponent(token)}`;
+}
+
+function billingPortalReturnPath(userEmail: string | null | undefined): string {
+  return getBillingPortalReturnPath(userEmail);
+}
+
 async function openBillingPortalForStripeIds(
   stripe: Stripe,
   opts: {
@@ -166,7 +178,7 @@ export async function createMemberBillingPortalUrl(opts: {
   }
 
   const baseUrl = getStripeBillingBaseUrl();
-  const returnPath = normalizeReturnPath(opts.returnPath);
+  const returnPath = billingPortalReturnPath(opts.userEmail);
 
   const stripeRow = await getSubscriptionStripeIdsForUser(opts.userId);
   const hasExistingStripe = !!(
@@ -217,6 +229,7 @@ export async function createMemberBillingPortalUrl(opts: {
         error: "Payment is not configured for your plan. Contact support."
       };
     }
+    const checkoutReturnPath = normalizeReturnPath(opts.returnPath);
     try {
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
@@ -227,8 +240,8 @@ export async function createMemberBillingPortalUrl(opts: {
           plan.trialDays && plan.trialDays > 0
             ? { trial_period_days: plan.trialDays }
             : undefined,
-        success_url: `${baseUrl}${returnPath}?billing=success`,
-        cancel_url: `${baseUrl}${returnPath}?billing=cancel`,
+        success_url: `${baseUrl}${checkoutReturnPath}?billing=success`,
+        cancel_url: `${baseUrl}${checkoutReturnPath}?billing=cancel`,
         allow_promotion_codes: true
       });
       if (!session.url) {

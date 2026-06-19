@@ -25,18 +25,17 @@ export const createUserSessionToken = (email: string) => {
 };
 
 const ONE_TIME_TTL_MS = 2 * 60 * 1000; // 2 minutes
+const BILLING_RETURN_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
-/** One-time token for post-login redirect: exchange in consume API to set session cookie from play-options. */
-export function createOneTimeSessionToken(email: string): string {
-  const expiry = (Date.now() + ONE_TIME_TTL_MS).toString();
+function createTimedSessionToken(email: string, ttlMs: number): string {
+  const expiry = (Date.now() + ttlMs).toString();
   const nonce = crypto.randomBytes(8).toString("hex");
   const payload = `${email}|${expiry}|${nonce}`;
   const signature = sign(payload);
   return Buffer.from(`${payload}|${signature}`).toString("base64url");
 }
 
-/** Returns email if token is valid and not expired. */
-export function verifyOneTimeSessionToken(tokenEnc: string): string | null {
+function verifyTimedSessionToken(tokenEnc: string): string | null {
   let raw: string;
   try {
     raw = Buffer.from(tokenEnc, "base64url").toString("utf8");
@@ -51,6 +50,25 @@ export function verifyOneTimeSessionToken(tokenEnc: string): string | null {
   const expiry = parseInt(expiryStr, 10);
   if (Number.isNaN(expiry) || Date.now() > expiry) return null;
   return email;
+}
+
+/** One-time token for post-login redirect: exchange in consume API to set session cookie from play-options. */
+export function createOneTimeSessionToken(email: string): string {
+  return createTimedSessionToken(email, ONE_TIME_TTL_MS);
+}
+
+/** Returns email if token is valid and not expired. */
+export function verifyOneTimeSessionToken(tokenEnc: string): string | null {
+  return verifyTimedSessionToken(tokenEnc);
+}
+
+/** Short-lived token embedded in Stripe billing portal return URLs to restore member session. */
+export function createBillingReturnToken(email: string): string {
+  return createTimedSessionToken(email, BILLING_RETURN_TTL_MS);
+}
+
+export function verifyBillingReturnToken(tokenEnc: string): string | null {
+  return verifyTimedSessionToken(tokenEnc);
 }
 
 type CookieRequestHint = Pick<Request, "headers" | "url"> | null | undefined;
