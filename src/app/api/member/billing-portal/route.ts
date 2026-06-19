@@ -33,6 +33,7 @@ export async function POST(request: Request) {
 
   const result = await createMemberBillingPortalUrl({
     userId: user.id,
+    userEmail: user.email,
     subscriptionTier: user.subscriptionTier,
     subscriptionStatus: user.subscriptionStatus,
     returnPath

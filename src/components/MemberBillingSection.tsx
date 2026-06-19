@@ -59,6 +59,10 @@ export default function MemberBillingSection({ billing, returnPath = "/member/pr
 
   const showManageBilling = billing.canManageBilling;
   const showCompletePayment = billing.needsPayment;
+  const showLinkBilling =
+    billing.stripeConfigured &&
+    !billing.hasStripeBilling &&
+    billing.subscriptionStatus === "active";
   const showActiveNoStripe =
     billing.subscriptionStatus === "active" &&
     !billing.hasStripeBilling &&
@@ -82,11 +86,12 @@ export default function MemberBillingSection({ billing, returnPath = "/member/pr
         <strong>Status:</strong> {billing.statusLabel}
       </p>
 
-      {showManageBilling && (
+      {(showManageBilling || showLinkBilling) && (
         <>
           <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
-            Update your card, view invoices, or manage your subscription in Stripe&apos;s secure
-            billing portal.
+            {showLinkBilling
+              ? "If you pay through Stripe, open billing to link your subscription and update your card."
+              : "Update your card, view invoices, or manage your subscription in Stripe's secure billing portal."}
           </p>
           <button
             type="button"
@@ -124,6 +129,7 @@ export default function MemberBillingSection({ billing, returnPath = "/member/pr
 
       {!showManageBilling &&
         !showCompletePayment &&
+        !showLinkBilling &&
         !showActiveNoStripe &&
         billing.subscriptionStatus === "active" &&
         !billing.stripeConfigured && (
@@ -134,6 +140,7 @@ export default function MemberBillingSection({ billing, returnPath = "/member/pr
 
       {!showManageBilling &&
         !showCompletePayment &&
+        !showLinkBilling &&
         !showActiveNoStripe &&
         billing.subscriptionStatus !== "active" &&
         !billing.stripeConfigured && (

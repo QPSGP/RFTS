@@ -1,9 +1,11 @@
 import type Stripe from "stripe";
 import {
   getSubscriptionStripeIdsForUser,
-  listSubscriptionPlans
+  listSubscriptionPlans,
+  updateSubscriptionStripeIdsForUser
 } from "@/lib/db";
 import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
+import { resolveStripeBillingByEmail } from "@/lib/stripe-resolve";
 import { getStripe } from "@/lib/stripe";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
@@ -87,8 +89,59 @@ function normalizeReturnPath(returnPath: string | undefined): string {
   return path.startsWith("/") ? path : `/${path}`;
 }
 
+async function openBillingPortalForStripeIds(
+  stripe: Stripe,
+  opts: {
+    userId: string;
+    stripeCustomerId: string | null | undefined;
+    stripeSubscriptionId: string | null | undefined;
+    baseUrl: string;
+    returnPath: string;
+    persistIds?: boolean;
+  }
+): Promise<MemberBillingPortalResult | null> {
+  const customerId = opts.stripeCustomerId?.trim() || null;
+  const subscriptionId = opts.stripeSubscriptionId?.trim() || null;
+  if (!customerId && !subscriptionId) return null;
+
+  if (opts.persistIds && customerId) {
+    try {
+      await updateSubscriptionStripeIdsForUser(opts.userId, customerId, subscriptionId);
+    } catch (err) {
+      console.error("[member-billing] Failed to persist Stripe ids:", err);
+    }
+  }
+
+  try {
+    const portalUrl = await createBillingPortalSessionUrl(stripe, {
+      stripeCustomerId: customerId,
+      stripeSubscriptionId: subscriptionId,
+      baseUrl: opts.baseUrl,
+      returnPath: opts.returnPath
+    });
+    if (portalUrl) {
+      return { ok: true, url: portalUrl, billingPortal: true };
+    }
+  } catch (err) {
+    console.error("[member-billing] Billing portal:", err);
+    return {
+      ok: false,
+      status: 503,
+      error: "Could not open billing management. Try again or contact support."
+    };
+  }
+
+  return {
+    ok: false,
+    status: 409,
+    error:
+      "We have billing on file but could not open the portal. Contact support for card updates."
+  };
+}
+
 export async function createMemberBillingPortalUrl(opts: {
   userId: string;
+  userEmail?: string | null;
   subscriptionTier: string | null;
   subscriptionStatus: string | null;
   returnPath?: string;
@@ -121,30 +174,34 @@ export async function createMemberBillingPortalUrl(opts: {
   );
 
   if (hasExistingStripe) {
+    const portalResult = await openBillingPortalForStripeIds(stripe, {
+      userId: opts.userId,
+      stripeCustomerId: stripeRow?.stripeCustomerId,
+      stripeSubscriptionId: stripeRow?.stripeSubscriptionId,
+      baseUrl,
+      returnPath
+    });
+    if (portalResult) return portalResult;
+  }
+
+  const email = opts.userEmail?.trim();
+  if (email) {
     try {
-      const portalUrl = await createBillingPortalSessionUrl(stripe, {
-        stripeCustomerId: stripeRow?.stripeCustomerId,
-        stripeSubscriptionId: stripeRow?.stripeSubscriptionId,
-        baseUrl,
-        returnPath
-      });
-      if (portalUrl) {
-        return { ok: true, url: portalUrl, billingPortal: true };
+      const resolved = await resolveStripeBillingByEmail(stripe, email);
+      if (resolved) {
+        const portalResult = await openBillingPortalForStripeIds(stripe, {
+          userId: opts.userId,
+          stripeCustomerId: resolved.stripeCustomerId,
+          stripeSubscriptionId: resolved.stripeSubscriptionId,
+          baseUrl,
+          returnPath,
+          persistIds: true
+        });
+        if (portalResult) return portalResult;
       }
     } catch (err) {
-      console.error("[member-billing] Billing portal:", err);
-      return {
-        ok: false,
-        status: 503,
-        error: "Could not open billing management. Try again or contact support."
-      };
+      console.error("[member-billing] Stripe email resolve:", err);
     }
-    return {
-      ok: false,
-      status: 409,
-      error:
-        "We have billing on file but could not open the portal. Contact support for card updates."
-    };
   }
 
   if (opts.subscriptionStatus !== "active") {
@@ -187,6 +244,7 @@ export async function createMemberBillingPortalUrl(opts: {
   return {
     ok: false,
     status: 400,
-    error: "Your membership is active. No card on file is required for your account."
+    error:
+      "We could not find Stripe billing for this account. Contact support at reachforthestars.today if you pay through Stripe."
   };
 }

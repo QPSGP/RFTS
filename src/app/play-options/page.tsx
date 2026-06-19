@@ -333,6 +333,9 @@ export default function PlayOptionsPage() {
             Log Out
           </button>
         </div>
+        {billingError && (
+          <p style={{ color: "#dc2626", fontSize: 14, marginTop: 8 }}>{billingError}</p>
+        )}
       </section>
       {profile && !profile.isManaged && profile.goalIds?.length === 0 && (
         <section className="card" style={{ marginBottom: 16 }}>
