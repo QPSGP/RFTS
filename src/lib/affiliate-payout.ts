@@ -26,6 +26,53 @@ export const AFFILIATE_PAYOUT_DETAIL_PLACEHOLDERS: Record<AffiliatePayoutMethod,
   bank_contact: "Optional note (we will contact you for bank details)"
 };
 
+/** Launch-period minimum (USD); standard minimum applies after launch period ends. */
+export const AFFILIATE_PAYOUT_THRESHOLD_LAUNCH_USD = 25;
+export const AFFILIATE_PAYOUT_THRESHOLD_STANDARD_USD = 50;
+
+const AFFILIATE_PAYOUT_LAUNCH_PERIOD_END_DEFAULT = "2027-06-18";
+
+export function getAffiliatePayoutLaunchPeriodEnd(): Date {
+  const raw =
+    process.env.NEXT_PUBLIC_AFFILIATE_PAYOUT_LAUNCH_END ??
+    AFFILIATE_PAYOUT_LAUNCH_PERIOD_END_DEFAULT;
+  const datePart = raw.trim().slice(0, 10);
+  return new Date(`${datePart}T23:59:59`);
+}
+
+export function isAffiliateLaunchPayoutPeriod(now = new Date()): boolean {
+  return now <= getAffiliatePayoutLaunchPeriodEnd();
+}
+
+export function getCurrentAffiliatePayoutThresholdUsd(now = new Date()): number {
+  return isAffiliateLaunchPayoutPeriod(now)
+    ? AFFILIATE_PAYOUT_THRESHOLD_LAUNCH_USD
+    : AFFILIATE_PAYOUT_THRESHOLD_STANDARD_USD;
+}
+
+export function formatAffiliatePayoutLaunchPeriodEndLabel(): string {
+  return getAffiliatePayoutLaunchPeriodEnd().toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
+export function formatAffiliatePayoutThresholdPolicy(now = new Date()): string {
+  const standard = AFFILIATE_PAYOUT_THRESHOLD_STANDARD_USD;
+  if (!isAffiliateLaunchPayoutPeriod(now)) {
+    return `Commissions are paid monthly when your balance reaches $${standard}. Amounts below that roll forward to the next month.`;
+  }
+  const launch = AFFILIATE_PAYOUT_THRESHOLD_LAUNCH_USD;
+  const endLabel = formatAffiliatePayoutLaunchPeriodEndLabel();
+  return `Commissions are paid monthly when your balance reaches the minimum threshold. During our launch period (through ${endLabel}), the minimum is $${launch}; after that, the minimum becomes $${standard}. Amounts below the minimum roll forward.`;
+}
+
+export function formatAffiliatePayoutShortSummary(now = new Date()): string {
+  const threshold = getCurrentAffiliatePayoutThresholdUsd(now);
+  return `Monthly payouts when your balance reaches $${threshold} (manual processing).`;
+}
+
 export function normalizeAffiliatePayoutMethod(
   raw: string | null | undefined
 ): AffiliatePayoutMethod | null {

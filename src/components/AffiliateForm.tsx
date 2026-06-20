@@ -5,6 +5,7 @@ import {
   AFFILIATE_PAYOUT_DETAIL_PLACEHOLDERS,
   AFFILIATE_PAYOUT_METHOD_LABELS,
   AFFILIATE_PAYOUT_METHODS,
+  formatAffiliatePayoutThresholdPolicy,
   type AffiliatePayoutMethod
 } from "@/lib/affiliate-payout";
 
@@ -47,6 +48,9 @@ export default function AffiliateForm() {
       <p style={{ fontSize: 14, color: "#4b5563", marginBottom: 12 }}>
         Already a member? Your affiliate number and referral link are in My Profile — you do not
         need to apply here. This form is for non-members who want affiliate payout setup.
+      </p>
+      <p style={{ fontSize: 13, color: "#4b5563", marginBottom: 12 }}>
+        {formatAffiliatePayoutThresholdPolicy()}
       </p>
       <form onSubmit={onSubmit} className="grid">
         <input

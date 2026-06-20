@@ -1,7 +1,9 @@
 import {
   formatAffiliatePayoutMethodLabel,
+  getCurrentAffiliatePayoutThresholdUsd,
   normalizeAffiliatePayoutMethod,
-  parseAffiliatePayoutInput
+  parseAffiliatePayoutInput,
+  formatAffiliatePayoutThresholdPolicy
 } from "./affiliate-payout";
 
 describe("affiliate-payout", () => {
@@ -34,5 +36,12 @@ describe("affiliate-payout", () => {
       payoutDetail: ""
     });
     expect(bank.success).toBe(true);
+  });
+
+  it("uses launch threshold during launch period", () => {
+    expect(getCurrentAffiliatePayoutThresholdUsd(new Date("2026-06-01"))).toBe(25);
+    expect(formatAffiliatePayoutThresholdPolicy(new Date("2026-06-01"))).toContain("$25");
+    expect(formatAffiliatePayoutThresholdPolicy(new Date("2028-01-01"))).toContain("$50");
+    expect(formatAffiliatePayoutThresholdPolicy(new Date("2028-01-01"))).not.toContain("$25");
   });
 });

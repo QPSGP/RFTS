@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  formatAffiliatePayoutThresholdPolicy
+} from "@/lib/affiliate-payout";
 import SiteFooter from "@/components/SiteFooter";
 
 type SectionKey = "who" | "what" | "where" | "why" | "help";
@@ -170,6 +173,25 @@ export default function FaqsPage() {
               Payments are managed securely through Stripe. You can update payment details
               and view subscription status from your member profile.
             </p>
+          </div>
+
+          <div className="card">
+            <h3>Where is my affiliate number and referral link?</h3>
+            <p>
+              Every member receives an affiliate number in{" "}
+              <a href="/member/profile">My Profile</a>. Open My Profile to copy your referral
+              link, set payout preferences, and share Reach For The Stars with others.
+            </p>
+          </div>
+
+          <div className="card">
+            <h3>How do affiliate payouts work?</h3>
+            <p>
+              You earn <strong>25% ongoing</strong> for each member who subscribes through your
+              referral link and stays subscribed. In My Profile, choose how you want to be paid
+              (crypto, PayPal, Venmo, Zelle, or bank/ACH via support).
+            </p>
+            <p>{formatAffiliatePayoutThresholdPolicy()}</p>
           </div>
         </div>
         )}

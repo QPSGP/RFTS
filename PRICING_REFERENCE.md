@@ -53,7 +53,7 @@ RFTS sits **between** generic apps (Headspace/Calm) and high-touch personal deve
 
 - **Current rate:** **25% ongoing** — affiliates earn 25% of subscription revenue for as long as the referred member stays subscribed.
 - **Benchmarks:** Insight Timer ~50% of first year; others 25–45% one-time or 10–30% recurring.
-- **Operational:** Monthly payout; minimum threshold ~$25–50; cookie 30–60 days.
+- **Operational:** Monthly payout; minimum threshold **$25 through launch period** (default through June 18, 2027), then **$50**; cookie 30–60 days. Set `NEXT_PUBLIC_AFFILIATE_PAYOUT_LAUNCH_END` to adjust launch end date.
 
 ---
 

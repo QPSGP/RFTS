@@ -6,6 +6,7 @@ import {
   AFFILIATE_PAYOUT_METHOD_LABELS,
   AFFILIATE_PAYOUT_METHODS,
   formatAffiliatePayoutMethodLabel,
+  formatAffiliatePayoutThresholdPolicy,
   type AffiliatePayoutMethod
 } from "@/lib/affiliate-payout";
 
@@ -137,8 +138,7 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
       >
         <h3 style={{ margin: "0 0 8px", fontSize: 17 }}>Payout preferences</h3>
         <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
-          Choose how you want to receive affiliate commissions. Payouts are processed manually when
-          you reach the minimum threshold.
+          {formatAffiliatePayoutThresholdPolicy()}
         </p>
         {hasPayoutPrefs && (
           <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
