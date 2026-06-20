@@ -2413,7 +2413,7 @@ export default function AdminUsers() {
                                 style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
                               />
                               <span>
-                                I am interested in building my practice as a Hypnotherapist, Healer, or Life Coach
+                                I am interested in building my practice as a Hypnotherapist, Healer, or Life/Business Coach
                                 using the tools offered here.
                               </span>
                             </label>
