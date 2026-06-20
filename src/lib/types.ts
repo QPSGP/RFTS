@@ -1,3 +1,5 @@
+import type { AffiliatePayoutMethod } from "./affiliate-payout";
+
 export type AffiliateRecord = {
   id: string;
   name: string;
@@ -7,7 +9,10 @@ export type AffiliateRecord = {
   status: "pending" | "approved" | "paused";
   affiliateCode?: string | null;
   userId?: string | null;
+  payoutMethod?: AffiliatePayoutMethod | null;
 };
+
+export type { AffiliatePayoutMethod } from "./affiliate-payout";
 
 export type AdminAccount = {
   id: string;

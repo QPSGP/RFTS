@@ -474,7 +474,7 @@ export default function MemberProfilePage() {
 
         <MemberBillingSection billing={billing} returnPath="/member/profile" />
 
-        <MemberAffiliateSection affiliate={affiliate} />
+        <MemberAffiliateSection affiliate={affiliate} onPayoutSaved={load} />
 
         <div style={{ marginTop: 32 }}>
           <ScreenWakeToggle />

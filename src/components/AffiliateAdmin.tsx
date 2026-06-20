@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatAffiliatePayoutMethodLabel } from "@/lib/affiliate-payout";
 import type { AffiliateRecord } from "@/lib/types";
 
 export default function AffiliateAdmin() {
@@ -55,7 +56,10 @@ export default function AffiliateAdmin() {
               {affiliate.userId && (
                 <p style={{ fontSize: 13, color: "#059669" }}>Linked member account</p>
               )}
-              <p>Payout: {affiliate.payoutAddress}</p>
+              <p>
+                Payout method: {formatAffiliatePayoutMethodLabel(affiliate.payoutMethod ?? "crypto")}
+              </p>
+              {affiliate.payoutAddress && <p>Payout details: {affiliate.payoutAddress}</p>}
               <p>Status: {affiliate.status}</p>
               <div style={{ display: "flex", gap: 8 }}>
                 <button

@@ -1,10 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import {
+  AFFILIATE_PAYOUT_DETAIL_PLACEHOLDERS,
+  AFFILIATE_PAYOUT_METHOD_LABELS,
+  AFFILIATE_PAYOUT_METHODS,
+  type AffiliatePayoutMethod
+} from "@/lib/affiliate-payout";
 
 export default function AffiliateForm() {
   const [status, setStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [payoutMethod, setPayoutMethod] = useState<AffiliatePayoutMethod>("crypto");
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -14,7 +21,8 @@ export default function AffiliateForm() {
     const payload = {
       name: formData.get("name"),
       email: formData.get("email"),
-      payoutAddress: formData.get("payoutAddress")
+      payoutMethod: formData.get("payoutMethod"),
+      payoutDetail: formData.get("payoutDetail")
     };
     const response = await fetch("/api/affiliates", {
       method: "POST",
@@ -24,11 +32,14 @@ export default function AffiliateForm() {
     if (response.ok) {
       setStatus("Application submitted. We will review within 48 hours.");
       event.currentTarget.reset();
+      setPayoutMethod("crypto");
     } else {
       setStatus("Something went wrong. Please try again.");
     }
     setIsSubmitting(false);
   };
+
+  const detailRequired = payoutMethod !== "bank_contact";
 
   return (
     <div className="card">
@@ -51,12 +62,40 @@ export default function AffiliateForm() {
           required
           style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
         />
+        <label style={{ fontSize: 14, color: "#4b5563" }}>
+          Payout method
+          <select
+            name="payoutMethod"
+            value={payoutMethod}
+            onChange={(e) => setPayoutMethod(e.target.value as AffiliatePayoutMethod)}
+            required
+            style={{
+              display: "block",
+              width: "100%",
+              marginTop: 4,
+              padding: 12,
+              borderRadius: 8,
+              border: "1px solid #d1d5db"
+            }}
+          >
+            {AFFILIATE_PAYOUT_METHODS.map((method) => (
+              <option key={method} value={method}>
+                {AFFILIATE_PAYOUT_METHOD_LABELS[method]}
+              </option>
+            ))}
+          </select>
+        </label>
         <input
-          name="payoutAddress"
-          placeholder="Crypto payout address"
-          required
+          name="payoutDetail"
+          placeholder={AFFILIATE_PAYOUT_DETAIL_PLACEHOLDERS[payoutMethod]}
+          required={detailRequired}
           style={{ padding: 12, borderRadius: 8, border: "1px solid #d1d5db" }}
         />
+        {payoutMethod === "bank_contact" && (
+          <p style={{ fontSize: 13, color: "#4b5563", margin: 0 }}>
+            We will contact you to collect bank details for ACH payouts.
+          </p>
+        )}
         <button className="button" disabled={isSubmitting} type="submit">
           {isSubmitting ? "Submitting..." : "Submit Application"}
         </button>

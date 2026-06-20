@@ -376,3 +376,8 @@ ALTER TABLE affiliate_applications ADD COLUMN IF NOT EXISTS affiliate_code text;
 ALTER TABLE affiliate_applications ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES users(id) ON DELETE SET NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS affiliate_applications_affiliate_code_unique
   ON affiliate_applications (affiliate_code) WHERE affiliate_code IS NOT NULL;
+
+-- Affiliate payout methods (crypto, PayPal, Venmo, Zelle, bank/ACH contact)
+ALTER TABLE affiliate_applications ADD COLUMN IF NOT EXISTS payout_method text;
+ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS affiliate_payout_method text;
+ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS affiliate_payout_detail text;

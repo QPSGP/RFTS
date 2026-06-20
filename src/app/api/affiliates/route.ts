@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { parseAffiliatePayoutInput } from "@/lib/affiliate-payout";
 import { isAdminSession } from "@/lib/auth";
 import { createAffiliate, listAffiliates, updateAffiliateStatus } from "@/lib/db";
 
 const createSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
-  payoutAddress: z.string().min(6)
+  payoutMethod: z.string(),
+  payoutDetail: z.string().optional()
 });
 
 const updateSchema = z.object({
@@ -28,7 +30,19 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const record = await createAffiliate(parsed.data);
+  const payoutParsed = parseAffiliatePayoutInput({
+    payoutMethod: parsed.data.payoutMethod,
+    payoutDetail: parsed.data.payoutDetail
+  });
+  if (!payoutParsed.success) {
+    return NextResponse.json({ error: "Invalid payout details." }, { status: 400 });
+  }
+  const record = await createAffiliate({
+    name: parsed.data.name,
+    email: parsed.data.email,
+    payoutMethod: payoutParsed.data.payoutMethod,
+    payoutDetail: payoutParsed.data.payoutDetail?.trim() || null
+  });
   return NextResponse.json({ ok: true, record });
 }
 

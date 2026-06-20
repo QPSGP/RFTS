@@ -8,6 +8,7 @@ import {
 } from "@/lib/db";
 import { getMemberBillingSummary } from "@/lib/member-billing";
 import { getMemberAffiliateSummary } from "@/lib/member-affiliate";
+import { parseAffiliatePayoutInput } from "@/lib/affiliate-payout";
 import { getWelcomeEmailCcRecipients, sendEmail } from "@/lib/email";
 import {
   getLgdInterestEmailContent,
@@ -50,7 +51,9 @@ const updateSchema = z.object({
   adultConsent: z.boolean().optional(),
   wantsPolyamory: z.boolean().optional(),
   hadLgdSession: z.boolean().optional(),
-  referralSource: z.string().optional()
+  referralSource: z.string().optional(),
+  affiliatePayoutMethod: z.string().optional(),
+  affiliatePayoutDetail: z.string().optional()
 });
 
 export async function GET() {
@@ -127,7 +130,21 @@ export async function PATCH(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
+
   const existing = await getMemberProfileByUserId(user.id);
+  let affiliatePayoutMethod = existing?.affiliatePayoutMethod ?? null;
+  let affiliatePayoutDetail = existing?.affiliatePayoutDetail ?? null;
+  if (parsed.data.affiliatePayoutMethod !== undefined) {
+    const payoutParsed = parseAffiliatePayoutInput({
+      payoutMethod: parsed.data.affiliatePayoutMethod,
+      payoutDetail: parsed.data.affiliatePayoutDetail
+    });
+    if (!payoutParsed.success) {
+      return NextResponse.json({ error: "Invalid payout details." }, { status: 400 });
+    }
+    affiliatePayoutMethod = payoutParsed.data.payoutMethod;
+    affiliatePayoutDetail = payoutParsed.data.payoutDetail?.trim() || null;
+  }
   const rawBirthDate = parsed.data.birthDate;
   const birthDate =
     typeof rawBirthDate === "string" && rawBirthDate.trim().length >= 10
@@ -181,7 +198,9 @@ export async function PATCH(request: Request) {
       parsed.data.referralSource !== undefined
         ? parsed.data.referralSource
         : existing?.referralSource ?? null,
-    notes: existing?.notes ?? null
+    notes: existing?.notes ?? null,
+    affiliatePayoutMethod,
+    affiliatePayoutDetail
   });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

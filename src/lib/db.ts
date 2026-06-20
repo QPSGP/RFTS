@@ -55,6 +55,8 @@ export type MemberProfile = {
   hadLgdSession?: boolean | null;
   referralSource?: string | null;
   notes?: string | null;
+  affiliatePayoutMethod?: string | null;
+  affiliatePayoutDetail?: string | null;
   /** Date (YYYY-MM-DD) when the member's schedule rotation anchor started; used for legacy session backfill window. */
   scheduleStartedAt?: string | null;
   /** Highest schedule night index (1-based) the member has fully completed by listening; drives "tonight". */
@@ -401,7 +403,9 @@ export const upsertMemberProfile = async (profile: MemberProfile) => {
       wants_polyamory,
       had_lgd_session,
       referral_source,
-      notes
+      notes,
+      affiliate_payout_method,
+      affiliate_payout_detail
     )
     VALUES (
       ${profile.userId},
@@ -423,7 +427,9 @@ export const upsertMemberProfile = async (profile: MemberProfile) => {
       ${profile.wantsPolyamory ?? false},
       ${profile.hadLgdSession ?? false},
       ${profile.referralSource || null},
-      ${profile.notes || null}
+      ${profile.notes || null},
+      ${profile.affiliatePayoutMethod || null},
+      ${profile.affiliatePayoutDetail || null}
     )
     ON CONFLICT (user_id)
     DO UPDATE SET
@@ -446,6 +452,8 @@ export const upsertMemberProfile = async (profile: MemberProfile) => {
       had_lgd_session = EXCLUDED.had_lgd_session,
       referral_source = EXCLUDED.referral_source,
       notes = EXCLUDED.notes,
+      affiliate_payout_method = EXCLUDED.affiliate_payout_method,
+      affiliate_payout_detail = EXCLUDED.affiliate_payout_detail,
       updated_at = now()
   `;
 };
@@ -473,6 +481,8 @@ export const getMemberProfileByUserId = async (userId: string): Promise<MemberPr
       had_lgd_session as "hadLgdSession",
       referral_source as "referralSource",
       notes,
+      affiliate_payout_method as "affiliatePayoutMethod",
+      affiliate_payout_detail as "affiliatePayoutDetail",
       schedule_started_at as "scheduleStartedAt",
       COALESCE(completed_schedule_nights, 0) AS "completedScheduleNights"
     FROM member_profiles
@@ -1989,7 +1999,8 @@ export const listAffiliates = async () => {
       created_at as "createdAt",
       status,
       affiliate_code as "affiliateCode",
-      user_id as "userId"
+      user_id as "userId",
+      payout_method as "payoutMethod"
     FROM affiliate_applications
     ORDER BY created_at DESC
   `;
@@ -2054,11 +2065,13 @@ const linkAffiliateApplicationToUserByEmail = async (email: string) => {
 export const createAffiliate = async (payload: {
   name: string;
   email: string;
-  payoutAddress: string;
+  payoutMethod: string;
+  payoutDetail: string | null;
 }) => {
+  const payoutDetail = payload.payoutDetail?.trim() || null;
   const { rows } = await sql<AffiliateRecord>`
-    INSERT INTO affiliate_applications (name, email, payout_address, status)
-    VALUES (${payload.name}, ${payload.email}, ${payload.payoutAddress}, 'pending')
+    INSERT INTO affiliate_applications (name, email, payout_address, payout_method, status)
+    VALUES (${payload.name}, ${payload.email}, ${payoutDetail || null}, ${payload.payoutMethod}, 'pending')
     RETURNING
       id,
       name,
@@ -2067,7 +2080,8 @@ export const createAffiliate = async (payload: {
       created_at as "createdAt",
       status,
       affiliate_code as "affiliateCode",
-      user_id as "userId"
+      user_id as "userId",
+      payout_method as "payoutMethod"
   `;
   return rows[0];
 };
@@ -2085,7 +2099,8 @@ export const updateAffiliateStatus = async (id: string, status: AffiliateRecord[
       created_at as "createdAt",
       status,
       affiliate_code as "affiliateCode",
-      user_id as "userId"
+      user_id as "userId",
+      payout_method as "payoutMethod"
   `;
   const record = rows[0] || null;
   if (!record) return null;
@@ -2102,7 +2117,8 @@ export const updateAffiliateStatus = async (id: string, status: AffiliateRecord[
         created_at as "createdAt",
         status,
         affiliate_code as "affiliateCode",
-        user_id as "userId"
+        user_id as "userId",
+        payout_method as "payoutMethod"
       FROM affiliate_applications
       WHERE id = ${id}
       LIMIT 1

@@ -18,6 +18,7 @@
     "stripe:verify": "node scripts/verify-stripe-ready.js",
     "affiliates:backfill": "node scripts/backfill-affiliate-codes.js",
     "affiliates:migrate": "node scripts/migrate-affiliate-columns.js",
+    "affiliates:payout-migrate": "node scripts/migrate-affiliate-payout-columns.js",
     "test:production-smoke": "node scripts/production-smoke-test.js https://reachforthestars.today",
     "deploy": "vercel --prod",
     "push-deploy": "node scripts/push-and-deploy.js",

@@ -1,20 +1,41 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  AFFILIATE_PAYOUT_DETAIL_PLACEHOLDERS,
+  AFFILIATE_PAYOUT_METHOD_LABELS,
+  AFFILIATE_PAYOUT_METHODS,
+  formatAffiliatePayoutMethodLabel,
+  type AffiliatePayoutMethod
+} from "@/lib/affiliate-payout";
 
 export type MemberAffiliateInfo = {
   affiliateCode: string;
   referralUrl: string;
   applicationStatus: "pending" | "approved" | "paused" | null;
   isApprovedAffiliate: boolean;
+  payoutMethod?: AffiliatePayoutMethod | null;
+  payoutDetail?: string | null;
 };
 
 type Props = {
   affiliate: MemberAffiliateInfo | null;
+  onPayoutSaved?: () => void;
 };
 
-export default function MemberAffiliateSection({ affiliate }: Props) {
+export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Props) {
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const [payoutMethod, setPayoutMethod] = useState<AffiliatePayoutMethod>(
+    affiliate?.payoutMethod ?? "crypto"
+  );
+  const [payoutDetail, setPayoutDetail] = useState(affiliate?.payoutDetail ?? "");
+  const [payoutMessage, setPayoutMessage] = useState<string | null>(null);
+  const [payoutSaving, setPayoutSaving] = useState(false);
+
+  useEffect(() => {
+    setPayoutMethod(affiliate?.payoutMethod ?? "crypto");
+    setPayoutDetail(affiliate?.payoutDetail ?? "");
+  }, [affiliate?.payoutMethod, affiliate?.payoutDetail]);
 
   const copyLink = useCallback(async () => {
     if (!affiliate?.referralUrl) return;
@@ -27,7 +48,32 @@ export default function MemberAffiliateSection({ affiliate }: Props) {
     }
   }, [affiliate?.referralUrl]);
 
+  const savePayout = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setPayoutSaving(true);
+    setPayoutMessage(null);
+    const response = await fetch("/api/member/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        affiliatePayoutMethod: payoutMethod,
+        affiliatePayoutDetail: payoutDetail
+      })
+    });
+    if (response.ok) {
+      setPayoutMessage("Payout preferences saved.");
+      onPayoutSaved?.();
+    } else {
+      setPayoutMessage("Could not save payout preferences. Check your details and try again.");
+    }
+    setPayoutSaving(false);
+  };
+
   if (!affiliate?.affiliateCode) return null;
+
+  const detailRequired = payoutMethod !== "bank_contact";
+  const hasPayoutPrefs = affiliate.payoutMethod != null;
 
   return (
     <section
@@ -81,6 +127,76 @@ export default function MemberAffiliateSection({ affiliate }: Props) {
       {copyMessage && (
         <p style={{ margin: "12px 0 0", fontSize: 14, color: "#059669" }}>{copyMessage}</p>
       )}
+
+      <div
+        style={{
+          marginTop: 24,
+          paddingTop: 20,
+          borderTop: "1px solid #e5e7eb"
+        }}
+      >
+        <h3 style={{ margin: "0 0 8px", fontSize: 17 }}>Payout preferences</h3>
+        <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
+          Choose how you want to receive affiliate commissions. Payouts are processed manually when
+          you reach the minimum threshold.
+        </p>
+        {hasPayoutPrefs && (
+          <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
+            Current: {formatAffiliatePayoutMethodLabel(affiliate.payoutMethod)}
+            {affiliate.payoutDetail ? ` — ${affiliate.payoutDetail}` : ""}
+          </p>
+        )}
+        <form onSubmit={savePayout} className="grid" style={{ gap: 10 }}>
+          <label style={{ fontSize: 14, color: "#4b5563" }}>
+            Payout method
+            <select
+              value={payoutMethod}
+              onChange={(e) => setPayoutMethod(e.target.value as AffiliatePayoutMethod)}
+              required
+              style={{
+                display: "block",
+                width: "100%",
+                marginTop: 4,
+                padding: 10,
+                borderRadius: 8,
+                border: "1px solid #d1d5db"
+              }}
+            >
+              {AFFILIATE_PAYOUT_METHODS.map((method) => (
+                <option key={method} value={method}>
+                  {AFFILIATE_PAYOUT_METHOD_LABELS[method]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <input
+            value={payoutDetail}
+            onChange={(e) => setPayoutDetail(e.target.value)}
+            placeholder={AFFILIATE_PAYOUT_DETAIL_PLACEHOLDERS[payoutMethod]}
+            required={detailRequired}
+            style={{ padding: 10, borderRadius: 8, border: "1px solid #d1d5db" }}
+          />
+          {payoutMethod === "bank_contact" && (
+            <p style={{ fontSize: 13, color: "#4b5563", margin: 0 }}>
+              We will contact you to collect bank details for ACH payouts.
+            </p>
+          )}
+          <button className="button" type="submit" disabled={payoutSaving}>
+            {payoutSaving ? "Saving..." : "Save payout preferences"}
+          </button>
+        </form>
+        {payoutMessage && (
+          <p
+            style={{
+              margin: "12px 0 0",
+              fontSize: 14,
+              color: payoutMessage.includes("saved") ? "#059669" : "#b45309"
+            }}
+          >
+            {payoutMessage}
+          </p>
+        )}
+      </div>
     </section>
   );
 }
