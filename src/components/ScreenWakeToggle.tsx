@@ -19,7 +19,32 @@ function isAndroidUa(): boolean {
 
 /** Auto screen wake for the full guided session (prep, main audios, and inter-half wait). */
 function shouldAutoEnableWakeOnSessionStart(): boolean {
+  if (typeof navigator === "undefined" || !("wakeLock" in navigator)) return false;
   return isAppleMobileUa() || isAndroidUa();
+}
+
+const SCREEN_WAKE_PREF_KEY = "rfts-screen-wake-enabled";
+
+function readScreenWakePreference(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(SCREEN_WAKE_PREF_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeScreenWakePreference(enabled: boolean) {
+  if (typeof window === "undefined") return;
+  try {
+    if (enabled) {
+      window.localStorage.setItem(SCREEN_WAKE_PREF_KEY, "1");
+    } else {
+      window.localStorage.removeItem(SCREEN_WAKE_PREF_KEY);
+    }
+  } catch {
+    // ignore quota / private mode
+  }
 }
 
 type ScreenWakeToggleProps = {
@@ -30,7 +55,7 @@ type ScreenWakeToggleProps = {
 export default function ScreenWakeToggle({
   title = "Keep Screen Awake",
   description =
-    "On iPhone and iPad, screen wake turns on when you start your session and off when the session ends. On Android, screen wake turns on in your browser automatically when you start playing and stays on through your entire session—including the wait between audios—even if your phone is locked. Tap Enable anytime to keep the screen on outside a session, or Disable to turn it off early."
+    "When you start a session, we try to turn on screen wake automatically in Chrome, Safari, and Edge on phones and tablets. If it does not turn on, tap Enable Screen Wake while this page is visible. Your choice is remembered for future sessions. Screen wake helps the app stay active but may not stop sleep while your phone is locked—unlock and tap Play if the second recording is late. Firefox and some browsers may not support screen wake."
 }: ScreenWakeToggleProps) {
   const [wakeLockSupported, setWakeLockSupported] = useState(true);
   const [wakeLockActive, setWakeLockActive] = useState(false);
@@ -53,6 +78,9 @@ export default function ScreenWakeToggle({
     if (typeof navigator !== "undefined" && !("wakeLock" in navigator)) {
       setWakeLockSupported(false);
     }
+    if (readScreenWakePreference()) {
+      userWantsWakeLockRef.current = true;
+    }
   }, []);
 
   const acquireScreenWakeLock = useCallback(
@@ -73,6 +101,7 @@ export default function ScreenWakeToggle({
       if (wakeLockRef.current) {
         if (opts.setUserIntent) {
           userWantsWakeLockRef.current = true;
+          writeScreenWakePreference(true);
           setFeedback("Screen wake enabled. Your screen will stay on during playback.");
         }
         return;
@@ -81,6 +110,7 @@ export default function ScreenWakeToggle({
         const sentinel = await navigator.wakeLock.request("screen");
         if (opts.setUserIntent) {
           userWantsWakeLockRef.current = true;
+          writeScreenWakePreference(true);
         }
         wakeLockRef.current = sentinel;
         setWakeLockActive(true);
@@ -99,7 +129,14 @@ export default function ScreenWakeToggle({
           }
         });
         if (opts.setUserIntent) {
+          writeScreenWakePreference(true);
           setFeedback("Screen wake enabled. Your screen will stay on during playback.");
+        } else if (
+          androidSessionWakeActiveRef.current ||
+          gapAutoWakeActiveRef.current ||
+          userWantsWakeLockRef.current
+        ) {
+          setFeedback("Screen wake is on for this session.");
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Request failed";
@@ -144,7 +181,12 @@ export default function ScreenWakeToggle({
     sessionStartRetryIdsRef.current = [];
     gapAutoWakeActiveRef.current = false;
     androidSessionWakeActiveRef.current = false;
-    userWantsWakeLockRef.current = false;
+    if (!opts?.afterSession) {
+      userWantsWakeLockRef.current = false;
+      writeScreenWakePreference(false);
+    } else {
+      userWantsWakeLockRef.current = readScreenWakePreference();
+    }
     const hadLock = wakeLockRef.current !== null;
     try {
       if (wakeLockRef.current) {
@@ -226,10 +268,14 @@ export default function ScreenWakeToggle({
       }
     };
     const handleSessionStart = () => {
-      if (!shouldAutoEnableWakeOnSessionStart()) return;
+      const savedPref = readScreenWakePreference();
+      if (savedPref) {
+        userWantsWakeLockRef.current = true;
+      }
+      if (!shouldAutoEnableWakeOnSessionStart() && !savedPref) return;
       if (isAndroidUa()) {
         androidSessionWakeActiveRef.current = true;
-      } else {
+      } else if (shouldAutoEnableWakeOnSessionStart()) {
         userWantsWakeLockRef.current = true;
       }
       clearSessionStartRetries();
@@ -246,6 +292,14 @@ export default function ScreenWakeToggle({
         const id = setTimeout(tryRequest, ms);
         sessionStartRetryIdsRef.current.push(id);
       }
+      const failId = setTimeout(() => {
+        if (wantsWakeLockHeld() && !wakeLockRef.current) {
+          setFeedback(
+            "Screen wake could not start automatically. Keep this tab visible and tap Enable Screen Wake."
+          );
+        }
+      }, 16_000);
+      sessionStartRetryIdsRef.current.push(failId);
       if (isAndroidUa() && "wakeLock" in navigator) {
         beginWakeLockPolling();
       }
@@ -310,7 +364,7 @@ export default function ScreenWakeToggle({
       window.removeEventListener("rfts-gap-wake-nudge", handleGapWakeNudge);
       window.removeEventListener("rfts-second-half-started", handleSecondHalfStarted);
       window.removeEventListener("rfts-session-end", handleSessionEnd);
-      void releaseWakeLock();
+      void releaseWakeLock({ afterSession: true });
     };
   }, [acquireScreenWakeLock, releaseWakeLock, releaseGapAutoWakeOnly]);
 

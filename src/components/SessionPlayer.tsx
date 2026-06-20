@@ -1191,7 +1191,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           )}
           {coarseMobilePlatform() === "Android" && (
             <p style={{ margin: "10px 0 0", color: "#92400e", fontSize: 13 }}>
-              Screen wake is turned on automatically for this session. If the second recording is late, unlock your phone or tap Play above—some Android browsers pause long timers while the screen is locked.
+              We try to keep screen wake on during this session. If the second recording is late, unlock your phone and tap Play—some browsers pause timers while the screen is locked.
             </p>
           )}
           <button
