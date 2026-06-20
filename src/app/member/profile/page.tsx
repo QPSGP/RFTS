@@ -113,6 +113,12 @@ export default function MemberProfilePage() {
   const [saving, setSaving] = useState(false);
   const [billing, setBilling] = useState<MemberBillingInfo | null>(null);
   const [affiliate, setAffiliate] = useState<MemberAffiliateInfo | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  const profileSummaryName = useMemo(() => {
+    const name = [profile.firstName, profile.lastName].filter(Boolean).join(" ").trim();
+    return name || profile.email || "Member";
+  }, [profile.firstName, profile.lastName, profile.email]);
 
   const showAdultContent = useMemo(() => {
     const dateStr = profile.birthDate.trim() || (profile.yearBorn.trim() ? `${profile.yearBorn}-01-01` : "");
@@ -204,17 +210,54 @@ export default function MemberProfilePage() {
       <div className="card" style={{ maxWidth: 720, margin: "0 auto" }}>
         <h1>My Profile</h1>
         <p style={{ color: "#4b5563", marginTop: 4 }}>
-          View and update your personal details. This matches the information you provided when you signed up.
+          Manage billing, affiliate sharing, and session settings below. Open your profile when you
+          need to update personal details.
         </p>
 
-        <div className="section-heading" style={{ marginTop: 24, marginBottom: 4 }}>
-          Personal Details
-        </div>
-        <p style={{ color: "#4b5563", fontSize: 14, marginBottom: 12 }}>
-          Before selecting your goals we need some basic information to start your customization and better service you.
-        </p>
+        <section
+          style={{
+            marginTop: 24,
+            padding: 20,
+            borderRadius: 12,
+            border: "1px solid #e5e7eb",
+            background: "#fafafa"
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              flexWrap: "wrap"
+            }}
+          >
+            <div>
+              <h2 style={{ margin: 0, fontSize: 20 }}>Personal details</h2>
+              {!profileOpen && (
+                <p style={{ margin: "6px 0 0", fontSize: 14, color: "#4b5563" }}>
+                  {profileSummaryName}
+                  {profile.email ? ` · ${profile.email}` : ""}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={() => setProfileOpen((open) => !open)}
+            >
+              {profileOpen ? "Close Profile" : "Open Profile"}
+            </button>
+          </div>
 
-        <div className="grid grid-2">
+          {profileOpen && (
+            <>
+              <p style={{ color: "#4b5563", fontSize: 14, margin: "16px 0 12px" }}>
+                Before selecting your goals we need some basic information to start your
+                customization and better service you.
+              </p>
+
+              <div className="grid grid-2">
           <input
             style={inputStyle}
             placeholder="First Name *"
@@ -425,6 +468,9 @@ export default function MemberProfilePage() {
             </span>
           )}
         </div>
+            </>
+          )}
+        </section>
 
         <MemberBillingSection billing={billing} returnPath="/member/profile" />
 
