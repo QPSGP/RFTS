@@ -230,7 +230,7 @@ export default function FaqsPage() {
             <div className="card">
               <h3>Quick tips for best results</h3>
               <ul>
-                <li>Keep your phone on a charger near your bed.</li>
+                <li>Keep your phone charged and avoid having it close to your head when on a charger.</li>
                 <li>Use the Pause/Play/Restart controls if you wake up.</li>
                 <li>Stick with your goals long enough to complete a full cycle.</li>
               </ul>
