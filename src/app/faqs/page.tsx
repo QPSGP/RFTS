@@ -176,6 +176,15 @@ export default function FaqsPage() {
           </div>
 
           <div className="card">
+            <h3>How can I pay for membership?</h3>
+            <p>
+              When you subscribe, Stripe Checkout accepts <strong>credit or debit card</strong>,
+              <strong> PayPal</strong>, and <strong>US bank account (ACH)</strong> where available.
+              Venmo, Zelle, and cryptocurrency are not offered for membership payments.
+            </p>
+          </div>
+
+          <div className="card">
             <h3>Where is my affiliate number and referral link?</h3>
             <p>
               Every member receives an affiliate number in{" "}

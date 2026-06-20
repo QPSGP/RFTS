@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { apiError } from "@/lib/api-utils";
 import { createUserSessionToken, setUserSessionCookieOnResponse } from "@/lib/user-auth";
 import { getStripe, getStripeMode } from "@/lib/stripe";
+import { stripeCheckoutPaymentMethodParams } from "@/lib/stripe-checkout";
 import {
   addEmailToLibraryItemAllowedList,
   createUser,
@@ -250,6 +251,7 @@ export async function POST(request: Request) {
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
+      ...stripeCheckoutPaymentMethodParams(),
       client_reference_id: user.id,
       metadata: { tier: plan.id },
       line_items: [{ price: plan.priceId, quantity: 1 }],
