@@ -168,7 +168,7 @@ export default function FaqsPage() {
             <h3>Where do I manage billing?</h3>
             <p>
               Payments are managed securely through Stripe. You can update payment details
-              and view subscription status from your member options.
+              and view subscription status from your member profile.
             </p>
           </div>
         </div>
@@ -191,8 +191,9 @@ export default function FaqsPage() {
           <div className="card">
             <h3>Why are my goals limited to 10?</h3>
             <p>
-              Ten goals keeps your lineup focused and effective. It also ensures your
-              highest priorities are reinforced regularly in your session plan.
+              Ten goals has 3 audios per goal totaling 30 audios. This keeps your lineup
+              focused and effective. It also ensures your highest priorities are reinforced
+              regularly in your session plan.
             </p>
           </div>
 
@@ -200,7 +201,8 @@ export default function FaqsPage() {
             <h3>Can I change my goals?</h3>
             <p>
               Yes. You can change your goals at any time from your member area. Your
-              session plan will update to reflect your new priorities.
+              session plan will update to reflect your new priorities. We recommend that
+              you keep to your program and discourage you from changing goals.
             </p>
           </div>
         </div>
