@@ -73,6 +73,17 @@ export function formatAffiliatePayoutShortSummary(now = new Date()): string {
   return `Monthly payouts when your balance reaches $${threshold} (manual processing).`;
 }
 
+export const AFFILIATE_COMMISSION_RATE = 0.25;
+
+export function calculateAffiliateCommissionCents(grossAmountCents: number): number {
+  if (!Number.isFinite(grossAmountCents) || grossAmountCents <= 0) return 0;
+  return Math.round(grossAmountCents * AFFILIATE_COMMISSION_RATE);
+}
+
+export function formatUsdFromCents(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
 export function normalizeAffiliatePayoutMethod(
   raw: string | null | undefined
 ): AffiliatePayoutMethod | null {

@@ -11,6 +11,7 @@ import AdminUsers from "@/components/AdminUsers";
 import AdminAdmins from "@/components/AdminAdmins";
 import AdminLogoutButton from "@/components/AdminLogoutButton";
 import AffiliateAdmin from "@/components/AffiliateAdmin";
+import AffiliatePayoutAdmin from "@/components/AffiliatePayoutAdmin";
 import ScheduleAlgorithmTool from "@/components/ScheduleAlgorithmTool";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 
@@ -165,6 +166,7 @@ export default function AdminContentPage() {
       )}
       {openSections.affiliates && (
         <section id="admin-affiliates" style={{ marginBottom: 20 }}>
+          <AffiliatePayoutAdmin />
           <AffiliateAdmin />
         </section>
       )}

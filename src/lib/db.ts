@@ -2581,3 +2581,229 @@ export const savePlaybackSettings = async (settings: PlaybackSettings) => {
       fallback_track_id = EXCLUDED.fallback_track_id
   `;
 };
+
+export const getUserIdByStripeSubscriptionId = async (subscriptionId: string) => {
+  const id = subscriptionId.trim();
+  if (!id) return null;
+  const { rows } = await sql<{ user_id: string }>`
+    SELECT user_id FROM subscriptions WHERE stripe_subscription_id = ${id} LIMIT 1
+  `;
+  return rows[0]?.user_id ?? null;
+};
+
+export const getUserIdByStripeCustomerId = async (customerId: string) => {
+  const id = customerId.trim();
+  if (!id) return null;
+  const { rows } = await sql<{ user_id: string }>`
+    SELECT user_id FROM subscriptions WHERE stripe_customer_id = ${id} LIMIT 1
+  `;
+  return rows[0]?.user_id ?? null;
+};
+
+export const getUserByAffiliateCode = async (code: string) => {
+  const normalized = normalizeAffiliateCode(code);
+  if (!normalized) return null;
+  const { rows } = await sql<{ id: string; email: string }>`
+    SELECT id, email FROM users WHERE affiliate_code = ${normalized} LIMIT 1
+  `;
+  return rows[0] ?? null;
+};
+
+export type UserReferralAttribution = {
+  userId: string;
+  email: string;
+  affiliateCode: string | null;
+  referredByAffiliateCode: string | null;
+};
+
+export const getUserReferralAttribution = async (userId: string) => {
+  const { rows } = await sql<{
+    id: string;
+    email: string;
+    affiliate_code: string | null;
+    referred_by_affiliate_code: string | null;
+  }>`
+    SELECT id, email, affiliate_code, referred_by_affiliate_code
+    FROM users
+    WHERE id = ${userId}
+    LIMIT 1
+  `;
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    userId: row.id,
+    email: row.email,
+    affiliateCode: row.affiliate_code,
+    referredByAffiliateCode: row.referred_by_affiliate_code
+  } satisfies UserReferralAttribution;
+};
+
+export const resolveAffiliateOwnerByCode = async (code: string) => {
+  const normalized = normalizeAffiliateCode(code);
+  if (!normalized) return null;
+
+  const user = await getUserByAffiliateCode(normalized);
+  if (user) {
+    const profile = await getMemberProfileByUserId(user.id);
+    const name = [profile?.firstName, profile?.lastName].filter(Boolean).join(" ").trim();
+    return {
+      userId: user.id,
+      email: user.email,
+      name: name || null
+    };
+  }
+
+  const { rows } = await sql<{
+    user_id: string | null;
+    email: string;
+    name: string;
+  }>`
+    SELECT user_id, email, name
+    FROM affiliate_applications
+    WHERE affiliate_code = ${normalized} AND status = 'approved'
+    ORDER BY created_at DESC
+    LIMIT 1
+  `;
+  const app = rows[0];
+  if (!app) return null;
+  return {
+    userId: app.user_id ?? null,
+    email: app.email,
+    name: app.name
+  };
+};
+
+export const getAffiliateCommissionByInvoiceId = async (invoiceId: string) => {
+  const { rows } = await sql<{ id: string }>`
+    SELECT id FROM affiliate_commissions WHERE stripe_invoice_id = ${invoiceId} LIMIT 1
+  `;
+  return rows[0] ?? null;
+};
+
+export const insertAffiliateCommission = async (payload: {
+  affiliateCode: string;
+  affiliateUserId: string | null;
+  referredUserId: string;
+  stripeInvoiceId: string;
+  stripeEventId: string | null;
+  grossAmountCents: number;
+  commissionAmountCents: number;
+  currency: string;
+}) => {
+  await sql`
+    INSERT INTO affiliate_commissions (
+      affiliate_code,
+      affiliate_user_id,
+      referred_user_id,
+      stripe_invoice_id,
+      stripe_event_id,
+      gross_amount_cents,
+      commission_amount_cents,
+      currency,
+      status
+    )
+    VALUES (
+      ${payload.affiliateCode},
+      ${payload.affiliateUserId},
+      ${payload.referredUserId},
+      ${payload.stripeInvoiceId},
+      ${payload.stripeEventId},
+      ${payload.grossAmountCents},
+      ${payload.commissionAmountCents},
+      ${payload.currency},
+      'pending'
+    )
+    ON CONFLICT (stripe_invoice_id) DO NOTHING
+  `;
+};
+
+export const getAffiliatePendingBalanceCents = async (affiliateCode: string) => {
+  const code = normalizeAffiliateCode(affiliateCode);
+  if (!code) return 0;
+  const { rows } = await sql<{ total: number | null }>`
+    SELECT COALESCE(SUM(commission_amount_cents), 0)::int AS total
+    FROM affiliate_commissions
+    WHERE affiliate_code = ${code} AND status = 'pending'
+  `;
+  return rows[0]?.total ?? 0;
+};
+
+export const listAffiliatePayoutSummaries = async () => {
+  const { rows } = await sql<{
+    affiliateCode: string;
+    pendingBalanceCents: number;
+    pendingCommissionCount: number;
+    paidBalanceCents: number;
+  }>`
+    SELECT
+      affiliate_code AS "affiliateCode",
+      COALESCE(SUM(CASE WHEN status = 'pending' THEN commission_amount_cents ELSE 0 END), 0)::int
+        AS "pendingBalanceCents",
+      COUNT(*) FILTER (WHERE status = 'pending')::int AS "pendingCommissionCount",
+      COALESCE(SUM(CASE WHEN status = 'paid' THEN commission_amount_cents ELSE 0 END), 0)::int
+        AS "paidBalanceCents"
+    FROM affiliate_commissions
+    GROUP BY affiliate_code
+    ORDER BY
+      COALESCE(SUM(CASE WHEN status = 'pending' THEN commission_amount_cents ELSE 0 END), 0) DESC,
+      affiliate_code ASC
+  `;
+
+  const summaries = [];
+  for (const row of rows) {
+    const owner = await resolveAffiliateOwnerByCode(row.affiliateCode);
+    let payoutMethod: string | null = null;
+    let payoutDetail: string | null = null;
+
+    if (owner?.userId) {
+      const profile = await getMemberProfileByUserId(owner.userId);
+      payoutMethod = profile?.affiliatePayoutMethod ?? null;
+      payoutDetail = profile?.affiliatePayoutDetail ?? null;
+    } else if (owner?.email) {
+      const { rows: appRows } = await sql<{
+        payout_method: string | null;
+        payout_address: string | null;
+      }>`
+        SELECT payout_method, payout_address
+        FROM affiliate_applications
+        WHERE affiliate_code = ${row.affiliateCode}
+        ORDER BY created_at DESC
+        LIMIT 1
+      `;
+      payoutMethod = appRows[0]?.payout_method ?? null;
+      payoutDetail = appRows[0]?.payout_address ?? null;
+    }
+
+    summaries.push({
+      affiliateCode: row.affiliateCode,
+      affiliateUserId: owner?.userId ?? null,
+      affiliateEmail: owner?.email ?? null,
+      affiliateName: owner?.name ?? null,
+      payoutMethod,
+      payoutDetail,
+      pendingBalanceCents: row.pendingBalanceCents,
+      pendingCommissionCount: row.pendingCommissionCount,
+      paidBalanceCents: row.paidBalanceCents
+    });
+  }
+
+  return summaries;
+};
+
+export const markAffiliateCommissionsPaid = async (
+  affiliateCode: string,
+  payoutNotes?: string | null
+) => {
+  const code = normalizeAffiliateCode(affiliateCode);
+  if (!code) return 0;
+  const { rows } = await sql<{ count: number }>`
+    WITH updated AS (
+      UPDATE affiliate_commissions
+      SET status = 'paid', paid_at = now(), payout_notes = ${payoutNotes ?? null}
+      WHERE affiliate_code = ${code} AND status = 'pending'
+      RETURNING 1
+    )
+    SELECT COUNT(*)::int AS count FROM updated
+  `;
+  return rows[0]?.count ?? 0;
+};

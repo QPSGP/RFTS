@@ -14,6 +14,20 @@ export type AffiliateRecord = {
 
 export type { AffiliatePayoutMethod } from "./affiliate-payout";
 
+export type AffiliatePayoutSummary = {
+  affiliateCode: string;
+  affiliateUserId: string | null;
+  affiliateEmail: string | null;
+  affiliateName: string | null;
+  payoutMethod: string | null;
+  payoutDetail: string | null;
+  pendingBalanceCents: number;
+  pendingCommissionCount: number;
+  paidBalanceCents: number;
+  thresholdUsd: number;
+  readyForPayout: boolean;
+};
+
 export type AdminAccount = {
   id: string;
   email: string;

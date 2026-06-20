@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { recordAffiliateCommissionFromInvoice } from "@/lib/affiliate-commission";
 import { getStripe } from "@/lib/stripe";
 import {
   ensureSubscription,
@@ -14,6 +15,26 @@ function tierDisplayName(tier: string | undefined): string | null {
   if (tier === "platinum_managed") return "Platinum Managed";
   if (tier === "platinum") return "Gold Member";
   return tier ? tier : null;
+}
+
+async function tryRecordCommissionFromCheckoutSession(
+  session: Stripe.Checkout.Session,
+  stripeEventId: string
+) {
+  const invoiceRef = session.invoice;
+  if (!invoiceRef) return;
+  const stripe = getStripe();
+  const invoiceId =
+    typeof invoiceRef === "string" ? invoiceRef : invoiceRef.id;
+  try {
+    const invoice = await stripe.invoices.retrieve(invoiceId);
+    const result = await recordAffiliateCommissionFromInvoice(invoice, stripeEventId);
+    if (result.recorded) {
+      console.info("[stripe webhook] Affiliate commission recorded for invoice", invoiceId);
+    }
+  } catch (e) {
+    console.error("[stripe webhook] Affiliate commission from checkout:", e);
+  }
 }
 
 export async function POST(request: Request) {
@@ -89,6 +110,20 @@ export async function POST(request: Request) {
       } catch (e) {
         console.error("[stripe webhook] Subscription active email:", e);
       }
+    }
+
+    await tryRecordCommissionFromCheckoutSession(session, event.id);
+  }
+
+  if (event.type === "invoice.paid") {
+    const invoice = event.data.object as Stripe.Invoice;
+    try {
+      const result = await recordAffiliateCommissionFromInvoice(invoice, event.id);
+      if (result.recorded) {
+        console.info("[stripe webhook] Affiliate commission recorded for invoice", invoice.id);
+      }
+    } catch (e) {
+      console.error("[stripe webhook] Affiliate commission from invoice.paid:", e);
     }
   }
 

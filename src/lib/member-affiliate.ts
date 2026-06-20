@@ -3,10 +3,12 @@ import type { AffiliatePayoutMethod } from "@/lib/affiliate-payout";
 import { normalizeAffiliatePayoutMethod } from "@/lib/affiliate-payout";
 import { buildMemberReferralUrl } from "@/lib/affiliate-code";
 import {
+  getAffiliatePendingBalanceCents,
   ensureUserAffiliateCode,
   getMemberProfileByUserId,
   normalizeMemberEmail
 } from "@/lib/db";
+import { getCurrentAffiliatePayoutThresholdUsd } from "@/lib/affiliate-payout";
 
 export type MemberAffiliateSummary = {
   affiliateCode: string;
@@ -15,6 +17,9 @@ export type MemberAffiliateSummary = {
   isApprovedAffiliate: boolean;
   payoutMethod: AffiliatePayoutMethod | null;
   payoutDetail: string | null;
+  pendingBalanceCents: number;
+  thresholdUsd: number;
+  readyForPayout: boolean;
 };
 
 export async function getMemberAffiliateSummary(
@@ -43,12 +48,19 @@ export async function getMemberAffiliateSummary(
       ? appStatus
       : null;
 
+  const pendingBalanceCents = await getAffiliatePendingBalanceCents(code);
+  const thresholdUsd = getCurrentAffiliatePayoutThresholdUsd();
+  const thresholdCents = thresholdUsd * 100;
+
   return {
     affiliateCode: code,
     referralUrl,
     applicationStatus: normalizedStatus,
     isApprovedAffiliate: normalizedStatus === "approved" || normalizedStatus === null,
     payoutMethod,
-    payoutDetail
+    payoutDetail,
+    pendingBalanceCents,
+    thresholdUsd,
+    readyForPayout: pendingBalanceCents >= thresholdCents
   };
 }

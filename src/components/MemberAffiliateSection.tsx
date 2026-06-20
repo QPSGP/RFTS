@@ -9,6 +9,7 @@ import {
   formatAffiliatePayoutThresholdPolicy,
   type AffiliatePayoutMethod
 } from "@/lib/affiliate-payout";
+import { formatUsdFromCents } from "@/lib/affiliate-payout";
 
 export type MemberAffiliateInfo = {
   affiliateCode: string;
@@ -17,6 +18,9 @@ export type MemberAffiliateInfo = {
   isApprovedAffiliate: boolean;
   payoutMethod?: AffiliatePayoutMethod | null;
   payoutDetail?: string | null;
+  pendingBalanceCents?: number;
+  thresholdUsd?: number;
+  readyForPayout?: boolean;
 };
 
 type Props = {
@@ -127,6 +131,21 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
       </button>
       {copyMessage && (
         <p style={{ margin: "12px 0 0", fontSize: 14, color: "#059669" }}>{copyMessage}</p>
+      )}
+
+      {(affiliate.pendingBalanceCents ?? 0) > 0 && (
+        <p style={{ margin: "16px 0 0", fontSize: 14, color: "#4b5563" }}>
+          <strong>Pending commission balance:</strong>{" "}
+          {formatUsdFromCents(affiliate.pendingBalanceCents ?? 0)}
+          {affiliate.readyForPayout ? (
+            <span style={{ color: "#059669" }}> — ready for payout</span>
+          ) : (
+            <span>
+              {" "}
+              — minimum payout is ${affiliate.thresholdUsd ?? 25}
+            </span>
+          )}
+        </p>
       )}
 
       <div

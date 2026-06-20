@@ -381,3 +381,24 @@ CREATE UNIQUE INDEX IF NOT EXISTS affiliate_applications_affiliate_code_unique
 ALTER TABLE affiliate_applications ADD COLUMN IF NOT EXISTS payout_method text;
 ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS affiliate_payout_method text;
 ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS affiliate_payout_detail text;
+
+-- Affiliate commission ledger (25% of referred subscription payments)
+CREATE TABLE IF NOT EXISTS affiliate_commissions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  affiliate_code text NOT NULL,
+  affiliate_user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  referred_user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  stripe_invoice_id text NOT NULL UNIQUE,
+  stripe_event_id text,
+  gross_amount_cents integer NOT NULL,
+  commission_amount_cents integer NOT NULL,
+  currency text NOT NULL DEFAULT 'usd',
+  status text NOT NULL DEFAULT 'pending',
+  paid_at timestamptz,
+  payout_notes text,
+  created_at timestamptz DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS affiliate_commissions_affiliate_code_status_idx
+  ON affiliate_commissions (affiliate_code, status);
+CREATE INDEX IF NOT EXISTS affiliate_commissions_referred_user_id_idx
+  ON affiliate_commissions (referred_user_id);
