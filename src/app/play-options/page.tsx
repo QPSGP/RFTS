@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import SessionPlayer, { SessionPlayerHandle } from "@/components/SessionPlayer";
-import { openMemberBilling } from "@/components/MemberBillingSection";
 import { getMemberTonightTrackItems } from "@/lib/schedule-progress";
 
 export default function PlayOptionsPage() {
@@ -35,8 +34,6 @@ export default function PlayOptionsPage() {
     { id: string; title: string }[]
   >([]);
   const [nextInCue, setNextInCue] = useState<{ id: string; title: string; skuCode?: string }[]>([]);
-  const [billingLoading, setBillingLoading] = useState(false);
-  const [billingError, setBillingError] = useState<string | null>(null);
   const sessionRef = useRef<SessionPlayerHandle | null>(null);
   const playSecondFromUrlRef = useRef(false);
 
@@ -96,19 +93,6 @@ export default function PlayOptionsPage() {
   const logout = async () => {
     await fetch("/api/user/logout", { method: "POST", credentials: "include" });
     window.location.href = "/member/login";
-  };
-
-  const goToBilling = async () => {
-    setBillingLoading(true);
-    setBillingError(null);
-    try {
-      const url = await openMemberBilling("/play-options");
-      if (url) window.location.href = url;
-    } catch (err) {
-      setBillingError(err instanceof Error ? err.message : "Could not open billing.");
-    } finally {
-      setBillingLoading(false);
-    }
   };
 
   useEffect(() => {
@@ -222,22 +206,11 @@ export default function PlayOptionsPage() {
           </p>
           <h1>Activate your RFTS membership</h1>
           <p>
-            Your account is ready, but a subscription is required to start sessions. Complete
-            payment below, or manage billing from My Profile if you already pay through Stripe.
+            Your account is ready, but a subscription is required to start sessions. Go to My
+            Profile to complete payment or manage billing if you already pay through Stripe.
           </p>
-          {billingError && (
-            <p style={{ color: "#dc2626", fontSize: 14, marginTop: 8 }}>{billingError}</p>
-          )}
           <div className="cta-row" style={{ marginTop: 16 }}>
-            <button
-              className="button"
-              type="button"
-              onClick={goToBilling}
-              disabled={billingLoading}
-            >
-              {billingLoading ? "Opening…" : "Complete payment"}
-            </button>
-            <a className="button button-secondary" href="/member/profile">
+            <a className="button" href="/member/profile">
               My Profile
             </a>
             <a className="button button-secondary" href="/member/login">
@@ -321,21 +294,10 @@ export default function PlayOptionsPage() {
           <a className="button button-secondary" href="/member/profile">
             My Profile
           </a>
-          <button
-            className="button button-secondary"
-            type="button"
-            onClick={goToBilling}
-            disabled={billingLoading}
-          >
-            {billingLoading ? "Opening…" : "Manage billing"}
-          </button>
           <button className="button button-secondary" type="button" onClick={logout}>
             Log Out
           </button>
         </div>
-        {billingError && (
-          <p style={{ color: "#dc2626", fontSize: 14, marginTop: 8 }}>{billingError}</p>
-        )}
       </section>
       {profile && !profile.isManaged && profile.goalIds?.length === 0 && (
         <section className="card" style={{ marginBottom: 16 }}>
