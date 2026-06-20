@@ -5,6 +5,8 @@ export type AffiliateRecord = {
   payoutAddress: string;
   createdAt: string;
   status: "pending" | "approved" | "paused";
+  affiliateCode?: string | null;
+  userId?: string | null;
 };
 
 export type AdminAccount = {

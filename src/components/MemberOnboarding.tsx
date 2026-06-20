@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { SubscriptionPlan } from "@/lib/types";
+import { AFFILIATE_REF_PARAM } from "@/lib/affiliate-code";
 
 type Interest = {
   id: string;
@@ -49,6 +50,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
   const [goalIds, setGoalIds] = useState<string[]>([]);
   const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
   const [searchTerm, setSearchTerm] = useState("");
+  const [affiliateRef, setAffiliateRef] = useState("");
   const [profile, setProfile] = useState({
     firstName: "",
     lastName: "",
@@ -81,6 +83,13 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
       return prev;
     });
   }, [visiblePlans]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get(AFFILIATE_REF_PARAM)?.trim();
+    if (ref) setAffiliateRef(ref);
+  }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -194,6 +203,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
         password: profile.password,
         goalIds,
         playsPerNight,
+        affiliateRef: affiliateRef.trim() || undefined,
         profile: {
           firstName: profile.firstName,
           lastName: profile.lastName,

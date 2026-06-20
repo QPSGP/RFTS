@@ -15,6 +15,7 @@ import {
   listSubscriptionPlans,
   setUserGoals,
   setUserPlaysPerNight,
+  setUserReferredByAffiliateCode,
   upsertMemberProfile
 } from "@/lib/db";
 import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
@@ -37,6 +38,7 @@ const schema = z.object({
   password: z.string().min(6),
   goalIds: z.array(z.string()).min(1).max(10),
   playsPerNight: z.number().int().min(1).max(2).default(2),
+  affiliateRef: z.string().optional(),
   profile: z.object({
     firstName: z.string().min(1),
     lastName: z.string().min(1),
@@ -101,6 +103,17 @@ export async function POST(request: Request) {
 
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
   const user = await createUser(parsed.data.email, passwordHash);
+  if (parsed.data.affiliateRef?.trim()) {
+    try {
+      await setUserReferredByAffiliateCode(
+        user.id,
+        parsed.data.affiliateRef,
+        user.email
+      );
+    } catch (e) {
+      console.error("[onboarding] affiliate ref:", e);
+    }
+  }
   const subscriptionStatus = isDemoSkip ? "active" : "inactive";
   await ensureSubscription(user.id, "platinum", subscriptionStatus);
   await setUserGoals(user.id, parsed.data.goalIds);

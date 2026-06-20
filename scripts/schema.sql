@@ -365,3 +365,14 @@ END $$;
 -- Admin display profile (optional; safe on existing DBs)
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS first_name text;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS last_name text;
+
+-- Member affiliate codes + referral attribution
+ALTER TABLE users ADD COLUMN IF NOT EXISTS affiliate_code text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by_affiliate_code text;
+CREATE UNIQUE INDEX IF NOT EXISTS users_affiliate_code_unique
+  ON users (affiliate_code) WHERE affiliate_code IS NOT NULL;
+
+ALTER TABLE affiliate_applications ADD COLUMN IF NOT EXISTS affiliate_code text;
+ALTER TABLE affiliate_applications ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES users(id) ON DELETE SET NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS affiliate_applications_affiliate_code_unique
+  ON affiliate_applications (affiliate_code) WHERE affiliate_code IS NOT NULL;

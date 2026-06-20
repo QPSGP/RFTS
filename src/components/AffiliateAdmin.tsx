@@ -1,15 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-type AffiliateRecord = {
-  id: string;
-  name: string;
-  email: string;
-  payoutAddress: string;
-  createdAt: string;
-  status: "pending" | "approved" | "paused";
-};
+import type { AffiliateRecord } from "@/lib/types";
 
 export default function AffiliateAdmin() {
   const [affiliates, setAffiliates] = useState<AffiliateRecord[]>([]);
@@ -47,6 +39,10 @@ export default function AffiliateAdmin() {
   return (
     <div className="card">
       <h3>Affiliate Approvals</h3>
+      <p style={{ fontSize: 14, color: "#4b5563", marginBottom: 12 }}>
+        Members already receive an affiliate number in My Profile. Applications here are for
+        non-members who want payout setup before or without a membership.
+      </p>
       {affiliates.length === 0 ? (
         <p>No affiliate applications yet.</p>
       ) : (
@@ -55,6 +51,10 @@ export default function AffiliateAdmin() {
             <div key={affiliate.id} className="card">
               <strong>{affiliate.name}</strong>
               <p>{affiliate.email}</p>
+              {affiliate.affiliateCode && <p>Affiliate #: {affiliate.affiliateCode}</p>}
+              {affiliate.userId && (
+                <p style={{ fontSize: 13, color: "#059669" }}>Linked member account</p>
+              )}
               <p>Payout: {affiliate.payoutAddress}</p>
               <p>Status: {affiliate.status}</p>
               <div style={{ display: "flex", gap: 8 }}>

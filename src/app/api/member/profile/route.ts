@@ -7,6 +7,7 @@ import {
   upsertMemberProfile
 } from "@/lib/db";
 import { getMemberBillingSummary } from "@/lib/member-billing";
+import { getMemberAffiliateSummary } from "@/lib/member-affiliate";
 import { getWelcomeEmailCcRecipients, sendEmail } from "@/lib/email";
 import {
   getLgdInterestEmailContent,
@@ -62,10 +63,12 @@ export async function GET() {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
   const billing = await getMemberBillingSummary(user);
+  const affiliate = await getMemberAffiliateSummary(user.id, user.email);
   const memberProfile = await getMemberProfileByUserId(user.id);
   if (!memberProfile) {
     return NextResponse.json({
       billing,
+      affiliate,
       profile: {
         email: user.email,
         firstName: null,
@@ -89,6 +92,7 @@ export async function GET() {
   const birthDate = memberProfile.birthDate ?? null;
   return NextResponse.json({
     billing,
+    affiliate,
     profile: {
       email: user.email,
       firstName: memberProfile.firstName ?? null,

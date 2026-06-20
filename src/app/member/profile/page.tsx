@@ -5,6 +5,9 @@ import Link from "next/link";
 import MemberBillingSection, {
   type MemberBillingInfo
 } from "@/components/MemberBillingSection";
+import MemberAffiliateSection, {
+  type MemberAffiliateInfo
+} from "@/components/MemberAffiliateSection";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 
 const TIME_ZONES = [
@@ -109,6 +112,7 @@ export default function MemberProfilePage() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [billing, setBilling] = useState<MemberBillingInfo | null>(null);
+  const [affiliate, setAffiliate] = useState<MemberAffiliateInfo | null>(null);
 
   const showAdultContent = useMemo(() => {
     const dateStr = profile.birthDate.trim() || (profile.yearBorn.trim() ? `${profile.yearBorn}-01-01` : "");
@@ -132,6 +136,7 @@ export default function MemberProfilePage() {
     const data = await res.json();
     setProfile(toState(data.profile ?? {}));
     setBilling(data.billing ?? null);
+    setAffiliate(data.affiliate ?? null);
     setStatus("ready");
   }, []);
 
@@ -422,6 +427,8 @@ export default function MemberProfilePage() {
         </div>
 
         <MemberBillingSection billing={billing} returnPath="/member/profile" />
+
+        <MemberAffiliateSection affiliate={affiliate} />
 
         <div style={{ marginTop: 32 }}>
           <ScreenWakeToggle />

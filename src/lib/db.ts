@@ -17,6 +17,11 @@ import {
   defaultPlaybackSettings,
   defaultSubscriptionPlans
 } from "@/lib/content-seed";
+import { generateAffiliateCode, normalizeAffiliateCode } from "@/lib/affiliate-code";
+
+function isUniqueViolation(error: unknown): boolean {
+  return (error as { code?: string })?.code === "23505";
+}
 
 export type DbUser = {
   id: string;
@@ -100,12 +105,122 @@ export const getUserById = async (userId: string) => {
 
 export const createUser = async (email: string, passwordHash: string) => {
   const canonical = normalizeMemberEmail(email);
-  const { rows } = await sql<DbUser>`
-    INSERT INTO users (email, password_hash)
-    VALUES (${canonical}, ${passwordHash})
-    RETURNING id, email, password_hash, goal_ids, goal_updated_at, plays_per_night, created_at
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const affiliateCode = generateAffiliateCode();
+    try {
+      const { rows } = await sql<DbUser>`
+        INSERT INTO users (email, password_hash, affiliate_code)
+        VALUES (${canonical}, ${passwordHash}, ${affiliateCode})
+        RETURNING id, email, password_hash, goal_ids, goal_updated_at, plays_per_night, created_at
+      `;
+      const user = rows[0];
+      await linkAffiliateApplicationOnMemberSignup(user.id, canonical);
+      return user;
+    } catch (error) {
+      if (!isUniqueViolation(error)) throw error;
+    }
+  }
+  throw new Error("Could not create user.");
+};
+
+export const ensureUserAffiliateCode = async (userId: string): Promise<string> => {
+  const { rows: existing } = await sql<{ affiliate_code: string | null }>`
+    SELECT affiliate_code FROM users WHERE id = ${userId} LIMIT 1
   `;
-  return rows[0];
+  const current = existing[0]?.affiliate_code?.trim();
+  if (current) return current.toUpperCase();
+
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const code = generateAffiliateCode();
+    try {
+      const { rows } = await sql<{ affiliate_code: string }>`
+        UPDATE users
+        SET affiliate_code = ${code}
+        WHERE id = ${userId} AND affiliate_code IS NULL
+        RETURNING affiliate_code
+      `;
+      if (rows[0]?.affiliate_code) return rows[0].affiliate_code;
+      const { rows: again } = await sql<{ affiliate_code: string | null }>`
+        SELECT affiliate_code FROM users WHERE id = ${userId} LIMIT 1
+      `;
+      if (again[0]?.affiliate_code) return again[0].affiliate_code;
+    } catch (error) {
+      if (!isUniqueViolation(error)) throw error;
+    }
+  }
+  throw new Error("Could not assign affiliate code.");
+};
+
+export const linkAffiliateApplicationOnMemberSignup = async (userId: string, email: string) => {
+  const canonical = normalizeMemberEmail(email);
+  const { rows: appRows } = await sql<{ id: string; affiliate_code: string | null }>`
+    SELECT id, affiliate_code
+    FROM affiliate_applications
+    WHERE LOWER(email) = LOWER(${canonical}) AND status = 'approved'
+    ORDER BY created_at DESC
+    LIMIT 1
+  `;
+  const app = appRows[0];
+  if (!app) return;
+
+  const { rows: userRows } = await sql<{ affiliate_code: string | null }>`
+    SELECT affiliate_code FROM users WHERE id = ${userId} LIMIT 1
+  `;
+  const userCode = userRows[0]?.affiliate_code?.trim() || null;
+
+  await sql`UPDATE affiliate_applications SET user_id = ${userId} WHERE id = ${app.id}`;
+
+  if (app.affiliate_code?.trim()) {
+    const appCode = app.affiliate_code.trim().toUpperCase();
+    await sql`UPDATE users SET affiliate_code = ${appCode} WHERE id = ${userId}`;
+  } else if (userCode) {
+    await sql`UPDATE affiliate_applications SET affiliate_code = ${userCode} WHERE id = ${app.id}`;
+  } else {
+    const code = await ensureUserAffiliateCode(userId);
+    await sql`UPDATE affiliate_applications SET affiliate_code = ${code} WHERE id = ${app.id}`;
+  }
+};
+
+export const setUserReferredByAffiliateCode = async (
+  userId: string,
+  codeRaw: string | null | undefined,
+  userEmail: string
+) => {
+  const code = normalizeAffiliateCode(codeRaw);
+  if (!code) return;
+
+  const { rows: referrerRows } = await sql<{ email: string }>`
+    SELECT email FROM users WHERE affiliate_code = ${code} LIMIT 1
+  `;
+  if (referrerRows[0]) {
+    if (normalizeMemberEmail(referrerRows[0].email) === normalizeMemberEmail(userEmail)) return;
+    await sql`UPDATE users SET referred_by_affiliate_code = ${code} WHERE id = ${userId}`;
+    return;
+  }
+
+  const { rows: appRows } = await sql`
+    SELECT 1 FROM affiliate_applications
+    WHERE affiliate_code = ${code} AND status = 'approved'
+    LIMIT 1
+  `;
+  if (appRows[0]) {
+    await sql`UPDATE users SET referred_by_affiliate_code = ${code} WHERE id = ${userId}`;
+  }
+};
+
+export const isValidAffiliateReferralCode = async (codeRaw: string): Promise<boolean> => {
+  const code = normalizeAffiliateCode(codeRaw);
+  if (!code) return false;
+  const { rows: userRows } = await sql`
+    SELECT 1 FROM users WHERE affiliate_code = ${code} LIMIT 1
+  `;
+  if (userRows[0]) return true;
+  const { rows: appRows } = await sql`
+    SELECT 1 FROM affiliate_applications
+    WHERE affiliate_code = ${code} AND status = 'approved'
+    LIMIT 1
+  `;
+  return !!appRows[0];
 };
 
 export const deleteUserByEmail = async (email: string) => {
@@ -1872,11 +1987,68 @@ export const listAffiliates = async () => {
       email,
       payout_address as "payoutAddress",
       created_at as "createdAt",
-      status
+      status,
+      affiliate_code as "affiliateCode",
+      user_id as "userId"
     FROM affiliate_applications
     ORDER BY created_at DESC
   `;
   return rows;
+};
+
+const ensureAffiliateApplicationCode = async (applicationId: string): Promise<string | null> => {
+  const { rows } = await sql<{ affiliate_code: string | null }>`
+    SELECT affiliate_code FROM affiliate_applications WHERE id = ${applicationId} LIMIT 1
+  `;
+  const current = rows[0]?.affiliate_code?.trim();
+  if (current) return current.toUpperCase();
+
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const code = generateAffiliateCode();
+    try {
+      const { rows: updated } = await sql<{ affiliate_code: string }>`
+        UPDATE affiliate_applications
+        SET affiliate_code = ${code}
+        WHERE id = ${applicationId} AND affiliate_code IS NULL
+        RETURNING affiliate_code
+      `;
+      if (updated[0]?.affiliate_code) return updated[0].affiliate_code;
+    } catch (error) {
+      if (!isUniqueViolation(error)) throw error;
+    }
+  }
+  return null;
+};
+
+const linkAffiliateApplicationToUserByEmail = async (email: string) => {
+  const canonical = normalizeMemberEmail(email);
+  const { rows: userRows } = await sql<{ id: string; affiliate_code: string | null }>`
+    SELECT id, affiliate_code FROM users WHERE LOWER(email) = LOWER(${canonical}) LIMIT 1
+  `;
+  const user = userRows[0];
+  if (!user) return;
+
+  const { rows: appRows } = await sql<{ id: string; affiliate_code: string | null }>`
+    SELECT id, affiliate_code
+    FROM affiliate_applications
+    WHERE LOWER(email) = LOWER(${canonical}) AND status = 'approved'
+    ORDER BY created_at DESC
+    LIMIT 1
+  `;
+  const app = appRows[0];
+  if (!app) return;
+
+  await sql`UPDATE affiliate_applications SET user_id = ${user.id} WHERE id = ${app.id}`;
+
+  if (app.affiliate_code?.trim()) {
+    const appCode = app.affiliate_code.trim().toUpperCase();
+    await sql`UPDATE users SET affiliate_code = ${appCode} WHERE id = ${user.id}`;
+  } else if (user.affiliate_code?.trim()) {
+    await sql`UPDATE affiliate_applications SET affiliate_code = ${user.affiliate_code} WHERE id = ${app.id}`;
+  } else {
+    const code = await ensureUserAffiliateCode(user.id);
+    await sql`UPDATE affiliate_applications SET affiliate_code = ${code} WHERE id = ${app.id}`;
+  }
 };
 
 export const createAffiliate = async (payload: {
@@ -1893,7 +2065,9 @@ export const createAffiliate = async (payload: {
       email,
       payout_address as "payoutAddress",
       created_at as "createdAt",
-      status
+      status,
+      affiliate_code as "affiliateCode",
+      user_id as "userId"
   `;
   return rows[0];
 };
@@ -1909,9 +2083,34 @@ export const updateAffiliateStatus = async (id: string, status: AffiliateRecord[
       email,
       payout_address as "payoutAddress",
       created_at as "createdAt",
-      status
+      status,
+      affiliate_code as "affiliateCode",
+      user_id as "userId"
   `;
-  return rows[0] || null;
+  const record = rows[0] || null;
+  if (!record) return null;
+
+  if (status === "approved") {
+    await ensureAffiliateApplicationCode(id);
+    await linkAffiliateApplicationToUserByEmail(record.email);
+    const { rows: refreshed } = await sql<AffiliateRecord>`
+      SELECT
+        id,
+        name,
+        email,
+        payout_address as "payoutAddress",
+        created_at as "createdAt",
+        status,
+        affiliate_code as "affiliateCode",
+        user_id as "userId"
+      FROM affiliate_applications
+      WHERE id = ${id}
+      LIMIT 1
+    `;
+    return refreshed[0] || record;
+  }
+
+  return record;
 };
 
 export const listModerationQueue = async () => {
