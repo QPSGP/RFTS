@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { apiError } from "@/lib/api-utils";
 import { createUserSessionToken, setUserSessionCookieOnResponse } from "@/lib/user-auth";
 import { getStripe, getStripeMode } from "@/lib/stripe";
-import { stripeCheckoutPaymentMethodParams } from "@/lib/stripe-checkout";
+import { createMembershipCheckoutSession } from "@/lib/stripe-checkout";
 import {
   addEmailToLibraryItemAllowedList,
   createUser,
@@ -249,9 +249,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await createMembershipCheckoutSession(stripe, {
       mode: "subscription",
-      ...stripeCheckoutPaymentMethodParams(),
       client_reference_id: user.id,
       metadata: { tier: plan.id },
       line_items: [{ price: plan.priceId, quantity: 1 }],
@@ -265,7 +264,8 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ url: session.url });
   } catch (err) {
-    // Member already saved; redirect to portal so they can complete payment later
+    console.error("[onboarding] Stripe Checkout failed:", err);
+    // Member already saved; redirect so they can complete payment later
     const res = NextResponse.json({ url: "/play-options" });
     setUserSessionCookieOnResponse(res, token, request);
     return res;

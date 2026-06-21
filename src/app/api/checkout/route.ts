@@ -4,7 +4,7 @@ import { getSubscriptionStripeIdsForUser, getUserByEmail } from "@/lib/db";
 import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
 import { getBillingPortalReturnPath } from "@/lib/member-billing";
 import { getStripe } from "@/lib/stripe";
-import { stripeCheckoutPaymentMethodParams } from "@/lib/stripe-checkout";
+import { createMembershipCheckoutSession } from "@/lib/stripe-checkout";
 import { getPublicSiteUrl } from "@/lib/site-url";
 import { getUserSessionEmail } from "@/lib/user-auth";
 
@@ -72,9 +72,8 @@ export async function POST(request: Request) {
     }
   }
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await createMembershipCheckoutSession(stripe, {
     mode: "subscription",
-    ...stripeCheckoutPaymentMethodParams(),
     line_items: [{ price: priceId, quantity: 1 }],
     subscription_data:
       trialDays && trialDays > 0 ? { trial_period_days: trialDays } : undefined,

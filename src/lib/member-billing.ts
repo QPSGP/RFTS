@@ -7,7 +7,7 @@ import {
 import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
 import { resolveStripeBillingByEmail } from "@/lib/stripe-resolve";
 import { getStripe } from "@/lib/stripe";
-import { stripeCheckoutPaymentMethodParams } from "@/lib/stripe-checkout";
+import { createMembershipCheckoutSession } from "@/lib/stripe-checkout";
 import { getPublicSiteUrl } from "@/lib/site-url";
 import { createBillingReturnToken } from "@/lib/user-auth";
 
@@ -232,9 +232,8 @@ export async function createMemberBillingPortalUrl(opts: {
     }
     const checkoutReturnPath = normalizeReturnPath(opts.returnPath);
     try {
-      const session = await stripe.checkout.sessions.create({
+      const session = await createMembershipCheckoutSession(stripe, {
         mode: "subscription",
-        ...stripeCheckoutPaymentMethodParams(),
         client_reference_id: opts.userId,
         metadata: { tier: plan.id },
         line_items: [{ price: plan.priceId, quantity: 1 }],
