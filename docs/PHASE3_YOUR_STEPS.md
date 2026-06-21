@@ -6,6 +6,87 @@ Code already handles: **www → apex redirect**, canonical URLs, cookie domain o
 
 ---
 
+## Day start — affiliate payouts, checkout, and smoke test (June 2026)
+
+Use this checklist when picking up work on **affiliate commissions**, **PayPal/ACH checkout**, and **production verification**. Order matters.
+
+### A. Database migrations (production Postgres)
+
+From `rfts-platform/`, point `.env.local` at **production** `POSTGRES_URL` (Neon / Vercel Postgres), then run **once** (safe to re-run):
+
+```bash
+npm run affiliates:migrate
+npm run affiliates:payout-migrate
+npm run affiliates:commissions-migrate
+```
+
+| Script | Adds |
+|--------|------|
+| `affiliates:migrate` | Member affiliate codes, referral columns |
+| `affiliates:payout-migrate` | Payout method columns on profiles + applications |
+| `affiliates:commissions-migrate` | `affiliate_commissions` ledger table |
+
+If migrations only ran against a dev database, repeat with production `POSTGRES_URL`.
+
+### B. Stripe Dashboard (Test + Live)
+
+**Payment methods** — [Settings → Payment methods](https://dashboard.stripe.com/settings/payment_methods):
+
+- [ ] **PayPal** — connect / enable
+- [ ] **ACH Direct Debit** (US bank account) — enable
+
+Checkout code requests `card`, `paypal`, and `us_bank_account` on every membership Checkout session.
+
+**Webhooks** — [Developers → Webhooks](https://dashboard.stripe.com/webhooks) → your endpoint `https://reachforthestars.today/api/webhooks/stripe`:
+
+- [ ] `checkout.session.completed` (already used)
+- [ ] **`invoice.paid`** — required for affiliate commission ledger on renewals and paid invoices
+
+Copy signing secret to Vercel `STRIPE_WEBHOOK_SECRET` if you add or rotate the endpoint.
+
+**Billing portal** — Settings → Billing → Customer portal: enabled (members manage card / PayPal / bank there).
+
+### C. Automated smoke test
+
+```bash
+npm run test:production-smoke
+```
+
+Target: **31/31** passed against `https://reachforthestars.today`. If **Signup onboarding → Stripe Checkout** fails with `url=/play-options`, check Vercel logs for `[onboarding]` / Stripe errors (invalid price, API key, or Checkout payment-method config).
+
+### D. Manual tests (you in browser)
+
+**Checkout (PayPal + ACH)**
+
+1. Open `https://reachforthestars.today/signup/step-1-subscription-selection` (or start a new test signup).
+2. Complete onboarding → Stripe Checkout should offer **card**, **PayPal**, and **bank** (not Venmo/Zelle).
+3. In **Stripe test mode**, complete a test payment; confirm return to Play Options and active subscription.
+
+**Referred signup path**
+
+1. As a member, open **My Profile** → copy referral link (`?ref=AFFILIATECODE`).
+2. New signup in incognito using that link.
+3. After signup, confirm in admin or DB: new user has `referred_by_affiliate_code` set.
+4. After first **paid** invoice (not $0 trial invoice): Admin → Content Console → **Affiliate payout queue** shows a pending commission (~25% of payment).
+
+**Admin payout queue**
+
+1. Admin login → **Content Console** → open **Affiliates** section.
+2. **Affiliate payout queue** lists affiliates with pending balances and payout method/details.
+3. Affiliates at **≥ $25** (launch period) show “ready for payout”.
+4. After manual payout, click **Mark pending as paid**.
+
+**Screen wake (optional)**
+
+Play Options → **Enable Screen Wake** once (preference is saved). Start Session → confirm message or **Enable** if auto-wake fails.
+
+### E. Payout policy (member-facing)
+
+- **$25** minimum through **June 18, 2027**; then **$50**.
+- Override launch end: `NEXT_PUBLIC_AFFILIATE_PAYOUT_LAUNCH_END=YYYY-MM-DD` on Vercel + redeploy.
+
+---
+
 ## 1. Vercel — add the domain
 
 1. [Vercel Dashboard](https://vercel.com) → your RFTS project → **Settings** → **Domains**.
@@ -55,10 +136,12 @@ Until verified, you can still send from `onboarding@resend.dev` for testing.
 
 1. [Stripe Dashboard](https://dashboard.stripe.com) → **Developers** → **Webhooks**.
 2. Endpoint URL: **`https://reachforthestars.today/api/webhooks/stripe`**
-3. Event: **`checkout.session.completed`** (and any others you already use).
+3. Events: **`checkout.session.completed`** and **`invoice.paid`** (affiliate commissions).
 4. Copy the signing secret → Vercel env **`STRIPE_WEBHOOK_SECRET`** → redeploy.
 
 Confirm **Customer Billing Portal** is enabled (Settings → Billing → Customer portal).
+
+Enable **PayPal** and **ACH Direct Debit** under Settings → Payment methods (see **Day start** above).
 
 ---
 
@@ -71,10 +154,15 @@ Open **`https://reachforthestars.today`** (not www — www should redirect).
 - [ ] Member login → Play Options.
 - [ ] Forgot password → email link uses `https://reachforthestars.today/...`
 - [ ] New signup → Stripe Checkout → return URL works.
+- [ ] Checkout shows card, PayPal, and US bank (ACH) when enabled in Stripe.
 - [ ] Manage billing opens Stripe portal.
+- [ ] Referral link signup sets affiliate attribution; commission appears after paid invoice.
+- [ ] Admin → Affiliates → payout queue loads.
 - [ ] Report an issue → confirmation email.
 
 Quick health check: `https://reachforthestars.today/api/health` → `{"ok":true,...}`
+
+Automated: `npm run test:production-smoke` from `rfts-platform/`.
 
 ---
 
