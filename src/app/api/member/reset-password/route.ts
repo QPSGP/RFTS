@@ -9,7 +9,7 @@ import {
 
 const schema = z.object({
   token: z.string().min(1),
-  newPassword: z.string().min(6)
+  newPassword: z.string().trim().min(6)
 });
 
 export async function POST(request: Request) {

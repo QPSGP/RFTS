@@ -47,7 +47,7 @@ export default function UserAuth({
     setStatusType(null);
     const form = e.currentTarget;
     const email = (form.elements.namedItem("email") as HTMLInputElement)?.value?.trim();
-    const password = (form.elements.namedItem("password") as HTMLInputElement)?.value;
+    const password = (form.elements.namedItem("password") as HTMLInputElement)?.value?.trim();
     if (!email || !password || password.length < 6) {
       setStatus("Please enter a valid email and password (at least 6 characters).");
       setStatusType("error");

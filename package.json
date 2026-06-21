@@ -21,6 +21,7 @@
     "affiliates:payout-migrate": "node scripts/migrate-affiliate-payout-columns.js",
     "affiliates:commissions-migrate": "node scripts/migrate-affiliate-commissions.js",
     "test:production-smoke": "node scripts/production-smoke-test.js https://reachforthestars.today",
+    "member:set-password": "node scripts/set-member-password.js",
     "deploy": "vercel --prod",
     "push-deploy": "node scripts/push-and-deploy.js",
     "covers:review": "node scripts/generate-covers-review.js",

@@ -200,7 +200,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
         planId: selectedPlanId,
         skipPayment: skipPayment && isDemoMode,
         email: profile.email,
-        password: profile.password,
+        password: profile.password.trim(),
         goalIds,
         playsPerNight,
         affiliateRef: affiliateRef.trim() || undefined,

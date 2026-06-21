@@ -36,7 +36,7 @@ const schema = z.object({
   planId: z.string(),
   skipPayment: z.boolean().optional().default(false),
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().trim().min(6),
   goalIds: z.array(z.string()).min(1).max(10),
   playsPerNight: z.number().int().min(1).max(2).default(2),
   affiliateRef: z.string().optional(),
