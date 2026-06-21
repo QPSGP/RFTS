@@ -43,7 +43,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     "Push A Button And Listen While You Sleep!",
     "Listen to Tailored Recordings out of Sequence as Needed",
     "Access to all public recordings in the Success Center Library!",
-    "Includes a 15-minute Private Goal Setting Consultation every 90 days with a Success Center hypnotherapist/coach ($444 value annual benefit). Call 800-GOAL-NOW to set your appointment today."
+    "We recommend a Private Goal Setting Consultation with a Success Center hypnotherapist/coach. Call 800-GOAL-NOW to set your appointment today."
   ];
   const membershipNote =
     'For best results for reprogramming your subconscious with our system is to have a private "Life Guidance Discovery Session" allowing you to really discover where you are, where you want to go, and how to get there! We then design a customized audio specifically designed by you, for you!';
