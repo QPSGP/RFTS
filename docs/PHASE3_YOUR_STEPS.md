@@ -18,6 +18,7 @@ From `rfts-platform/`, point `.env.local` at **production** `POSTGRES_URL` (Neon
 npm run affiliates:migrate
 npm run affiliates:payout-migrate
 npm run affiliates:commissions-migrate
+npm run affiliates:connect-migrate
 ```
 
 | Script | Adds |
@@ -25,6 +26,7 @@ npm run affiliates:commissions-migrate
 | `affiliates:migrate` | Member affiliate codes, referral columns |
 | `affiliates:payout-migrate` | Payout method columns on profiles + applications |
 | `affiliates:commissions-migrate` | `affiliate_commissions` ledger table |
+| `affiliates:connect-migrate` | Stripe Connect columns on `users` |
 
 If migrations only ran against a dev database, repeat with production `POSTGRES_URL`.
 
@@ -45,6 +47,26 @@ Checkout code requests `card`, `paypal`, and `us_bank_account` on every membersh
 Copy signing secret to Vercel `STRIPE_WEBHOOK_SECRET` if you add or rotate the endpoint.
 
 **Billing portal** — Settings → Billing → Customer portal: enabled (members manage card / PayPal / bank there).
+
+**Connect** — enable Stripe Connect (Express) for automated affiliate payouts.
+
+- [ ] Webhook: **`account.updated`** (sync Connect onboarding status)
+
+### B2. Vercel — `CRON_SECRET` (monthly Connect payouts)
+
+Monthly cron runs `GET /api/cron/affiliate-connect-payouts` on the **1st at 14:00 UTC** (`vercel.json`).
+
+1. [Vercel](https://vercel.com) → RFTS project → **Settings** → **Environment Variables**
+2. Add **`CRON_SECRET`** (Production, **Sensitive**): use the value in your local `.env.local`, or generate a new 32+ character random string.
+3. **Redeploy** production after adding the variable.
+
+**CLI (optional):** add `VERCEL_TOKEN` to `.env.local` ([create token](https://vercel.com/account/tokens)), then:
+
+```bash
+npm run vercel:set-cron-secret
+```
+
+If the project name is not `rfts`, set `VERCEL_PROJECT` in `.env.local`.
 
 ### C. Automated smoke test
 
