@@ -2728,6 +2728,90 @@ export const getAffiliatePendingBalanceCents = async (affiliateCode: string) => 
   return rows[0]?.total ?? 0;
 };
 
+export type UserStripeConnectFields = {
+  stripeConnectAccountId: string | null;
+  stripeConnectDetailsSubmitted: boolean;
+  stripeConnectPayoutsEnabled: boolean;
+};
+
+export const getUserStripeConnectFields = async (userId: string): Promise<UserStripeConnectFields | null> => {
+  const { rows } = await sql<{
+    stripe_connect_account_id: string | null;
+    stripe_connect_details_submitted: boolean;
+    stripe_connect_payouts_enabled: boolean;
+  }>`
+    SELECT stripe_connect_account_id, stripe_connect_details_submitted, stripe_connect_payouts_enabled
+    FROM users
+    WHERE id = ${userId}
+    LIMIT 1
+  `;
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    stripeConnectAccountId: row.stripe_connect_account_id,
+    stripeConnectDetailsSubmitted: row.stripe_connect_details_submitted,
+    stripeConnectPayoutsEnabled: row.stripe_connect_payouts_enabled
+  };
+};
+
+export const setUserStripeConnectAccount = async (
+  userId: string,
+  accountId: string,
+  flags: { detailsSubmitted: boolean; payoutsEnabled: boolean }
+) => {
+  await sql`
+    UPDATE users
+    SET
+      stripe_connect_account_id = ${accountId},
+      stripe_connect_details_submitted = ${flags.detailsSubmitted},
+      stripe_connect_payouts_enabled = ${flags.payoutsEnabled}
+    WHERE id = ${userId}
+  `;
+};
+
+export const syncUserStripeConnectFromStripeAccount = async (
+  account: {
+    id: string;
+    details_submitted?: boolean;
+    payouts_enabled?: boolean;
+    metadata?: { rfts_user_id?: string } | null;
+  },
+  userIdHint?: string
+) => {
+  const userId = userIdHint || account.metadata?.rfts_user_id;
+  const detailsSubmitted = account.details_submitted ?? false;
+  const payoutsEnabled = account.payouts_enabled ?? false;
+  if (userId) {
+    await sql`
+      UPDATE users
+      SET
+        stripe_connect_account_id = ${account.id},
+        stripe_connect_details_submitted = ${detailsSubmitted},
+        stripe_connect_payouts_enabled = ${payoutsEnabled}
+      WHERE id = ${userId}
+    `;
+    return;
+  }
+  await sql`
+    UPDATE users
+    SET
+      stripe_connect_details_submitted = ${detailsSubmitted},
+      stripe_connect_payouts_enabled = ${payoutsEnabled}
+    WHERE stripe_connect_account_id = ${account.id}
+  `;
+};
+
+export const listAffiliateCodesAbovePayoutThreshold = async (thresholdCents: number) => {
+  const { rows } = await sql<{ affiliate_code: string }>`
+    SELECT affiliate_code
+    FROM affiliate_commissions
+    WHERE status = 'pending'
+    GROUP BY affiliate_code
+    HAVING COALESCE(SUM(commission_amount_cents), 0) >= ${thresholdCents}
+  `;
+  return rows.map((row) => row.affiliate_code);
+};
+
 export const listAffiliatePayoutSummaries = async () => {
   const { rows } = await sql<{
     affiliateCode: string;
@@ -2754,11 +2838,19 @@ export const listAffiliatePayoutSummaries = async () => {
     const owner = await resolveAffiliateOwnerByCode(row.affiliateCode);
     let payoutMethod: string | null = null;
     let payoutDetail: string | null = null;
+    let stripeConnectAccountId: string | null = null;
+    let stripeConnectReady = false;
 
     if (owner?.userId) {
       const profile = await getMemberProfileByUserId(owner.userId);
       payoutMethod = profile?.affiliatePayoutMethod ?? null;
       payoutDetail = profile?.affiliatePayoutDetail ?? null;
+      const connect = await getUserStripeConnectFields(owner.userId);
+      if (connect?.stripeConnectAccountId) {
+        stripeConnectAccountId = connect.stripeConnectAccountId;
+        stripeConnectReady =
+          connect.stripeConnectDetailsSubmitted && connect.stripeConnectPayoutsEnabled;
+      }
     } else if (owner?.email) {
       const { rows: appRows } = await sql<{
         payout_method: string | null;
@@ -2781,6 +2873,8 @@ export const listAffiliatePayoutSummaries = async () => {
       affiliateName: owner?.name ?? null,
       payoutMethod,
       payoutDetail,
+      stripeConnectAccountId,
+      stripeConnectReady,
       pendingBalanceCents: row.pendingBalanceCents,
       pendingCommissionCount: row.pendingCommissionCount,
       paidBalanceCents: row.paidBalanceCents

@@ -26,6 +26,8 @@ export type AffiliatePayoutSummary = {
   paidBalanceCents: number;
   thresholdUsd: number;
   readyForPayout: boolean;
+  stripeConnectAccountId: string | null;
+  stripeConnectReady: boolean;
 };
 
 export type AdminAccount = {

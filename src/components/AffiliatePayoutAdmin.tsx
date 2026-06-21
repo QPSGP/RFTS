@@ -11,6 +11,8 @@ export default function AffiliatePayoutAdmin() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [markingCode, setMarkingCode] = useState<string | null>(null);
+  const [connectRunningCode, setConnectRunningCode] = useState<string | null>(null);
+  const [connectRunningAll, setConnectRunningAll] = useState(false);
 
   const load = async () => {
     const response = await fetch("/api/admin/affiliate-payouts");
@@ -34,7 +36,7 @@ export default function AffiliatePayoutAdmin() {
     const response = await fetch("/api/admin/affiliate-payouts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ affiliateCode })
+      body: JSON.stringify({ action: "mark_paid", affiliateCode })
     });
     if (response.ok) {
       const data = await response.json();
@@ -49,11 +51,49 @@ export default function AffiliatePayoutAdmin() {
     setMarkingCode(null);
   };
 
+  const runConnectPayout = async (affiliateCode?: string) => {
+    if (affiliateCode) {
+      setConnectRunningCode(affiliateCode);
+    } else {
+      setConnectRunningAll(true);
+    }
+    setMessage(null);
+    const response = await fetch("/api/admin/affiliate-payouts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "run_connect",
+        affiliateCode: affiliateCode ?? undefined
+      })
+    });
+    if (response.ok) {
+      const data = await response.json();
+      if (affiliateCode) {
+        setMessage(
+          `Stripe Connect transfer ${data.transferId} sent (${formatUsdFromCents(data.amountCents ?? 0)}); ${data.markedCount} commission(s) marked paid.`
+        );
+      } else {
+        setMessage(
+          `Stripe Connect batch: ${data.succeededCount} succeeded, ${data.failedCount} failed.`
+        );
+      }
+      await load();
+    } else {
+      const data = await response.json().catch(() => ({}));
+      setMessage(data.error || "Stripe Connect payout failed.");
+    }
+    setConnectRunningCode(null);
+    setConnectRunningAll(false);
+  };
+
   if (error) {
     return <p>{error}</p>;
   }
 
   const readyCount = summaries.filter((s) => s.readyForPayout).length;
+  const connectReadyCount = summaries.filter(
+    (s) => s.readyForPayout && s.stripeConnectReady
+  ).length;
 
   return (
     <div className="card" style={{ marginTop: 20 }}>
@@ -61,7 +101,9 @@ export default function AffiliatePayoutAdmin() {
       <p style={{ fontSize: 14, color: "#4b5563", marginBottom: 12 }}>
         Commissions are recorded automatically when Stripe invoices are paid for referred members
         (25% of each payment). Current minimum payout threshold:{" "}
-        <strong>${thresholdUsd}</strong>. Mark paid after you send funds manually.
+        <strong>${thresholdUsd}</strong>. Stripe Connect payouts run automatically on the{" "}
+        <strong>1st of each month</strong> (14:00 UTC) for affiliates who completed onboarding.
+        Use the buttons below for manual runs, or mark paid after PayPal/Venmo/Zelle/crypto payouts.
       </p>
       {message && (
         <p style={{ fontSize: 14, marginBottom: 12, color: "#059669" }}>{message}</p>
@@ -71,8 +113,20 @@ export default function AffiliatePayoutAdmin() {
       ) : (
         <>
           <p style={{ fontSize: 14, color: "#4b5563", marginBottom: 12 }}>
-            {readyCount} affiliate(s) at or above the ${thresholdUsd} minimum.
+            {readyCount} affiliate(s) at or above the ${thresholdUsd} minimum ·{" "}
+            {connectReadyCount} ready for Stripe Connect.
           </p>
+          {connectReadyCount > 0 && (
+            <button
+              className="button"
+              type="button"
+              disabled={connectRunningAll}
+              onClick={() => runConnectPayout()}
+              style={{ marginBottom: 16 }}
+            >
+              {connectRunningAll ? "Running Connect payouts…" : "Run all Stripe Connect payouts"}
+            </button>
+          )}
           <div className="grid">
             {summaries.map((row) => (
               <div key={row.affiliateCode} className="card">
@@ -98,17 +152,39 @@ export default function AffiliatePayoutAdmin() {
                   {formatUsdFromCents(row.paidBalanceCents)} paid to date
                 </p>
                 <p>
-                  Payout method: {formatAffiliatePayoutMethodLabel(row.payoutMethod)}
+                  Stripe Connect:{" "}
+                  {row.stripeConnectReady
+                    ? "ready for automatic payout"
+                    : row.stripeConnectAccountId
+                      ? "onboarding incomplete"
+                      : "not set up"}
                 </p>
-                {row.payoutDetail && <p>Payout details: {row.payoutDetail}</p>}
-                <button
-                  className="button"
-                  type="button"
-                  disabled={!row.readyForPayout || markingCode === row.affiliateCode}
-                  onClick={() => markPaid(row.affiliateCode)}
-                >
-                  {markingCode === row.affiliateCode ? "Marking…" : "Mark pending as paid"}
-                </button>
+                <p>
+                  Manual payout method: {formatAffiliatePayoutMethodLabel(row.payoutMethod)}
+                </p>
+                {row.payoutDetail && <p>Manual payout details: {row.payoutDetail}</p>}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                  {row.readyForPayout && row.stripeConnectReady && (
+                    <button
+                      className="button"
+                      type="button"
+                      disabled={connectRunningCode === row.affiliateCode}
+                      onClick={() => runConnectPayout(row.affiliateCode)}
+                    >
+                      {connectRunningCode === row.affiliateCode
+                        ? "Sending…"
+                        : "Run Stripe Connect payout"}
+                    </button>
+                  )}
+                  <button
+                    className="button"
+                    type="button"
+                    disabled={!row.readyForPayout || markingCode === row.affiliateCode}
+                    onClick={() => markPaid(row.affiliateCode)}
+                  >
+                    {markingCode === row.affiliateCode ? "Marking…" : "Mark manual payout paid"}
+                  </button>
+                </div>
               </div>
             ))}
           </div>

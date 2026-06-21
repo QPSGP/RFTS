@@ -84,6 +84,26 @@ export function formatUsdFromCents(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
+/** CC on affiliate threshold + payout emails (override with AFFILIATE_EMAIL_CC). */
+export function getAffiliateNotificationCcRecipients(): string[] {
+  const raw = process.env.AFFILIATE_EMAIL_CC?.trim();
+  if (raw) {
+    return raw
+      .split(/[,;]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return ["Richard@richardleeweatherman.com"];
+}
+
+export function didCrossPayoutThreshold(
+  balanceBeforeCents: number,
+  balanceAfterCents: number,
+  thresholdCents: number
+): boolean {
+  return balanceBeforeCents < thresholdCents && balanceAfterCents >= thresholdCents;
+}
+
 export function normalizeAffiliatePayoutMethod(
   raw: string | null | undefined
 ): AffiliatePayoutMethod | null {

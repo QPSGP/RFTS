@@ -36,11 +36,52 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
   const [payoutDetail, setPayoutDetail] = useState(affiliate?.payoutDetail ?? "");
   const [payoutMessage, setPayoutMessage] = useState<string | null>(null);
   const [payoutSaving, setPayoutSaving] = useState(false);
+  const [connectLoading, setConnectLoading] = useState(false);
+  const [connectMessage, setConnectMessage] = useState<string | null>(null);
+  const [connectReady, setConnectReady] = useState(false);
+  const [connectStarted, setConnectStarted] = useState(false);
 
   useEffect(() => {
     setPayoutMethod(affiliate?.payoutMethod ?? "crypto");
     setPayoutDetail(affiliate?.payoutDetail ?? "");
   }, [affiliate?.payoutMethod, affiliate?.payoutDetail]);
+
+  useEffect(() => {
+    if (!affiliate?.affiliateCode) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("connect") === "return") {
+      setConnectMessage("Stripe setup updated. We will refresh your payout status.");
+    }
+    fetch("/api/member/affiliate/connect", { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.status) {
+          setConnectReady(data.status.readyForTransfers);
+          setConnectStarted(Boolean(data.status.accountId));
+        }
+      })
+      .catch(() => {});
+  }, [affiliate?.affiliateCode]);
+
+  const startConnectOnboarding = async () => {
+    setConnectLoading(true);
+    setConnectMessage(null);
+    const response = await fetch("/api/member/affiliate/connect", {
+      method: "POST",
+      credentials: "include"
+    });
+    if (response.ok) {
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setConnectMessage("Could not start Stripe setup. Try again or contact support.");
+    } else {
+      setConnectMessage("Could not start Stripe setup. Try again or contact support.");
+    }
+    setConnectLoading(false);
+  };
 
   const copyLink = useCallback(async () => {
     if (!affiliate?.referralUrl) return;
@@ -155,7 +196,45 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
           borderTop: "1px solid #e5e7eb"
         }}
       >
-        <h3 style={{ margin: "0 0 8px", fontSize: 17 }}>Payout preferences</h3>
+        <h3 style={{ margin: "0 0 8px", fontSize: 17 }}>Automatic payouts (Stripe)</h3>
+        <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
+          Connect your bank account through Stripe for faster commission payouts when your balance
+          reaches the minimum. You can still keep manual payout preferences below as a backup.
+        </p>
+        {connectReady ? (
+          <p style={{ margin: "0 0 12px", fontSize: 14, color: "#059669" }}>
+            Stripe Connect is active — eligible payouts can be sent automatically.
+          </p>
+        ) : connectStarted ? (
+          <p style={{ margin: "0 0 12px", fontSize: 14, color: "#92400e" }}>
+            Stripe setup is incomplete. Finish onboarding so we can send payouts to your bank.
+          </p>
+        ) : null}
+        <button
+          type="button"
+          className="button"
+          disabled={connectLoading}
+          onClick={startConnectOnboarding}
+        >
+          {connectLoading
+            ? "Opening Stripe…"
+            : connectStarted
+              ? "Continue Stripe setup"
+              : "Set up automatic payouts (Stripe)"}
+        </button>
+        {connectMessage && (
+          <p style={{ margin: "12px 0 0", fontSize: 14, color: "#4b5563" }}>{connectMessage}</p>
+        )}
+      </div>
+
+      <div
+        style={{
+          marginTop: 24,
+          paddingTop: 20,
+          borderTop: "1px solid #e5e7eb"
+        }}
+      >
+        <h3 style={{ margin: "0 0 8px", fontSize: 17 }}>Manual payout preferences</h3>
         <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
           {formatAffiliatePayoutThresholdPolicy()}
         </p>

@@ -20,6 +20,8 @@
     "affiliates:migrate": "node scripts/migrate-affiliate-columns.js",
     "affiliates:payout-migrate": "node scripts/migrate-affiliate-payout-columns.js",
     "affiliates:commissions-migrate": "node scripts/migrate-affiliate-commissions.js",
+    "affiliates:connect-migrate": "node scripts/migrate-stripe-connect-columns.js",
+    "affiliates:run-connect-payouts": "tsx scripts/run-affiliate-connect-payouts.ts",
     "test:production-smoke": "node scripts/production-smoke-test.js https://reachforthestars.today",
     "member:set-password": "node scripts/set-member-password.js",
     "deploy": "vercel --prod",

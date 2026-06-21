@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { recordAffiliateCommissionFromInvoice } from "@/lib/affiliate-commission";
+import { syncUserStripeConnectFromStripeAccount } from "@/lib/db";
 import { getStripe } from "@/lib/stripe";
 import {
   ensureSubscription,
@@ -124,6 +125,16 @@ export async function POST(request: Request) {
       }
     } catch (e) {
       console.error("[stripe webhook] Affiliate commission from invoice.paid:", e);
+    }
+  }
+
+  if (event.type === "account.updated") {
+    const account = event.data.object as Stripe.Account;
+    try {
+      await syncUserStripeConnectFromStripeAccount(account);
+      console.info("[stripe webhook] Stripe Connect account synced", account.id);
+    } catch (e) {
+      console.error("[stripe webhook] Stripe Connect account.updated:", e);
     }
   }
 

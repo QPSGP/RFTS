@@ -402,3 +402,10 @@ CREATE INDEX IF NOT EXISTS affiliate_commissions_affiliate_code_status_idx
   ON affiliate_commissions (affiliate_code, status);
 CREATE INDEX IF NOT EXISTS affiliate_commissions_referred_user_id_idx
   ON affiliate_commissions (referred_user_id);
+
+-- Stripe Connect (Express) for automated affiliate payouts
+ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_account_id text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_details_submitted boolean NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_payouts_enabled boolean NOT NULL DEFAULT false;
+CREATE UNIQUE INDEX IF NOT EXISTS users_stripe_connect_account_id_unique
+  ON users (stripe_connect_account_id) WHERE stripe_connect_account_id IS NOT NULL;

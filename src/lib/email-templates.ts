@@ -9,6 +9,8 @@ import { getBaseUrl } from "./email";
  * - getIssueResolvedEmailContent — admin marked report resolved; notify member
  * - getLgdInterestEmailContent — Life Guidance Discovery Session interest (onboarding or profile)
  * - getTherapistHealerCoachEmailContent — therapist / healer / coach (Build Practice) interest
+ * - getAffiliateThresholdReachedEmailContent — affiliate pending balance reached payout minimum
+ * - getAffiliatePayoutSentEmailContent — Stripe Connect affiliate commission payout sent
  *
  * Staff BCC: set EMAIL_STAFF_BCC (comma-separated) for Terry, Richard, etc. Applied in sendEmail().
  */
@@ -402,5 +404,78 @@ Library: ${baseUrl}/library
 Reach For The Stars
 `.trim();
 
+  return { subject, html, text };
+}
+
+export function getAffiliateThresholdReachedEmailContent(params: {
+  firstName?: string | null;
+  affiliateCode: string;
+  balanceUsd: string;
+  thresholdUsd: number;
+}): TemplateContent {
+  const baseUrl = getBaseUrl();
+  const profileUrl = `${baseUrl}/member/profile`;
+  const subject = "Your affiliate commission balance is ready for payout";
+  const html = emailWrapper(`
+  <p>${greeting(params.firstName)}</p>
+  <p>Good news — your Reach For The Stars affiliate commission balance has reached the minimum payout threshold.</p>
+  <p><strong>Affiliate #:</strong> ${escapeHtml(params.affiliateCode)}</p>
+  <p><strong>Pending balance:</strong> ${escapeHtml(params.balanceUsd)}</p>
+  <p>Minimum payout is <strong>$${params.thresholdUsd}</strong>. Payouts are processed monthly for affiliates who set up automatic payouts through Stripe. You can also update manual payout preferences (PayPal, Venmo, Zelle, crypto) on your profile.</p>
+  <p style="margin-top: 24px;">
+    <a href="${profileUrl}" style="display: inline-block; padding: 12px 20px; background: #0f766e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Open member profile</a>
+  </p>
+  <p style="margin-top: 24px; font-size: 14px; color: #6b7280;">Questions? 800-GOAL-NOW (462-5669) or customerservice@reachforthestars.today</p>
+`);
+  const text = `
+${greeting(params.firstName)}
+
+Your affiliate commission balance (${params.balanceUsd}) has reached the $${params.thresholdUsd} minimum payout threshold.
+
+Affiliate #: ${params.affiliateCode}
+
+Set up automatic Stripe payouts or manual payout preferences: ${profileUrl}
+
+Questions? 800-GOAL-NOW (462-5669)
+`.trim();
+  return { subject, html, text };
+}
+
+export function getAffiliatePayoutSentEmailContent(params: {
+  firstName?: string | null;
+  affiliateCode: string;
+  amountUsd: string;
+  transferId?: string;
+}): TemplateContent {
+  const baseUrl = getBaseUrl();
+  const profileUrl = `${baseUrl}/member/profile`;
+  const transferLine = params.transferId
+    ? `<p style="font-size: 14px; color: #6b7280;">Reference: ${escapeHtml(params.transferId)}</p>`
+    : "";
+  const subject = "Your affiliate commission payout was sent";
+  const html = emailWrapper(`
+  <p>${greeting(params.firstName)}</p>
+  <p>We sent your Reach For The Stars affiliate commission payout via Stripe Connect.</p>
+  <p><strong>Affiliate #:</strong> ${escapeHtml(params.affiliateCode)}</p>
+  <p><strong>Amount:</strong> ${escapeHtml(params.amountUsd)}</p>
+  ${transferLine}
+  <p>Funds typically arrive in your connected bank account within a few business days, depending on your bank and Stripe.</p>
+  <p style="margin-top: 24px;">
+    <a href="${profileUrl}" style="display: inline-block; padding: 12px 20px; background: #0f766e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">View profile</a>
+  </p>
+  <p style="margin-top: 24px; font-size: 14px; color: #6b7280;">Questions? 800-GOAL-NOW (462-5669) or customerservice@reachforthestars.today</p>
+`);
+  const transferText = params.transferId ? `Reference: ${params.transferId}\n\n` : "";
+  const text = `
+${greeting(params.firstName)}
+
+Your affiliate commission payout of ${params.amountUsd} was sent via Stripe Connect.
+
+Affiliate #: ${params.affiliateCode}
+${transferText}
+View your profile: ${profileUrl}
+
+Questions? 800-GOAL-NOW (462-5669)
+`.trim();
   return { subject, html, text };
 }

@@ -1,8 +1,14 @@
 import type Stripe from "stripe";
 import { normalizeAffiliateCode } from "@/lib/affiliate-code";
-import { calculateAffiliateCommissionCents } from "@/lib/affiliate-payout";
+import {
+  calculateAffiliateCommissionCents,
+  didCrossPayoutThreshold,
+  getCurrentAffiliatePayoutThresholdUsd
+} from "@/lib/affiliate-payout";
+import { trySendAffiliateThresholdReachedEmail } from "@/lib/affiliate-notifications";
 import {
   getAffiliateCommissionByInvoiceId,
+  getAffiliatePendingBalanceCents,
   getUserIdByStripeCustomerId,
   getUserIdByStripeSubscriptionId,
   getUserReferralAttribution,
@@ -85,6 +91,9 @@ export async function recordAffiliateCommissionFromInvoice(
 
   const currency = (invoice.currency || "usd").toLowerCase();
 
+  const thresholdCents = getCurrentAffiliatePayoutThresholdUsd() * 100;
+  const balanceBeforeCents = await getAffiliatePendingBalanceCents(affiliateCode);
+
   await insertAffiliateCommission({
     affiliateCode,
     affiliateUserId: affiliateOwner?.userId ?? null,
@@ -95,6 +104,19 @@ export async function recordAffiliateCommissionFromInvoice(
     commissionAmountCents: commissionCents,
     currency
   });
+
+  if (affiliateOwner?.email) {
+    const balanceAfterCents = await getAffiliatePendingBalanceCents(affiliateCode);
+    if (didCrossPayoutThreshold(balanceBeforeCents, balanceAfterCents, thresholdCents)) {
+      await trySendAffiliateThresholdReachedEmail({
+        affiliateCode,
+        affiliateEmail: affiliateOwner.email,
+        affiliateUserId: affiliateOwner.userId,
+        balanceCents: balanceAfterCents,
+        thresholdUsd: thresholdCents / 100
+      });
+    }
+  }
 
   return { recorded: true };
 }
