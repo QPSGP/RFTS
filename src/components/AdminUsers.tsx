@@ -1114,7 +1114,7 @@ export default function AdminUsers() {
     startMemberAudioHydration(email);
     const hydrateTimeout = window.setTimeout(() => {
       finishMemberAudioHydration(email);
-      setStatus("Rotation load timed out — you can still edit; click Save Personalized Audios when ready.");
+      setStatus("Rotation load timed out — you can still edit rotation below.");
     }, 12000);
     try {
       const assignments = buildAudioAssignment(email);
@@ -3235,17 +3235,20 @@ export default function AdminUsers() {
                         </div>
                       </div>
                       <div style={{ marginTop: 12 }}>
-                        <h4 style={{ marginBottom: 8 }}>5. Check audios designed for them</h4>
-                        <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
-                          <strong>Gold:</strong> check audios and set <strong>#</strong> order (each audio once).{" "}
-                          <strong>Platinum Managed:</strong> build the night-by-night list only in{" "}
-                          <strong>Rotation order</strong> below — pick a recording and <strong>Add at end</strong> (the
-                          dropdown resets each time; same recording can appear multiple times). Use <strong>Up / Down</strong>{" "}
-                          to place each step. Up to{" "}
-                          {MANAGED_MAX_SLOTS_PER_AUDIO}× per recording (no fixed cap on total steps). The library checklist
-                          is for <strong>access</strong> only; it does not add steps. Step numbers appear only in{" "}
-                          <strong>Rotation order</strong> below.
-                        </p>
+                        <h4 style={{ marginBottom: 8 }}>5. Schedule audios</h4>
+                        {effectiveTier === "platinum_managed" ? (
+                          <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
+                            Build the night-by-night list in <strong>Rotation order</strong> below — pick a recording and{" "}
+                            <strong>Add at end</strong> (the dropdown resets each time; same recording can appear multiple
+                            times). Use <strong>Up / Down</strong> to place each step. Up to {MANAGED_MAX_SLOTS_PER_AUDIO}×
+                            per recording (no fixed cap on total steps). Changes save automatically.
+                          </p>
+                        ) : (
+                          <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
+                            <strong>Gold:</strong> schedule audios come from assigned goals in section <strong>2</strong>.
+                            Use the goals panel to choose what plays — no manual audio checklist is needed.
+                          </p>
+                        )}
                         {effectiveTier === "platinum_managed" && (
                           <div
                             className="card"
@@ -3284,12 +3287,8 @@ export default function AdminUsers() {
                                 {MANAGED_MAX_SLOTS_PER_AUDIO}× per recording). Use <strong>Up / Down</strong> to place each step.
                               </li>
                               <li>
-                                Reorder with <strong>Up / Down</strong>. The library checkboxes only control{" "}
-                                <strong>library access</strong> — they do not insert steps.
-                              </li>
-                              <li>
-                                Click <strong>Save Personalized Audios</strong>. If it fails, read the message for server
-                                detail.
+                                Reorder with <strong>Up / Down</strong> or remove a single step with <strong>Remove</strong>.
+                                Each change saves to the server automatically.
                               </li>
                             </ol>
                           </div>
@@ -3308,8 +3307,7 @@ export default function AdminUsers() {
                             <p style={{ fontSize: 12, color: "#64748b", marginTop: 6, marginBottom: 8 }}>
                               This numbered list is the member&apos;s schedule (same recording may appear more than once).
                               Use <strong>Add at end of rotation</strong> to append a step, then <strong>Up / Down</strong> to
-                              reorder. Each add/move/remove saves rotation automatically for Platinum Managed.
-                              Then <strong>Save Personalized Audios</strong> for library access changes.
+                              reorder. Each add, move, or remove saves automatically.
                             </p>
                             <p style={{ fontSize: 12, color: "#6b7280", marginTop: 0, marginBottom: 8 }}>
                               {rotationOrder.length} step{rotationOrder.length === 1 ? "" : "s"} · each recording max{" "}
@@ -3327,8 +3325,7 @@ export default function AdminUsers() {
                             {rotationOrder.length === 0 ? (
                               <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4, marginBottom: 10 }}>
                                 No steps yet — use <strong>Add at end of rotation</strong> below to choose a recording and
-                                append it. Grant library access in the checklist if this member should see those titles in
-                                their library.
+                                append it.
                               </p>
                             ) : (
                               <ol
@@ -3431,8 +3428,7 @@ export default function AdminUsers() {
                               <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 8px 0" }}>
                                 After each add the dropdown goes back to <strong>Choose recording…</strong> so you can pick the
                                 next step (including the same recording again). The page scrolls the new row into view when the
-                                browser supports it — use <strong>Up / Down</strong> to move it, then{" "}
-                                <strong>Save Personalized Audios</strong>.
+                                browser supports it — use <strong>Up / Down</strong> to move it if needed.
                               </p>
                               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
                               <select
@@ -3502,7 +3498,7 @@ export default function AdminUsers() {
                                       ...(audioKey !== user.email.trim() ? { [user.email]: "" } : {})
                                     }));
                                     setStatus(
-                                      "Added to end of rotation. Use Up / Down on that row to move it, then Save Personalized Audios."
+                                      "Added to end of rotation. Use Up / Down on that row to move it if needed."
                                     );
                                     requestAnimationFrame(() => {
                                       const last =
@@ -3522,169 +3518,14 @@ export default function AdminUsers() {
                             </div>
                           </div>
                         )}
-                        <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, marginTop: 4 }}>
-                          {effectiveTier === "platinum_managed"
-                            ? "Library access (does not add rotation steps)"
-                            : "Audios & order"}
-                        </p>
-                        <div className="goal-list">
-                          {library
-                            .slice()
-                            .sort((a, b) => {
-                              // Sort by SKU: items with SKU first, then by SKU value, then by title
-                              const skuA = (a.skuCode || "").trim();
-                              const skuB = (b.skuCode || "").trim();
-                              const hasSkuA = !!skuA;
-                              const hasSkuB = !!skuB;
-                              
-                              // Items with SKU come before items without SKU
-                              if (hasSkuA && !hasSkuB) return -1;
-                              if (!hasSkuA && hasSkuB) return 1;
-                              
-                              // Both have SKU or both don't have SKU
-                              if (hasSkuA && hasSkuB) {
-                                return skuA.localeCompare(skuB, undefined, { numeric: true, sensitivity: 'base' });
-                              }
-                              
-                              // Neither has SKU, sort by title
-                              return (a.title || "").localeCompare(b.title || "");
-                            })
-                            .map((item) => {
-                            const emailLower = user.email.toLowerCase();
-                            const currentOrder = rotationOrder;
-                            const slotsForItem = countAudioSlotsInOrder(currentOrder, item.id);
-                            const mappedAssign = memberAudioAssignmentsMap(audioAssignments, user.email)[item.id];
-                            const isManagedMember = effectiveTier === "platinum_managed";
-                            const isAssigned = isManagedMember
-                              ? slotsForItem > 0 || mappedAssign === true
-                              : (memberAudioAssignmentsMap(audioAssignments, user.email)[item.id] ??
-                                  item.allowedUserEmails?.some(
-                                    (allowed) => allowed.toLowerCase() === emailLower
-                                  ) ??
-                                  false);
-                            const fallbackOrder = library
-                              .filter((i) =>
-                                i.allowedUserEmails?.some((e) => e.toLowerCase() === emailLower)
-                              )
-                              .map((i) => i.id);
-                            const orderValue = getAudioOrder(user.email, item.id, fallbackOrder);
-                            return (
-                              <div
-                                key={item.id}
-                                className="goal-item"
-                                style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}
-                              >
-                                {isManagedMember ? (
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      flex: "1 1 240px",
-                                      alignItems: "center",
-                                      gap: 8,
-                                      minWidth: 0
-                                    }}
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={isAssigned}
-                                      disabled={audioHydrating}
-                                      onChange={(e) => {
-                                        if (!e.target.checked) {
-                                          clearManagedAudioForItem(user.email, item.id);
-                                          return;
-                                        }
-                                        if (memberAudioHydratingRef.current[audioKey]) {
-                                          setStatus("Still loading saved rotation — try again in a second.");
-                                          return;
-                                        }
-                                        setMemberAudio((prev) => {
-                                          const prevAssign = memberAudioAssignmentsMap(
-                                            prev.assignments,
-                                            user.email
-                                          );
-                                          return patchMemberAssignmentsKeys(prev, user.email, {
-                                            ...prevAssign,
-                                            [item.id]: true
-                                          });
-                                        });
-                                      }}
-                                      aria-label={`Allow ${item.skuCode || item.title || "audio"} in this member's library (uncheck removes all rotation steps for this recording and revokes access)`}
-                                      style={{ flex: "0 0 auto", marginTop: 2 }}
-                                    />
-                                    <span style={{ flex: 1, minWidth: 0, fontWeight: 600 }}>
-                                      {item.skuCode || item.title || "No SKU/Title"}
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <label
-                                    style={{
-                                      display: "flex",
-                                      flex: "1 1 200px",
-                                      alignItems: "center",
-                                      gap: 8,
-                                      minWidth: 0,
-                                      cursor: "pointer"
-                                    }}
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={isAssigned}
-                                      onChange={() =>
-                                        toggleAudioAssignment(user.email, item.id, effectiveTier)
-                                      }
-                                    />
-                                    <span style={{ flex: 1, minWidth: 0 }}>
-                                      {item.skuCode || item.title || "No SKU/Title"}
-                                    </span>
-                                  </label>
-                                )}
-                                {!isManagedMember ? (
-                                  <input
-                                    value={orderValue}
-                                    onChange={(event) =>
-                                      updateAudioOrder(
-                                        user.email,
-                                        item.id,
-                                        event.target.value
-                                      )
-                                    }
-                                    placeholder="#"
-                                    style={{
-                                      width: 44,
-                                      textAlign: "center",
-                                      borderRadius: 6,
-                                      border: "1px solid #d1d5db",
-                                      padding: "4px 6px",
-                                      background: orderValue ? "#16a34a" : "#ffffff",
-                                      color: orderValue ? "#ffffff" : "#111827",
-                                      fontWeight: 600,
-                                      flexShrink: 0
-                                    }}
-                                  />
-                                ) : null}
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
-                          Managed: unchecking a library row removes every rotation step for that recording and revokes access.
-                          To drop one step only, use <strong>Remove</strong> on that line in Rotation order. Then click Save
-                          Personalized Audios.
-                        </p>
-                        <div style={{ marginTop: 8, display: "flex", gap: 12 }}>
-                          <button
-                            className="button button-secondary"
-                            type="button"
-                            onClick={() => saveAudioAssignments(user.email)}
+                        {audioSaveStatus[user.email] && (
+                          <p
+                            role="status"
+                            style={{ fontSize: 12, color: "#047857", marginTop: effectiveTier === "platinum_managed" ? 8 : 0 }}
                           >
-                            Save Personalized Audios
-                          </button>
-                          {audioSaveStatus[user.email] && (
-                            <span style={{ alignSelf: "center" }}>
-                              {audioSaveStatus[user.email]}
-                            </span>
-                          )}
-                        </div>
+                            {audioSaveStatus[user.email]}
+                          </p>
+                        )}
                       </div>
                       <div className="card" style={{ marginTop: 12, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
                         <h4 style={{ marginBottom: 6 }}>6. Billing &amp; rate</h4>
