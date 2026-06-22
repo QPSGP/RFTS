@@ -19,7 +19,7 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
     "Listen to Tailored Recordings out of Sequence as Needed",
     "Access to all public recordings in the Success Center Library!",
     "You May Update Goals Anytime!",
-    "We recommend a Private Goal Setting Consultation with a Success Center hypnotherapist/coach. Call 800-GOAL-NOW to set your appointment today."
+    "Includes a 15-minute Goal Changing & Progress Evaluation consultation every 90 days with a Success Center hypnotherapist or coach. Call 800-GOAL-NOW to set your appointment today."
   ];
   const membershipNote =
     "Recommend a private Life Guidance Discovery Session for full access to Member benefits.";
