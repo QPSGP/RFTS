@@ -403,8 +403,10 @@ export default function AdminModerators() {
       })
     });
     if (response.ok) {
-      setStatus("Moderator updated.");
+      setStatus("Member assignments saved. Facilitator will see them after refreshing their console.");
       await load();
+    } else {
+      setStatus("Save failed. Check member emails are valid.");
     }
   };
 
@@ -425,11 +427,36 @@ export default function AdminModerators() {
   return (
     <div className="card">
       <h2>Facilitator Admin</h2>
+      <div
+        className="card"
+        style={{
+          marginTop: 12,
+          marginBottom: 16,
+          padding: 14,
+          background: "#ecfdf5",
+          border: "1px solid #a7f3d0"
+        }}
+      >
+        <h3 style={{ marginTop: 0, color: "#065f46" }}>Assign members to a facilitator</h3>
+        <ol style={{ margin: "0 0 8px", paddingLeft: 20, color: "#047857", lineHeight: 1.6 }}>
+          <li>Open <strong>Facilitators Section</strong> on this page (button above).</li>
+          <li>Scroll to <strong>Active Facilitators</strong> below.</li>
+          <li>
+            In the green <strong>Assign members</strong> box, enter member emails (comma-separated).
+          </li>
+          <li>
+            Click <strong>Save member assignments</strong> — not Save profile (profile is for public
+            spotlight page only).
+          </li>
+        </ol>
+        <p style={{ margin: 0, fontSize: 13, color: "#065f46" }}>
+          Assigned members appear in the facilitator&apos;s console at{" "}
+          <code>/moderator/console</code> after they log in at <code>/login</code>.
+        </p>
+      </div>
       <p style={{ color: "#4b5563" }}>
-        Facilitators can only access their assigned subscribers. They cannot add
-        admins or other facilitators. Delete facilitators individually from the
-        Active Facilitators section below. Approved applications are hidden;
-        only pending and declined applications appear in the list.
+        Facilitators can only access members you assign below. Pending applications are listed at
+        the bottom; approved facilitators appear in <strong>Active Facilitators</strong>.
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
         <button
@@ -442,6 +469,142 @@ export default function AdminModerators() {
           Create Demo Application
         </button>
       </div>
+
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3>Active Facilitators — assign members here</h3>
+        {moderators.length === 0 ? (
+          <p>No facilitators yet. Approve a pending application first.</p>
+        ) : (
+          <div className="grid">
+            {moderators.map((moderator) => {
+              const app = findApplicationForEmail(moderator.email);
+              const assignedList =
+                assignments[moderator.id] ?? moderator.assignedUserEmails.join(", ");
+              const assignedCount = assignedList
+                .split(",")
+                .map((e) => e.trim())
+                .filter(Boolean).length;
+              return (
+                <div key={moderator.id} className="card">
+                  <strong>{moderator.name}</strong>
+                  <p>{moderator.email}</p>
+                  <p>Status: {moderator.status}</p>
+
+                  <div
+                    className="card"
+                    style={{
+                      marginTop: 12,
+                      padding: 14,
+                      background: "#ecfdf5",
+                      border: "1px solid #6ee7b7"
+                    }}
+                  >
+                    <h4 style={{ marginTop: 0, color: "#065f46" }}>
+                      Assign members to this facilitator
+                    </h4>
+                    <p style={{ fontSize: 13, color: "#047857", marginTop: 0 }}>
+                      Enter member emails from <strong>Members Section</strong> (comma-separated).
+                      Currently assigned: <strong>{assignedCount}</strong>
+                      {assignedCount > 0 ? ` — ${assignedList}` : " — none yet"}
+                    </p>
+                    <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>
+                      Member emails
+                    </label>
+                    <input
+                      style={inputStyle}
+                      placeholder="e.g. member1@example.com, member2@example.com"
+                      value={assignedList}
+                      onChange={(event) =>
+                        setAssignments({ ...assignments, [moderator.id]: event.target.value })
+                      }
+                    />
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+                      <button className="button" type="button" onClick={() => updateModerator(moderator.id)}>
+                        Save member assignments
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="card" style={{ marginTop: 12 }}>
+                    <h4 style={{ marginTop: 0 }}>Account access</h4>
+                    <input
+                      style={inputStyle}
+                      placeholder="Reset access code (optional, 6+ chars)"
+                      value={resets[moderator.id] || ""}
+                      onChange={(event) =>
+                        setResets({ ...resets, [moderator.id]: event.target.value })
+                      }
+                    />
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+                      <button
+                        className="button button-secondary"
+                        type="button"
+                        onClick={() => updateModerator(moderator.id)}
+                      >
+                        Save access code
+                      </button>
+                      <button
+                        className="button button-secondary"
+                        type="button"
+                        onClick={() =>
+                          toggleStatus(
+                            moderator.id,
+                            moderator.status === "active" ? "paused" : "active"
+                          )
+                        }
+                      >
+                        {moderator.status === "active" ? "Make Inactive" : "Make Active"}
+                      </button>
+                      <button
+                        className="button button-secondary"
+                        type="button"
+                        onClick={() => deleteFacilitator(moderator.id, moderator.name)}
+                        style={{ color: "#b91c1c" }}
+                      >
+                        Delete Facilitator
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="card" style={{ marginTop: 12, background: "#f8fafc" }}>
+                    <h4 style={{ marginTop: 0 }}>Public profile &amp; login identity</h4>
+                    <p style={{ fontSize: 13, color: "#475569", marginTop: 0 }}>
+                      Spotlight page fields — separate from member assignments above.
+                    </p>
+                    {app ? (
+                      <>
+                        {renderProfileFields(app.id)}
+                        <button
+                          className="button button-secondary"
+                          type="button"
+                          style={{ marginTop: 12 }}
+                          onClick={() => saveFacilitatorProfile(moderator.id, app.id)}
+                        >
+                          Save profile
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p style={{ color: "#6b7280" }}>
+                          No profile record linked to this facilitator yet.
+                        </p>
+                        <button
+                          className="button button-secondary"
+                          type="button"
+                          onClick={() => ensureFacilitatorProfile(moderator.id)}
+                        >
+                          Create profile record
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       <div className="card" style={{ marginTop: 12 }}>
         <h3>Featured Facilitator Profiles</h3>
         <p style={{ color: "#4b5563" }}>
@@ -481,28 +644,13 @@ export default function AdminModerators() {
           )}
         </div>
       </div>
-      <div className="card" style={{ marginTop: 12 }}>
-        <h3>Active Facilitators (Summary)</h3>
-        {moderators.length === 0 ? (
-          <p>No facilitators yet. Approve a pending application to activate.</p>
-        ) : (
-          <div className="stack">
-            {moderators.map((moderator) => (
-              <p key={moderator.id}>
-                {moderator.name} — {moderator.email}
-              </p>
-            ))}
-          </div>
-        )}
-      </div>
       {status && <p>{status}</p>}
-      <div className="grid" style={{ marginTop: 16 }}>
-        <div className="card">
-          <h3>Facilitator Applications</h3>
-          <p style={{ color: "#6b7280" }}>
-            Pending and declined applications appear here. Approved applications
-            are hidden—those facilitators appear in Active Facilitators below.
-          </p>
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3>Facilitator Applications (pending / declined)</h3>
+        <p style={{ color: "#6b7280" }}>
+          When approving a new facilitator, you can assign member emails here too — or assign later
+          in <strong>Active Facilitators</strong> above.
+        </p>
           {pendingApplications.length === 0 ? (
             <p>No pending or declined applications.</p>
           ) : (
@@ -558,107 +706,6 @@ export default function AdminModerators() {
                 ))}
             </div>
           )}
-        </div>
-
-        <div className="card">
-          <h3>Active Facilitators</h3>
-          {moderators.length === 0 ? (
-            <p>No facilitators yet.</p>
-          ) : (
-            <div className="grid">
-              {moderators.map((moderator) => {
-                const app = findApplicationForEmail(moderator.email);
-                return (
-                <div key={moderator.id} className="card">
-                  <strong>{moderator.name}</strong>
-                  <p>{moderator.email}</p>
-                  <p>Status: {moderator.status}</p>
-
-                  <div className="card" style={{ marginTop: 12, background: "#f8fafc" }}>
-                    <h4 style={{ marginTop: 0 }}>Public profile &amp; login identity</h4>
-                    <p style={{ fontSize: 13, color: "#475569", marginTop: 0 }}>
-                      Save profile updates the spotlight page fields and syncs the facilitator
-                      login name and email.
-                    </p>
-                    {app ? (
-                      <>
-                        {renderProfileFields(app.id)}
-                        <button
-                          className="button"
-                          type="button"
-                          style={{ marginTop: 12 }}
-                          onClick={() => saveFacilitatorProfile(moderator.id, app.id)}
-                        >
-                          Save profile
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <p style={{ color: "#6b7280" }}>
-                          No profile record linked to this facilitator yet.
-                        </p>
-                        <button
-                          className="button button-secondary"
-                          type="button"
-                          onClick={() => ensureFacilitatorProfile(moderator.id)}
-                        >
-                          Create profile record
-                        </button>
-                      </>
-                    )}
-                  </div>
-
-                  <div className="card" style={{ marginTop: 12 }}>
-                    <h4 style={{ marginTop: 0 }}>Account access</h4>
-                  <input
-                    style={inputStyle}
-                    placeholder="Assigned member emails (comma-separated)"
-                    value={
-                      assignments[moderator.id] ??
-                      moderator.assignedUserEmails.join(", ")
-                    }
-                    onChange={(event) =>
-                      setAssignments({ ...assignments, [moderator.id]: event.target.value })
-                    }
-                  />
-                  <input
-                    style={inputStyle}
-                    placeholder="Reset access code (optional, 6+ chars)"
-                    value={resets[moderator.id] || ""}
-                    onChange={(event) =>
-                      setResets({ ...resets, [moderator.id]: event.target.value })
-                    }
-                  />
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
-                    <button className="button" onClick={() => updateModerator(moderator.id)}>
-                      Save account
-                    </button>
-                    <button
-                      className="button button-secondary"
-                      onClick={() =>
-                        toggleStatus(
-                          moderator.id,
-                          moderator.status === "active" ? "paused" : "active"
-                        )
-                      }
-                    >
-                      {moderator.status === "active" ? "Make Inactive" : "Make Active"}
-                    </button>
-                    <button
-                      className="button button-secondary"
-                      onClick={() => deleteFacilitator(moderator.id, moderator.name)}
-                      style={{ color: "#b91c1c" }}
-                    >
-                      Delete Facilitator
-                    </button>
-                  </div>
-                  </div>
-                </div>
-              );
-              })}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

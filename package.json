@@ -24,6 +24,7 @@
     "affiliates:run-connect-payouts": "tsx scripts/run-affiliate-connect-payouts.ts",
     "managed-rotation:migrate": "node scripts/migrate-managed-rotation-duplicates.js",
     "facilitators:migrate": "node scripts/migrate-moderator-applications-email-unique.js",
+    "facilitators:assign": "node scripts/assign-facilitator-members.js",
     "test:production-smoke": "node scripts/production-smoke-test.js https://reachforthestars.today",
     "test:facilitator-smoke": "node scripts/facilitator-smoke-test.js https://reachforthestars.today",
     "member:set-password": "node scripts/set-member-password.js",
