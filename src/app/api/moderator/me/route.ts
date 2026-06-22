@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionEmail, getSessionRole } from "@/lib/auth";
-import { getModeratorByEmail } from "@/lib/db";
+import { getMemberSummariesByEmails, getModeratorByEmail } from "@/lib/db";
 
 export async function GET() {
   if ((await getSessionRole()) !== "moderator") {
@@ -14,11 +14,13 @@ export async function GET() {
   if (!moderator) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
+  const assignedMembers = await getMemberSummariesByEmails(moderator.assignedUserEmails);
   return NextResponse.json({
     moderator: {
       name: moderator.name,
       email: moderator.email,
       assignedUserEmails: moderator.assignedUserEmails,
+      assignedMembers,
       status: moderator.status
     }
   });

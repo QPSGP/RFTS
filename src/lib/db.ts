@@ -2246,7 +2246,10 @@ export const createModeratorApplication = async (payload: {
       social_links = EXCLUDED.social_links,
       photo_url = EXCLUDED.photo_url,
       profile_slug = EXCLUDED.profile_slug,
-      status = EXCLUDED.status,
+      status = CASE
+        WHEN moderator_applications.status = 'approved' THEN moderator_applications.status
+        ELSE EXCLUDED.status
+      END,
       submitted_at = now()
     RETURNING
       id,
@@ -2333,6 +2336,30 @@ export const updateModeratorApplication = async (payload: {
       profile_slug as "profileSlug",
       submitted_at as "submittedAt",
       status
+  `;
+  return rows[0] || null;
+};
+
+export const getModeratorApplicationByEmail = async (email: string) => {
+  const { rows } = await sql<ModeratorApplication>`
+    SELECT
+      id,
+      name,
+      email,
+      focus_areas as "focusAreas",
+      experience,
+      links,
+      phone,
+      website,
+      social_links as "socialLinks",
+      photo_url as "photoUrl",
+      profile_slug as "profileSlug",
+      submitted_at as "submittedAt",
+      status
+    FROM moderator_applications
+    WHERE LOWER(email) = LOWER(${email})
+    ORDER BY submitted_at DESC
+    LIMIT 1
   `;
   return rows[0] || null;
 };
@@ -2465,6 +2492,65 @@ export const getModeratorByEmail = async (email: string) => {
   return rows[0] || null;
 };
 
+export type ModeratorAssignedMemberSummary = {
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  subscriptionTier: "platinum" | "platinum_managed" | null;
+  subscriptionStatus: string | null;
+  registered: boolean;
+};
+
+export const getMemberSummariesByEmails = async (
+  emails: string[]
+): Promise<ModeratorAssignedMemberSummary[]> => {
+  const unique = [...new Set(emails.map((e) => e.trim().toLowerCase()).filter(Boolean))];
+  if (!unique.length) return [];
+
+  const { rows } = await sql<{
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+    subscriptionTier: "platinum" | "platinum_managed" | null;
+    subscriptionStatus: string | null;
+  }>`
+    SELECT
+      u.email,
+      mp.first_name AS "firstName",
+      mp.last_name AS "lastName",
+      s.tier AS "subscriptionTier",
+      s.status AS "subscriptionStatus"
+    FROM users u
+    LEFT JOIN member_profiles mp ON mp.user_id = u.id
+    LEFT JOIN subscriptions s ON s.user_id = u.id
+    WHERE LOWER(u.email) = ANY(${toPgArray(unique)}::text[])
+  `;
+
+  const byEmail = new Map(rows.map((row) => [row.email.toLowerCase(), row]));
+
+  return unique.map((email) => {
+    const row = byEmail.get(email);
+    if (!row) {
+      return {
+        email,
+        firstName: null,
+        lastName: null,
+        subscriptionTier: null,
+        subscriptionStatus: null,
+        registered: false
+      };
+    }
+    return {
+      email: row.email,
+      firstName: row.firstName,
+      lastName: row.lastName,
+      subscriptionTier: row.subscriptionTier,
+      subscriptionStatus: row.subscriptionStatus,
+      registered: true
+    };
+  });
+};
+
 export const createModeratorAccount = async (payload: {
   name: string;
   email: string;
@@ -2491,6 +2577,8 @@ export const createModeratorAccount = async (payload: {
 
 export const updateModeratorAccount = async (payload: {
   moderatorId: string;
+  name?: string;
+  email?: string;
   assignedUserEmails?: string[];
   status?: ModeratorAccount["status"];
   passwordHash?: string;
@@ -2498,6 +2586,8 @@ export const updateModeratorAccount = async (payload: {
   const { rows } = await sql<ModeratorAccount>`
     UPDATE moderators
     SET
+      name = COALESCE(${payload.name ?? null}, name),
+      email = COALESCE(${payload.email ?? null}, email),
       assigned_user_emails = COALESCE(
         ${payload.assignedUserEmails ? toPgArray(payload.assignedUserEmails) : null}::text[],
         assigned_user_emails
@@ -2515,6 +2605,47 @@ export const updateModeratorAccount = async (payload: {
       created_at as "createdAt"
   `;
   return rows[0] || null;
+};
+
+export const updateFacilitatorProfile = async (payload: {
+  moderatorId: string;
+  applicationId: string;
+  name: string;
+  email: string;
+  focusAreas: string;
+  experience: string;
+  links?: string;
+  phone?: string;
+  website?: string;
+  socialLinks?: string;
+  photoUrl?: string;
+  profileSlug?: string;
+}) => {
+  const application = await updateModeratorApplication({
+    id: payload.applicationId,
+    name: payload.name,
+    email: payload.email,
+    focusAreas: payload.focusAreas,
+    experience: payload.experience,
+    links: payload.links,
+    phone: payload.phone,
+    website: payload.website,
+    socialLinks: payload.socialLinks,
+    photoUrl: payload.photoUrl,
+    profileSlug: payload.profileSlug
+  });
+  if (!application) {
+    return null;
+  }
+  const moderator = await updateModeratorAccount({
+    moderatorId: payload.moderatorId,
+    name: payload.name,
+    email: payload.email
+  });
+  if (!moderator) {
+    return null;
+  }
+  return { application, moderator };
 };
 
 export const listSubscriptionPlans = async () => {

@@ -11,6 +11,7 @@ import {
   getModeratorByEmail,
   listModeratorApplications,
   listModerators,
+  updateFacilitatorProfile,
   updateModeratorApplication,
   updateModeratorAccount,
   updateModeratorApplicationStatus
@@ -46,6 +47,27 @@ const updateApplicationSchema = z.object({
   socialLinks: z.string().optional().default(""),
   photoUrl: z.string().optional().default(""),
   profileSlug: z.string().optional().default("")
+});
+
+const updateFacilitatorProfileSchema = z.object({
+  action: z.literal("update-facilitator-profile"),
+  moderatorId: z.string(),
+  applicationId: z.string(),
+  name: z.string().min(2),
+  email: z.string().email(),
+  focusAreas: z.string().min(3),
+  experience: z.string().min(10),
+  links: z.string().optional().default(""),
+  phone: z.string().optional().default(""),
+  website: z.string().optional().default(""),
+  socialLinks: z.string().optional().default(""),
+  photoUrl: z.string().optional().default(""),
+  profileSlug: z.string().optional().default("")
+});
+
+const ensureFacilitatorProfileSchema = z.object({
+  action: z.literal("ensure-facilitator-profile"),
+  moderatorId: z.string()
 });
 
 const resetDemoSchema = z.object({
@@ -124,6 +146,42 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ ok: true });
   }
+  if (body?.action === "ensure-facilitator-profile") {
+    const parsed = ensureFacilitatorProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+    }
+    const moderators = await listModerators();
+    const moderator = moderators.find((item) => item.id === parsed.data.moderatorId);
+    if (!moderator) {
+      return NextResponse.json({ error: "Facilitator not found." }, { status: 404 });
+    }
+    const existing = await listModeratorApplications();
+    const application = existing.find(
+      (item) => item.email.toLowerCase() === moderator.email.toLowerCase()
+    );
+    if (application) {
+      return NextResponse.json({ ok: true, application });
+    }
+    const slug = moderator.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+    const created = await createModeratorApplication({
+      name: moderator.name,
+      email: moderator.email,
+      focusAreas: "General wellness and hypnosis",
+      experience: "Facilitator profile created by admin. Add experience details below.",
+      links: "",
+      phone: "",
+      website: "",
+      socialLinks: "",
+      photoUrl: "",
+      profileSlug: slug,
+      status: "approved"
+    });
+    return NextResponse.json({ ok: true, application: created });
+  }
 
   const parsed = approveSchema.safeParse(body);
   if (!parsed.success) {
@@ -146,6 +204,13 @@ export async function POST(request: Request) {
       passwordHash,
       assignedUserEmails: parsed.data.assignedUserEmails
     });
+  } else {
+    await updateModeratorAccount({
+      moderatorId: existing.id,
+      assignedUserEmails: parsed.data.assignedUserEmails,
+      passwordHash,
+      status: "active"
+    });
   }
 
   return NextResponse.json({ ok: true });
@@ -156,6 +221,30 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();
+  if (body?.action === "update-facilitator-profile") {
+    const parsed = updateFacilitatorProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+    }
+    const updated = await updateFacilitatorProfile({
+      moderatorId: parsed.data.moderatorId,
+      applicationId: parsed.data.applicationId,
+      name: parsed.data.name,
+      email: parsed.data.email,
+      focusAreas: parsed.data.focusAreas,
+      experience: parsed.data.experience,
+      links: parsed.data.links,
+      phone: parsed.data.phone,
+      website: parsed.data.website,
+      socialLinks: parsed.data.socialLinks,
+      photoUrl: parsed.data.photoUrl,
+      profileSlug: parsed.data.profileSlug
+    });
+    if (!updated) {
+      return NextResponse.json({ error: "Not found." }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true });
+  }
   if (body?.action === "update-application") {
     const parsed = updateApplicationSchema.safeParse(body);
     if (!parsed.success) {

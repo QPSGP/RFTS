@@ -70,7 +70,7 @@ export default async function SiteHeader() {
                 <summary className="button header-cta">Login</summary>
                 <div className="menu-panel">
                   <a href="/member/login">Members</a>
-                  <a href="/moderator/console">Facilitators</a>
+                  <a href="/login">Facilitators</a>
                   <a href="/login">Administrator</a>
                   {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
                 </div>

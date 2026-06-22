@@ -34,6 +34,19 @@ const inputStyle = {
   width: "100%"
 };
 
+type ProfileDraft = {
+  name: string;
+  email: string;
+  focusAreas: string;
+  experience: string;
+  links: string;
+  phone: string;
+  website: string;
+  socialLinks: string;
+  photoUrl: string;
+  profileSlug: string;
+};
+
 export default function AdminModerators() {
   const [applications, setApplications] = useState<ModeratorApplication[]>([]);
   const [moderators, setModerators] = useState<ModeratorAccount[]>([]);
@@ -41,23 +54,7 @@ export default function AdminModerators() {
   const [accessCodes, setAccessCodes] = useState<Record<string, string>>({});
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [resets, setResets] = useState<Record<string, string>>({});
-  const [applicationDrafts, setApplicationDrafts] = useState<
-    Record<
-      string,
-      {
-        name: string;
-        email: string;
-        focusAreas: string;
-        experience: string;
-        links: string;
-        phone: string;
-        website: string;
-        socialLinks: string;
-        photoUrl: string;
-        profileSlug: string;
-      }
-    >
-  >({});
+  const [applicationDrafts, setApplicationDrafts] = useState<Record<string, ProfileDraft>>({});
 
   const uniqueApplications = useMemo(() => {
     const map = new Map<string, ModeratorApplication>();
@@ -82,6 +79,24 @@ export default function AdminModerators() {
     [uniqueApplications]
   );
 
+  const approvedApplications = useMemo(
+    () => uniqueApplications.filter((app) => app.status === "approved"),
+    [uniqueApplications]
+  );
+
+  const profileDraftFromApplication = (app: ModeratorApplication): ProfileDraft => ({
+    name: app.name,
+    email: app.email,
+    focusAreas: app.focusAreas,
+    experience: app.experience,
+    links: app.links || "",
+    phone: app.phone || "",
+    website: app.website || "",
+    socialLinks: app.socialLinks || "",
+    photoUrl: app.photoUrl || "",
+    profileSlug: app.profileSlug || ""
+  });
+
   const load = async () => {
     const response = await fetch("/api/moderator-admin");
     if (!response.ok) {
@@ -94,20 +109,7 @@ export default function AdminModerators() {
     setApplicationDrafts((prev) => {
       const next = { ...prev };
       (data.applications || []).forEach((app: ModeratorApplication) => {
-        if (!next[app.id]) {
-          next[app.id] = {
-            name: app.name,
-            email: app.email,
-            focusAreas: app.focusAreas,
-            experience: app.experience,
-            links: app.links || "",
-            phone: app.phone || "",
-            website: app.website || "",
-            socialLinks: app.socialLinks || "",
-            photoUrl: app.photoUrl || "",
-            profileSlug: app.profileSlug || ""
-          };
-        }
+        next[app.id] = profileDraftFromApplication(app);
       });
       return next;
     });
@@ -191,30 +193,108 @@ export default function AdminModerators() {
   };
 
   const getApplicationDraft = (app: ModeratorApplication) =>
-    applicationDrafts[app.id] || {
-      name: app.name,
-      email: app.email,
-      focusAreas: app.focusAreas,
-      experience: app.experience,
-      links: app.links || "",
-      phone: app.phone || "",
-      website: app.website || "",
-      socialLinks: app.socialLinks || "",
-      photoUrl: app.photoUrl || "",
-      profileSlug: app.profileSlug || ""
-    };
+    applicationDrafts[app.id] || profileDraftFromApplication(app);
 
-  const updateApplicationDraft = (
-    appId: string,
-    patch: Partial<(typeof applicationDrafts)[string]>
-  ) => {
-    setApplicationDrafts((prev) => ({
-      ...prev,
-      [appId]: {
-        ...prev[appId],
-        ...patch
-      }
-    }));
+  const updateApplicationDraft = (appId: string, patch: Partial<ProfileDraft>) => {
+    setApplicationDrafts((prev) => {
+      const app = applications.find((item) => item.id === appId);
+      const base = prev[appId] || (app ? profileDraftFromApplication(app) : null);
+      if (!base) return prev;
+      return { ...prev, [appId]: { ...base, ...patch } };
+    });
+  };
+
+  const renderProfileFields = (appId: string, options?: { includeIdentity?: boolean }) => {
+    const app = applications.find((item) => item.id === appId);
+    if (!app) return null;
+    const draft = getApplicationDraft(app);
+    const includeIdentity = options?.includeIdentity !== false;
+    return (
+      <div className="grid">
+        {includeIdentity && (
+          <>
+            <input
+              style={inputStyle}
+              value={draft.name}
+              onChange={(event) => updateApplicationDraft(app.id, { name: event.target.value })}
+              placeholder="Full name"
+            />
+            <input
+              style={inputStyle}
+              value={draft.email}
+              onChange={(event) => updateApplicationDraft(app.id, { email: event.target.value })}
+              placeholder="Email"
+            />
+          </>
+        )}
+        <input
+          style={inputStyle}
+          value={draft.profileSlug}
+          onChange={(event) =>
+            updateApplicationDraft(app.id, { profileSlug: event.target.value })
+          }
+          placeholder="Profile slug (e.g. terry-brussel-rogers)"
+        />
+        <input
+          style={inputStyle}
+          value={draft.focusAreas}
+          onChange={(event) =>
+            updateApplicationDraft(app.id, { focusAreas: event.target.value })
+          }
+          placeholder="Focus areas"
+        />
+        <textarea
+          style={{ ...inputStyle, resize: "vertical" }}
+          value={draft.experience}
+          onChange={(event) =>
+            updateApplicationDraft(app.id, { experience: event.target.value })
+          }
+          placeholder="Experience / bio"
+          rows={4}
+        />
+        <input
+          style={inputStyle}
+          value={draft.links}
+          onChange={(event) => updateApplicationDraft(app.id, { links: event.target.value })}
+          placeholder="Portfolio / website"
+        />
+        <input
+          style={inputStyle}
+          value={draft.phone}
+          onChange={(event) => updateApplicationDraft(app.id, { phone: event.target.value })}
+          placeholder="Phone"
+        />
+        <input
+          style={inputStyle}
+          value={draft.website}
+          onChange={(event) => updateApplicationDraft(app.id, { website: event.target.value })}
+          placeholder="Website"
+        />
+        <input
+          style={inputStyle}
+          value={draft.socialLinks}
+          onChange={(event) =>
+            updateApplicationDraft(app.id, { socialLinks: event.target.value })
+          }
+          placeholder="Social links (comma-separated)"
+        />
+        <input
+          style={inputStyle}
+          value={draft.photoUrl}
+          onChange={(event) => updateApplicationDraft(app.id, { photoUrl: event.target.value })}
+          placeholder="Photo URL"
+        />
+        {draft.profileSlug.trim() && (
+          <p style={{ fontSize: 13, color: "#475569", margin: 0 }}>
+            Public profile slug: <code>{draft.profileSlug.trim()}</code>
+            {" · "}
+            <a href={`/facilitators/${draft.profileSlug.trim()}`} target="_blank" rel="noreferrer">
+              Preview profile page
+            </a>
+          </p>
+        )}
+      </div>
+    );
   };
 
   const saveApplication = async (appId: string) => {
@@ -246,6 +326,52 @@ export default function AdminModerators() {
       await load();
     } else {
       setStatus("Update failed. Check the fields and try again.");
+    }
+  };
+
+  const saveFacilitatorProfile = async (moderatorId: string, applicationId: string) => {
+    const app = applications.find((item) => item.id === applicationId);
+    if (!app) return;
+    const draft = getApplicationDraft(app);
+    const response = await fetch("/api/moderator-admin", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "update-facilitator-profile",
+        moderatorId,
+        applicationId,
+        name: draft.name,
+        email: draft.email,
+        focusAreas: draft.focusAreas,
+        experience: draft.experience,
+        links: draft.links,
+        phone: draft.phone,
+        website: draft.website,
+        socialLinks: draft.socialLinks,
+        photoUrl: draft.photoUrl,
+        profileSlug: draft.profileSlug
+      })
+    });
+    if (response.ok) {
+      setStatus("Facilitator profile saved (public profile + login account synced).");
+      await load();
+    } else {
+      const data = await response.json().catch(() => ({}));
+      setStatus(data?.error || "Profile save failed. Check the fields and try again.");
+    }
+  };
+
+  const ensureFacilitatorProfile = async (moderatorId: string) => {
+    const response = await fetch("/api/moderator-admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "ensure-facilitator-profile", moderatorId })
+    });
+    if (response.ok) {
+      setStatus("Profile record created. You can edit details below.");
+      await load();
+    } else {
+      setStatus("Could not create profile record.");
     }
   };
 
@@ -319,19 +445,40 @@ export default function AdminModerators() {
       <div className="card" style={{ marginTop: 12 }}>
         <h3>Featured Facilitator Profiles</h3>
         <p style={{ color: "#4b5563" }}>
-          Manage spotlight pages for your facilitators.
+          Spotlight pages use the profile slug below. Edit facilitator profiles in Active
+          Facilitators — save updates the public profile and login account together.
         </p>
         <div className="grid">
-          <div className="card">
-            <strong>Terry Brussel-Rogers, CCHt</strong>
-            <p>Facilitator profile page</p>
-            <a
-              className="button button-secondary"
-              href="/facilitators/terry-brussel-rogers"
-            >
-              View Profile
-            </a>
-          </div>
+          {approvedApplications.length === 0 ? (
+            <p style={{ color: "#6b7280" }}>No approved facilitator profiles yet.</p>
+          ) : (
+            approvedApplications.map((app) => {
+              const draft = getApplicationDraft(app);
+              const slug = draft.profileSlug.trim();
+              return (
+                <div key={app.id} className="card">
+                  <strong>{draft.name || app.name}</strong>
+                  <p style={{ fontSize: 13, color: "#6b7280" }}>
+                    {slug ? `Slug: ${slug}` : "No profile slug set yet"}
+                  </p>
+                  {slug ? (
+                    <a
+                      className="button button-secondary"
+                      href={`/facilitators/${slug}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      View Profile
+                    </a>
+                  ) : (
+                    <p style={{ fontSize: 13, color: "#92400e" }}>
+                      Set a profile slug in Active Facilitators to enable a public page.
+                    </p>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
       <div className="card" style={{ marginTop: 12 }}>
@@ -364,89 +511,7 @@ export default function AdminModerators() {
                   <div key={app.id} className="card">
                     <strong>{app.name}</strong>
                     <p>Status: {app.status}</p>
-                    <div className="grid" style={{ marginTop: 8 }}>
-                      <input
-                        style={inputStyle}
-                        value={getApplicationDraft(app).name}
-                        onChange={(event) =>
-                          updateApplicationDraft(app.id, { name: event.target.value })
-                        }
-                        placeholder="Full name"
-                      />
-                      <input
-                        style={inputStyle}
-                        value={getApplicationDraft(app).email}
-                        onChange={(event) =>
-                          updateApplicationDraft(app.id, { email: event.target.value })
-                        }
-                        placeholder="Email"
-                      />
-                      <input
-                        style={inputStyle}
-                        value={getApplicationDraft(app).profileSlug}
-                        onChange={(event) =>
-                          updateApplicationDraft(app.id, { profileSlug: event.target.value })
-                        }
-                        placeholder="Profile slug (e.g. terry-brussel-rogers)"
-                      />
-                      <input
-                        style={inputStyle}
-                        value={getApplicationDraft(app).focusAreas}
-                        onChange={(event) =>
-                          updateApplicationDraft(app.id, { focusAreas: event.target.value })
-                        }
-                        placeholder="Focus areas"
-                      />
-                      <textarea
-                        style={{ ...inputStyle, resize: "vertical" }}
-                        value={getApplicationDraft(app).experience}
-                        onChange={(event) =>
-                          updateApplicationDraft(app.id, { experience: event.target.value })
-                        }
-                        placeholder="Experience"
-                        rows={4}
-                      />
-                      <input
-                        style={inputStyle}
-                        value={getApplicationDraft(app).links}
-                        onChange={(event) =>
-                          updateApplicationDraft(app.id, { links: event.target.value })
-                        }
-                        placeholder="Portfolio / website"
-                      />
-                      <input
-                        style={inputStyle}
-                        value={getApplicationDraft(app).phone}
-                        onChange={(event) =>
-                          updateApplicationDraft(app.id, { phone: event.target.value })
-                        }
-                        placeholder="Phone"
-                      />
-                      <input
-                        style={inputStyle}
-                        value={getApplicationDraft(app).website}
-                        onChange={(event) =>
-                          updateApplicationDraft(app.id, { website: event.target.value })
-                        }
-                        placeholder="Website"
-                      />
-                      <input
-                        style={inputStyle}
-                        value={getApplicationDraft(app).socialLinks}
-                        onChange={(event) =>
-                          updateApplicationDraft(app.id, { socialLinks: event.target.value })
-                        }
-                        placeholder="Social links (comma-separated)"
-                      />
-                      <input
-                        style={inputStyle}
-                        value={getApplicationDraft(app).photoUrl}
-                        onChange={(event) =>
-                          updateApplicationDraft(app.id, { photoUrl: event.target.value })
-                        }
-                        placeholder="Photo URL"
-                      />
-                    </div>
+                    {renderProfileFields(app.id)}
                     {app.status === "pending" && (
                       <>
                         <input
@@ -459,7 +524,7 @@ export default function AdminModerators() {
                         />
                         <input
                           style={inputStyle}
-                          placeholder="Assigned subscriber emails (comma-separated)"
+                          placeholder="Assigned member emails (comma-separated, e.g. ciesar4@gmail.com)"
                           value={assignments[app.id] || ""}
                           onChange={(event) =>
                             setAssignments({ ...assignments, [app.id]: event.target.value })
@@ -501,14 +566,53 @@ export default function AdminModerators() {
             <p>No facilitators yet.</p>
           ) : (
             <div className="grid">
-              {moderators.map((moderator) => (
+              {moderators.map((moderator) => {
+                const app = findApplicationForEmail(moderator.email);
+                return (
                 <div key={moderator.id} className="card">
                   <strong>{moderator.name}</strong>
                   <p>{moderator.email}</p>
                   <p>Status: {moderator.status}</p>
+
+                  <div className="card" style={{ marginTop: 12, background: "#f8fafc" }}>
+                    <h4 style={{ marginTop: 0 }}>Public profile &amp; login identity</h4>
+                    <p style={{ fontSize: 13, color: "#475569", marginTop: 0 }}>
+                      Save profile updates the spotlight page fields and syncs the facilitator
+                      login name and email.
+                    </p>
+                    {app ? (
+                      <>
+                        {renderProfileFields(app.id)}
+                        <button
+                          className="button"
+                          type="button"
+                          style={{ marginTop: 12 }}
+                          onClick={() => saveFacilitatorProfile(moderator.id, app.id)}
+                        >
+                          Save profile
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p style={{ color: "#6b7280" }}>
+                          No profile record linked to this facilitator yet.
+                        </p>
+                        <button
+                          className="button button-secondary"
+                          type="button"
+                          onClick={() => ensureFacilitatorProfile(moderator.id)}
+                        >
+                          Create profile record
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="card" style={{ marginTop: 12 }}>
+                    <h4 style={{ marginTop: 0 }}>Account access</h4>
                   <input
                     style={inputStyle}
-                    placeholder="Assigned subscriber emails"
+                    placeholder="Assigned member emails (comma-separated)"
                     value={
                       assignments[moderator.id] ??
                       moderator.assignedUserEmails.join(", ")
@@ -519,125 +623,15 @@ export default function AdminModerators() {
                   />
                   <input
                     style={inputStyle}
-                    placeholder="Reset access code (optional)"
+                    placeholder="Reset access code (optional, 6+ chars)"
                     value={resets[moderator.id] || ""}
                     onChange={(event) =>
                       setResets({ ...resets, [moderator.id]: event.target.value })
                     }
                   />
-                  <div className="card" style={{ marginTop: 12 }}>
-                    <h4 style={{ marginTop: 0 }}>Profile Details</h4>
-                    {findApplicationForEmail(moderator.email) ? (
-                      <div className="grid">
-                        {(() => {
-                          const app = findApplicationForEmail(moderator.email);
-                          if (!app) return null;
-                          const draft = getApplicationDraft(app);
-                          return (
-                            <>
-                              <input
-                                style={inputStyle}
-                                value={draft.focusAreas}
-                                onChange={(event) =>
-                                  updateApplicationDraft(app.id, {
-                                    focusAreas: event.target.value
-                                  })
-                                }
-                                placeholder="Focus areas"
-                              />
-                              <textarea
-                                style={{ ...inputStyle, resize: "vertical" }}
-                                value={draft.experience}
-                                onChange={(event) =>
-                                  updateApplicationDraft(app.id, {
-                                    experience: event.target.value
-                                  })
-                                }
-                                placeholder="Experience"
-                                rows={4}
-                              />
-                              <input
-                                style={inputStyle}
-                                value={draft.links}
-                                onChange={(event) =>
-                                  updateApplicationDraft(app.id, {
-                                    links: event.target.value
-                                  })
-                                }
-                                placeholder="Portfolio / website"
-                              />
-                              <input
-                                style={inputStyle}
-                                value={draft.phone}
-                                onChange={(event) =>
-                                  updateApplicationDraft(app.id, {
-                                    phone: event.target.value
-                                  })
-                                }
-                                placeholder="Phone"
-                              />
-                              <input
-                                style={inputStyle}
-                                value={draft.website}
-                                onChange={(event) =>
-                                  updateApplicationDraft(app.id, {
-                                    website: event.target.value
-                                  })
-                                }
-                                placeholder="Website"
-                              />
-                              <input
-                                style={inputStyle}
-                                value={draft.socialLinks}
-                                onChange={(event) =>
-                                  updateApplicationDraft(app.id, {
-                                    socialLinks: event.target.value
-                                  })
-                                }
-                                placeholder="Social links (comma-separated)"
-                              />
-                              <input
-                                style={inputStyle}
-                                value={draft.photoUrl}
-                                onChange={(event) =>
-                                  updateApplicationDraft(app.id, {
-                                    photoUrl: event.target.value
-                                  })
-                                }
-                                placeholder="Photo URL"
-                              />
-                              <input
-                                style={inputStyle}
-                                value={draft.profileSlug}
-                                onChange={(event) =>
-                                  updateApplicationDraft(app.id, {
-                                    profileSlug: event.target.value
-                                  })
-                                }
-                                placeholder="Profile slug (e.g. terry-brussel-rogers)"
-                              />
-                              <button
-                                className="button button-secondary"
-                                type="button"
-                                onClick={() => saveApplication(app.id)}
-                              >
-                                Save Profile
-                              </button>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    ) : (
-                      <p style={{ color: "#6b7280" }}>
-                        No application profile found for this facilitator yet.
-                        Create one in the Facilitator Applications section to enable
-                        profile editing.
-                      </p>
-                    )}
-                  </div>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
                     <button className="button" onClick={() => updateModerator(moderator.id)}>
-                      Save
+                      Save account
                     </button>
                     <button
                       className="button button-secondary"
@@ -658,8 +652,10 @@ export default function AdminModerators() {
                       Delete Facilitator
                     </button>
                   </div>
+                  </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
           )}
         </div>
