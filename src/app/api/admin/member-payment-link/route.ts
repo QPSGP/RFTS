@@ -48,9 +48,13 @@ export async function POST(request: Request) {
     });
   }
 
-  return NextResponse.json({
-    url: result.url,
-    tier: result.tier,
-    planName: result.planName
-  });
+  if ("planName" in result) {
+    return NextResponse.json({
+      url: result.url,
+      tier: result.tier,
+      planName: result.planName
+    });
+  }
+
+  return NextResponse.json({ error: "Unexpected checkout response." }, { status: 500 });
 }

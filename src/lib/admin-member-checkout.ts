@@ -43,7 +43,7 @@ export async function createAdminMemberPaymentLink(opts: {
 
   if (hasExistingStripe) {
     try {
-      const portalUrl = await createBillingPortalSessionUrl(stripe, {
+      const portalUrl = await createBillingPortalSessionUrl(opts.stripe, {
         stripeCustomerId: stripeRow?.stripeCustomerId,
         stripeSubscriptionId: stripeRow?.stripeSubscriptionId,
         baseUrl,
