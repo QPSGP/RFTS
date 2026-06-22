@@ -455,6 +455,8 @@ export default function AdminUsers() {
   const [stripeEdits, setStripeEdits] = useState<
     Record<string, { stripeCustomerId?: string; stripeSubscriptionId?: string }>
   >({});
+  const [paymentLinks, setPaymentLinks] = useState<Record<string, string>>({});
+  const [paymentLinkLoading, setPaymentLinkLoading] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState<Record<string, boolean>>({});
   const [goalsSectionOpen, setGoalsSectionOpen] = useState<Record<string, boolean>>({});
   const [profileDrafts, setProfileDrafts] = useState<Record<string, ProfileDraft>>({});
@@ -693,6 +695,48 @@ export default function AdminUsers() {
     }
     const data = await response.json().catch(() => ({}));
     setStatus(data?.error || `Delete failed.`);
+  };
+
+  const generatePaymentLink = async (email: string) => {
+    const user = users.find((u) => u.email === email);
+    if (!user) return;
+    setPaymentLinkLoading(email);
+    setStatus(null);
+    const tier =
+      updates[email]?.subscriptionTier ?? user.subscriptionTier ?? "platinum_managed";
+    const response = await fetch("/api/admin/member-payment-link", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, tier })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (response.ok && data.url) {
+      setPaymentLinks((prev) => ({ ...prev, [email]: data.url }));
+      if (data.billingPortal) {
+        setStatus(
+          `${email} already has Stripe billing — billing portal link copied below (not a new Checkout).`
+        );
+      } else {
+        setStatus(
+          `Payment link ready for ${data.planName ?? tier}. Send it to the member to complete Stripe Checkout.`
+        );
+      }
+    } else {
+      setStatus(data?.error || "Could not generate payment link.");
+    }
+    setPaymentLinkLoading(null);
+  };
+
+  const copyPaymentLink = async (email: string) => {
+    const url = paymentLinks[email];
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      setStatus(`Payment link copied for ${email}.`);
+    } catch {
+      setStatus("Could not copy — select and copy the link below.");
+    }
   };
 
   const updateUser = async (email: string) => {
@@ -2696,6 +2740,73 @@ export default function AdminUsers() {
                         <p style={{ fontSize: 12, color: "#0f766e", marginBottom: 8 }}>
                           <strong>Existing Stripe members:</strong> paste Customer ID (<code>cus_…</code>) and Subscription ID (<code>sub_…</code>) from the Stripe Dashboard before they sign up or pay again. That links their current billing and prevents a second subscription.
                         </p>
+                        {(() => {
+                          const stripeCustomerDraft =
+                            stripeEdits[user.email]?.stripeCustomerId ??
+                            user.stripeCustomerId ??
+                            "";
+                          const stripeSubscriptionDraft =
+                            stripeEdits[user.email]?.stripeSubscriptionId ??
+                            user.stripeSubscriptionId ??
+                            "";
+                          const hasStripeOnFile =
+                            stripeCustomerDraft.trim().length > 0 ||
+                            stripeSubscriptionDraft.trim().length > 0;
+                          const paymentTier =
+                            updates[user.email]?.subscriptionTier ??
+                            user.subscriptionTier ??
+                            "platinum";
+                          const paymentLink = paymentLinks[user.email];
+                          if (hasStripeOnFile) return null;
+                          return (
+                            <div
+                              style={{
+                                marginBottom: 12,
+                                padding: 12,
+                                borderRadius: 8,
+                                border: "1px solid #d1fae5",
+                                background: "#ecfdf5"
+                              }}
+                            >
+                              <p style={{ fontSize: 12, color: "#065f46", margin: "0 0 8px" }}>
+                                <strong>New member billing:</strong> generate a Stripe Checkout link for{" "}
+                                {paymentTier === "platinum_managed"
+                                  ? "Platinum Managed ($39.95/mo)"
+                                  : "Gold Member ($19.95/mo)"}
+                                . Send it to the member — when they pay, Stripe IDs link automatically.
+                              </p>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                                <button
+                                  type="button"
+                                  className="button"
+                                  disabled={paymentLinkLoading === user.email}
+                                  onClick={() => generatePaymentLink(user.email)}
+                                >
+                                  {paymentLinkLoading === user.email
+                                    ? "Generating…"
+                                    : "Generate payment link"}
+                                </button>
+                                {paymentLink && (
+                                  <button
+                                    type="button"
+                                    className="button"
+                                    onClick={() => copyPaymentLink(user.email)}
+                                  >
+                                    Copy link
+                                  </button>
+                                )}
+                              </div>
+                              {paymentLink && (
+                                <input
+                                  style={{ ...inputStyle, marginTop: 8, fontSize: 12 }}
+                                  readOnly
+                                  value={paymentLink}
+                                  onFocus={(event) => event.target.select()}
+                                />
+                              )}
+                            </div>
+                          );
+                        })()}
                         <input
                           style={inputStyle}
                           placeholder="Stripe Customer ID (cus_...) — from Stripe Dashboard"
