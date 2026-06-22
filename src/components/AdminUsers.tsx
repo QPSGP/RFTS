@@ -1009,7 +1009,9 @@ export default function AdminUsers() {
     const opening = !memberSectionOpen[email]?.[section];
     setMemberSectionOpen((prev) => ({
       ...prev,
-      [email]: { ...prev[email], [section]: opening }
+      [email]: opening
+        ? { [section]: true }
+        : { ...prev[email], [section]: false }
     }));
     if (opening) {
       if (section === "activity") void loadMemberActivity(email);
