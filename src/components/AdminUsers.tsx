@@ -472,6 +472,8 @@ export default function AdminUsers() {
   /** While true, rotation edits must not run — async hydrate would overwrite them (race with saved order). */
   const [memberAudioHydrating, setMemberAudioHydrating] = useState<Record<string, boolean>>({});
   const memberAudioHydratingRef = useRef<Record<string, boolean>>({});
+  /** Avoid re-fetching server order when toggling profile — preserves unsaved rotation edits. */
+  const memberAudioServerLoadedRef = useRef<Record<string, boolean>>({});
   /** Scroll newly appended rotation rows into view (one list per member email). */
   const managedRotationOlRefs = useRef<Record<string, HTMLOListElement | null>>({});
   const [audioSaveStatus, setAudioSaveStatus] = useState<Record<string, string>>({});
@@ -1044,6 +1046,74 @@ export default function AdminUsers() {
     setMemberAudioHydrating((p) => ({ ...p, [key]: false }));
   };
 
+  const loadMemberAudioFromServer = async (email: string, opts?: { force?: boolean }) => {
+    const key = memberAudioEmailKey(email);
+    if (!opts?.force && memberAudioServerLoadedRef.current[key]) {
+      return;
+    }
+    startMemberAudioHydration(email);
+    const hydrateTimeout = window.setTimeout(() => {
+      finishMemberAudioHydration(email);
+      setStatus("Rotation load timed out — you can still edit; click Save Personalized Audios when ready.");
+    }, 12000);
+    try {
+      const assignments = buildAudioAssignment(email);
+      const order = await buildAudioOrder(email);
+      setMemberAudio((prev) => {
+        let next = patchMemberOrderKeys(prev, email, order);
+        next = patchMemberAssignmentsKeys(next, email, assignments);
+        return next;
+      });
+      memberAudioServerLoadedRef.current[key] = true;
+    } catch {
+      setStatus("Could not load saved rotation. Refresh the page and try again.");
+    } finally {
+      window.clearTimeout(hydrateTimeout);
+      finishMemberAudioHydration(email);
+    }
+  };
+
+  const persistManagedRotationOrder = async (
+    email: string,
+    orderList: string[]
+  ): Promise<boolean> => {
+    const response = await fetch("/api/admin/member-audio-order", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, order: orderList })
+    });
+    if (!response.ok) {
+      const errPayload = await response.json().catch(() => ({} as { error?: string }));
+      const detail =
+        typeof errPayload?.error === "string" ? errPayload.error : `HTTP ${response.status}`;
+      setAudioSaveStatus((prev) => ({
+        ...prev,
+        [email]: `Rotation save failed: ${detail}`
+      }));
+      setStatus(detail);
+      return false;
+    }
+    setAudioSaveStatus((prev) => ({
+      ...prev,
+      [email]:
+        orderList.length === 1
+          ? "Saved 1 rotation step to the server."
+          : `Saved ${orderList.length} rotation steps to the server.`
+    }));
+    return true;
+  };
+
+  const managedTierForEmail = (email: string): UserRow["subscriptionTier"] =>
+    updates[email]?.subscriptionTier ??
+    users.find((u) => u.email.toLowerCase() === email.toLowerCase())?.subscriptionTier ??
+    "platinum";
+
+  const autoSaveManagedRotationIfNeeded = async (email: string, orderList: string[]) => {
+    if (managedTierForEmail(email) !== "platinum_managed") return;
+    await persistManagedRotationOrder(email, orderList);
+  };
+
   /** Managed: remove every rotation slot for this item and revoke library assignment. */
   const clearManagedAudioForItem = (email: string, itemId: string) => {
     const key = memberAudioEmailKey(email);
@@ -1098,9 +1168,11 @@ export default function AdminUsers() {
       return false;
     }
     let computed!: { next: MemberAudioSnapshot; outcome: "added" | "per_audio" };
+    let nextOrder: string[] = [];
     flushSync(() => {
       setMemberAudio((prev) => {
         computed = computeManagedRotationAppend(prev, email, itemId);
+        nextOrder = memberRotationOrder(computed.next.order, email);
         return computed.next;
       });
     });
@@ -1109,39 +1181,59 @@ export default function AdminUsers() {
       setStatus(
         `This audio is already in the rotation ${MANAGED_MAX_SLOTS_PER_AUDIO} times (maximum). Remove a slot or pick another track.`
       );
+      return false;
     }
-    return outcome === "added";
+    void autoSaveManagedRotationIfNeeded(email, nextOrder);
+    return true;
   };
 
   const removeManagedSlotAtIndex = (email: string, slotIndex: number) => {
     const key = memberAudioEmailKey(email);
     if (memberAudioHydratingRef.current[key]) return;
-    setMemberAudio((prev) => {
-      const cur = memberRotationOrder(prev.order, email);
-      if (slotIndex < 0 || slotIndex >= cur.length) return prev;
-      const removedId = cur[slotIndex];
-      const nextOrderArr = cur.filter((_, i) => i !== slotIndex);
-      const remaining = countAudioSlotsInOrder(nextOrderArr, removedId) > 0;
-      const prevAssign = memberAudioAssignmentsMap(prev.assignments, email);
-      let next = patchMemberOrderKeys(prev, email, nextOrderArr);
-      next = patchMemberAssignmentsKeys(next, email, { ...prevAssign, [removedId]: remaining });
-      return next;
+    let nextOrder: string[] = [];
+    let changed = false;
+    flushSync(() => {
+      setMemberAudio((prev) => {
+        const cur = memberRotationOrder(prev.order, email);
+        if (slotIndex < 0 || slotIndex >= cur.length) return prev;
+        const removedId = cur[slotIndex];
+        const nextOrderArr = cur.filter((_, i) => i !== slotIndex);
+        nextOrder = nextOrderArr;
+        changed = true;
+        const remaining = countAudioSlotsInOrder(nextOrderArr, removedId) > 0;
+        const prevAssign = memberAudioAssignmentsMap(prev.assignments, email);
+        let next = patchMemberOrderKeys(prev, email, nextOrderArr);
+        next = patchMemberAssignmentsKeys(next, email, { ...prevAssign, [removedId]: remaining });
+        return next;
+      });
     });
+    if (changed) {
+      void autoSaveManagedRotationIfNeeded(email, nextOrder);
+    }
   };
 
   /** Swap slot with neighbor so repeats can sit apart (e.g. same SKU in positions 1 and 10). */
   const moveManagedSlot = (email: string, slotIndex: number, direction: "up" | "down") => {
     const key = memberAudioEmailKey(email);
     if (memberAudioHydratingRef.current[key]) return;
-    setMemberAudio((prev) => {
-      const cur = [...memberRotationOrder(prev.order, email)];
-      const j = direction === "up" ? slotIndex - 1 : slotIndex + 1;
-      if (slotIndex < 0 || slotIndex >= cur.length || j < 0 || j >= cur.length) return prev;
-      const t = cur[slotIndex];
-      cur[slotIndex] = cur[j];
-      cur[j] = t;
-      return patchMemberOrderKeys(prev, email, cur);
+    let nextOrder: string[] = [];
+    let changed = false;
+    flushSync(() => {
+      setMemberAudio((prev) => {
+        const cur = [...memberRotationOrder(prev.order, email)];
+        const j = direction === "up" ? slotIndex - 1 : slotIndex + 1;
+        if (slotIndex < 0 || slotIndex >= cur.length || j < 0 || j >= cur.length) return prev;
+        const t = cur[slotIndex];
+        cur[slotIndex] = cur[j];
+        cur[j] = t;
+        nextOrder = cur;
+        changed = true;
+        return patchMemberOrderKeys(prev, email, cur);
+      });
     });
+    if (changed) {
+      void autoSaveManagedRotationIfNeeded(email, nextOrder);
+    }
   };
 
   const updateAudioOrder = (email: string, itemId: string, orderValue: string) => {
@@ -1715,21 +1807,7 @@ export default function AdminUsers() {
                         onClick={async () => {
                           setProfileOpen({ ...profileOpen, [user.email]: true });
                           setStatus(null);
-                          startMemberAudioHydration(user.email);
-                          try {
-                            const assignments = buildAudioAssignment(user.email);
-                            const order = await buildAudioOrder(user.email);
-                            setMemberAudio((prev) => {
-                              let next = patchMemberOrderKeys(prev, user.email, order);
-                              next = patchMemberAssignmentsKeys(next, user.email, assignments);
-                              return next;
-                            });
-                          } catch {
-                            setStatus("Could not load saved rotation. Refresh the page and try again.");
-                          } finally {
-                            /** Must not wait on loadProfile — a slow hang left rotation locked forever. */
-                            finishMemberAudioHydration(user.email);
-                          }
+                          await loadMemberAudioFromServer(user.email);
                           if (!profileDrafts[user.email]) {
                             void loadProfile(user.email);
                           }
@@ -1785,20 +1863,7 @@ export default function AdminUsers() {
                           setProfileOpen({ ...profileOpen, [user.email]: next });
                           if (next) {
                             setStatus(null);
-                            startMemberAudioHydration(user.email);
-                            try {
-                              const assignments = buildAudioAssignment(user.email);
-                              const order = await buildAudioOrder(user.email);
-                              setMemberAudio((prev) => {
-                                let next = patchMemberOrderKeys(prev, user.email, order);
-                                next = patchMemberAssignmentsKeys(next, user.email, assignments);
-                                return next;
-                              });
-                            } catch {
-                              setStatus("Could not load saved rotation. Refresh the page and try again.");
-                            } finally {
-                              finishMemberAudioHydration(user.email);
-                            }
+                            await loadMemberAudioFromServer(user.email);
                             if (!profileDrafts[user.email]) {
                               void loadProfile(user.email);
                             }
@@ -3248,7 +3313,8 @@ export default function AdminUsers() {
                             <p style={{ fontSize: 12, color: "#64748b", marginTop: 6, marginBottom: 8 }}>
                               This numbered list is the member&apos;s schedule (same recording may appear more than once).
                               Use <strong>Add at end of rotation</strong> to append a step, then <strong>Up / Down</strong> to
-                              reorder. Then <strong>Save Personalized Audios</strong>.
+                              reorder. Each add/move/remove saves rotation automatically for Platinum Managed.
+                              Then <strong>Save Personalized Audios</strong> for library access changes.
                             </p>
                             <p style={{ fontSize: 12, color: "#6b7280", marginTop: 0, marginBottom: 8 }}>
                               {rotationOrder.length} step{rotationOrder.length === 1 ? "" : "s"} · each recording max{" "}
