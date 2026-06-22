@@ -1,4 +1,5 @@
 import { getMemberProfileByUserId, getUserProfile, listInterests, listLibrary } from "@/lib/db";
+import { memberCanBrowseLibraryItem } from "@/lib/library-access";
 import { getUserSessionEmail } from "@/lib/user-auth";
 import LibraryBrowser from "@/components/LibraryBrowser";
 import PlaySecondRecordingCta from "@/components/PlaySecondRecordingCta";
@@ -36,7 +37,9 @@ export default async function LibraryPage() {
     interests = filterInterestsByMemberAccess(allInterests, false, false);
   }
   const libraryForMember = library.filter(
-    (item) => !(item.skuCode || "").toUpperCase().startsWith("MU")
+    (item) =>
+      !(item.skuCode || "").toUpperCase().startsWith("MU") &&
+      memberCanBrowseLibraryItem(item, email)
   );
   return (
     <main>

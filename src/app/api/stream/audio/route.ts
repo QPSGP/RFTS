@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { isAdminSession } from "@/lib/auth";
+import { memberCanStreamLibraryItem } from "@/lib/library-access";
 import { getUserSessionEmail } from "@/lib/user-auth";
 import {
   getLibraryItem,
@@ -124,6 +125,17 @@ export async function GET(request: Request) {
       (item.allowedUserEmails || []).some(
         (e) => e.trim().toLowerCase() === email.trim().toLowerCase()
       ) ?? false;
+
+    if (!memberCanStreamLibraryItem(item, email)) {
+      return NextResponse.json(
+        { error: "This facilitator track is not assigned to your account." },
+        {
+          status: 403,
+          headers: { "X-Stream-Deny-Reason": "facilitator-not-assigned" }
+        }
+      );
+    }
+
     const tier = profile.subscriptionTier ?? "";
 
     if (isCgmr) {

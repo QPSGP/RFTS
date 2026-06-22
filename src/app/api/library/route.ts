@@ -20,7 +20,8 @@ const createSchema = z.object({
   audioUrl: z.string().optional().default(""),
   interestIds: z.array(z.string()).default([]),
   allowedUserEmails: z.array(z.string().email()).optional().default([]),
-  isAdult: z.boolean().optional()
+  isAdult: z.boolean().optional(),
+  inGeneralCatalog: z.boolean().optional()
 });
 
 const updateSchema = z.object({
@@ -35,7 +36,8 @@ const updateSchema = z.object({
   interestIds: z.array(z.string()).default([]),
   allowedUserEmails: z.array(z.string().email()).optional().default([]),
   order: z.number().int().optional(),
-  isAdult: z.boolean().optional()
+  isAdult: z.boolean().optional(),
+  inGeneralCatalog: z.boolean().optional()
 });
 
 const deleteSchema = z.object({
@@ -83,7 +85,8 @@ export async function POST(request: Request) {
     audioUrl: parsed.data.audioUrl,
     interestIds: parsed.data.interestIds,
     allowedUserEmails: parsed.data.allowedUserEmails,
-    isAdult: parsed.data.isAdult
+    isAdult: parsed.data.isAdult,
+    inGeneralCatalog: parsed.data.inGeneralCatalog
   });
   return NextResponse.json({ ok: true, record });
 }
@@ -120,7 +123,8 @@ export async function PATCH(request: Request) {
     interestIds: parsed.data.interestIds,
     allowedUserEmails: parsed.data.allowedUserEmails,
     order: parsed.data.order,
-    isAdult: parsed.data.isAdult
+    isAdult: parsed.data.isAdult,
+    inGeneralCatalog: parsed.data.inGeneralCatalog
   });
   if (!record) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });

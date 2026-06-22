@@ -409,3 +409,9 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_details_submitted bool
 ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_payouts_enabled boolean NOT NULL DEFAULT false;
 CREATE UNIQUE INDEX IF NOT EXISTS users_stripe_connect_account_id_unique
   ON users (stripe_connect_account_id) WHERE stripe_connect_account_id IS NOT NULL;
+
+-- Facilitator-owned library tracks (private to assigned members until admin promotes)
+ALTER TABLE library_items ADD COLUMN IF NOT EXISTS moderator_id uuid REFERENCES moderators(id) ON DELETE SET NULL;
+ALTER TABLE library_items ADD COLUMN IF NOT EXISTS in_general_catalog boolean NOT NULL DEFAULT true;
+CREATE INDEX IF NOT EXISTS library_items_moderator_id_idx ON library_items (moderator_id)
+  WHERE moderator_id IS NOT NULL;

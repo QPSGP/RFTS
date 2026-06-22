@@ -1321,6 +1321,8 @@ export const listLibrary = async () => {
       audio_url as "audioUrl",
       COALESCE(interest_ids, ARRAY[]::text[]) as "interestIds",
       COALESCE(allowed_user_emails, ARRAY[]::text[]) as "allowedUserEmails",
+      moderator_id as "moderatorId",
+      in_general_catalog as "inGeneralCatalog",
       created_at as "createdAt",
       order_index as "order",
       is_adult as "isAdult"
@@ -1344,6 +1346,8 @@ export const listPersonalizedLibraryForUser = async (email: string) => {
       audio_url as "audioUrl",
       COALESCE(interest_ids, ARRAY[]::text[]) as "interestIds",
       COALESCE(allowed_user_emails, ARRAY[]::text[]) as "allowedUserEmails",
+      moderator_id as "moderatorId",
+      in_general_catalog as "inGeneralCatalog",
       created_at as "createdAt",
       order_index as "order",
       is_adult as "isAdult"
@@ -1355,6 +1359,32 @@ export const listPersonalizedLibraryForUser = async (email: string) => {
         WHERE LOWER(allowed) = LOWER(${email})
       )
     ORDER BY LOWER(title) ASC
+  `;
+  return rows;
+};
+
+export const listFacilitatorLibraryItems = async (moderatorId: string) => {
+  await ensureLibrarySeeded();
+  const { rows } = await sql<LibraryItem>`
+    SELECT
+      id,
+      title,
+      description,
+      sku_code as "skuCode",
+      COALESCE(file_name, '') as "fileName",
+      COALESCE(categories, ARRAY[]::text[]) as "categories",
+      cover_url as "coverUrl",
+      audio_url as "audioUrl",
+      COALESCE(interest_ids, ARRAY[]::text[]) as "interestIds",
+      COALESCE(allowed_user_emails, ARRAY[]::text[]) as "allowedUserEmails",
+      moderator_id as "moderatorId",
+      in_general_catalog as "inGeneralCatalog",
+      created_at as "createdAt",
+      order_index as "order",
+      is_adult as "isAdult"
+    FROM library_items
+    WHERE moderator_id = ${moderatorId}
+    ORDER BY created_at DESC
   `;
   return rows;
 };
@@ -1373,6 +1403,8 @@ export const getLibraryItem = async (id: string) => {
       audio_url as "audioUrl",
       COALESCE(interest_ids, ARRAY[]::text[]) as "interestIds",
       COALESCE(allowed_user_emails, ARRAY[]::text[]) as "allowedUserEmails",
+      moderator_id as "moderatorId",
+      in_general_catalog as "inGeneralCatalog",
       created_at as "createdAt",
       order_index as "order",
       is_adult as "isAdult"
@@ -1858,19 +1890,22 @@ export const createLibraryItem = async (payload: {
   interestIds: string[];
   allowedUserEmails: string[];
   isAdult?: boolean;
+  moderatorId?: string | null;
+  inGeneralCatalog?: boolean;
 }) => {
   const { rows: orderRows } = await sql<{ max: number }>`
     SELECT COALESCE(MAX(order_index), 0)::int as max FROM library_items
   `;
   const order = (orderRows[0]?.max || 0) + 1;
+  const inCatalog = payload.inGeneralCatalog ?? (payload.moderatorId ? false : true);
   const { rows } = await sql<LibraryItem>`
     INSERT INTO library_items
-      (title, description, sku_code, file_name, categories, cover_url, audio_url, interest_ids, allowed_user_emails, order_index, is_adult)
+      (title, description, sku_code, file_name, categories, cover_url, audio_url, interest_ids, allowed_user_emails, order_index, is_adult, moderator_id, in_general_catalog)
     VALUES
       (${payload.title}, ${payload.description}, ${payload.skuCode}, ${payload.fileName ?? ""}, ${toPgArray(payload.categories)}::text[],
        ${payload.coverUrl}, ${payload.audioUrl},
        ${toPgArray(payload.interestIds)}::text[], ${toPgArray(payload.allowedUserEmails)}::text[],
-       ${order}, ${payload.isAdult ?? false})
+       ${order}, ${payload.isAdult ?? false}, ${payload.moderatorId ?? null}, ${inCatalog})
     RETURNING
       id,
       title,
@@ -1882,6 +1917,8 @@ export const createLibraryItem = async (payload: {
       audio_url as "audioUrl",
       COALESCE(interest_ids, ARRAY[]::text[]) as "interestIds",
       COALESCE(allowed_user_emails, ARRAY[]::text[]) as "allowedUserEmails",
+      moderator_id as "moderatorId",
+      in_general_catalog as "inGeneralCatalog",
       created_at as "createdAt",
       order_index as "order",
       is_adult as "isAdult"
@@ -1902,6 +1939,7 @@ export const updateLibraryItem = async (payload: {
   allowedUserEmails: string[];
   order?: number;
   isAdult?: boolean;
+  inGeneralCatalog?: boolean;
 }) => {
   const { rows } = await sql<LibraryItem>`
     UPDATE library_items
@@ -1916,7 +1954,8 @@ export const updateLibraryItem = async (payload: {
       interest_ids = ${toPgArray(payload.interestIds)}::text[],
       allowed_user_emails = ${toPgArray(payload.allowedUserEmails)}::text[],
       order_index = COALESCE(${payload.order ?? null}, order_index),
-      is_adult = COALESCE(${payload.isAdult ?? null}, is_adult)
+      is_adult = COALESCE(${payload.isAdult ?? null}, is_adult),
+      in_general_catalog = COALESCE(${payload.inGeneralCatalog ?? null}, in_general_catalog)
     WHERE id = ${payload.id}
     RETURNING
       id,
@@ -1929,6 +1968,8 @@ export const updateLibraryItem = async (payload: {
       audio_url as "audioUrl",
       COALESCE(interest_ids, ARRAY[]::text[]) as "interestIds",
       COALESCE(allowed_user_emails, ARRAY[]::text[]) as "allowedUserEmails",
+      moderator_id as "moderatorId",
+      in_general_catalog as "inGeneralCatalog",
       created_at as "createdAt",
       order_index as "order",
       is_adult as "isAdult"

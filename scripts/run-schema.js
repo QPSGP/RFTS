@@ -18,14 +18,66 @@ if (!connectionString) {
   process.exit(1);
 }
 
+/** Split SQL on semicolons outside dollar-quoted blocks (e.g. DO $$ ... END $$). */
+function splitSqlStatements(sql) {
+  const statements = [];
+  let buf = "";
+  let i = 0;
+  let dollarTag = null;
+
+  const readDollarTag = () => {
+    if (sql[i] !== "$") return null;
+    let j = i + 1;
+    while (j < sql.length && /[a-zA-Z0-9_]/.test(sql[j])) j++;
+    if (j < sql.length && sql[j] === "$") {
+      return sql.slice(i, j + 1);
+    }
+    return null;
+  };
+
+  while (i < sql.length) {
+    if (dollarTag === null && sql[i] === "-" && sql[i + 1] === "-") {
+      while (i < sql.length && sql[i] !== "\n") i++;
+      continue;
+    }
+
+    if (dollarTag === null) {
+      const tag = readDollarTag();
+      if (tag) {
+        dollarTag = tag;
+        buf += tag;
+        i += tag.length;
+        continue;
+      }
+    } else if (sql.slice(i, i + dollarTag.length) === dollarTag) {
+      buf += dollarTag;
+      i += dollarTag.length;
+      dollarTag = null;
+      continue;
+    }
+
+    if (dollarTag === null && sql[i] === ";") {
+      const stmt = buf.trim();
+      if (stmt) statements.push(stmt);
+      buf = "";
+      i++;
+      continue;
+    }
+
+    buf += sql[i];
+    i++;
+  }
+
+  const tail = buf.trim();
+  if (tail) statements.push(tail);
+  return statements;
+}
+
 async function run() {
   const { Pool } = require("pg");
   const pool = new Pool({ connectionString });
   const sql = fs.readFileSync(schemaPath, "utf8");
-  const statements = sql
-    .split(/;\s*\n/)
-    .map((s) => s.replace(/--[^\n]*/g, "").trim())
-    .filter((s) => s.length > 0);
+  const statements = splitSqlStatements(sql);
   for (let i = 0; i < statements.length; i++) {
     const stmt = statements[i] + ";";
     try {

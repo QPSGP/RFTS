@@ -99,6 +99,9 @@ export type LibraryItem = {
   audioUrl: string;
   interestIds: string[];
   allowedUserEmails?: string[];
+  moderatorId?: string | null;
+  /** When false and moderatorId is set, only allowedUserEmails can browse/stream until admin enables. */
+  inGeneralCatalog?: boolean;
   createdAt: string;
   order: number;
   isAdult?: boolean;

@@ -27,6 +27,8 @@ type LibraryItem = {
   order: number;
   isAdult?: boolean;
   allowedUserEmails?: string[];
+  moderatorId?: string | null;
+  inGeneralCatalog?: boolean;
 };
 
 const inputStyle = {
@@ -608,7 +610,8 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
       audioUrl: editDraft.audioUrl || "",
       interestIds: editInterestIds,
       allowedUserEmails: editDraft.allowedUserEmails || [],
-      isAdult: editDraft.isAdult || false
+      isAdult: editDraft.isAdult || false,
+      inGeneralCatalog: editDraft.inGeneralCatalog ?? true
     };
     const response = await fetch("/api/library", {
       method: "PATCH",
@@ -1196,6 +1199,33 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                   <a href={`#audio-${item.id}`} style={{ fontWeight: 600 }}>
                     {(item.skuCode || "SKU?") + " - " + item.title}
                   </a>
+                  {item.moderatorId && !item.inGeneralCatalog ? (
+                    <span
+                      style={{
+                        marginLeft: 8,
+                        fontSize: 11,
+                        background: "#fef3c7",
+                        color: "#92400e",
+                        padding: "2px 6px",
+                        borderRadius: 4
+                      }}
+                    >
+                      Facilitator (private)
+                    </span>
+                  ) : item.moderatorId ? (
+                    <span
+                      style={{
+                        marginLeft: 8,
+                        fontSize: 11,
+                        background: "#ecfdf5",
+                        color: "#047857",
+                        padding: "2px 6px",
+                        borderRadius: 4
+                      }}
+                    >
+                      Facilitator (in library)
+                    </span>
+                  ) : null}
                   <p
                     style={{
                       margin: "6px 0 0",
@@ -1373,6 +1403,21 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                     placeholder="Allowed user emails (comma-separated, optional)"
                     style={inputStyle}
                   />
+                  {editDraft.moderatorId ? (
+                    <p style={{ fontSize: 12, color: "#78350f", margin: "0 0 8px" }}>
+                      Facilitator-uploaded track — private to allowed members until included in the general library.
+                    </p>
+                  ) : null}
+                  <label style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+                    <input
+                      type="checkbox"
+                      checked={editDraft.inGeneralCatalog ?? true}
+                      onChange={(event) =>
+                        setEditDraft({ ...editDraft, inGeneralCatalog: event.target.checked })
+                      }
+                    />
+                    Include in general library (all members can browse)
+                  </label>
                   <label style={{ fontSize: 13 }}>Attach goals</label>
                   <select
                     name="interestIds"
