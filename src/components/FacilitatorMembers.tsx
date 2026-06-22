@@ -287,9 +287,11 @@ export default function FacilitatorMembers() {
         <section className="card">
           <h2 style={{ marginTop: 0 }}>Your clients</h2>
           {members.length === 0 ? (
-            <p style={{ color: "#64748b" }}>
-              No members assigned yet. Ask your admin to add member emails to your facilitator
-              account.
+            <p style={{ color: "#64748b", lineHeight: 1.6 }}>
+              No members assigned yet. Ask your admin to add member emails in{" "}
+              <strong>Admin → Content → Facilitators Section → Active Facilitators → Assigned member
+              emails</strong>, then click <strong>Save account</strong>. After that, select a client here
+              to view profile, activity, and rotation controls.
             </p>
           ) : (
             <div className="stack">
@@ -323,7 +325,11 @@ export default function FacilitatorMembers() {
 
         <section className="card">
           {!selectedEmail ? (
-            <p style={{ color: "#64748b" }}>Select a client from the list to view details.</p>
+            <p style={{ color: "#64748b", lineHeight: 1.6 }}>
+              Select a client from the list on the left. You will see profile details, recent
+              activity, and—for <strong>Platinum Managed</strong> members—rotation controls to add,
+              reorder, and remove schedule steps.
+            </p>
           ) : detailLoading ? (
             <p>Loading member details…</p>
           ) : (

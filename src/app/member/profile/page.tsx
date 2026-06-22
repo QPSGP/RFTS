@@ -8,7 +8,6 @@ import MemberBillingSection, {
 import MemberAffiliateSection, {
   type MemberAffiliateInfo
 } from "@/components/MemberAffiliateSection";
-import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 
 const TIME_ZONES = [
   "Pacific Time",
@@ -208,10 +207,14 @@ export default function MemberProfilePage() {
   return (
     <main className="section">
       <div className="card" style={{ maxWidth: 720, margin: "0 auto" }}>
+        <p style={{ marginTop: 0, marginBottom: 16 }}>
+          <Link href="/play-options" className="button button-secondary">
+            Back to Play Options
+          </Link>
+        </p>
         <h1>My Profile</h1>
         <p style={{ color: "#4b5563", marginTop: 4 }}>
-          Manage billing, affiliate sharing, and session settings below. Open your profile when you
-          need to update personal details.
+          Manage billing, affiliate sharing, and personal details below.
         </p>
 
         <section
@@ -475,10 +478,6 @@ export default function MemberProfilePage() {
         <MemberBillingSection billing={billing} returnPath="/member/profile" />
 
         <MemberAffiliateSection affiliate={affiliate} onPayoutSaved={load} />
-
-        <div style={{ marginTop: 32 }}>
-          <ScreenWakeToggle />
-        </div>
 
         <p style={{ marginTop: 24, marginBottom: 0 }}>
           <Link href="/play-options" className="button button-secondary">
