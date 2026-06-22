@@ -741,6 +741,66 @@ export default function AdminUsers() {
     }
   };
 
+  const memberHasStripeOnFile = (user: UserRow) => {
+    const stripeCustomerDraft =
+      stripeEdits[user.email]?.stripeCustomerId ?? user.stripeCustomerId ?? "";
+    const stripeSubscriptionDraft =
+      stripeEdits[user.email]?.stripeSubscriptionId ?? user.stripeSubscriptionId ?? "";
+    return (
+      stripeCustomerDraft.trim().length > 0 || stripeSubscriptionDraft.trim().length > 0
+    );
+  };
+
+  const renderMemberPaymentLinkBlock = (user: UserRow) => {
+    if (memberHasStripeOnFile(user)) return null;
+    const paymentTier =
+      updates[user.email]?.subscriptionTier ?? user.subscriptionTier ?? "platinum";
+    const paymentLink = paymentLinks[user.email];
+    return (
+      <div
+        style={{
+          marginTop: 12,
+          marginBottom: 12,
+          padding: 12,
+          borderRadius: 8,
+          border: "1px solid #d1fae5",
+          background: "#ecfdf5"
+        }}
+      >
+        <p style={{ fontSize: 12, color: "#065f46", margin: "0 0 8px" }}>
+          <strong>New member billing:</strong> generate a Stripe Checkout link for{" "}
+          {paymentTier === "platinum_managed"
+            ? "Platinum Managed ($39.95/mo)"
+            : "Gold Member ($19.95/mo)"}
+          . Send it to the member — when they pay, Stripe IDs link automatically.
+        </p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <button
+            type="button"
+            className="button"
+            disabled={paymentLinkLoading === user.email}
+            onClick={() => generatePaymentLink(user.email)}
+          >
+            {paymentLinkLoading === user.email ? "Generating…" : "Generate payment link"}
+          </button>
+          {paymentLink && (
+            <button type="button" className="button" onClick={() => copyPaymentLink(user.email)}>
+              Copy link
+            </button>
+          )}
+        </div>
+        {paymentLink && (
+          <input
+            style={{ ...inputStyle, marginTop: 8, fontSize: 12 }}
+            readOnly
+            value={paymentLink}
+            onFocus={(event) => event.target.select()}
+          />
+        )}
+      </div>
+    );
+  };
+
   const updateUser = async (email: string) => {
     const user = users.find((u) => u.email === email);
     if (!user) {
@@ -1850,6 +1910,7 @@ export default function AdminUsers() {
                           </button>
                         </div>
                       </div>
+                      {renderMemberPaymentLinkBlock(user)}
                     </>
                   )}
                   {profileOpen[user.email] && (
@@ -2805,73 +2866,7 @@ export default function AdminUsers() {
                         <p style={{ fontSize: 12, color: "#0f766e", marginBottom: 8 }}>
                           <strong>Existing Stripe members:</strong> paste Customer ID (<code>cus_…</code>) and Subscription ID (<code>sub_…</code>) from the Stripe Dashboard before they sign up or pay again. That links their current billing and prevents a second subscription.
                         </p>
-                        {(() => {
-                          const stripeCustomerDraft =
-                            stripeEdits[user.email]?.stripeCustomerId ??
-                            user.stripeCustomerId ??
-                            "";
-                          const stripeSubscriptionDraft =
-                            stripeEdits[user.email]?.stripeSubscriptionId ??
-                            user.stripeSubscriptionId ??
-                            "";
-                          const hasStripeOnFile =
-                            stripeCustomerDraft.trim().length > 0 ||
-                            stripeSubscriptionDraft.trim().length > 0;
-                          const paymentTier =
-                            updates[user.email]?.subscriptionTier ??
-                            user.subscriptionTier ??
-                            "platinum";
-                          const paymentLink = paymentLinks[user.email];
-                          if (hasStripeOnFile) return null;
-                          return (
-                            <div
-                              style={{
-                                marginBottom: 12,
-                                padding: 12,
-                                borderRadius: 8,
-                                border: "1px solid #d1fae5",
-                                background: "#ecfdf5"
-                              }}
-                            >
-                              <p style={{ fontSize: 12, color: "#065f46", margin: "0 0 8px" }}>
-                                <strong>New member billing:</strong> generate a Stripe Checkout link for{" "}
-                                {paymentTier === "platinum_managed"
-                                  ? "Platinum Managed ($39.95/mo)"
-                                  : "Gold Member ($19.95/mo)"}
-                                . Send it to the member — when they pay, Stripe IDs link automatically.
-                              </p>
-                              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                                <button
-                                  type="button"
-                                  className="button"
-                                  disabled={paymentLinkLoading === user.email}
-                                  onClick={() => generatePaymentLink(user.email)}
-                                >
-                                  {paymentLinkLoading === user.email
-                                    ? "Generating…"
-                                    : "Generate payment link"}
-                                </button>
-                                {paymentLink && (
-                                  <button
-                                    type="button"
-                                    className="button"
-                                    onClick={() => copyPaymentLink(user.email)}
-                                  >
-                                    Copy link
-                                  </button>
-                                )}
-                              </div>
-                              {paymentLink && (
-                                <input
-                                  style={{ ...inputStyle, marginTop: 8, fontSize: 12 }}
-                                  readOnly
-                                  value={paymentLink}
-                                  onFocus={(event) => event.target.select()}
-                                />
-                              )}
-                            </div>
-                          );
-                        })()}
+                        {renderMemberPaymentLinkBlock(user)}
                         <input
                           style={inputStyle}
                           placeholder="Stripe Customer ID (cus_...) — from Stripe Dashboard"
@@ -3698,7 +3693,15 @@ export default function AdminUsers() {
                           <strong>Platinum Managed Member:</strong> $39.95/mo — Managed membership with admin-assigned audios (no goals).
                         </p>
                         <p style={{ fontSize: 12, margin: 0 }}>
-                          Current tier: <strong>{effectiveTier === "platinum_managed" ? "Platinum Managed Member ($39.95/mo)" : "Gold Member ($19.95/mo)"}</strong> — use subscription controls above to activate and charge.
+                          Current tier:{" "}
+                          <strong>
+                            {effectiveTier === "platinum_managed"
+                              ? "Platinum Managed Member ($39.95/mo)"
+                              : "Gold Member ($19.95/mo)"}
+                          </strong>
+                          {memberHasStripeOnFile(user)
+                            ? " — Stripe billing is on file (see section 3)."
+                            : " — no Stripe billing yet. Use Generate payment link in section 3 (or on the collapsed member row)."}
                         </p>
                       </div>
                     </>
