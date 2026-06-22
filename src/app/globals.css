@@ -227,6 +227,12 @@ main {
   font-size: inherit;
   font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  box-sizing: border-box;
 }
 
 .button-secondary {
@@ -650,7 +656,12 @@ button.section-title {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  align-items: center;
+  align-items: stretch;
+}
+
+.cta-row .button {
+  flex: 1 1 auto;
+  min-width: 140px;
 }
 
 .stat-card h3 {

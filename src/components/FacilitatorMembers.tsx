@@ -286,6 +286,9 @@ export default function FacilitatorMembers() {
       >
         <section className="card">
           <h2 style={{ marginTop: 0 }}>Your clients</h2>
+          <p style={{ fontSize: 12, color: "#64748b", marginTop: 0 }}>
+            Tap a client to open details; tap again to close.
+          </p>
           {members.length === 0 ? (
             <p style={{ color: "#64748b", lineHeight: 1.6 }}>
               No members assigned yet. Ask your admin to add member emails in{" "}
@@ -300,14 +303,17 @@ export default function FacilitatorMembers() {
                   key={member.email}
                   type="button"
                   className="button button-secondary"
+                  aria-pressed={selectedEmail === member.email}
                   style={{
-                    textAlign: "left",
+                    textAlign: "center",
                     background: selectedEmail === member.email ? "#ecfdf5" : undefined,
                     borderColor: selectedEmail === member.email ? "#10b981" : undefined
                   }}
                   onClick={() => {
                     setStatus(null);
-                    setSelectedEmail(member.email);
+                    setSelectedEmail((prev) =>
+                      prev === member.email ? null : member.email
+                    );
                   }}
                 >
                   <strong>{memberLabel(member)}</strong>
