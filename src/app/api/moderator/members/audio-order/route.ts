@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { isAdminSession } from "@/lib/auth";
 import { getMemberAudioOrder } from "@/lib/db";
 import { saveMemberAudioOrder } from "@/lib/member-audio-order";
+import { requireModeratorAssignedMember } from "@/lib/moderator-member-access";
 
 const querySchema = z.object({
   email: z.string().email()
@@ -14,30 +14,30 @@ const updateSchema = z.object({
 });
 
 export async function GET(request: Request) {
-  if (!(await isAdminSession())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
   const url = new URL(request.url);
-  const parsed = querySchema.safeParse({
-    email: url.searchParams.get("email")
-  });
+  const parsed = querySchema.safeParse({ email: url.searchParams.get("email") });
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid email." }, { status: 400 });
   }
-  const order = await getMemberAudioOrder(parsed.data.email);
+  const access = await requireModeratorAssignedMember(parsed.data.email);
+  if ("error" in access) {
+    return NextResponse.json({ error: access.error }, { status: access.status });
+  }
+  const order = await getMemberAudioOrder(access.memberEmail);
   return NextResponse.json({ order });
 }
 
 export async function POST(request: Request) {
-  if (!(await isAdminSession())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
   const body = await request.json().catch(() => ({}));
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
-  const result = await saveMemberAudioOrder(parsed.data.email, parsed.data.order);
+  const access = await requireModeratorAssignedMember(parsed.data.email);
+  if ("error" in access) {
+    return NextResponse.json({ error: access.error }, { status: access.status });
+  }
+  const result = await saveMemberAudioOrder(access.memberEmail, parsed.data.order);
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }

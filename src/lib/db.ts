@@ -2551,6 +2551,32 @@ export const getMemberSummariesByEmails = async (
   });
 };
 
+export const listUsersByEmails = async (emails: string[]): Promise<UserRowWithName[]> => {
+  const unique = [...new Set(emails.map((e) => e.trim().toLowerCase()).filter(Boolean))];
+  if (!unique.length) return [];
+
+  const { rows } = await sql<UserRowWithName>`
+    SELECT
+      u.id,
+      u.email,
+      COALESCE(u.goal_ids, ARRAY[]::text[]) AS "goalIds",
+      u.goal_updated_at AS "goalUpdatedAt",
+      COALESCE(u.plays_per_night, 2) AS "playsPerNight",
+      s.status AS "subscriptionStatus",
+      s.tier AS "subscriptionTier",
+      s.stripe_customer_id AS "stripeCustomerId",
+      s.stripe_subscription_id AS "stripeSubscriptionId",
+      mp.first_name AS "firstName",
+      mp.last_name AS "lastName"
+    FROM users u
+    LEFT JOIN subscriptions s ON s.user_id = u.id
+    LEFT JOIN member_profiles mp ON mp.user_id = u.id
+    WHERE LOWER(u.email) = ANY(${toPgArray(unique)}::text[])
+    ORDER BY u.email ASC
+  `;
+  return rows;
+};
+
 export const createModeratorAccount = async (payload: {
   name: string;
   email: string;
