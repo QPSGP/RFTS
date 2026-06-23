@@ -5,7 +5,7 @@ import { getUserSessionEmail } from "@/lib/user-auth";
 import { sendEmail } from "@/lib/email";
 import { getReportIssueConfirmationContent } from "@/lib/email-templates";
 import { rateLimit } from "@/lib/rate-limit";
-import { getMemberProfileByUserId, getUserByEmail, insertMemberIssueReport } from "@/lib/db";
+import { getMemberProfileByUserId, getUserByEmail, insertMemberIssueReport, getFacilitatorsForMemberEmail } from "@/lib/db";
 
 const schema = z.object({
   subject: z.string().min(1).max(200),
@@ -45,7 +45,9 @@ export async function POST(request: Request) {
     <p>${parsed.data.message.replace(/\n/g, "<br />")}</p>
   `;
   const text = `Report from: ${email}\nCategory: ${categoryLabel}\nSubject: ${parsed.data.subject}\n\n${parsed.data.message}`;
-  const { ok, error } = await sendEmail({ to, subject, html, text });
+  const facilitators = await getFacilitatorsForMemberEmail(user.email);
+  const facilitatorCc = facilitators[0]?.email ? [facilitators[0].email] : [];
+  const { ok, error } = await sendEmail({ to, subject, html, text, cc: facilitatorCc });
   let storedInAdmin = false;
   if (ok) {
     storedInAdmin = await insertMemberIssueReport({

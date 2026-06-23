@@ -112,6 +112,7 @@ export default function MemberProfilePage() {
   const [saving, setSaving] = useState(false);
   const [billing, setBilling] = useState<MemberBillingInfo | null>(null);
   const [affiliate, setAffiliate] = useState<MemberAffiliateInfo | null>(null);
+  const [facilitator, setFacilitator] = useState<{ name: string; email: string } | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
 
   const profileSummaryName = useMemo(() => {
@@ -142,6 +143,7 @@ export default function MemberProfilePage() {
     setProfile(toState(data.profile ?? {}));
     setBilling(data.billing ?? null);
     setAffiliate(data.affiliate ?? null);
+    setFacilitator(data.facilitator ?? null);
     setStatus("ready");
   }, []);
 
@@ -474,6 +476,32 @@ export default function MemberProfilePage() {
             </>
           )}
         </section>
+
+        {facilitator && (
+          <section
+            style={{
+              marginTop: 24,
+              padding: 20,
+              borderRadius: 12,
+              border: "1px solid #d1fae5",
+              background: "#ecfdf5"
+            }}
+          >
+            <h2 style={{ margin: "0 0 8px", fontSize: 20 }}>Your facilitator</h2>
+            <p style={{ margin: 0, color: "#047857", lineHeight: 1.5 }}>
+              <strong>{facilitator.name}</strong> is assigned to support your membership.
+              {facilitator.email ? (
+                <>
+                  {" "}
+                  Contact:{" "}
+                  <a href={`mailto:${facilitator.email}`} style={{ color: "#065f46" }}>
+                    {facilitator.email}
+                  </a>
+                </>
+              ) : null}
+            </p>
+          </section>
+        )}
 
         <MemberBillingSection billing={billing} returnPath="/member/profile" />
 

@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { requireActiveModerator } from "@/lib/moderator-member-access";
+import { getWelcomeEmailCcRecipients, sendEmail, getBaseUrl } from "@/lib/email";
+import { getFacilitatorCreatedMemberEmailContent } from "@/lib/email-templates";
+import { recordModeratorStaffActivity } from "@/lib/facilitator-staff-activity";
 import {
   createUser,
   ensureSubscription,
@@ -88,6 +91,7 @@ export async function POST(request: Request) {
       moderatorId: moderator.id,
       assignedUserEmails: [...moderator.assignedUserEmails, email]
     });
+    await recordModeratorStaffActivity(`assigned_existing_member:${emailLower}`);
     return NextResponse.json({
       ok: true,
       assignedExisting: true,
@@ -118,9 +122,44 @@ export async function POST(request: Request) {
     assignedUserEmails: [...moderator.assignedUserEmails, email]
   });
 
+  const tierLabel =
+    parsed.data.tier === "platinum_managed" ? "Platinum Managed Member" : "Gold Member";
+  const statusLabel =
+    parsed.data.status === "active" ? "Active" : "Inactive (billing not started)";
+  const billingNote =
+    parsed.data.status === "active"
+      ? "Your membership is active — you can sign in and use the member console."
+      : "Your account is inactive until billing is set up. Your facilitator or our team will help you activate membership.";
+
+  const loginUrl = `${getBaseUrl()}/member/login`;
+  const welcome = getFacilitatorCreatedMemberEmailContent({
+    firstName: parsed.data.firstName,
+    tierLabel,
+    statusLabel,
+    facilitatorName: moderator.name,
+    loginUrl,
+    billingNote
+  });
+  const emailResult = await sendEmail({
+    to: email,
+    subject: welcome.subject,
+    html: welcome.html,
+    text: welcome.text,
+    cc: getWelcomeEmailCcRecipients()
+  });
+  if (!emailResult.ok) {
+    console.error("[moderator/members POST] Welcome email failed:", emailResult.error);
+  }
+
+  await recordModeratorStaffActivity(
+    `created_member:${email.toLowerCase()}:${parsed.data.tier}`
+  );
+
   return NextResponse.json({
     ok: true,
     assignedExisting: false,
-    message: "Member created and assigned to you."
+    message: emailResult.ok
+      ? "Member created, assigned to you, and welcome email sent."
+      : "Member created and assigned. Welcome email could not be sent — share login details manually."
   });
 }

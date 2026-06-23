@@ -49,6 +49,18 @@ function getFileNameFromAudioUrl(url: string): string {
   }
 }
 
+type LibraryCategoryFilter =
+  | "all"
+  | "General"
+  | "Special"
+  | "CGMR"
+  | "facilitator_private"
+  | "facilitator_all";
+
+const isFacilitatorPrivate = (item: LibraryItem) =>
+  Boolean(item.moderatorId) && !item.inGeneralCatalog;
+const isFacilitatorTrack = (item: LibraryItem) => Boolean(item.moderatorId);
+
 type AdminContentProps = {
   openGoals: boolean;
   openLibrary: boolean;
@@ -66,7 +78,8 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [goalDraft, setGoalDraft] = useState<Interest | null>(null);
   const [librarySort, setLibrarySort] = useState<"title" | "sku">("title");
-  const [libraryCategoryFilter, setLibraryCategoryFilter] = useState<"all" | "General" | "Special" | "CGMR">("General");
+  const [libraryCategoryFilter, setLibraryCategoryFilter] = useState<LibraryCategoryFilter>("General");
+  const [bulkCatalogStatus, setBulkCatalogStatus] = useState<string | null>(null);
   const [librarySearch, setLibrarySearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<LibraryItem | null>(null);
@@ -169,7 +182,11 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     if (libraryCategoryFilter === "all") return sortedLibrary;
     if (libraryCategoryFilter === "CGMR") return sortedLibrary.filter((item) => hasCategory(item, "cgmr"));
     if (libraryCategoryFilter === "Special") return sortedLibrary.filter((item) => hasCategory(item, "special"));
-    if (libraryCategoryFilter === "General") return sortedLibrary.filter((item) => !hasCategory(item, "cgmr") && !hasCategory(item, "special"));
+    if (libraryCategoryFilter === "General")
+      return sortedLibrary.filter((item) => !hasCategory(item, "cgmr") && !hasCategory(item, "special"));
+    if (libraryCategoryFilter === "facilitator_private")
+      return sortedLibrary.filter(isFacilitatorPrivate);
+    if (libraryCategoryFilter === "facilitator_all") return sortedLibrary.filter(isFacilitatorTrack);
     return sortedLibrary;
   }, [sortedLibrary, libraryCategoryFilter]);
 
@@ -592,6 +609,39 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     setEditAudioLoading(false);
     if (editCoverInputRef.current) editCoverInputRef.current.value = "";
     if (editAudioInputRef.current) editAudioInputRef.current.value = "";
+  };
+
+  const promoteFacilitatorPrivateToCatalog = async () => {
+    const items = searchFilteredLibrary.filter(isFacilitatorPrivate);
+    if (items.length === 0) {
+      setBulkCatalogStatus("No facilitator-private tracks in this view.");
+      return;
+    }
+    setBulkCatalogStatus("Promoting tracks to general catalog…");
+    let promoted = 0;
+    for (const item of items) {
+      const response = await fetch("/api/library", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          skuCode: item.skuCode || "",
+          fileName: item.fileName || "",
+          categories: item.categories || [],
+          coverUrl: item.coverUrl || "",
+          audioUrl: item.audioUrl || "",
+          interestIds: item.interestIds || [],
+          allowedUserEmails: item.allowedUserEmails || [],
+          isAdult: item.isAdult || false,
+          inGeneralCatalog: true
+        })
+      });
+      if (response.ok) promoted += 1;
+    }
+    await load();
+    setBulkCatalogStatus(`Promoted ${promoted} of ${items.length} track(s) to general catalog.`);
   };
 
   const saveEdit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -1162,15 +1212,31 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                   style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #d1d5db" }}
                   value={libraryCategoryFilter}
                   onChange={(event) =>
-                    setLibraryCategoryFilter(event.target.value as "all" | "General" | "Special" | "CGMR")
+                    setLibraryCategoryFilter(event.target.value as LibraryCategoryFilter)
                   }
                 >
                   <option value="all">All</option>
                   <option value="General">General</option>
                   <option value="Special">Special</option>
                   <option value="CGMR">CGMR</option>
+                  <option value="facilitator_private">Facilitator (private)</option>
+                  <option value="facilitator_all">Facilitator (all)</option>
                 </select>
               </label>
+              {(libraryCategoryFilter === "facilitator_private" ||
+                libraryCategoryFilter === "facilitator_all") && (
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  disabled={libraryCategoryFilter !== "facilitator_private"}
+                  onClick={() => void promoteFacilitatorPrivateToCatalog()}
+                >
+                  Promote visible private tracks to library
+                </button>
+              )}
+              {bulkCatalogStatus && (
+                <span style={{ fontSize: 13, color: "#64748b" }}>{bulkCatalogStatus}</span>
+              )}
               <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 Sort by
                 <select

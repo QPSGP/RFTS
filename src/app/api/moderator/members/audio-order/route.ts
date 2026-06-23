@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getMemberAudioOrder } from "@/lib/db";
 import { saveMemberAudioOrder } from "@/lib/member-audio-order";
 import { requireModeratorAssignedMember } from "@/lib/moderator-member-access";
+import { recordModeratorStaffActivity } from "@/lib/facilitator-staff-activity";
 
 const querySchema = z.object({
   email: z.string().email()
@@ -41,5 +42,8 @@ export async function POST(request: Request) {
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
+  await recordModeratorStaffActivity(
+    `updated_member_rotation:${access.memberEmail}:${parsed.data.order.length}`
+  );
   return NextResponse.json({ success: true });
 }

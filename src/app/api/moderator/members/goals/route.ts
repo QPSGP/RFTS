@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserByEmail, getUserProfile, setUserGoals } from "@/lib/db";
 import { requireModeratorAssignedMember } from "@/lib/moderator-member-access";
+import { recordModeratorStaffActivity } from "@/lib/facilitator-staff-activity";
 
 const patchSchema = z.object({
   email: z.string().email(),
@@ -34,6 +35,10 @@ export async function PATCH(request: Request) {
   }
 
   await setUserGoals(user.id, parsed.data.goalIds);
+
+  await recordModeratorStaffActivity(
+    `updated_member_goals:${access.memberEmail}:${parsed.data.goalIds.length}`
+  );
 
   return NextResponse.json({
     ok: true,

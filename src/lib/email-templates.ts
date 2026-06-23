@@ -479,3 +479,45 @@ Questions? 800-GOAL-NOW (462-5669)
 `.trim();
   return { subject, html, text };
 }
+
+/** Sent when a facilitator creates a new member account from the console. */
+export function getFacilitatorCreatedMemberEmailContent(params: {
+  firstName?: string | null;
+  tierLabel: string;
+  statusLabel: string;
+  facilitatorName: string;
+  loginUrl: string;
+  billingNote: string;
+}): TemplateContent {
+  const baseUrl = getBaseUrl();
+  const subject = "Your Reach For The Stars member account is ready";
+  const dear = params.firstName?.trim()
+    ? `Hi ${escapeHtml(params.firstName.trim())},`
+    : "Hi there,";
+  const html = emailWrapper(`
+  <p>${dear}</p>
+  <p><strong>${escapeHtml(params.facilitatorName)}</strong>, your facilitator on Reach For The Stars, created a member account for you.</p>
+  <p><strong>Plan:</strong> ${escapeHtml(params.tierLabel)}<br />
+  <strong>Status:</strong> ${escapeHtml(params.statusLabel)}</p>
+  <p>${escapeHtml(params.billingNote)}</p>
+  <p>Sign in at <a href="${params.loginUrl}">${params.loginUrl}</a> with the email and password your facilitator gave you.</p>
+  <p style="margin-top: 24px;">
+    <a href="${baseUrl}/play-options" style="display: inline-block; padding: 12px 20px; background: #0f766e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Open member console</a>
+  </p>
+  <p style="margin-top: 24px; font-size: 14px; color: #6b7280;">Questions? 800-GOAL-NOW (462-5669) or customerservice@acesuccess.com</p>
+`);
+  const text = `
+${params.firstName?.trim() ? `Hi ${params.firstName.trim()},` : "Hi there,"}
+
+${params.facilitatorName} created your Reach For The Stars member account.
+
+Plan: ${params.tierLabel}
+Status: ${params.statusLabel}
+
+${params.billingNote}
+
+Sign in: ${params.loginUrl}
+Member console: ${baseUrl}/play-options
+`.trim();
+  return { subject, html, text };
+}

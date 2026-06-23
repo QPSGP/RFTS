@@ -6,6 +6,7 @@ import {
   listFacilitatorLibraryItems
 } from "@/lib/db";
 import { requireActiveModerator } from "@/lib/moderator-member-access";
+import { recordModeratorStaffActivity } from "@/lib/facilitator-staff-activity";
 
 const createSchema = z.object({
   title: z.string().min(2),
@@ -96,6 +97,8 @@ export async function POST(request: Request) {
     moderatorId: moderator.id,
     inGeneralCatalog: false
   });
+
+  await recordModeratorStaffActivity(`uploaded_member_audio:${record.title}`);
 
   return NextResponse.json({ ok: true, record });
 }

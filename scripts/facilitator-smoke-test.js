@@ -42,10 +42,10 @@ async function testPublicPages() {
     } else if (path === "/facilitator") {
       pass("Facilitator application form");
     }
-    if (path === "/moderator/console" && !text.includes("Facilitator Console")) {
+    if (path === "/moderator/console" && !text.includes("Log Out")) {
       fail("Console page shell");
     } else if (path === "/moderator/console") {
-      pass("Console page loads (auth message is client-rendered)");
+      pass("Console page shell");
     }
     if (path === "/login" && !text.includes("Admin / Facilitator Login")) {
       fail("Shared admin/facilitator login form");
@@ -70,7 +70,11 @@ async function testAuthGuards() {
   const guarded = [
     { url: `${BASE}/api/moderator/me`, method: "GET" },
     { url: `${BASE}/api/moderator-admin`, method: "GET" },
-    { url: `${BASE}/api/moderators`, method: "GET" }
+    { url: `${BASE}/api/moderators`, method: "GET" },
+    { url: `${BASE}/api/moderator/members`, method: "GET" },
+    { url: `${BASE}/api/moderator/member-issues`, method: "GET" },
+    { url: `${BASE}/api/moderator/members/schedule-preview?email=test@example.invalid`, method: "GET" },
+    { url: `${BASE}/api/moderator/members/activity?email=test@example.invalid`, method: "GET" }
   ];
   for (const g of guarded) {
     const { res } = await fetchStatus(g.url, { method: g.method });

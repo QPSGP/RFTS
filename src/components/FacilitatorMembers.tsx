@@ -140,6 +140,41 @@ export default function FacilitatorMembers() {
   const [goalSearch, setGoalSearch] = useState("");
   const [goalsSaveStatus, setGoalsSaveStatus] = useState<string | null>(null);
   const [goalsSaving, setGoalsSaving] = useState(false);
+  type ClientSection = "summary" | "goals" | "schedule" | "rotation" | "issues" | "activity";
+  const [openClientSection, setOpenClientSection] = useState<ClientSection | null>(null);
+  const [activitySummary, setActivitySummary] = useState<
+    Record<
+      string,
+      {
+        goalCount: number;
+        lastLoginAt: string | null;
+        lastPlayAt: string | null;
+        lastPlayDetails: string | null;
+        activityRowCount: number;
+      }
+    >
+  >({});
+  const [schedulePreview, setSchedulePreview] = useState<
+    Record<
+      string,
+      Array<{
+        night: number;
+        tracks: Array<{ title: string; skuCode?: string }>;
+        note?: string;
+      }>
+    >
+  >({});
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [openIssues, setOpenIssues] = useState<
+    Array<{
+      id: string;
+      memberEmail: string;
+      subject: string;
+      category: string;
+      status: string;
+      createdAt: string;
+    }>
+  >([]);
 
   const selectedMember = useMemo(
     () => members.find((m) => m.email === selectedEmail) ?? null,
@@ -187,7 +222,15 @@ export default function FacilitatorMembers() {
     const membersRes = await fetch("/api/moderator/members");
     if (!membersRes.ok) throw new Error("Could not load members");
     const membersData = await membersRes.json();
-    setMembers(membersData.members ?? []);
+    const memberList = membersData.members ?? [];
+    setMembers(memberList);
+    if (memberList.length === 0) setAddMemberOpen(true);
+
+    const issuesRes = await fetch("/api/moderator/member-issues");
+    if (issuesRes.ok) {
+      const issuesData = await issuesRes.json();
+      setOpenIssues(issuesData.reports ?? []);
+    }
 
     const libRes = await fetch("/api/moderator/library");
     if (libRes.ok) {
@@ -233,6 +276,7 @@ export default function FacilitatorMembers() {
     setRotationSaveStatus(null);
     setGoalSearch("");
     setGoalsSaveStatus(null);
+    setOpenClientSection("summary");
     try {
       let tier = memberTier;
       const profileRes = await fetch(
@@ -262,6 +306,9 @@ export default function FacilitatorMembers() {
         const data = await activityRes.json();
         setActivity(data.activityLog ?? []);
         setScheduleProgress(data.scheduleProgress ?? null);
+        if (data.summary) {
+          setActivitySummary((prev) => ({ ...prev, [email]: data.summary }));
+        }
       }
 
       if (tier === "platinum_managed") {
@@ -299,6 +346,45 @@ export default function FacilitatorMembers() {
     const member = members.find((m) => m.email === selectedEmail);
     void loadMemberDetail(selectedEmail, member?.subscriptionTier ?? null);
   }, [selectedEmail, members, loadMemberDetail]);
+
+  const toggleClientSection = (section: ClientSection) => {
+    const opening = openClientSection !== section;
+    setOpenClientSection(opening ? section : null);
+    if (opening && section === "schedule" && selectedEmail && isGold) {
+      void loadSchedulePreview(selectedEmail);
+    }
+  };
+
+  const loadSchedulePreview = async (email: string) => {
+    setScheduleLoading(true);
+    try {
+      const res = await fetch(
+        `/api/moderator/members/schedule-preview?email=${encodeURIComponent(email)}&nights=14`
+      );
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setSchedulePreview((prev) => ({
+          ...prev,
+          [email]: (data.schedule ?? []).map(
+            (night: {
+              night: number;
+              tracks?: Array<{ title?: string; skuCode?: string }>;
+              note?: string;
+            }) => ({
+              night: night.night,
+              note: night.note,
+              tracks: (night.tracks ?? []).map((t) => ({
+                title: t.title ?? "Audio",
+                skuCode: t.skuCode
+              }))
+            })
+          )
+        }));
+      }
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
 
   const persistRotation = async (email: string, order: string[]) => {
     setRotationSaveStatus("Saving rotation…");
@@ -561,10 +647,7 @@ export default function FacilitatorMembers() {
         </p>
       )}
 
-      <div
-        className="grid"
-        style={{ gridTemplateColumns: "minmax(220px, 280px) 1fr", gap: 16, alignItems: "start" }}
-      >
+      <div className="facilitator-console-layout">
         <section className="card">
           <h2 style={{ marginTop: 0 }}>Your clients</h2>
           <p style={{ fontSize: 12, color: "#64748b", marginTop: 0 }}>
@@ -829,8 +912,48 @@ export default function FacilitatorMembers() {
               <h2 style={{ marginTop: 0 }}>{memberLabel(selectedMember!)}</h2>
               <p style={{ color: "#64748b", marginBottom: 16 }}>{selectedEmail}</p>
 
-              <div className="card" style={{ marginBottom: 16, background: "#f8fafc" }}>
-                <h3 style={{ marginTop: 0 }}>Profile</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+                <button
+                  type="button"
+                  className={adminSectionToggleClass(openClientSection === "summary", true)}
+                  onClick={() => toggleClientSection("summary")}
+                >
+                  Client summary
+                </button>
+                {openClientSection === "summary" && (
+                  <div className="card" style={{ marginTop: 4 }}>
+                    <div className="grid grid-2" style={{ gap: 12, marginBottom: 12 }}>
+                      <div className="card" style={{ background: "#f8fafc" }}>
+                        <strong>Goals</strong>
+                        <p style={{ margin: "4px 0 0", fontSize: 22 }}>
+                          {activitySummary[selectedEmail]?.goalCount ?? memberGoalIds.length}
+                        </p>
+                      </div>
+                      <div className="card" style={{ background: "#f8fafc" }}>
+                        <strong>Schedule nights</strong>
+                        <p style={{ margin: "4px 0 0", fontSize: 22 }}>
+                          {scheduleProgress?.completedScheduleNights ?? 0}
+                        </p>
+                      </div>
+                      <div className="card" style={{ background: "#f8fafc" }}>
+                        <strong>Last login</strong>
+                        <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
+                          {activitySummary[selectedEmail]?.lastLoginAt
+                            ? new Date(activitySummary[selectedEmail].lastLoginAt!).toLocaleString()
+                            : "—"}
+                        </p>
+                      </div>
+                      <div className="card" style={{ background: "#f8fafc" }}>
+                        <strong>Last play</strong>
+                        <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
+                          {activitySummary[selectedEmail]?.lastPlayAt
+                            ? new Date(activitySummary[selectedEmail].lastPlayAt!).toLocaleString()
+                            : "—"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="card" style={{ background: "#f8fafc" }}>
+                      <h3 style={{ marginTop: 0 }}>Profile</h3>
                 {!profileDetail?.registered ? (
                   <p style={{ color: "#92400e" }}>
                     This person has not completed signup yet. They will appear here once they
@@ -862,14 +985,54 @@ export default function FacilitatorMembers() {
                     )}
                   </div>
                 )}
-              </div>
+                    </div>
+                  </div>
+                )}
+
+              {openIssues.filter((r) => r.memberEmail.toLowerCase() === selectedEmail.toLowerCase()).length >
+                0 && (
+                <>
+                  <button
+                    type="button"
+                    className={adminSectionToggleClass(openClientSection === "issues", true)}
+                    onClick={() => toggleClientSection("issues")}
+                  >
+                    Open issue reports (
+                    {
+                      openIssues.filter(
+                        (r) => r.memberEmail.toLowerCase() === selectedEmail.toLowerCase()
+                      ).length
+                    }
+                    )
+                  </button>
+                  {openClientSection === "issues" && (
+                    <div className="card" style={{ marginTop: 4, marginBottom: 8 }}>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
+                        {openIssues
+                          .filter((r) => r.memberEmail.toLowerCase() === selectedEmail.toLowerCase())
+                          .map((issue) => (
+                            <li key={issue.id} style={{ marginBottom: 8 }}>
+                              <strong>{issue.subject}</strong> ({issue.status}) —{" "}
+                              {new Date(issue.createdAt).toLocaleString()}
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              )}
 
               {isGold && profileDetail?.registered && selectedEmail && (
-                <div className="card" style={{ marginBottom: 16 }}>
-                  <h3 style={{ marginTop: 0 }}>
-                    Goals (Gold Member)
-                    {memberGoalIds.length ? ` — ${memberGoalIds.length} selected` : ""}
-                  </h3>
+                <>
+                  <button
+                    type="button"
+                    className={adminSectionToggleClass(openClientSection === "goals", true)}
+                    onClick={() => toggleClientSection("goals")}
+                  >
+                    Goals (Gold){memberGoalIds.length ? ` — ${memberGoalIds.length}` : ""}
+                  </button>
+                  {openClientSection === "goals" && (
+                <div className="card" style={{ marginTop: 4, marginBottom: 8 }}>
                   <p style={{ fontSize: 13, color: "#64748b", marginTop: 0 }}>
                     Choose up to 10 goals in order. Nightly schedule audios come from these goals.
                   </p>
@@ -998,20 +1161,63 @@ export default function FacilitatorMembers() {
                     </p>
                   )}
                 </div>
+                  )}
+                  <button
+                    type="button"
+                    className={adminSectionToggleClass(openClientSection === "schedule", true)}
+                    onClick={() => toggleClientSection("schedule")}
+                  >
+                    Scheduled audios (Gold preview)
+                  </button>
+                  {openClientSection === "schedule" && (
+                    <div className="card" style={{ marginTop: 4, marginBottom: 8 }}>
+                      {scheduleLoading ? (
+                        <p style={{ fontSize: 13, color: "#64748b" }}>Loading schedule preview…</p>
+                      ) : (schedulePreview[selectedEmail] ?? []).length === 0 ? (
+                        <p style={{ fontSize: 13, color: "#6b7280" }}>
+                          Add goals and save to preview the next 14 schedule nights.
+                        </p>
+                      ) : (
+                        <ol style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
+                          {(schedulePreview[selectedEmail] ?? []).map((night) => (
+                            <li key={night.night} style={{ marginBottom: 10 }}>
+                              <strong>Night {night.night}</strong>
+                              {night.note ? ` — ${night.note}` : ""}
+                              <ul style={{ margin: "4px 0 0", paddingLeft: 16 }}>
+                                {night.tracks.map((t, i) => (
+                                  <li key={i}>
+                                    {t.skuCode ? `${t.skuCode} – ` : ""}
+                                    {t.title}
+                                  </li>
+                                ))}
+                              </ul>
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
 
-              {scheduleProgress && (
-                <div className="card" style={{ marginBottom: 16 }}>
-                  <h3 style={{ marginTop: 0 }}>Schedule progress</h3>
-                  <p style={{ margin: 0 }}>
-                    Completed nights: <strong>{scheduleProgress.completedScheduleNights}</strong>
-                    · Current night: <strong>{scheduleProgress.currentNight}</strong>
-                  </p>
-                </div>
+              {scheduleProgress && openClientSection === "summary" && (
+                <p style={{ fontSize: 13, color: "#64748b", marginBottom: 16 }}>
+                  Schedule progress: <strong>{scheduleProgress.completedScheduleNights}</strong> nights
+                  complete · current night <strong>{scheduleProgress.currentNight}</strong>
+                </p>
               )}
 
               {isManaged && (
-                <div className="card" style={{ marginBottom: 16 }}>
+                <>
+                  <button
+                    type="button"
+                    className={adminSectionToggleClass(openClientSection === "rotation", true)}
+                    onClick={() => toggleClientSection("rotation")}
+                  >
+                    Rotation order (Managed)
+                  </button>
+                  {openClientSection === "rotation" && (
+                <div className="card" style={{ marginTop: 4, marginBottom: 8 }}>
                   <h3 style={{ marginTop: 0 }}>Rotation order (Platinum Managed)</h3>
                   <p style={{ fontSize: 13, color: "#64748b", marginTop: 0 }}>
                     This is the member&apos;s live schedule. Each add, move, or remove saves
@@ -1105,9 +1311,19 @@ export default function FacilitatorMembers() {
                     <p style={{ fontSize: 12, color: "#047857", marginTop: 8 }}>{rotationSaveStatus}</p>
                   )}
                 </div>
+                  )}
+                </>
               )}
 
-              <div className="card">
+              <button
+                type="button"
+                className={adminSectionToggleClass(openClientSection === "activity", true)}
+                onClick={() => toggleClientSection("activity")}
+              >
+                Recent activity
+              </button>
+              {openClientSection === "activity" && (
+              <div className="card" style={{ marginTop: 4 }}>
                 <h3 style={{ marginTop: 0 }}>Recent activity</h3>
                 {activity.length === 0 ? (
                   <p style={{ color: "#6b7280" }}>No activity recorded yet.</p>
@@ -1137,6 +1353,8 @@ export default function FacilitatorMembers() {
                     </table>
                   </div>
                 )}
+              </div>
+              )}
               </div>
             </>
           )}

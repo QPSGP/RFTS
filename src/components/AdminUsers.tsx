@@ -51,6 +51,8 @@ type UserRow = {
   playsPerNight: number;
   stripeCustomerId?: string | null;
   stripeSubscriptionId?: string | null;
+  affiliateCode?: string | null;
+  referredByAffiliateCode?: string | null;
 };
 
 const inputStyle = {
@@ -2424,6 +2426,24 @@ export default function AdminUsers() {
                                   ? "Saving…"
                                   : "Save facilitator assignment"}
                               </button>
+                              <div
+                                style={{
+                                  marginTop: 16,
+                                  paddingTop: 12,
+                                  borderTop: "1px solid #e5e7eb",
+                                  fontSize: 13,
+                                  color: "#4b5563"
+                                }}
+                              >
+                                <p style={{ margin: "0 0 6px" }}>
+                                  <strong>Member affiliate code:</strong>{" "}
+                                  {user.affiliateCode?.trim() || "—"}
+                                </p>
+                                <p style={{ margin: 0 }}>
+                                  <strong>Referred by affiliate:</strong>{" "}
+                                  {user.referredByAffiliateCode?.trim() || "—"}
+                                </p>
+                              </div>
                             </>
                           )}
                         </div>

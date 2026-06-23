@@ -4,7 +4,8 @@ import { getUserSessionEmail } from "@/lib/user-auth";
 import {
   getMemberProfileByUserId,
   getUserProfile,
-  upsertMemberProfile
+  upsertMemberProfile,
+  getFacilitatorsForMemberEmail
 } from "@/lib/db";
 import { getMemberBillingSummary } from "@/lib/member-billing";
 import { getMemberAffiliateSummary } from "@/lib/member-affiliate";
@@ -68,10 +69,15 @@ export async function GET() {
   const billing = await getMemberBillingSummary(user);
   const affiliate = await getMemberAffiliateSummary(user.id, user.email);
   const memberProfile = await getMemberProfileByUserId(user.id);
+  const assignedFacilitators = await getFacilitatorsForMemberEmail(user.email);
+  const facilitator = assignedFacilitators[0]
+    ? { name: assignedFacilitators[0].name, email: assignedFacilitators[0].email }
+    : null;
   if (!memberProfile) {
     return NextResponse.json({
       billing,
       affiliate,
+      facilitator,
       profile: {
         email: user.email,
         firstName: null,
@@ -96,6 +102,7 @@ export async function GET() {
   return NextResponse.json({
     billing,
     affiliate,
+    facilitator,
     profile: {
       email: user.email,
       firstName: memberProfile.firstName ?? null,

@@ -1018,3 +1018,16 @@ button.section-title {
     grid-template-columns: 1fr;
   }
 }
+
+.facilitator-console-layout {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .facilitator-console-layout {
+    grid-template-columns: 1fr;
+  }
+}

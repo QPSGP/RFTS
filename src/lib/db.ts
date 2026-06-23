@@ -798,6 +798,8 @@ export const getUserProfile = async (email: string) => {
 export type UserRowWithName = UserProfile & {
   firstName: string | null;
   lastName: string | null;
+  affiliateCode: string | null;
+  referredByAffiliateCode: string | null;
 };
 
 export const listUsers = async (): Promise<UserRowWithName[]> => {
@@ -813,7 +815,9 @@ export const listUsers = async (): Promise<UserRowWithName[]> => {
       s.stripe_customer_id AS "stripeCustomerId",
       s.stripe_subscription_id AS "stripeSubscriptionId",
       mp.first_name AS "firstName",
-      mp.last_name AS "lastName"
+      mp.last_name AS "lastName",
+      u.affiliate_code AS "affiliateCode",
+      u.referred_by_affiliate_code AS "referredByAffiliateCode"
     FROM users u
     LEFT JOIN subscriptions s ON s.user_id = u.id
     LEFT JOIN member_profiles mp ON mp.user_id = u.id
@@ -1693,6 +1697,62 @@ const mapIssueReportRow = (r: {
   resolvedBy: r.resolved_by ?? null,
   createdAt: r.created_at
 });
+
+export const listMemberIssueReportsForMemberEmails = async (
+  emails: string[],
+  limit = 50
+): Promise<MemberIssueReportAdmin[]> => {
+  const unique = [...new Set(emails.map((e) => e.trim().toLowerCase()).filter(Boolean))];
+  if (!unique.length) return [];
+  try {
+    const { rows } = await sql<{
+      id: string;
+      user_id: string;
+      member_email: string;
+      category: string;
+      subject: string;
+      message: string;
+      status: MemberIssueReportStatus;
+      resolution_notes: string | null;
+      resolved_at: string | null;
+      resolved_by: string | null;
+      created_at: string;
+    }>`
+      SELECT
+        id,
+        user_id,
+        member_email,
+        category,
+        subject,
+        message,
+        status,
+        resolution_notes,
+        resolved_at,
+        resolved_by,
+        created_at
+      FROM member_issue_reports
+      WHERE LOWER(member_email) = ANY(${toPgArray(unique)}::text[])
+        AND status IN ('open', 'in_progress')
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `;
+    return rows.map((r) => ({
+      id: r.id,
+      userId: r.user_id,
+      memberEmail: r.member_email,
+      category: r.category,
+      subject: r.subject,
+      message: r.message,
+      status: r.status,
+      resolutionNotes: r.resolution_notes ?? null,
+      resolvedAt: r.resolved_at ?? null,
+      resolvedBy: r.resolved_by ?? null,
+      createdAt: r.created_at
+    }));
+  } catch {
+    return [];
+  }
+};
 
 export const countMemberIssueReports = async (
   statusFilter: "all" | MemberIssueReportStatus
