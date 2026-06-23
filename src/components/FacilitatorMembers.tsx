@@ -88,6 +88,52 @@ function countInOrder(order: string[], itemId: string): number {
   return order.filter((id) => id === itemId).length;
 }
 
+type SchedulePreviewNight = {
+  night: number;
+  tracks: Array<{ id?: string; title: string; skuCode?: string }>;
+  note?: string;
+  rotationAdded?: string[];
+  rotationSessionDrop?: string[];
+  rotationRemovedAfterPlays?: string[];
+};
+
+type SchedulePreviewMeta = {
+  tier: MemberRow["subscriptionTier"] | "platinum" | "platinum_managed";
+  playsPerNight: number;
+  completedScheduleNights: number;
+  currentNight: number;
+  goalCount: number;
+  rotationStepCount: number;
+};
+
+function trackLabel(track: { skuCode?: string; title: string }): string {
+  return track.skuCode ? `${track.skuCode} – ${track.title}` : track.title;
+}
+
+function lineupAlgorithmNote(
+  night: SchedulePreviewNight,
+  idLabels: Map<string, string>
+): string {
+  const parts: string[] = [];
+  if (night.note) parts.push(night.note);
+  if (night.rotationAdded?.length) {
+    parts.push(
+      `Added to rotation: ${night.rotationAdded.map((id) => idLabels.get(id) || id).join(", ")}`
+    );
+  }
+  if (night.rotationSessionDrop?.length) {
+    parts.push(
+      `Goals leave rotation: ${night.rotationSessionDrop.map((id) => idLabels.get(id) || id).join(", ")}`
+    );
+  }
+  if (night.rotationRemovedAfterPlays?.length) {
+    parts.push(
+      `Removed after plays: ${night.rotationRemovedAfterPlays.map((id) => idLabels.get(id) || id).join(", ")}`
+    );
+  }
+  return parts.join(" · ") || "—";
+}
+
 export default function FacilitatorMembers() {
   const [facilitatorName, setFacilitatorName] = useState("");
   const [members, setMembers] = useState<MemberRow[]>([]);
@@ -156,17 +202,15 @@ export default function FacilitatorMembers() {
       }
     >
   >({});
-  const [schedulePreview, setSchedulePreview] = useState<
-    Record<
-      string,
-      Array<{
-        night: number;
-        tracks: Array<{ title: string; skuCode?: string }>;
-        note?: string;
-      }>
-    >
-  >({});
+  const [schedulePreview, setSchedulePreview] = useState<Record<string, SchedulePreviewNight[]>>({});
+  const [schedulePreviewMeta, setSchedulePreviewMeta] = useState<Record<string, SchedulePreviewMeta>>(
+    {}
+  );
   const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [lineupPreviewOpen, setLineupPreviewOpen] = useState(false);
+  const [lineupMemberEmail, setLineupMemberEmail] = useState("");
+  const [lineupNights, setLineupNights] = useState(14);
+  const [lineupMessage, setLineupMessage] = useState<string | null>(null);
   const [openIssues, setOpenIssues] = useState<
     Array<{
       id: string;
@@ -363,42 +407,69 @@ export default function FacilitatorMembers() {
     if (!selectedEmail) return;
     const member = members.find((m) => m.email === selectedEmail);
     void loadMemberDetail(selectedEmail, member?.subscriptionTier ?? null);
+    setLineupMemberEmail(selectedEmail);
   }, [selectedEmail, members, loadMemberDetail]);
+
+  useEffect(() => {
+    if (lineupMemberEmail) return;
+    const firstRegistered = members.find((member) => member.registered);
+    if (firstRegistered) setLineupMemberEmail(firstRegistered.email);
+  }, [members, lineupMemberEmail]);
+
+  useEffect(() => {
+    if (!lineupPreviewOpen || !lineupMemberEmail) return;
+    void loadSchedulePreview(lineupMemberEmail, lineupNights);
+  }, [lineupPreviewOpen, lineupMemberEmail, lineupNights]);
 
   const toggleClientSection = (section: ClientSection) => {
     const opening = openClientSection !== section;
     setOpenClientSection(opening ? section : null);
-    if (opening && section === "schedule" && selectedEmail && isGold) {
-      void loadSchedulePreview(selectedEmail);
+    if (opening && section === "schedule" && selectedEmail) {
+      void loadSchedulePreview(selectedEmail, lineupNights);
     }
   };
 
-  const loadSchedulePreview = async (email: string) => {
+  const loadSchedulePreview = async (email: string, nights = lineupNights) => {
     setScheduleLoading(true);
+    setLineupMessage(null);
     try {
       const res = await fetch(
-        `/api/moderator/members/schedule-preview?email=${encodeURIComponent(email)}&nights=14`
+        `/api/moderator/members/schedule-preview?email=${encodeURIComponent(email)}&nights=${nights}`
       );
       const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setSchedulePreview((prev) => ({
-          ...prev,
-          [email]: (data.schedule ?? []).map(
-            (night: {
-              night: number;
-              tracks?: Array<{ title?: string; skuCode?: string }>;
-              note?: string;
-            }) => ({
-              night: night.night,
-              note: night.note,
-              tracks: (night.tracks ?? []).map((t) => ({
-                title: t.title ?? "Audio",
-                skuCode: t.skuCode
-              }))
-            })
-          )
-        }));
+      if (!res.ok) {
+        setLineupMessage(typeof data?.error === "string" ? data.error : "Could not load lineup.");
+        return;
       }
+      if (typeof data.message === "string" && data.message) {
+        setLineupMessage(data.message);
+      }
+      setSchedulePreview((prev) => ({
+        ...prev,
+        [email]: (data.schedule ?? []).map((night: SchedulePreviewNight) => ({
+          night: night.night,
+          note: night.note,
+          rotationAdded: night.rotationAdded,
+          rotationSessionDrop: night.rotationSessionDrop,
+          rotationRemovedAfterPlays: night.rotationRemovedAfterPlays,
+          tracks: (night.tracks ?? []).map((t) => ({
+            id: t.id,
+            title: t.title ?? "Audio",
+            skuCode: t.skuCode
+          }))
+        }))
+      }));
+      setSchedulePreviewMeta((prev) => ({
+        ...prev,
+        [email]: {
+          tier: data.tier ?? "platinum",
+          playsPerNight: data.playsPerNight ?? 2,
+          completedScheduleNights: data.completedScheduleNights ?? 0,
+          currentNight: data.currentNight ?? 1,
+          goalCount: data.goalCount ?? 0,
+          rotationStepCount: data.rotationStepCount ?? 0
+        }
+      }));
     } finally {
       setScheduleLoading(false);
     }
@@ -640,6 +711,89 @@ export default function FacilitatorMembers() {
     [library]
   );
 
+  const registeredMembers = useMemo(() => members.filter((member) => member.registered), [members]);
+
+  const buildLineupIdLabels = (email: string) => {
+    const idLabels = new Map<string, string>();
+    library.forEach((item) => idLabels.set(item.id, trackLabel(item)));
+    (schedulePreview[email] ?? []).forEach((night) => {
+      night.tracks.forEach((track) => {
+        if (track.id) idLabels.set(track.id, trackLabel(track));
+      });
+    });
+    return idLabels;
+  };
+
+  const renderLineupPreview = (email: string, showLoading = false) => {
+    const nights = schedulePreview[email] ?? [];
+    const meta = schedulePreviewMeta[email];
+    const idLabels = buildLineupIdLabels(email);
+    const isLoading = showLoading && scheduleLoading && lineupMemberEmail === email;
+
+    if (isLoading) {
+      return <p style={{ fontSize: 13, color: "#64748b" }}>Loading nightly lineup…</p>;
+    }
+
+    if (nights.length === 0) {
+      return (
+        <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>
+          {lineupMemberEmail === email && lineupMessage
+            ? lineupMessage
+            : "Assign goals (Gold) or rotation steps (Managed), then refresh the preview."}
+        </p>
+      );
+    }
+
+    return (
+      <>
+        {meta && (
+          <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 12px", lineHeight: 1.5 }}>
+            <strong>{tierLabel(meta.tier)}</strong> · {meta.playsPerNight} audio
+            {meta.playsPerNight === 1 ? "" : "s"} per night · current night{" "}
+            <strong>{meta.currentNight}</strong> ({meta.completedScheduleNights} completed)
+            {meta.tier === "platinum_managed"
+              ? ` · ${meta.rotationStepCount} rotation step${meta.rotationStepCount === 1 ? "" : "s"}`
+              : ` · ${meta.goalCount} goal${meta.goalCount === 1 ? "" : "s"}`}
+            . Matches the member app algorithm.
+          </p>
+        )}
+        <div style={{ maxHeight: 420, overflow: "auto", border: "1px solid #e2e8f0", borderRadius: 8 }}>
+          <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ textAlign: "left", background: "#f8fafc" }}>
+                <th style={{ padding: "8px 10px", borderBottom: "1px solid #e2e8f0" }}>Night</th>
+                <th style={{ padding: "8px 10px", borderBottom: "1px solid #e2e8f0" }}>Lineup</th>
+                <th style={{ padding: "8px 10px", borderBottom: "1px solid #e2e8f0" }}>Algorithm notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {nights.map((night) => (
+                <tr key={night.night} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                  <td style={{ padding: "8px 10px", verticalAlign: "top", fontWeight: 600 }}>
+                    {night.night}
+                    {meta && night.night === meta.currentNight ? (
+                      <span style={{ color: "#047857", fontWeight: 500 }}> · tonight</span>
+                    ) : null}
+                  </td>
+                  <td style={{ padding: "8px 10px", verticalAlign: "top" }}>
+                    {night.tracks.length === 0
+                      ? "—"
+                      : night.tracks.map((track, index) => (
+                          <div key={`${night.night}-${index}`}>{trackLabel(track)}</div>
+                        ))}
+                  </td>
+                  <td style={{ padding: "8px 10px", verticalAlign: "top", color: "#64748b" }}>
+                    {lineupAlgorithmNote(night, idLabels)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
+    );
+  };
+
   if (loading) {
     return (
       <section className="card">
@@ -655,7 +809,7 @@ export default function FacilitatorMembers() {
         <h1>Welcome, {facilitatorName || "Facilitator"}</h1>
         <p>
           Manage members assigned to you — add clients, upload member audios, set Gold member goals,
-          view activity, and edit Platinum Managed rotations.
+          preview nightly lineups, and edit Platinum Managed rotations.
         </p>
       </section>
 
@@ -939,6 +1093,82 @@ export default function FacilitatorMembers() {
               </div>
             )}
           </div>
+          <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid #e5e7eb" }}>
+            <button
+              type="button"
+              className={adminSectionToggleClass(lineupPreviewOpen, true)}
+              aria-expanded={lineupPreviewOpen}
+              onClick={() => setLineupPreviewOpen((open) => !open)}
+            >
+              {lineupPreviewOpen ? "▼" : "▶"} Nightly lineup preview
+            </button>
+            {lineupPreviewOpen && (
+              <div className="card" style={{ marginTop: 8 }}>
+                <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, lineHeight: 1.5 }}>
+                  See the same nightly schedule the member app builds — useful for checking goals,
+                  rotation order, and algorithm notes (adds, drops, CGMR slots).
+                </p>
+                {registeredMembers.length === 0 ? (
+                  <p style={{ fontSize: 12, color: "#92400e" }}>
+                    No registered clients yet. Members must complete signup before a lineup can be
+                    previewed.
+                  </p>
+                ) : (
+                  <>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 8,
+                        alignItems: "flex-end",
+                        marginBottom: 12
+                      }}
+                    >
+                      <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600 }}>Client</span>
+                        <select
+                          style={inputStyle}
+                          value={lineupMemberEmail}
+                          onChange={(e) => setLineupMemberEmail(e.target.value)}
+                        >
+                          {registeredMembers.map((member) => (
+                            <option key={member.email} value={member.email}>
+                              {memberLabel(member)} — {tierLabel(member.subscriptionTier)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600 }}>Nights</span>
+                        <select
+                          style={{ ...inputStyle, width: 120 }}
+                          value={lineupNights}
+                          onChange={(e) => setLineupNights(Number(e.target.value))}
+                        >
+                          <option value={7}>7 nights</option>
+                          <option value={14}>14 nights</option>
+                          <option value={21}>21 nights</option>
+                          <option value={30}>30 nights</option>
+                          <option value={42}>42 nights</option>
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        className="button button-secondary"
+                        disabled={!lineupMemberEmail || scheduleLoading}
+                        onClick={() =>
+                          lineupMemberEmail && void loadSchedulePreview(lineupMemberEmail, lineupNights)
+                        }
+                      >
+                        {scheduleLoading ? "Loading…" : "Refresh lineup"}
+                      </button>
+                    </div>
+                    {lineupMemberEmail ? renderLineupPreview(lineupMemberEmail, true) : null}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </section>
 
         <section className="card">
@@ -1060,6 +1290,23 @@ export default function FacilitatorMembers() {
                             </li>
                           ))}
                       </ul>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {profileDetail?.registered && selectedEmail && (
+                <>
+                  <button
+                    type="button"
+                    className={adminSectionToggleClass(openClientSection === "schedule", true)}
+                    onClick={() => toggleClientSection("schedule")}
+                  >
+                    Nightly lineup preview
+                  </button>
+                  {openClientSection === "schedule" && (
+                    <div className="card" style={{ marginTop: 4, marginBottom: 8 }}>
+                      {renderLineupPreview(selectedEmail, true)}
                     </div>
                   )}
                 </>
@@ -1204,41 +1451,6 @@ export default function FacilitatorMembers() {
                     </p>
                   )}
                 </div>
-                  )}
-                  <button
-                    type="button"
-                    className={adminSectionToggleClass(openClientSection === "schedule", true)}
-                    onClick={() => toggleClientSection("schedule")}
-                  >
-                    Scheduled audios (Gold preview)
-                  </button>
-                  {openClientSection === "schedule" && (
-                    <div className="card" style={{ marginTop: 4, marginBottom: 8 }}>
-                      {scheduleLoading ? (
-                        <p style={{ fontSize: 13, color: "#64748b" }}>Loading schedule preview…</p>
-                      ) : (schedulePreview[selectedEmail] ?? []).length === 0 ? (
-                        <p style={{ fontSize: 13, color: "#6b7280" }}>
-                          Add goals and save to preview the next 14 schedule nights.
-                        </p>
-                      ) : (
-                        <ol style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
-                          {(schedulePreview[selectedEmail] ?? []).map((night) => (
-                            <li key={night.night} style={{ marginBottom: 10 }}>
-                              <strong>Night {night.night}</strong>
-                              {night.note ? ` — ${night.note}` : ""}
-                              <ul style={{ margin: "4px 0 0", paddingLeft: 16 }}>
-                                {night.tracks.map((t, i) => (
-                                  <li key={i}>
-                                    {t.skuCode ? `${t.skuCode} – ` : ""}
-                                    {t.title}
-                                  </li>
-                                ))}
-                              </ul>
-                            </li>
-                          ))}
-                        </ol>
-                      )}
-                    </div>
                   )}
                 </>
               )}
