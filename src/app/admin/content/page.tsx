@@ -15,19 +15,23 @@ import AffiliatePayoutAdmin from "@/components/AffiliatePayoutAdmin";
 import ScheduleAlgorithmTool from "@/components/ScheduleAlgorithmTool";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 
+const contentConsoleSections = {
+  members: false,
+  moderators: false,
+  affiliates: false,
+  playback: false,
+  subscriptions: false,
+  goals: false,
+  library: false,
+  admins: false,
+  scheduleAlgorithm: false
+} as const;
+
+type ContentConsoleSection = keyof typeof contentConsoleSections;
+
 export default function AdminContentPage() {
   const [isFirstAdmin, setIsFirstAdmin] = useState<boolean | null>(null);
-  const [openSections, setOpenSections] = useState({
-    members: false,
-    moderators: false,
-    affiliates: false,
-    playback: false,
-    subscriptions: false,
-    goals: false,
-    library: false,
-    admins: false,
-    scheduleAlgorithm: false
-  });
+  const [openSections, setOpenSections] = useState(contentConsoleSections);
 
   useEffect(() => {
     fetch("/api/admin/is-first-admin")
@@ -45,7 +49,7 @@ export default function AdminContentPage() {
     }).catch(() => {});
   }, []);
 
-  const toggleSection = (key: keyof typeof openSections, id: string) => {
+  const toggleSection = (key: ContentConsoleSection, id: string) => {
     setOpenSections((prev) => {
       const nextOpen = !prev[key];
       if (nextOpen) {
@@ -53,8 +57,9 @@ export default function AdminContentPage() {
           const el = document.getElementById(id);
           el?.scrollIntoView({ behavior: "smooth", block: "start" });
         });
+        return { ...contentConsoleSections, [key]: true };
       }
-      return { ...prev, [key]: nextOpen };
+      return { ...prev, [key]: false };
     });
   };
 
