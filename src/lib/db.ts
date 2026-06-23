@@ -2444,6 +2444,45 @@ export const listModerators = async () => {
   return rows;
 };
 
+/** Facilitators that have this member email on their assigned list. */
+export const getFacilitatorsForMemberEmail = async (memberEmail: string) => {
+  const normalized = memberEmail.trim().toLowerCase();
+  const moderators = await listModerators();
+  return moderators.filter((m) =>
+    (m.assignedUserEmails ?? []).some((e) => e.trim().toLowerCase() === normalized)
+  );
+};
+
+/** Assign member to one facilitator (or none). Removes email from all other facilitators. */
+export const setMemberFacilitatorAssignment = async (
+  memberEmail: string,
+  facilitatorId: string | null
+) => {
+  const trimmed = memberEmail.trim();
+  const normalized = trimmed.toLowerCase();
+  const moderators = await listModerators();
+
+  for (const mod of moderators) {
+    const emails = mod.assignedUserEmails ?? [];
+    const hasMember = emails.some((e) => e.trim().toLowerCase() === normalized);
+    const shouldHave = facilitatorId !== null && mod.id === facilitatorId;
+
+    if (hasMember && !shouldHave) {
+      await updateModeratorAccount({
+        moderatorId: mod.id,
+        assignedUserEmails: emails.filter((e) => e.trim().toLowerCase() !== normalized)
+      });
+    } else if (!hasMember && shouldHave) {
+      await updateModeratorAccount({
+        moderatorId: mod.id,
+        assignedUserEmails: [...emails, trimmed]
+      });
+    }
+  }
+
+  return facilitatorId ? getFacilitatorsForMemberEmail(trimmed) : [];
+};
+
 export type StaffActivityRow = {
   id: string;
   actorType: "admin" | "moderator";

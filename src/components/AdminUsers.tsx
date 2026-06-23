@@ -11,12 +11,20 @@ import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 
 type MemberAdminSection =
   | "profile"
+  | "facilitator"
   | "activity"
   | "membership"
   | "addFile"
   | "scheduledAudios"
   | "goals"
   | "rotation";
+
+type FacilitatorOption = {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+};
 
 function sanitizePathSegment(name: string): string {
   return name
@@ -527,6 +535,13 @@ export default function AdminUsers() {
     >
   >({});
   const [memberScheduleDraft, setMemberScheduleDraft] = useState<Record<string, string>>({});
+  const [facilitatorOptions, setFacilitatorOptions] = useState<FacilitatorOption[]>([]);
+  const [facilitatorDrafts, setFacilitatorDrafts] = useState<Record<string, string>>({});
+  const [facilitatorLoading, setFacilitatorLoading] = useState<Record<string, boolean>>({});
+  const [facilitatorSaving, setFacilitatorSaving] = useState<Record<string, boolean>>({});
+  const [facilitatorMultipleWarning, setFacilitatorMultipleWarning] = useState<
+    Record<string, boolean>
+  >({});
   const [memberScheduleSaving, setMemberScheduleSaving] = useState<Record<string, boolean>>({});
   const [memberScheduleResetting, setMemberScheduleResetting] = useState<Record<string, boolean>>({});
   const [memberGoalSearch, setMemberGoalSearch] = useState<Record<string, string>>({});
@@ -901,6 +916,64 @@ export default function AdminUsers() {
     }));
   };
 
+  const loadMemberFacilitator = async (email: string) => {
+    setFacilitatorLoading((prev) => ({ ...prev, [email]: true }));
+    try {
+      const response = await fetch(
+        `/api/admin/member-facilitator?email=${encodeURIComponent(email)}`,
+        { credentials: "include" }
+      );
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setStatus(typeof data?.error === "string" ? data.error : "Unable to load facilitator assignment.");
+        return;
+      }
+      const assignedIds: string[] = data.assignedModeratorIds ?? [];
+      setFacilitatorDrafts((prev) => ({ ...prev, [email]: assignedIds[0] ?? "" }));
+      setFacilitatorMultipleWarning((prev) => ({
+        ...prev,
+        [email]: assignedIds.length > 1
+      }));
+      if (Array.isArray(data.moderators)) {
+        setFacilitatorOptions(data.moderators);
+      }
+    } finally {
+      setFacilitatorLoading((prev) => ({ ...prev, [email]: false }));
+    }
+  };
+
+  const saveMemberFacilitator = async (email: string) => {
+    setFacilitatorSaving((prev) => ({ ...prev, [email]: true }));
+    setStatus(null);
+    try {
+      const moderatorId = facilitatorDrafts[email]?.trim() || null;
+      const response = await fetch("/api/admin/member-facilitator", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberEmail: email, moderatorId })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setStatus(typeof data?.error === "string" ? data.error : "Could not save facilitator assignment.");
+        return;
+      }
+      const assignedIds: string[] = data.assignedModeratorIds ?? [];
+      setFacilitatorDrafts((prev) => ({ ...prev, [email]: assignedIds[0] ?? "" }));
+      setFacilitatorMultipleWarning((prev) => ({ ...prev, [email]: false }));
+      const name =
+        data.assignedFacilitators?.[0]?.name ||
+        facilitatorOptions.find((m) => m.id === moderatorId)?.name;
+      setStatus(
+        moderatorId && name
+          ? `Facilitator assignment saved: ${name} can access ${email} in their console.`
+          : `Facilitator assignment cleared for ${email}.`
+      );
+    } finally {
+      setFacilitatorSaving((prev) => ({ ...prev, [email]: false }));
+    }
+  };
+
   const loadMemberActivity = async (email: string) => {
     setMemberActivityLoading((prev) => ({ ...prev, [email]: true }));
     setMemberActivityError((prev) => ({ ...prev, [email]: null }));
@@ -1016,6 +1089,7 @@ export default function AdminUsers() {
     if (opening) {
       if (section === "activity") void loadMemberActivity(email);
       if (section === "profile" && !profileDrafts[email]) void loadProfile(email);
+      if (section === "facilitator") void loadMemberFacilitator(email);
       if (
         section === "rotation" ||
         section === "addFile" ||
@@ -2267,6 +2341,91 @@ export default function AdminUsers() {
                           Loading member profile…
                         </p>
                       )}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        className={adminSectionToggleClass(memberSectionIsOpen(user.email, "facilitator"), true)}
+                        aria-expanded={memberSectionIsOpen(user.email, "facilitator")}
+                        onClick={() => toggleMemberSection(user.email, "facilitator")}
+                      >
+                        {memberSectionIsOpen(user.email, "facilitator") ? "▼" : "▶"} Facilitator
+                        Assignment
+                      </button>
+                      {memberSectionIsOpen(user.email, "facilitator") && (
+                        <div className="card" style={{ marginTop: 8 }}>
+                          <p style={{ color: "#4b5563", fontSize: 14, marginTop: 0 }}>
+                            Choose which facilitator can access this member in their console. This
+                            updates the same assignment list used in{" "}
+                            <strong>Facilitators Section → Active Facilitators</strong>.
+                          </p>
+                          {facilitatorMultipleWarning[user.email] && (
+                            <p
+                              style={{
+                                color: "#92400e",
+                                fontSize: 13,
+                                background: "#fffbeb",
+                                border: "1px solid #fcd34d",
+                                borderRadius: 8,
+                                padding: "8px 12px"
+                              }}
+                            >
+                              This member was assigned to more than one facilitator. Saving will
+                              keep only the facilitator selected below.
+                            </p>
+                          )}
+                          {facilitatorLoading[user.email] ? (
+                            <p style={{ color: "#64748b", fontSize: 14 }}>Loading facilitator assignment…</p>
+                          ) : (
+                            <>
+                              <label
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  display: "block",
+                                  marginBottom: 6,
+                                  marginTop: 8
+                                }}
+                              >
+                                Assigned facilitator
+                              </label>
+                              <select
+                                style={inputStyle}
+                                value={facilitatorDrafts[user.email] ?? ""}
+                                onChange={(event) =>
+                                  setFacilitatorDrafts({
+                                    ...facilitatorDrafts,
+                                    [user.email]: event.target.value
+                                  })
+                                }
+                              >
+                                <option value="">No facilitator</option>
+                                {facilitatorOptions.map((moderator) => (
+                                  <option key={moderator.id} value={moderator.id}>
+                                    {moderator.name} ({moderator.email})
+                                    {moderator.status !== "active" ? " — inactive" : ""}
+                                  </option>
+                                ))}
+                              </select>
+                              {facilitatorOptions.length === 0 && (
+                                <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8 }}>
+                                  No facilitator accounts yet. Approve one in Facilitators Section
+                                  first.
+                                </p>
+                              )}
+                              <button
+                                className="button"
+                                type="button"
+                                style={{ marginTop: 12 }}
+                                disabled={facilitatorSaving[user.email]}
+                                onClick={() => void saveMemberFacilitator(user.email)}
+                              >
+                                {facilitatorSaving[user.email]
+                                  ? "Saving…"
+                                  : "Save facilitator assignment"}
+                              </button>
+                            </>
+                          )}
                         </div>
                       )}
                       <button
