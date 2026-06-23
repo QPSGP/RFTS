@@ -11,7 +11,11 @@ import {
   listLibrary
 } from "@/lib/db";
 import { requireActiveModerator } from "@/lib/moderator-member-access";
-import { resolveCurrentScheduleNight } from "@/lib/schedule-progress";
+import {
+  completedMainAudiosPlayed,
+  minScheduleNightsForCue,
+  resolveCurrentScheduleNight
+} from "@/lib/schedule-progress";
 import { buildSchedulePreview } from "@/lib/scheduler";
 
 const querySchema = z.object({
@@ -100,24 +104,44 @@ export async function GET(request: Request) {
     listInterests()
   ]);
 
-  const scheduleBuilt = buildSchedulePreview({
+  const previewLength = nights;
+  let buildNights = Math.min(
+    366,
+    Math.max(previewLength, minScheduleNightsForCue(completedNights, 2, previewLength * 2))
+  );
+
+  const scheduleInput = {
     interests: goalIds,
     library,
     interestRecords,
     settings,
-    tier: isManaged ? "platinum_managed" : "platinum",
-    nights,
-    playsPerNight: 2,
+    tier: (isManaged ? "platinum_managed" : "platinum") as "platinum" | "platinum_managed",
+    playsPerNight: 2 as const,
     assignedAudioIds
-  });
+  };
 
-  const currentNight = Math.min(
+  let scheduleBuilt = buildSchedulePreview({ ...scheduleInput, nights: buildNights });
+  let startScheduleNight = Math.min(
     366,
     Math.max(1, resolveCurrentScheduleNight(scheduleBuilt, completedNights, playsPerNight))
   );
 
-  const schedule = scheduleBuilt.map((night) => ({
-    night: night.night,
+  while (startScheduleNight + previewLength - 1 > buildNights && buildNights < 366) {
+    buildNights = Math.min(366, startScheduleNight + previewLength);
+    scheduleBuilt = buildSchedulePreview({ ...scheduleInput, nights: buildNights });
+    startScheduleNight = Math.min(
+      366,
+      Math.max(1, resolveCurrentScheduleNight(scheduleBuilt, completedNights, playsPerNight))
+    );
+  }
+
+  const upcoming = scheduleBuilt
+    .filter((night) => night.night >= startScheduleNight)
+    .slice(0, previewLength);
+
+  const schedule = upcoming.map((night, index) => ({
+    night: index + 1,
+    scheduleNight: night.night,
     note: night.note,
     rotationAdded: night.rotationAdded,
     rotationSessionDrop: night.rotationSessionDrop,
@@ -131,12 +155,14 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     schedule,
-    nights,
+    nights: previewLength,
     tier: isManaged ? "platinum_managed" : "platinum",
     goalCount: goalIds.length,
     rotationStepCount: assignedAudioIds?.length ?? 0,
     playsPerNight,
     completedScheduleNights: completedNights,
-    currentNight
+    completedMainAudios: completedMainAudiosPlayed(completedNights),
+    currentNight: startScheduleNight,
+    startScheduleNight
   });
 }

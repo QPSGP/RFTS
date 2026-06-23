@@ -90,6 +90,7 @@ function countInOrder(order: string[], itemId: string): number {
 
 type SchedulePreviewNight = {
   night: number;
+  scheduleNight?: number;
   tracks: Array<{ id?: string; title: string; skuCode?: string }>;
   note?: string;
   rotationAdded?: string[];
@@ -102,6 +103,7 @@ type SchedulePreviewMeta = {
   playsPerNight: number;
   completedScheduleNights: number;
   currentNight: number;
+  startScheduleNight?: number;
   goalCount: number;
   rotationStepCount: number;
 };
@@ -448,6 +450,7 @@ export default function FacilitatorMembers() {
         ...prev,
         [email]: (data.schedule ?? []).map((night: SchedulePreviewNight) => ({
           night: night.night,
+          scheduleNight: night.scheduleNight,
           note: night.note,
           rotationAdded: night.rotationAdded,
           rotationSessionDrop: night.rotationSessionDrop,
@@ -465,7 +468,8 @@ export default function FacilitatorMembers() {
           tier: data.tier ?? "platinum",
           playsPerNight: data.playsPerNight ?? 2,
           completedScheduleNights: data.completedScheduleNights ?? 0,
-          currentNight: data.currentNight ?? 1,
+          currentNight: data.startScheduleNight ?? data.currentNight ?? 1,
+          startScheduleNight: data.startScheduleNight ?? data.currentNight ?? 1,
           goalCount: data.goalCount ?? 0,
           rotationStepCount: data.rotationStepCount ?? 0
         }
@@ -749,20 +753,21 @@ export default function FacilitatorMembers() {
         {meta && (
           <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 12px", lineHeight: 1.5 }}>
             <strong>{tierLabel(meta.tier)}</strong> · {meta.playsPerNight} audio
-            {meta.playsPerNight === 1 ? "" : "s"} per night · current night{" "}
-            <strong>{meta.currentNight}</strong> ({meta.completedScheduleNights} completed)
+            {meta.playsPerNight === 1 ? "" : "s"} per night · schedule night{" "}
+            <strong>{meta.startScheduleNight ?? meta.currentNight}</strong> is tonight (
+            {meta.completedScheduleNights} main plays completed)
             {meta.tier === "platinum_managed"
               ? ` · ${meta.rotationStepCount} rotation step${meta.rotationStepCount === 1 ? "" : "s"}`
               : ` · ${meta.goalCount} goal${meta.goalCount === 1 ? "" : "s"}`}
-            . Matches the member app algorithm.
+            . Preview starts at tonight (night 1 below).
           </p>
         )}
         <div style={{ maxHeight: 420, overflow: "auto", border: "1px solid #e2e8f0", borderRadius: 8 }}>
           <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ textAlign: "left", background: "#f8fafc" }}>
-                <th style={{ padding: "8px 10px", borderBottom: "1px solid #e2e8f0" }}>Night</th>
-                <th style={{ padding: "8px 10px", borderBottom: "1px solid #e2e8f0" }}>Lineup</th>
+                <th style={{ padding: "8px 10px", borderBottom: "1px solid #e2e8f0" }}>Upcoming</th>
+                <th style={{ padding: "8px 10px", borderBottom: "1px solid #e2e8f0" }}>Audio lineup</th>
                 <th style={{ padding: "8px 10px", borderBottom: "1px solid #e2e8f0" }}>Algorithm notes</th>
               </tr>
             </thead>
@@ -771,8 +776,14 @@ export default function FacilitatorMembers() {
                 <tr key={night.night} style={{ borderBottom: "1px solid #f1f5f9" }}>
                   <td style={{ padding: "8px 10px", verticalAlign: "top", fontWeight: 600 }}>
                     {night.night}
-                    {meta && night.night === meta.currentNight ? (
+                    {night.night === 1 ? (
                       <span style={{ color: "#047857", fontWeight: 500 }}> · tonight</span>
+                    ) : null}
+                    {night.scheduleNight && night.scheduleNight !== night.night ? (
+                      <span style={{ color: "#94a3b8", fontWeight: 400, fontSize: 11 }}>
+                        <br />
+                        (schedule #{night.scheduleNight})
+                      </span>
                     ) : null}
                   </td>
                   <td style={{ padding: "8px 10px", verticalAlign: "top" }}>
@@ -1101,13 +1112,13 @@ export default function FacilitatorMembers() {
               aria-expanded={lineupPreviewOpen}
               onClick={() => setLineupPreviewOpen((open) => !open)}
             >
-              {lineupPreviewOpen ? "▼" : "▶"} Nightly lineup preview
+              {lineupPreviewOpen ? "▼" : "▶"} Audio lineup
             </button>
             {lineupPreviewOpen && (
               <div className="card" style={{ marginTop: 8 }}>
                 <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, lineHeight: 1.5 }}>
-                  See the same nightly schedule the member app builds — useful for checking goals,
-                  rotation order, and algorithm notes (adds, drops, CGMR slots).
+                  Upcoming audio lineup from tonight — same algorithm as the member app. Night 1 is
+                  always tonight; higher numbers are upcoming nights.
                 </p>
                 {registeredMembers.length === 0 ? (
                   <p style={{ fontSize: 12, color: "#92400e" }}>
@@ -1303,7 +1314,7 @@ export default function FacilitatorMembers() {
                     className={adminSectionToggleClass(openClientSection === "schedule", true)}
                     onClick={() => toggleClientSection("schedule")}
                   >
-                    Nightly lineup preview
+                    Audio lineup
                   </button>
                   {openClientSection === "schedule" && (
                     <div className="card" style={{ marginTop: 4, marginBottom: 8 }}>
