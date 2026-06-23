@@ -1,6 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import ModerationQueue from "@/components/ModerationQueue";
+import { adminSectionToggleClass } from "@/components/admin-section-toggle";
+
+type FacilitatorAdminSection =
+  | "activeFacilitators"
+  | "featuredProfiles"
+  | "applications"
+  | "coCreationQueue";
 
 type ModeratorApplication = {
   id: string;
@@ -55,6 +63,17 @@ export default function AdminModerators() {
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [resets, setResets] = useState<Record<string, string>>({});
   const [applicationDrafts, setApplicationDrafts] = useState<Record<string, ProfileDraft>>({});
+  const [openSection, setOpenSection] = useState<
+    Partial<Record<FacilitatorAdminSection, boolean>>
+  >({});
+
+  const facilitatorSectionIsOpen = (section: FacilitatorAdminSection) =>
+    !!openSection[section];
+
+  const toggleFacilitatorSection = (section: FacilitatorAdminSection) => {
+    const opening = !openSection[section];
+    setOpenSection(opening ? { [section]: true } : { ...openSection, [section]: false });
+  };
 
   const uniqueApplications = useMemo(() => {
     const map = new Map<string, ModeratorApplication>();
@@ -427,51 +446,50 @@ export default function AdminModerators() {
   return (
     <div className="card">
       <h2>Facilitator Admin</h2>
-      <div
-        className="card"
-        style={{
-          marginTop: 12,
-          marginBottom: 16,
-          padding: 14,
-          background: "#ecfdf5",
-          border: "1px solid #a7f3d0"
-        }}
-      >
-        <h3 style={{ marginTop: 0, color: "#065f46" }}>Assign members to a facilitator</h3>
-        <ol style={{ margin: "0 0 8px", paddingLeft: 20, color: "#047857", lineHeight: 1.6 }}>
-          <li>Open <strong>Facilitators Section</strong> on this page (button above).</li>
-          <li>Scroll to <strong>Active Facilitators</strong> below.</li>
-          <li>
-            In the green <strong>Assign members</strong> box, enter member emails (comma-separated).
-          </li>
-          <li>
-            Click <strong>Save member assignments</strong> — not Save profile (profile is for public
-            spotlight page only).
-          </li>
-        </ol>
-        <p style={{ margin: 0, fontSize: 13, color: "#065f46" }}>
-          Assigned members appear in the facilitator&apos;s console at{" "}
-          <code>/moderator/console</code> after they log in at <code>/login</code>.
-        </p>
-      </div>
       <p style={{ color: "#4b5563" }}>
-        Facilitators can only access members you assign below. Pending applications are listed at
-        the bottom; approved facilitators appear in <strong>Active Facilitators</strong>.
+        Approve applications, assign members, and manage facilitator profiles and co-creation
+        submissions. Open a section below — only one stays open at a time.
       </p>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
-        <button
-          className="button button-secondary"
-          onClick={clearPendingApplications}
-        >
-          Clear Pending Applications
-        </button>
-        <button className="button" onClick={seedDemoApplication}>
-          Create Demo Application
-        </button>
-      </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3>Active Facilitators — assign members here</h3>
+      <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+        <button
+          type="button"
+          className={adminSectionToggleClass(facilitatorSectionIsOpen("activeFacilitators"), true)}
+          aria-expanded={facilitatorSectionIsOpen("activeFacilitators")}
+          onClick={() => toggleFacilitatorSection("activeFacilitators")}
+        >
+          Active Facilitators
+        </button>
+        {facilitatorSectionIsOpen("activeFacilitators") && (
+          <div className="card" style={{ marginTop: 4 }}>
+            <div
+              className="card"
+              style={{
+                marginBottom: 16,
+                padding: 14,
+                background: "#ecfdf5",
+                border: "1px solid #a7f3d0"
+              }}
+            >
+              <h3 style={{ marginTop: 0, color: "#065f46" }}>Assign members to a facilitator</h3>
+              <ol style={{ margin: "0 0 8px", paddingLeft: 20, color: "#047857", lineHeight: 1.6 }}>
+                <li>
+                  In each facilitator card below, use the green <strong>Assign members</strong> box.
+                </li>
+                <li>
+                  Enter member emails from <strong>Members Section</strong> (comma-separated).
+                </li>
+                <li>
+                  Click <strong>Save member assignments</strong> — not Save profile (profile is for
+                  the public spotlight page only).
+                </li>
+              </ol>
+              <p style={{ margin: 0, fontSize: 13, color: "#065f46" }}>
+                Assigned members appear in the facilitator&apos;s console at{" "}
+                <code>/moderator/console</code> after they log in at <code>/login</code>.
+              </p>
+            </div>
+            <h3 style={{ marginTop: 0 }}>Active Facilitators — assign members here</h3>
         {moderators.length === 0 ? (
           <p>No facilitators yet. Approve a pending application first.</p>
         ) : (
@@ -603,10 +621,20 @@ export default function AdminModerators() {
             })}
           </div>
         )}
-      </div>
+          </div>
+        )}
 
-      <div className="card" style={{ marginTop: 12 }}>
-        <h3>Featured Facilitator Profiles</h3>
+        <button
+          type="button"
+          className={adminSectionToggleClass(facilitatorSectionIsOpen("featuredProfiles"), true)}
+          aria-expanded={facilitatorSectionIsOpen("featuredProfiles")}
+          onClick={() => toggleFacilitatorSection("featuredProfiles")}
+        >
+          Featured Facilitator Profiles
+        </button>
+        {facilitatorSectionIsOpen("featuredProfiles") && (
+          <div className="card" style={{ marginTop: 4 }}>
+        <h3 style={{ marginTop: 0 }}>Featured Facilitator Profiles</h3>
         <p style={{ color: "#4b5563" }}>
           Spotlight pages use the profile slug below. Edit facilitator profiles in Active
           Facilitators — save updates the public profile and login account together.
@@ -643,14 +671,36 @@ export default function AdminModerators() {
             })
           )}
         </div>
-      </div>
-      {status && <p>{status}</p>}
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3>Facilitator Applications (pending / declined)</h3>
+          </div>
+        )}
+
+        <button
+          type="button"
+          className={adminSectionToggleClass(facilitatorSectionIsOpen("applications"), true)}
+          aria-expanded={facilitatorSectionIsOpen("applications")}
+          onClick={() => toggleFacilitatorSection("applications")}
+        >
+          Facilitator Applications
+        </button>
+        {facilitatorSectionIsOpen("applications") && (
+          <div className="card" style={{ marginTop: 4 }}>
+        <h3 style={{ marginTop: 0 }}>Facilitator Applications (pending / declined)</h3>
         <p style={{ color: "#6b7280" }}>
           When approving a new facilitator, you can assign member emails here too — or assign later
-          in <strong>Active Facilitators</strong> above.
+          in <strong>Active Facilitators</strong>.
         </p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={clearPendingApplications}
+          >
+            Clear Pending Applications
+          </button>
+          <button type="button" className="button" onClick={seedDemoApplication}>
+            Create Demo Application
+          </button>
+        </div>
           {pendingApplications.length === 0 ? (
             <p>No pending or declined applications.</p>
           ) : (
@@ -706,7 +756,25 @@ export default function AdminModerators() {
                 ))}
             </div>
           )}
+          </div>
+        )}
+
+        <button
+          type="button"
+          className={adminSectionToggleClass(facilitatorSectionIsOpen("coCreationQueue"), true)}
+          aria-expanded={facilitatorSectionIsOpen("coCreationQueue")}
+          onClick={() => toggleFacilitatorSection("coCreationQueue")}
+        >
+          Co-Creation Queue
+        </button>
+        {facilitatorSectionIsOpen("coCreationQueue") && (
+          <div style={{ marginTop: 4 }}>
+            <ModerationQueue />
+          </div>
+        )}
       </div>
+
+      {status && <p style={{ marginTop: 16 }}>{status}</p>}
     </div>
   );
 }

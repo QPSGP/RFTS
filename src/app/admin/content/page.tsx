@@ -6,7 +6,6 @@ import AdminContent from "@/components/AdminContent";
 import AdminSubscriptions from "@/components/AdminSubscriptions";
 import AdminPlaybackSettings from "@/components/AdminPlaybackSettings";
 import AdminModerators from "@/components/AdminModerators";
-import ModerationQueue from "@/components/ModerationQueue";
 import AdminUsers from "@/components/AdminUsers";
 import AdminAdmins from "@/components/AdminAdmins";
 import AdminLogoutButton from "@/components/AdminLogoutButton";
@@ -166,7 +165,6 @@ export default function AdminContentPage() {
       {openSections.moderators && (
         <section id="admin-moderators" style={{ marginBottom: 20 }}>
           <AdminModerators />
-          <ModerationQueue />
         </section>
       )}
       {openSections.affiliates && (
