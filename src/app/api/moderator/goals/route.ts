@@ -1,20 +1,20 @@
 import { NextResponse } from "next/server";
+import { listInterests } from "@/lib/db";
 import { requireActiveModerator } from "@/lib/moderator-member-access";
-import { listLibrary } from "@/lib/db";
 
 export async function GET() {
   const moderator = await requireActiveModerator();
   if ("error" in moderator) {
     return NextResponse.json({ error: moderator.error }, { status: moderator.status });
   }
-  const library = await listLibrary();
+  const interests = await listInterests();
   return NextResponse.json({
-    library: library.map((item) => ({
+    interests: interests.map((item) => ({
       id: item.id,
-      title: item.title,
-      skuCode: item.skuCode ?? "",
+      name: item.name,
       description: item.description ?? "",
-      interestIds: item.interestIds ?? []
+      isAdult: item.isAdult ?? false,
+      categories: item.categories ?? []
     }))
   });
 }

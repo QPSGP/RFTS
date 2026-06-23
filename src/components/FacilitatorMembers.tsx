@@ -57,6 +57,13 @@ type LibraryItem = {
   id: string;
   title: string;
   skuCode: string;
+  interestIds?: string[];
+};
+
+type GoalOption = {
+  id: string;
+  name: string;
+  description?: string;
 };
 
 const inputStyle = {
@@ -85,6 +92,7 @@ export default function FacilitatorMembers() {
   const [facilitatorName, setFacilitatorName] = useState("");
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [library, setLibrary] = useState<LibraryItem[]>([]);
+  const [goalsCatalog, setGoalsCatalog] = useState<GoalOption[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
   const [profileDetail, setProfileDetail] = useState<{
     subscriptionTier: MemberRow["subscriptionTier"];
@@ -128,6 +136,10 @@ export default function FacilitatorMembers() {
   const [newMemberTier, setNewMemberTier] = useState<"platinum" | "platinum_managed">("platinum");
   const [newMemberStatus, setNewMemberStatus] = useState<"inactive" | "active">("inactive");
   const [newMemberSaveStatus, setNewMemberSaveStatus] = useState<string | null>(null);
+  const [goalDraftIds, setGoalDraftIds] = useState<Record<string, string[]>>({});
+  const [goalSearch, setGoalSearch] = useState("");
+  const [goalsSaveStatus, setGoalsSaveStatus] = useState<string | null>(null);
+  const [goalsSaving, setGoalsSaving] = useState(false);
 
   const selectedMember = useMemo(
     () => members.find((m) => m.email === selectedEmail) ?? null,
@@ -137,6 +149,34 @@ export default function FacilitatorMembers() {
   const isManaged =
     profileDetail?.subscriptionTier === "platinum_managed" ||
     selectedMember?.subscriptionTier === "platinum_managed";
+
+  const isGold =
+    !isManaged &&
+    (profileDetail?.subscriptionTier === "platinum" ||
+      selectedMember?.subscriptionTier === "platinum" ||
+      profileDetail?.subscriptionTier == null);
+
+  const sortedGoals = useMemo(
+    () => goalsCatalog.slice().sort((a, b) => a.name.localeCompare(b.name)),
+    [goalsCatalog]
+  );
+
+  const memberGoalIds = selectedEmail
+    ? goalDraftIds[selectedEmail] ?? profileDetail?.goalIds ?? selectedMember?.goalIds ?? []
+    : [];
+
+  const filteredGoals = useMemo(() => {
+    const term = goalSearch.trim().toLowerCase();
+    if (!term) return sortedGoals;
+    return sortedGoals.filter((goal) => goal.name.toLowerCase().includes(term));
+  }, [goalSearch, sortedGoals]);
+
+  const goalDerivedAudios = useMemo(() => {
+    if (memberGoalIds.length === 0) return [];
+    return library
+      .filter((item) => item.interestIds?.some((id) => memberGoalIds.includes(id)))
+      .slice(0, 10);
+  }, [library, memberGoalIds]);
 
   const loadMembers = useCallback(async () => {
     const meRes = await fetch("/api/moderator/me");
@@ -153,6 +193,12 @@ export default function FacilitatorMembers() {
     if (libRes.ok) {
       const libData = await libRes.json();
       setLibrary(libData.library ?? []);
+    }
+
+    const goalsRes = await fetch("/api/moderator/goals");
+    if (goalsRes.ok) {
+      const goalsData = await goalsRes.json();
+      setGoalsCatalog(goalsData.interests ?? []);
     }
   }, []);
 
@@ -185,6 +231,8 @@ export default function FacilitatorMembers() {
     setScheduleProgress(null);
     setRotationOrder([]);
     setRotationSaveStatus(null);
+    setGoalSearch("");
+    setGoalsSaveStatus(null);
     try {
       let tier = memberTier;
       const profileRes = await fetch(
@@ -201,6 +249,10 @@ export default function FacilitatorMembers() {
           profile: data.member?.profile ?? null,
           registered: data.member?.registered ?? true
         });
+        setGoalDraftIds((prev) => ({
+          ...prev,
+          [email]: data.member?.goalIds ?? []
+        }));
       }
 
       const activityRes = await fetch(
@@ -423,6 +475,52 @@ export default function FacilitatorMembers() {
     await loadMembers();
   };
 
+  const toggleMemberGoal = (email: string, goalId: string) => {
+    setGoalDraftIds((prev) => {
+      const current = prev[email] ?? [];
+      if (current.includes(goalId)) {
+        return { ...prev, [email]: current.filter((id) => id !== goalId) };
+      }
+      if (current.length >= 10) return prev;
+      return { ...prev, [email]: [...current, goalId] };
+    });
+    setGoalsSaveStatus(null);
+  };
+
+  const moveMemberGoal = (email: string, fromIndex: number, toIndex: number) => {
+    setGoalDraftIds((prev) => {
+      const current = [...(prev[email] ?? [])];
+      if (toIndex < 0 || toIndex >= current.length) return prev;
+      const [item] = current.splice(fromIndex, 1);
+      current.splice(toIndex, 0, item);
+      return { ...prev, [email]: current };
+    });
+    setGoalsSaveStatus(null);
+  };
+
+  const saveMemberGoals = async (email: string) => {
+    const goalIds = goalDraftIds[email] ?? [];
+    setGoalsSaving(true);
+    setGoalsSaveStatus(null);
+    try {
+      const res = await fetch("/api/moderator/members/goals", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, goalIds })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setGoalsSaveStatus(data?.error || "Could not save goals.");
+        return;
+      }
+      setGoalsSaveStatus(`Saved ${goalIds.length} goal${goalIds.length === 1 ? "" : "s"}.`);
+      setProfileDetail((prev) => (prev ? { ...prev, goalIds } : prev));
+      await loadMembers();
+    } finally {
+      setGoalsSaving(false);
+    }
+  };
+
   const sortedLibrary = useMemo(
     () =>
       library.slice().sort((a, b) => {
@@ -452,8 +550,8 @@ export default function FacilitatorMembers() {
         <span className="pill">Facilitator Console</span>
         <h1>Welcome, {facilitatorName || "Facilitator"}</h1>
         <p>
-          Manage members assigned to you — add clients, upload member audios, view activity, and edit
-          Platinum Managed rotations.
+          Manage members assigned to you — add clients, upload member audios, set Gold member goals,
+          view activity, and edit Platinum Managed rotations.
         </p>
       </section>
 
@@ -721,8 +819,8 @@ export default function FacilitatorMembers() {
           {!selectedEmail ? (
             <p style={{ color: "#64748b", lineHeight: 1.6 }}>
               Select a client from the list on the left. You will see profile details, recent
-              activity, and—for <strong>Platinum Managed</strong> members—rotation controls to add,
-              reorder, and remove schedule steps.
+              activity, <strong>Gold member goals</strong>, and—for{" "}
+              <strong>Platinum Managed</strong> members—rotation controls.
             </p>
           ) : detailLoading ? (
             <p>Loading member details…</p>
@@ -765,6 +863,142 @@ export default function FacilitatorMembers() {
                   </div>
                 )}
               </div>
+
+              {isGold && profileDetail?.registered && selectedEmail && (
+                <div className="card" style={{ marginBottom: 16 }}>
+                  <h3 style={{ marginTop: 0 }}>
+                    Goals (Gold Member)
+                    {memberGoalIds.length ? ` — ${memberGoalIds.length} selected` : ""}
+                  </h3>
+                  <p style={{ fontSize: 13, color: "#64748b", marginTop: 0 }}>
+                    Choose up to 10 goals in order. Nightly schedule audios come from these goals.
+                  </p>
+                  <div className="card" style={{ marginTop: 12, background: "#f8fafc" }}>
+                    <h4 style={{ marginTop: 0, marginBottom: 8, fontSize: 14 }}>
+                      Selected goals (saved order)
+                    </h4>
+                    {memberGoalIds.length === 0 ? (
+                      <p style={{ color: "#6b7280", margin: 0, fontSize: 13 }}>
+                        No goals selected yet.
+                      </p>
+                    ) : (
+                      <div className="goal-stack">
+                        {memberGoalIds.map((goalId, index) => {
+                          const goalName =
+                            sortedGoals.find((g) => g.id === goalId)?.name || "Unknown goal";
+                          return (
+                            <div
+                              key={goalId}
+                              className="goal-item"
+                              style={{ display: "flex", alignItems: "center", gap: 10 }}
+                            >
+                              <strong style={{ minWidth: 24 }}>{index + 1}.</strong>
+                              <span style={{ flex: 1 }}>{goalName}</span>
+                              <button
+                                type="button"
+                                className="button button-secondary"
+                                style={{ padding: "6px 10px", fontSize: 12 }}
+                                disabled={index === 0}
+                                onClick={() => moveMemberGoal(selectedEmail, index, index - 1)}
+                              >
+                                Up
+                              </button>
+                              <button
+                                type="button"
+                                className="button button-secondary"
+                                style={{ padding: "6px 10px", fontSize: 12 }}
+                                disabled={index === memberGoalIds.length - 1}
+                                onClick={() => moveMemberGoal(selectedEmail, index, index + 1)}
+                              >
+                                Down
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                  <div className="card" style={{ marginTop: 12 }}>
+                    <h4 style={{ marginTop: 0, marginBottom: 8, fontSize: 14 }}>Find goals</h4>
+                    <input
+                      style={inputStyle}
+                      placeholder="Search goals"
+                      value={goalSearch}
+                      onChange={(e) => setGoalSearch(e.target.value)}
+                    />
+                    <div className="card goal-see-all-list" style={{ marginTop: 12 }}>
+                      <div className="goal-all-scroll">
+                        {filteredGoals.length === 0 ? (
+                          <p style={{ color: "#6b7280", fontSize: 13, margin: 0 }}>
+                            No goals match your search.
+                          </p>
+                        ) : (
+                          filteredGoals.map((goal) => (
+                            <label key={goal.id} className="goal-all-row">
+                              <input
+                                type="checkbox"
+                                checked={memberGoalIds.includes(goal.id)}
+                                disabled={
+                                  !memberGoalIds.includes(goal.id) && memberGoalIds.length >= 10
+                                }
+                                onChange={() => toggleMemberGoal(selectedEmail, goal.id)}
+                              />
+                              <span className="goal-all-name">{goal.name}</span>
+                            </label>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ marginTop: 12 }}>
+                    <label style={{ fontSize: 12, fontWeight: 600 }}>Current audios play list</label>
+                    <p style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>
+                      Up to 10 audios in this member&apos;s rotation from assigned goals.
+                    </p>
+                    <div className="goal-list">
+                      {goalDerivedAudios.length === 0 ? (
+                        <span style={{ color: "#6b7280", fontSize: 12 }}>
+                          No audios in play list yet.
+                        </span>
+                      ) : (
+                        goalDerivedAudios.map((item) => (
+                          <div
+                            key={item.id}
+                            className="goal-item"
+                            style={{ display: "flex", gap: 8, alignItems: "center" }}
+                          >
+                            <span style={{ flex: 1 }}>
+                              {item.skuCode ? `${item.skuCode} – ` : ""}
+                              {item.title}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="button"
+                    style={{ marginTop: 12 }}
+                    disabled={goalsSaving}
+                    onClick={() => void saveMemberGoals(selectedEmail)}
+                  >
+                    {goalsSaving ? "Saving goals…" : "Save goals"}
+                  </button>
+                  {goalsSaveStatus && (
+                    <p
+                      style={{
+                        fontSize: 12,
+                        marginTop: 8,
+                        marginBottom: 0,
+                        color: goalsSaveStatus.includes("Could not") ? "#b91c1c" : "#047857"
+                      }}
+                    >
+                      {goalsSaveStatus}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {scheduleProgress && (
                 <div className="card" style={{ marginBottom: 16 }}>
