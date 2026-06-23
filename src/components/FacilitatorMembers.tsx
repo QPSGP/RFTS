@@ -839,7 +839,9 @@ export default function FacilitatorMembers() {
                   className="button button-secondary"
                   aria-pressed={selectedEmail === member.email}
                   style={{
-                    textAlign: "center",
+                    textAlign: "left",
+                    display: "block",
+                    width: "100%",
                     background: selectedEmail === member.email ? "#ecfdf5" : undefined,
                     borderColor: selectedEmail === member.email ? "#10b981" : undefined
                   }}
@@ -850,11 +852,10 @@ export default function FacilitatorMembers() {
                     );
                   }}
                 >
-                  <strong>{memberLabel(member)}</strong>
-                  <br />
-                  <span style={{ fontSize: 12, color: "#64748b" }}>
+                  <strong style={{ display: "block" }}>{memberLabel(member)}</strong>
+                  <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
                     {member.registered
-                      ? `${tierLabel(member.subscriptionTier)} · ${member.subscriptionStatus ?? "inactive"}`
+                      ? `${tierLabel(member.subscriptionTier)} - ${member.subscriptionStatus ?? "inactive"}`
                       : "Not registered yet"}
                   </span>
                 </button>
