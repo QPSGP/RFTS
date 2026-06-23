@@ -116,6 +116,8 @@ export default function FacilitatorMembers() {
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [memberAudiosOpen, setMemberAudiosOpen] = useState(false);
+  type AudioListFilter = "all" | "private" | "in_library";
+  const [audioListFilter, setAudioListFilter] = useState<AudioListFilter>("all");
   const [facilitatorAudios, setFacilitatorAudios] = useState<FacilitatorAudioRow[]>([]);
   const [audioDraft, setAudioDraft] = useState({
     title: "",
@@ -212,6 +214,22 @@ export default function FacilitatorMembers() {
       .filter((item) => item.interestIds?.some((id) => memberGoalIds.includes(id)))
       .slice(0, 10);
   }, [library, memberGoalIds]);
+
+  const facilitatorAudioCounts = useMemo(() => {
+    const privateCount = facilitatorAudios.filter((row) => !row.inGeneralCatalog).length;
+    const inLibraryCount = facilitatorAudios.filter((row) => row.inGeneralCatalog).length;
+    return { privateCount, inLibraryCount, all: facilitatorAudios.length };
+  }, [facilitatorAudios]);
+
+  const filteredFacilitatorAudios = useMemo(() => {
+    if (audioListFilter === "private") {
+      return facilitatorAudios.filter((row) => !row.inGeneralCatalog);
+    }
+    if (audioListFilter === "in_library") {
+      return facilitatorAudios.filter((row) => row.inGeneralCatalog);
+    }
+    return facilitatorAudios;
+  }, [facilitatorAudios, audioListFilter]);
 
   const loadMembers = useCallback(async () => {
     const meRes = await fetch("/api/moderator/me");
@@ -788,9 +806,32 @@ export default function FacilitatorMembers() {
                   and in the library for those members. Admin can later include a track in the
                   general library for everyone.
                 </p>
-                {facilitatorAudios.length > 0 ? (
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+                  <button
+                    type="button"
+                    className={adminSectionToggleClass(audioListFilter === "all", true)}
+                    onClick={() => setAudioListFilter("all")}
+                  >
+                    All ({facilitatorAudioCounts.all})
+                  </button>
+                  <button
+                    type="button"
+                    className={adminSectionToggleClass(audioListFilter === "private", true)}
+                    onClick={() => setAudioListFilter("private")}
+                  >
+                    Private ({facilitatorAudioCounts.privateCount})
+                  </button>
+                  <button
+                    type="button"
+                    className={adminSectionToggleClass(audioListFilter === "in_library", true)}
+                    onClick={() => setAudioListFilter("in_library")}
+                  >
+                    In library ({facilitatorAudioCounts.inLibraryCount})
+                  </button>
+                </div>
+                {filteredFacilitatorAudios.length > 0 ? (
                   <ul style={{ margin: "0 0 12px", paddingLeft: 18, fontSize: 13 }}>
-                    {facilitatorAudios.map((row) => (
+                    {filteredFacilitatorAudios.map((row) => (
                       <li key={row.id} style={{ marginBottom: 6 }}>
                         <strong>{row.title}</strong>
                         {row.inGeneralCatalog ? (
@@ -807,7 +848,9 @@ export default function FacilitatorMembers() {
                     ))}
                   </ul>
                 ) : (
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 12px" }}>No audios yet.</p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 12px" }}>
+                    No audios in this view.
+                  </p>
                 )}
                 {members.length === 0 ? (
                   <p style={{ fontSize: 12, color: "#92400e" }}>

@@ -8,7 +8,24 @@ type FacilitatorAdminSection =
   | "activeFacilitators"
   | "featuredProfiles"
   | "applications"
-  | "coCreationQueue";
+  | "coCreationQueue"
+  | "libraryHygiene";
+
+type FacilitatorLibraryItem = {
+  id: string;
+  title: string;
+  description: string;
+  skuCode?: string;
+  fileName?: string;
+  categories?: string[];
+  coverUrl?: string;
+  audioUrl?: string;
+  interestIds?: string[];
+  moderatorId?: string | null;
+  inGeneralCatalog?: boolean;
+  allowedUserEmails?: string[];
+  isAdult?: boolean;
+};
 
 type ModeratorApplication = {
   id: string;
@@ -66,6 +83,11 @@ export default function AdminModerators() {
   const [openSection, setOpenSection] = useState<
     Partial<Record<FacilitatorAdminSection, boolean>>
   >({});
+  const [libraryItems, setLibraryItems] = useState<FacilitatorLibraryItem[]>([]);
+  const [libraryFilter, setLibraryFilter] = useState<
+    "facilitator_all" | "facilitator_private" | "in_library"
+  >("facilitator_private");
+  const [libraryHygieneStatus, setLibraryHygieneStatus] = useState<string | null>(null);
 
   const facilitatorSectionIsOpen = (section: FacilitatorAdminSection) =>
     !!openSection[section];
@@ -103,6 +125,24 @@ export default function AdminModerators() {
     [uniqueApplications]
   );
 
+  const facilitatorTracks = useMemo(
+    () => libraryItems.filter((item) => Boolean(item.moderatorId)),
+    [libraryItems]
+  );
+  const privateTracks = useMemo(
+    () => facilitatorTracks.filter((item) => !item.inGeneralCatalog),
+    [facilitatorTracks]
+  );
+  const inLibraryTracks = useMemo(
+    () => facilitatorTracks.filter((item) => item.inGeneralCatalog),
+    [facilitatorTracks]
+  );
+  const filteredFacilitatorTracks = useMemo(() => {
+    if (libraryFilter === "facilitator_private") return privateTracks;
+    if (libraryFilter === "in_library") return inLibraryTracks;
+    return facilitatorTracks;
+  }, [libraryFilter, facilitatorTracks, privateTracks, inLibraryTracks]);
+
   const profileDraftFromApplication = (app: ModeratorApplication): ProfileDraft => ({
     name: app.name,
     email: app.email,
@@ -134,8 +174,48 @@ export default function AdminModerators() {
     });
   };
 
+  const loadLibraryItems = async () => {
+    const response = await fetch("/api/library", { credentials: "include" });
+    if (!response.ok) return;
+    const data = await response.json();
+    setLibraryItems(data.library || []);
+  };
+
+  const promotePrivateFacilitatorTracks = async () => {
+    if (privateTracks.length === 0) {
+      setLibraryHygieneStatus("No facilitator-private tracks to promote.");
+      return;
+    }
+    setLibraryHygieneStatus("Promoting private tracks…");
+    let promoted = 0;
+    for (const item of privateTracks) {
+      const response = await fetch("/api/library", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: item.id,
+          title: item.title,
+          description: item.description || item.title,
+          skuCode: item.skuCode || "",
+          fileName: item.fileName || "",
+          categories: item.categories || [],
+          coverUrl: item.coverUrl || "",
+          audioUrl: item.audioUrl || "",
+          interestIds: item.interestIds || [],
+          allowedUserEmails: item.allowedUserEmails || [],
+          isAdult: item.isAdult || false,
+          inGeneralCatalog: true
+        })
+      });
+      if (response.ok) promoted += 1;
+    }
+    await loadLibraryItems();
+    setLibraryHygieneStatus(`Promoted ${promoted} of ${privateTracks.length} private track(s).`);
+  };
+
   useEffect(() => {
     load();
+    loadLibraryItems();
   }, []);
 
   const seedDemoApplication = async () => {
@@ -452,6 +532,79 @@ export default function AdminModerators() {
       </p>
 
       <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+        <button
+          type="button"
+          className={adminSectionToggleClass(facilitatorSectionIsOpen("libraryHygiene"), true)}
+          aria-expanded={facilitatorSectionIsOpen("libraryHygiene")}
+          onClick={() => toggleFacilitatorSection("libraryHygiene")}
+        >
+          Facilitator library — Private / All ({facilitatorTracks.length})
+        </button>
+        {facilitatorSectionIsOpen("libraryHygiene") && (
+          <div className="card" style={{ marginTop: 4 }}>
+            <p style={{ marginTop: 0, fontSize: 13, color: "#64748b", lineHeight: 1.5 }}>
+              Review facilitator uploads. <strong>Private</strong> tracks are member-only until you
+              promote them to the general library. Same filters also appear in{" "}
+              <strong>Audio Library Section</strong>.
+            </p>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+              <button
+                type="button"
+                className={adminSectionToggleClass(libraryFilter === "facilitator_private", true)}
+                onClick={() => setLibraryFilter("facilitator_private")}
+              >
+                Private ({privateTracks.length})
+              </button>
+              <button
+                type="button"
+                className={adminSectionToggleClass(libraryFilter === "facilitator_all", true)}
+                onClick={() => setLibraryFilter("facilitator_all")}
+              >
+                Facilitator all ({facilitatorTracks.length})
+              </button>
+              <button
+                type="button"
+                className={adminSectionToggleClass(libraryFilter === "in_library", true)}
+                onClick={() => setLibraryFilter("in_library")}
+              >
+                In general library ({inLibraryTracks.length})
+              </button>
+            </div>
+            {libraryFilter === "facilitator_private" && privateTracks.length > 0 && (
+              <button
+                type="button"
+                className="button button-secondary"
+                style={{ marginBottom: 12 }}
+                onClick={() => void promotePrivateFacilitatorTracks()}
+              >
+                Promote all private tracks to library
+              </button>
+            )}
+            {libraryHygieneStatus && (
+              <p style={{ margin: "0 0 12px", fontSize: 13, color: "#64748b" }}>{libraryHygieneStatus}</p>
+            )}
+            {filteredFacilitatorTracks.length === 0 ? (
+              <p style={{ fontSize: 13, color: "#6b7280" }}>
+                No tracks in this view. Facilitators upload from their console under{" "}
+                <strong>Member audios</strong>.
+              </p>
+            ) : (
+              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
+                {filteredFacilitatorTracks.map((item) => (
+                  <li key={item.id} style={{ marginBottom: 8 }}>
+                    <strong>{item.skuCode ? `${item.skuCode} – ` : ""}{item.title}</strong>
+                    {item.inGeneralCatalog ? (
+                      <span style={{ color: "#047857" }}> · in general library</span>
+                    ) : (
+                      <span style={{ color: "#92400e" }}> · private</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
         <button
           type="button"
           className={adminSectionToggleClass(facilitatorSectionIsOpen("activeFacilitators"), true)}

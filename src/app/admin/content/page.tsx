@@ -135,7 +135,7 @@ export default function AdminContentPage() {
             aria-expanded={openSections.library}
             onClick={() => toggleSection("library", "admin-audio-library")}
           >
-            Audio Library Section
+            Audio Library Section (facilitator private / all)
           </button>
           <button
             className={adminSectionToggleClass(openSections.scheduleAlgorithm, true)}

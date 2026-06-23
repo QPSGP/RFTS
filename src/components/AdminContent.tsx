@@ -200,6 +200,12 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     );
   }, [filteredLibrary, librarySearch]);
 
+  const facilitatorLibraryCounts = useMemo(() => {
+    const facilitatorAll = library.filter(isFacilitatorTrack).length;
+    const facilitatorPrivate = library.filter(isFacilitatorPrivate).length;
+    return { facilitatorAll, facilitatorPrivate };
+  }, [library]);
+
   const addInterest = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
@@ -946,6 +952,132 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             </p>
           )}
         </div>
+        <div
+          id="admin-facilitator-library-filters"
+          className="card"
+          style={{
+            marginBottom: 16,
+            padding: 14,
+            background: "#f8fafc",
+            border: "1px solid #e2e8f0"
+          }}
+        >
+          <p style={{ margin: "0 0 10px", fontSize: 14, fontWeight: 600 }}>
+            Facilitator library filters
+          </p>
+          <p style={{ margin: "0 0 12px", fontSize: 13, color: "#64748b", lineHeight: 1.5 }}>
+            Use <strong>Facilitator (private)</strong> for member-only uploads, or{" "}
+            <strong>Facilitator (all)</strong> for every facilitator track. Promote private tracks
+            to include them in the general member library.
+          </p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+            <button
+              type="button"
+              className={adminSectionToggleClass(libraryCategoryFilter === "facilitator_private", true)}
+              onClick={() => setLibraryCategoryFilter("facilitator_private")}
+            >
+              Private ({facilitatorLibraryCounts.facilitatorPrivate})
+            </button>
+            <button
+              type="button"
+              className={adminSectionToggleClass(libraryCategoryFilter === "facilitator_all", true)}
+              onClick={() => setLibraryCategoryFilter("facilitator_all")}
+            >
+              Facilitator all ({facilitatorLibraryCounts.facilitatorAll})
+            </button>
+            <button
+              type="button"
+              className={adminSectionToggleClass(libraryCategoryFilter === "General", true)}
+              onClick={() => setLibraryCategoryFilter("General")}
+            >
+              General catalog
+            </button>
+            <button
+              type="button"
+              className={adminSectionToggleClass(libraryCategoryFilter === "all", true)}
+              onClick={() => setLibraryCategoryFilter("all")}
+            >
+              Show all tracks
+            </button>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              flexWrap: "wrap",
+              alignItems: "center"
+            }}
+          >
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              Search
+              <input
+                type="search"
+                placeholder="Name or SKU..."
+                value={librarySearch}
+                onChange={(e) => setLibrarySearch(e.target.value)}
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: 8,
+                  border: "1px solid #d1d5db",
+                  minWidth: 160
+                }}
+              />
+            </label>
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              Library view
+              <select
+                style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #d1d5db" }}
+                value={libraryCategoryFilter}
+                onChange={(event) =>
+                  setLibraryCategoryFilter(event.target.value as LibraryCategoryFilter)
+                }
+              >
+                <option value="all">All</option>
+                <option value="General">General</option>
+                <option value="Special">Special</option>
+                <option value="CGMR">CGMR</option>
+                <option value="facilitator_private">
+                  Facilitator (private) ({facilitatorLibraryCounts.facilitatorPrivate})
+                </option>
+                <option value="facilitator_all">
+                  Facilitator (all) ({facilitatorLibraryCounts.facilitatorAll})
+                </option>
+              </select>
+            </label>
+            {(libraryCategoryFilter === "facilitator_private" ||
+              libraryCategoryFilter === "facilitator_all") && (
+              <button
+                type="button"
+                className="button button-secondary"
+                disabled={libraryCategoryFilter !== "facilitator_private"}
+                onClick={() => void promoteFacilitatorPrivateToCatalog()}
+              >
+                Promote visible private tracks to library
+              </button>
+            )}
+            {bulkCatalogStatus && (
+              <span style={{ fontSize: 13, color: "#64748b" }}>{bulkCatalogStatus}</span>
+            )}
+            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              Sort by
+              <select
+                style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #d1d5db" }}
+                value={librarySort}
+                onChange={(event) => setLibrarySort(event.target.value as "title" | "sku")}
+              >
+                <option value="title">Title (default)</option>
+                <option value="sku">SKU</option>
+              </select>
+            </label>
+          </div>
+          {libraryCategoryFilter === "facilitator_private" &&
+            facilitatorLibraryCounts.facilitatorPrivate === 0 && (
+              <p style={{ margin: "12px 0 0", fontSize: 13, color: "#6b7280" }}>
+                No facilitator-private tracks yet. Facilitators upload these from their console under{" "}
+                <strong>Member audios</strong>.
+              </p>
+            )}
+        </div>
         {addNewAudioOpen && (
         <div id="admin-add-new-audio-panel">
         <p style={{ color: "#4b5563", marginBottom: 16 }}>
@@ -1193,64 +1325,8 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             {goalSaveStatus && <span style={{ alignSelf: "center" }}>{goalSaveStatus}</span>}
           </div>
         </div>
-        {library.length > 0 && (
+        {library.length > 0 ? (
           <>
-            <div style={{ marginTop: 16, marginBottom: 8, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                Search
-                <input
-                  type="search"
-                  placeholder="Name or SKU..."
-                  value={librarySearch}
-                  onChange={(e) => setLibrarySearch(e.target.value)}
-                  style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #d1d5db", minWidth: 160 }}
-                />
-              </label>
-              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                Category
-                <select
-                  style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #d1d5db" }}
-                  value={libraryCategoryFilter}
-                  onChange={(event) =>
-                    setLibraryCategoryFilter(event.target.value as LibraryCategoryFilter)
-                  }
-                >
-                  <option value="all">All</option>
-                  <option value="General">General</option>
-                  <option value="Special">Special</option>
-                  <option value="CGMR">CGMR</option>
-                  <option value="facilitator_private">Facilitator (private)</option>
-                  <option value="facilitator_all">Facilitator (all)</option>
-                </select>
-              </label>
-              {(libraryCategoryFilter === "facilitator_private" ||
-                libraryCategoryFilter === "facilitator_all") && (
-                <button
-                  type="button"
-                  className="button button-secondary"
-                  disabled={libraryCategoryFilter !== "facilitator_private"}
-                  onClick={() => void promoteFacilitatorPrivateToCatalog()}
-                >
-                  Promote visible private tracks to library
-                </button>
-              )}
-              {bulkCatalogStatus && (
-                <span style={{ fontSize: 13, color: "#64748b" }}>{bulkCatalogStatus}</span>
-              )}
-              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                Sort by
-                <select
-                  style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #d1d5db" }}
-                  value={librarySort}
-                  onChange={(event) =>
-                    setLibrarySort(event.target.value as "title" | "sku")
-                  }
-                >
-                  <option value="title">Title (default)</option>
-                  <option value="sku">SKU</option>
-                </select>
-              </label>
-            </div>
             <div className="card" style={{ marginTop: 0 }}>
             <h3>Audio Title List. Click a title for complete details and preview playback.</h3>
             <div
@@ -1310,7 +1386,13 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             </div>
           </div>
           </>
+        ) : (
+          <p style={{ marginTop: 16, fontSize: 13, color: "#6b7280" }}>
+            No tracks in the library yet. Use <strong>Add new audio</strong> above, or wait for
+            facilitator uploads.
+          </p>
         )}
+        {searchFilteredLibrary.length > 0 && (
         <div className="grid" style={{ marginTop: 16 }}>
           {searchFilteredLibrary.map((item) => (
             <div key={item.id} id={`audio-${item.id}`} className="card">
@@ -1678,6 +1760,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             </div>
           ))}
         </div>
+        )}
       </section>
       )}
     </div>
