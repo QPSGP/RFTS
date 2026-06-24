@@ -4,7 +4,6 @@ import { put } from "@vercel/blob/client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER } from "@/lib/member-audio-activity";
-import { formatFullSessionsFraction } from "@/lib/session-progress-format";
 import { MANAGED_MAX_SLOTS_PER_AUDIO } from "@/lib/managed-rotation-limits";
 import type { LibraryItem } from "@/lib/types";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
@@ -316,7 +315,7 @@ function formatActivityAction(action: string): string {
     case "updated_goals":
       return "Updated goals";
     case "updated_plays_per_night":
-      return "Updated session length (half/full)";
+      return "Updated audios per night (1 or 2)";
     case "played_audio":
       return "Played audio";
     case "audio_playback_outcome":
@@ -398,7 +397,7 @@ function playedAudioTitleForAdminCell(action: string, details: string | null | u
 function activityDetailFallback(action: string): string | null {
   switch (action) {
     case "logout":
-      return "Session ended";
+      return "Play Options ended";
     case "viewed_console":
       return "Play Options page";
     case "viewed_library":
@@ -1120,14 +1119,9 @@ export default function AdminUsers() {
         return;
       }
       {
-        const ppn = users.find((u) => u.email === email);
-        const plays = memberPlaysPerNight(ppn ?? { playsPerNight: 2 });
-        const sessionsLabel = formatFullSessionsFraction(clamped, plays);
         const nextStep = Math.min(366, Math.max(1, clamped + 1));
         setStatus(
-          plays === 1
-            ? `Schedule updated for ${email}: ${clamped} schedule step(s) → ${sessionsLabel} full session(s) complete (next step #${nextStep}).`
-            : `Schedule updated for ${email}: ${clamped} schedule night(s) → ${sessionsLabel} full session(s) complete (next night #${nextStep}).`
+          `Schedule updated for ${email}: ${clamped} step(s) complete · next step #${nextStep}.`
         );
       }
       await loadMemberActivity(email);
@@ -1916,8 +1910,8 @@ export default function AdminUsers() {
                 setCreatePlaysPerNight(Number(event.target.value) as 1 | 2)
               }
             >
-              <option value={2}>Full session — 2 main audios per schedule night (default)</option>
-              <option value={1}>Half session — 1 main audio per step (2 steps = 1 full session)</option>
+              <option value={2}>2 audios per night (default)</option>
+              <option value={1}>1 audio per step</option>
             </select>
             <button className="button" type="button" onClick={createUser}>
               Create Member
@@ -1992,7 +1986,7 @@ export default function AdminUsers() {
                   {!profileOpen[user.email] && (
                     <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
                       Goals: {user.goalIds?.length || 0} · {effectiveTier === "platinum_managed" ? "Platinum Managed Member" : "Gold Member"} · {user.subscriptionStatus ?? "inactive"} ·{" "}
-                      {memberPlaysPerNight(user) === 2 ? "Full session (2 audios/night)" : "Half session (1 audio/step)"}
+                      {memberPlaysPerNight(user) === 2 ? "2 audios/night" : "1 audio/step"}
                     </p>
                   )}
                   {!profileOpen[user.email] && (
@@ -2545,7 +2539,7 @@ export default function AdminUsers() {
                                 >
                                   <option value="all">All activity</option>
                                   <option value="library">Library plays</option>
-                                  <option value="session">Session plays</option>
+                                  <option value="session">Play Options plays</option>
                                   <option value="other">Other</option>
                                 </select>
                               </label>
@@ -2580,7 +2574,7 @@ export default function AdminUsers() {
                           <p style={{ color: "#64748b", fontSize: 13, marginTop: 0, marginBottom: 12 }}>
                             Sign-ins (with first page they head to), sign-outs, page views, played audio (library
                             and Play Options — each row lists the recording name), goal and console updates, and
-                            admin schedule changes. Use <strong>Filter</strong> for library vs session playback vs
+                            admin schedule changes. Use <strong>Filter</strong> for library vs Play Options playback vs
                             everything else; <strong>Rows</strong> caps how many matching rows appear (newest first).
                             Refresh loads up to 500 recent events. Rows with a <strong style={{ color: "#b91c1c" }}>red</strong>{" "}
                             background indicate the member jumped ahead in the player (seek / fast-forward), not
@@ -2655,27 +2649,10 @@ export default function AdminUsers() {
                             >
                               <h5 style={{ margin: "0 0 8px", fontSize: 14 }}>Schedule progress (manual)</h5>
                               <p style={{ margin: "0 0 10px", fontSize: 13, color: "#475569" }}>
-                                {memberPlaysPerNight(user) === 1 ? (
-                                  <>
-                                    <strong>Schedule steps completed:</strong>{" "}
-                                    {memberScheduleProgress[user.email]!.completedScheduleNights}
-                                    {" · "}
-                                  </>
-                                ) : (
-                                  <>
-                                    <strong>Schedule nights completed:</strong>{" "}
-                                    {memberScheduleProgress[user.email]!.completedScheduleNights}
-                                    {" · "}
-                                  </>
-                                )}
-                                <strong>Main rotation audios completed (approx.):</strong>{" "}
-                                {memberScheduleProgress[user.email]!.completedScheduleNights *
-                                  memberPlaysPerNight(user)}
+                                <strong>Steps completed:</strong>{" "}
+                                {memberScheduleProgress[user.email]!.completedScheduleNights}
                                 {" · "}
-                                <strong>
-                                  {memberPlaysPerNight(user) === 1 ? "Next schedule step:" : "Next schedule night:"}
-                                </strong>{" "}
-                                #{memberScheduleProgress[user.email]!.currentNight}
+                                <strong>Next step:</strong> #{memberScheduleProgress[user.email]!.currentNight}
                                 {memberScheduleProgress[user.email]!.scheduleStartedAt ? (
                                   <>
                                     {" "}
@@ -2696,11 +2673,7 @@ export default function AdminUsers() {
                                   type="button"
                                   className="button button-secondary"
                                   style={{ fontSize: 13, padding: "6px 12px" }}
-                                  title={
-                                    memberPlaysPerNight(user) === 1
-                                      ? "Subtract one completed schedule step"
-                                      : "Subtract one completed schedule night"
-                                  }
+                                  title="Subtract one completed step"
                                   disabled={!!memberScheduleSaving[user.email]}
                                   onClick={() =>
                                     void saveMemberScheduleProgress(
@@ -2709,17 +2682,13 @@ export default function AdminUsers() {
                                     )
                                   }
                                 >
-                                  {memberPlaysPerNight(user) === 1 ? "−1 step" : "−1 night"}
+                                  −1 step
                                 </button>
                                 <button
                                   type="button"
                                   className="button button-secondary"
                                   style={{ fontSize: 13, padding: "6px 12px" }}
-                                  title={
-                                    memberPlaysPerNight(user) === 1
-                                      ? "Add one completed schedule step"
-                                      : "Add one completed schedule night"
-                                  }
+                                  title="Add one completed step"
                                   disabled={!!memberScheduleSaving[user.email]}
                                   onClick={() =>
                                     void saveMemberScheduleProgress(
@@ -2728,12 +2697,10 @@ export default function AdminUsers() {
                                     )
                                   }
                                 >
-                                  {memberPlaysPerNight(user) === 1 ? "+1 step" : "+1 night"}
+                                  +1 step
                                 </button>
                                 <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
-                                  {memberPlaysPerNight(user) === 1
-                                    ? "Set completed steps (0–366)"
-                                    : "Set completed nights (0–366)"}
+                                  Set completed steps (0–366)
                                   <input
                                     type="number"
                                     min={0}
@@ -2757,11 +2724,7 @@ export default function AdminUsers() {
                                     const raw = memberScheduleDraft[user.email] ?? "0";
                                     const n = parseInt(raw, 10);
                                     if (Number.isNaN(n)) {
-                                      setStatus(
-                                        memberPlaysPerNight(user) === 1
-                                          ? "Enter a number between 0 and 366 for completed schedule steps."
-                                          : "Enter a number between 0 and 366 for completed schedule nights."
-                                      );
+                                      setStatus("Enter a number between 0 and 366 for completed steps.");
                                       return;
                                     }
                                     void saveMemberScheduleProgress(user.email, n);
@@ -2773,7 +2736,7 @@ export default function AdminUsers() {
                                   type="button"
                                   className="button button-secondary"
                                   style={{ fontSize: 13, padding: "6px 12px" }}
-                                  title="Clears nights completed and rotation anchor; bumps global initial tracks to 4 if still low"
+                                  title="Clears steps completed and rotation anchor; bumps global initial tracks to 4 if still low"
                                   disabled={
                                     !!memberScheduleSaving[user.email] ||
                                     !!memberScheduleResetting[user.email]
@@ -2786,9 +2749,9 @@ export default function AdminUsers() {
                                 </button>
                               </div>
                               <p style={{ margin: "10px 0 0", fontSize: 12, color: "#64748b" }}>
-                                This updates stored progress in the app (steps in half-session mode, nights in
-                                full-session mode). It does not change goals, session length setting, or rotation
-                                start date.
+                                Each main audio in the rotation is one step; order always moves forward whether the
+                                member plays 1 or 2 audios per night. This updates stored step count only — not goals,
+                                audios-per-night setting, or rotation start date.
                               </p>
                               <p style={{ margin: "8px 0 0", fontSize: 12, color: "#64748b" }}>
                                 <strong>Reset for internal testing</strong> clears progress and the rotation anchor
@@ -3026,8 +2989,8 @@ export default function AdminUsers() {
                             })
                           }
                         >
-                          <option value={2}>Full session — 2 main audios per schedule night</option>
-                          <option value={1}>Half session — 1 main audio per step (2 steps = 1 full session)</option>
+                          <option value={2}>2 audios per night</option>
+                          <option value={1}>1 audio per step</option>
                         </select>
                         <label htmlFor={`member-pw-${user.email}`} className="sr-only">
                           New password for {user.email}
