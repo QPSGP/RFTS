@@ -1017,6 +1017,11 @@ button.section-title {
   .grid-3 {
     grid-template-columns: 1fr;
   }
+
+  .library-search-input {
+    max-width: none !important;
+    width: 100%;
+  }
 }
 
 .facilitator-console-layout {

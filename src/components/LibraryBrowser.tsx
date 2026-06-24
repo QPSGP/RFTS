@@ -183,12 +183,16 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
               placeholder="Search by name or SKU..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="library-search-input"
               style={{
                 width: "100%",
-                maxWidth: 320,
-                padding: "8px 12px",
+                maxWidth: 480,
+                padding: "12px 16px",
+                fontSize: 16,
+                minHeight: 44,
                 borderRadius: 8,
-                border: "1px solid var(--border, #e5e7eb)"
+                border: "1px solid var(--border, #d1d5db)",
+                boxSizing: "border-box"
               }}
             />
           </div>
