@@ -17,7 +17,7 @@ function hasCategory(item: { categories?: string[] }, cat: string): boolean {
   return (item.categories || []).some((c) => c.toLowerCase() === cat.toLowerCase());
 }
 
-function filterLibraryForMember(
+export function filterLibraryForMember(
   library: LibraryItem[],
   memberProfile: Awaited<ReturnType<typeof getMemberProfileByUserId>>
 ): LibraryItem[] {
@@ -44,7 +44,7 @@ function filterLibraryForMember(
   });
 }
 
-function resolveUserAssignedTrack(
+export function resolveUserAssignedTrack(
   filteredLibrary: LibraryItem[],
   emailLower: string,
   assignedAudioIds: string[] | undefined

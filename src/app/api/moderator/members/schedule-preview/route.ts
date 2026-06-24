@@ -17,6 +17,10 @@ import {
   resolveCurrentScheduleNight
 } from "@/lib/schedule-progress";
 import { buildSchedulePreview } from "@/lib/scheduler";
+import {
+  filterLibraryForMember,
+  resolveUserAssignedTrack
+} from "@/lib/schedule-algorithm-export";
 
 const querySchema = z.object({
   email: z.string().email(),
@@ -104,6 +108,13 @@ export async function GET(request: Request) {
     listInterests()
   ]);
 
+  const filteredLibrary = filterLibraryForMember(library, memberProfileRow);
+  const userAssignedTrack = resolveUserAssignedTrack(
+    filteredLibrary,
+    memberEmail,
+    assignedAudioIds
+  );
+
   const previewLength = nights;
   let buildNights = Math.min(
     366,
@@ -112,12 +123,13 @@ export async function GET(request: Request) {
 
   const scheduleInput = {
     interests: goalIds,
-    library,
+    library: filteredLibrary,
     interestRecords,
     settings,
     tier: (isManaged ? "platinum_managed" : "platinum") as "platinum" | "platinum_managed",
     playsPerNight: 2 as const,
-    assignedAudioIds
+    assignedAudioIds,
+    userAssignedTrack: userAssignedTrack ?? undefined
   };
 
   let scheduleBuilt = buildSchedulePreview({ ...scheduleInput, nights: buildNights });
