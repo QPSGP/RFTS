@@ -4,6 +4,7 @@ import { put } from "@vercel/blob/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Interest } from "@/lib/types";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
+import AdminAudioPreview from "@/components/AdminAudioPreview";
 
 function sanitizePathSegment(name: string): string {
   return name
@@ -1196,7 +1197,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
           {addFormPreviewUrl && (
             <div className="card" style={{ padding: 12, background: "#f8fafc" }}>
               <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 600 }}>Preview</p>
-              <audio controls preload="metadata" src={addFormPreviewUrl} style={{ width: "100%" }} />
+              <AdminAudioPreview src={addFormPreviewUrl} style={{ width: "100%" }} />
             </div>
           )}
           <label style={{ fontSize: 13, fontWeight: 600 }}>Allowed member emails (optional)</label>
@@ -1427,7 +1428,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                         <p style={{ marginTop: 8, marginBottom: 8, fontSize: 12, color: "#6b7280" }}>
                           Current audio URL is set below. Click <strong>Save</strong> to keep uploaded changes.
                         </p>
-                        <audio controls preload="metadata" src={editDraft.audioUrl} style={{ width: "100%" }} />
+                        <AdminAudioPreview src={editDraft.audioUrl} style={{ width: "100%" }} />
                       </>
                     ) : (
                       <p style={{ marginTop: 8, marginBottom: 0, fontSize: 12, color: "#6b7280" }}>
@@ -1671,15 +1672,11 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                       <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 600, color: "#374151" }}>
                         Play preview (admin — same stream as members)
                       </p>
-                      <audio
-                        controls
-                        controlsList="nodownload"
-                        preload="metadata"
+                      <AdminAudioPreview
                         src={`/api/stream/audio?id=${encodeURIComponent(item.id)}`}
+                        controlsList="nodownload"
                         style={{ width: "100%", maxWidth: 520, display: "block" }}
-                      >
-                        Your browser does not support audio.
-                      </audio>
+                      />
                     </div>
                   ) : (
                     <p style={{ marginTop: 10, marginBottom: 0, fontSize: 14, color: "#6b7280" }}>
