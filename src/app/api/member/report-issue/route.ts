@@ -10,7 +10,8 @@ import { getMemberProfileByUserId, getUserByEmail, insertMemberIssueReport, getF
 const schema = z.object({
   subject: z.string().min(1).max(200),
   message: z.string().min(1).max(5000),
-  category: z.string().max(100).optional().default("")
+  category: z.string().max(100).optional().default(""),
+  screenshotUrl: z.string().url().max(2048).optional()
 });
 
 const REPORT_ISSUE_MAX_PER_MINUTE = 5;
@@ -36,15 +37,21 @@ export async function POST(request: Request) {
     process.env.REPORT_ISSUE_EMAIL ||
     "Richard@richardleeweatherman.com";
   const categoryLabel = parsed.data.category || "General";
+  const screenshotUrl = parsed.data.screenshotUrl?.trim() || null;
   const subject = `[RFTS Report] ${parsed.data.subject}`;
+  const screenshotHtml = screenshotUrl
+    ? `<p><strong>Screenshot:</strong> <a href="${screenshotUrl}">View screenshot</a></p>`
+    : "";
+  const screenshotText = screenshotUrl ? `\nScreenshot: ${screenshotUrl}` : "";
   const html = `
     <p><strong>Report from member:</strong> ${email}</p>
     <p><strong>Category:</strong> ${categoryLabel}</p>
     <p><strong>Subject:</strong> ${parsed.data.subject}</p>
+    ${screenshotHtml}
     <hr />
     <p>${parsed.data.message.replace(/\n/g, "<br />")}</p>
   `;
-  const text = `Report from: ${email}\nCategory: ${categoryLabel}\nSubject: ${parsed.data.subject}\n\n${parsed.data.message}`;
+  const text = `Report from: ${email}\nCategory: ${categoryLabel}\nSubject: ${parsed.data.subject}${screenshotText}\n\n${parsed.data.message}`;
   const facilitators = await getFacilitatorsForMemberEmail(user.email);
   const facilitatorCc = facilitators[0]?.email ? [facilitators[0].email] : [];
   const { ok, error } = await sendEmail({ to, subject, html, text, cc: facilitatorCc });
@@ -55,7 +62,8 @@ export async function POST(request: Request) {
       memberEmail: user.email,
       category: categoryLabel,
       subject: parsed.data.subject,
-      message: parsed.data.message
+      message: parsed.data.message,
+      screenshotUrl
     });
     if (!storedInAdmin) {
       console.error(

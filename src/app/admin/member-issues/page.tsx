@@ -11,6 +11,7 @@ type Report = {
   category: string;
   subject: string;
   message: string;
+  screenshotUrl: string | null;
   status: string;
   resolutionNotes: string | null;
   resolvedAt: string | null;
@@ -284,20 +285,47 @@ export default function AdminMemberIssuesPage() {
                       </button>
                     </div>
                     {expanded[r.id] ? (
-                      <pre
-                        style={{
-                          marginTop: 8,
-                          padding: 10,
-                          background: "#f9fafb",
-                          borderRadius: 8,
-                          fontSize: 13,
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-word",
-                          maxWidth: 420
-                        }}
-                      >
-                        {r.message}
-                      </pre>
+                      <>
+                        <pre
+                          style={{
+                            marginTop: 8,
+                            padding: 10,
+                            background: "#f9fafb",
+                            borderRadius: 8,
+                            fontSize: 13,
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                            maxWidth: 420
+                          }}
+                        >
+                          {r.message}
+                        </pre>
+                        {r.screenshotUrl ? (
+                          <div style={{ marginTop: 10, maxWidth: 420 }}>
+                            <a
+                              href={r.screenshotUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ fontSize: 13 }}
+                            >
+                              View screenshot
+                            </a>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={r.screenshotUrl}
+                              alt="Member screenshot"
+                              style={{
+                                display: "block",
+                                marginTop: 8,
+                                maxWidth: "100%",
+                                maxHeight: 280,
+                                borderRadius: 8,
+                                border: "1px solid #e5e7eb"
+                              }}
+                            />
+                          </div>
+                        ) : null}
+                      </>
                     ) : null}
                   </td>
                   <td style={{ padding: "10px 8px" }}>

@@ -190,6 +190,7 @@ CREATE TABLE IF NOT EXISTS member_issue_reports (
   category text NOT NULL DEFAULT '',
   subject text NOT NULL,
   message text NOT NULL,
+  screenshot_url text,
   status text NOT NULL DEFAULT 'open',
   resolution_notes text,
   resolved_at timestamptz,

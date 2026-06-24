@@ -1640,6 +1640,7 @@ export type MemberIssueReportAdmin = {
   category: string;
   subject: string;
   message: string;
+  screenshotUrl: string | null;
   status: string;
   resolutionNotes: string | null;
   resolvedAt: string | null;
@@ -1653,16 +1654,18 @@ export const insertMemberIssueReport = async (params: {
   category: string;
   subject: string;
   message: string;
+  screenshotUrl?: string | null;
 }): Promise<boolean> => {
   try {
     await sql`
-      INSERT INTO member_issue_reports (user_id, member_email, category, subject, message)
+      INSERT INTO member_issue_reports (user_id, member_email, category, subject, message, screenshot_url)
       VALUES (
         ${params.userId},
         ${params.memberEmail},
         ${params.category},
         ${params.subject},
-        ${params.message}
+        ${params.message},
+        ${params.screenshotUrl ?? null}
       )
     `;
     return true;
@@ -1679,6 +1682,7 @@ const mapIssueReportRow = (r: {
   category: string;
   subject: string;
   message: string;
+  screenshot_url?: string | null;
   status: string;
   resolution_notes: string | null;
   resolved_at: string | null;
@@ -1691,6 +1695,7 @@ const mapIssueReportRow = (r: {
   category: r.category,
   subject: r.subject,
   message: r.message,
+  screenshotUrl: r.screenshot_url ?? null,
   status: r.status,
   resolutionNotes: r.resolution_notes ?? null,
   resolvedAt: r.resolved_at ?? null,
@@ -1712,6 +1717,7 @@ export const listMemberIssueReportsForMemberEmails = async (
       category: string;
       subject: string;
       message: string;
+      screenshot_url: string | null;
       status: MemberIssueReportStatus;
       resolution_notes: string | null;
       resolved_at: string | null;
@@ -1725,6 +1731,7 @@ export const listMemberIssueReportsForMemberEmails = async (
         category,
         subject,
         message,
+        screenshot_url,
         status,
         resolution_notes,
         resolved_at,
@@ -1736,19 +1743,7 @@ export const listMemberIssueReportsForMemberEmails = async (
       ORDER BY created_at DESC
       LIMIT ${limit}
     `;
-    return rows.map((r) => ({
-      id: r.id,
-      userId: r.user_id,
-      memberEmail: r.member_email,
-      category: r.category,
-      subject: r.subject,
-      message: r.message,
-      status: r.status,
-      resolutionNotes: r.resolution_notes ?? null,
-      resolvedAt: r.resolved_at ?? null,
-      resolvedBy: r.resolved_by ?? null,
-      createdAt: r.created_at
-    }));
+    return rows.map((r) => mapIssueReportRow(r));
   } catch {
     return [];
   }
@@ -1792,6 +1787,7 @@ export const listMemberIssueReportsAdminPaged = async (params: {
         category: string;
         subject: string;
         message: string;
+        screenshot_url: string | null;
         status: string;
         resolution_notes: string | null;
         resolved_at: string | null;
@@ -1805,6 +1801,7 @@ export const listMemberIssueReportsAdminPaged = async (params: {
           category,
           subject,
           message,
+          screenshot_url,
           status,
           resolution_notes,
           resolved_at,
@@ -1824,6 +1821,7 @@ export const listMemberIssueReportsAdminPaged = async (params: {
       category: string;
       subject: string;
       message: string;
+      screenshot_url: string | null;
       status: string;
       resolution_notes: string | null;
       resolved_at: string | null;
@@ -1837,6 +1835,7 @@ export const listMemberIssueReportsAdminPaged = async (params: {
         category,
         subject,
         message,
+        screenshot_url,
         status,
         resolution_notes,
         resolved_at,
@@ -1865,6 +1864,7 @@ export const getMemberIssueReportById = async (
       category: string;
       subject: string;
       message: string;
+      screenshot_url: string | null;
       status: string;
       resolution_notes: string | null;
       resolved_at: string | null;
@@ -1878,6 +1878,7 @@ export const getMemberIssueReportById = async (
         category,
         subject,
         message,
+        screenshot_url,
         status,
         resolution_notes,
         resolved_at,
