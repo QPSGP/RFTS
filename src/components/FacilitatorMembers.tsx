@@ -344,7 +344,7 @@ export default function FacilitatorMembers() {
     setGoalSearch("");
     setGoalsSaveStatus(null);
     setNotesSaveStatus(null);
-    setOpenClientSection("summary");
+    setOpenClientSection(null);
     try {
       let tier = memberTier;
       const profileRes = await fetch(
