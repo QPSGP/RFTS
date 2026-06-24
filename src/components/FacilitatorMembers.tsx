@@ -190,8 +190,11 @@ export default function FacilitatorMembers() {
   const [goalSearch, setGoalSearch] = useState("");
   const [goalsSaveStatus, setGoalsSaveStatus] = useState<string | null>(null);
   const [goalsSaving, setGoalsSaving] = useState(false);
-  type ClientSection = "summary" | "goals" | "schedule" | "rotation" | "issues" | "activity";
+  type ClientSection = "summary" | "notes" | "goals" | "schedule" | "rotation" | "issues" | "activity";
   const [openClientSection, setOpenClientSection] = useState<ClientSection | null>(null);
+  const [notesDraft, setNotesDraft] = useState<Record<string, string>>({});
+  const [notesSaveStatus, setNotesSaveStatus] = useState<string | null>(null);
+  const [notesSaving, setNotesSaving] = useState(false);
   const [activitySummary, setActivitySummary] = useState<
     Record<
       string,
@@ -340,6 +343,7 @@ export default function FacilitatorMembers() {
     setRotationSaveStatus(null);
     setGoalSearch("");
     setGoalsSaveStatus(null);
+    setNotesSaveStatus(null);
     setOpenClientSection("summary");
     try {
       let tier = memberTier;
@@ -360,6 +364,10 @@ export default function FacilitatorMembers() {
         setGoalDraftIds((prev) => ({
           ...prev,
           [email]: data.member?.goalIds ?? []
+        }));
+        setNotesDraft((prev) => ({
+          ...prev,
+          [email]: data.member?.profile?.notes ?? ""
         }));
       }
 
@@ -476,6 +484,41 @@ export default function FacilitatorMembers() {
       }));
     } finally {
       setScheduleLoading(false);
+    }
+  };
+
+  const saveMemberNotes = async (email: string) => {
+    setNotesSaving(true);
+    setNotesSaveStatus(null);
+    try {
+      const response = await fetch("/api/moderator/members/profile", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          notes: notesDraft[email] ?? ""
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setNotesSaveStatus(data?.error || "Could not save notes.");
+        return;
+      }
+      setNotesSaveStatus("Notes saved.");
+      setProfileDetail((prev) =>
+        prev
+          ? {
+              ...prev,
+              profile: {
+                ...(prev.profile ?? {}),
+                notes: notesDraft[email] ?? ""
+              }
+            }
+          : prev
+      );
+    } finally {
+      setNotesSaving(false);
     }
   };
 
@@ -1265,14 +1308,63 @@ export default function FacilitatorMembers() {
                     {profileDetail.profile?.occupation && (
                       <p><strong>Occupation:</strong> {profileDetail.profile.occupation}</p>
                     )}
-                    {profileDetail.profile?.notes && (
-                      <p><strong>Notes:</strong> {profileDetail.profile.notes}</p>
-                    )}
                   </div>
                 )}
                     </div>
                   </div>
                 )}
+
+              {profileDetail?.registered && selectedEmail && (
+                <>
+                  <button
+                    type="button"
+                    className={adminSectionToggleClass(openClientSection === "notes", true)}
+                    onClick={() => toggleClientSection("notes")}
+                  >
+                    Client notes
+                  </button>
+                  {openClientSection === "notes" && (
+                    <div className="card" style={{ marginTop: 4, marginBottom: 8 }}>
+                      <p style={{ fontSize: 13, color: "#64748b", marginTop: 0, lineHeight: 1.5 }}>
+                        Shared internal notes — admins and facilitators can see and edit these.
+                        Not visible to the member.
+                      </p>
+                      <textarea
+                        style={{ ...inputStyle, minHeight: 120, resize: "vertical" }}
+                        placeholder="Coaching notes, follow-ups, context for the team…"
+                        value={notesDraft[selectedEmail] ?? ""}
+                        onChange={(e) =>
+                          setNotesDraft((prev) => ({
+                            ...prev,
+                            [selectedEmail]: e.target.value
+                          }))
+                        }
+                      />
+                      <button
+                        type="button"
+                        className="button"
+                        style={{ marginTop: 12 }}
+                        disabled={notesSaving}
+                        onClick={() => void saveMemberNotes(selectedEmail)}
+                      >
+                        {notesSaving ? "Saving notes…" : "Save client notes"}
+                      </button>
+                      {notesSaveStatus && (
+                        <p
+                          style={{
+                            fontSize: 12,
+                            marginTop: 8,
+                            marginBottom: 0,
+                            color: notesSaveStatus.includes("Could not") ? "#b91c1c" : "#047857"
+                          }}
+                        >
+                          {notesSaveStatus}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
 
               {openIssues.filter((r) => r.memberEmail.toLowerCase() === selectedEmail.toLowerCase()).length >
                 0 && (

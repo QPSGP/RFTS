@@ -11,6 +11,7 @@ import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 
 type MemberAdminSection =
   | "profile"
+  | "notes"
   | "facilitator"
   | "activity"
   | "membership"
@@ -1735,6 +1736,31 @@ export default function AdminUsers() {
     setStatus(data?.error || `Profile save failed. (status ${response.status})`);
   };
 
+  const saveClientNotes = async (email: string) => {
+    const notes = profileDrafts[email]?.notes ?? "";
+    const response = await fetch("/api/admin/member-profile", {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        profile: { notes }
+      })
+    });
+    if (response.ok) {
+      setStatus("Client notes saved.");
+      await loadProfile(email);
+      return;
+    }
+    const data = await response.json().catch(() => ({}));
+    setStatus(data?.error || "Could not save client notes.");
+  };
+
+  const ensureProfileDraftForNotes = async (email: string) => {
+    if (profileDrafts[email]) return;
+    await loadProfile(email);
+  };
+
   const getMemberGoalIds = (email: string, fallback: string[]) =>
     updates[email]?.goalIds ?? fallback ?? [];
 
@@ -2047,6 +2073,48 @@ export default function AdminUsers() {
                       <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
                       <button
                         type="button"
+                        className={adminSectionToggleClass(memberSectionIsOpen(user.email, "notes"), true)}
+                        aria-expanded={memberSectionIsOpen(user.email, "notes")}
+                        onClick={() => {
+                          toggleMemberSection(user.email, "notes");
+                          void ensureProfileDraftForNotes(user.email);
+                        }}
+                      >
+                        {memberSectionIsOpen(user.email, "notes") ? "▼" : "▶"} Client notes
+                      </button>
+                      {memberSectionIsOpen(user.email, "notes") && (
+                        <div className="card" style={{ marginTop: 8 }}>
+                          <p style={{ color: "#64748b", fontSize: 13, marginTop: 0, lineHeight: 1.5 }}>
+                            Internal notes for this member — visible to admins and assigned facilitators.
+                            Not shown to the member.
+                          </p>
+                          <textarea
+                            style={{ ...inputStyle, minHeight: 120, resize: "vertical" }}
+                            placeholder="Coaching notes, follow-ups, context for the team…"
+                            value={profileDrafts[user.email]?.notes ?? ""}
+                            onChange={(event) =>
+                              setProfileDrafts((prev) => {
+                                const row = prev[user.email];
+                                if (!row) return prev;
+                                return {
+                                  ...prev,
+                                  [user.email]: { ...row, notes: event.target.value }
+                                };
+                              })
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="button"
+                            style={{ marginTop: 12 }}
+                            onClick={() => void saveClientNotes(user.email)}
+                          >
+                            Save client notes
+                          </button>
+                        </div>
+                      )}
+                      <button
+                        type="button"
                         className={adminSectionToggleClass(memberSectionIsOpen(user.email, "profile"), true)}
                         aria-expanded={memberSectionIsOpen(user.email, "profile")}
                         onClick={() => toggleMemberSection(user.email, "profile")}
@@ -2060,20 +2128,6 @@ export default function AdminUsers() {
                           <p style={{ color: "#4b5563", marginTop: 4 }}>
                             Same fields and order as new member signup (Personal Details step).
                           </p>
-                          <label style={{ fontSize: 12, display: "block", marginBottom: 4, marginTop: 12 }}>
-                            Admin notes (internal only)
-                          </label>
-                          <textarea
-                            style={{ ...inputStyle, minHeight: 60, resize: "vertical" }}
-                            placeholder="Internal notes about this member (admin only)"
-                            value={profileDrafts[user.email].notes}
-                            onChange={(event) =>
-                              setProfileDrafts({
-                                ...profileDrafts,
-                                [user.email]: { ...profileDrafts[user.email], notes: event.target.value }
-                              })
-                            }
-                          />
                           <div className="section-heading" style={{ marginTop: 16, marginBottom: 4 }}>
                             Personal Details
                           </div>
