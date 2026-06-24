@@ -112,17 +112,25 @@ function setupFetchMock() {
   });
 }
 
-async function openManagedProfileAndWaitForHydration(user: ReturnType<typeof userEvent.setup>) {
+async function openManagedRotationSection(user: ReturnType<typeof userEvent.setup>) {
   await waitFor(() => {
     expect(screen.getByRole("button", { name: /View \/ Edit member/i })).toBeInTheDocument();
   });
   await user.click(screen.getByRole("button", { name: /View \/ Edit member/i }));
-  await screen.findByText(/Check audios designed for them/i);
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: /Rotation Order/i })).toBeInTheDocument();
+  });
+  await user.click(screen.getByRole("button", { name: /Rotation Order/i }));
+}
+
+async function openManagedProfileAndWaitForHydration(user: ReturnType<typeof userEvent.setup>) {
+  await openManagedRotationSection(user);
   await waitFor(() => {
     expect(
       screen.queryByRole("status", { name: /loading saved rotation from server/i })
     ).not.toBeInTheDocument();
   });
+  await screen.findByText(/Rotation order \(live schedule\)/i);
 }
 
 describe("AdminUsers Platinum Managed rotation", () => {
@@ -242,6 +250,7 @@ describe("AdminUsers Platinum Managed rotation", () => {
     });
 
     await user.click(screen.getByRole("button", { name: /View \/ Edit member/i }));
+    await user.click(screen.getByRole("button", { name: /Rotation Order/i }));
 
     await screen.findByRole("status", { name: /loading saved rotation from server/i });
 
@@ -357,7 +366,7 @@ describe("AdminUsers Platinum Managed rotation", () => {
       expect(screen.getByRole("button", { name: /View \/ Edit member/i })).toBeInTheDocument();
     });
     await user.click(screen.getByRole("button", { name: /View \/ Edit member/i }));
-    await screen.findByText(/Check audios designed for them/i);
+    await user.click(screen.getByRole("button", { name: /Rotation Order/i }));
     await waitFor(() => {
       expect(
         screen.queryByRole("status", { name: /loading saved rotation from server/i })
