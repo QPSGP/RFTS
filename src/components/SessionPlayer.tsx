@@ -477,6 +477,17 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     pauseForResumeRef.current = false;
   }, [current?.url]);
 
+  const clearWaitTimers = useCallback(() => {
+    if (waitTimeoutRef.current) {
+      clearTimeout(waitTimeoutRef.current);
+      waitTimeoutRef.current = null;
+    }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+  }, []);
+
   const attemptPlay = (track?: SessionTrack | null) => {
     const audio = audioRef.current;
     if (!audio || !track) {
@@ -503,11 +514,43 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     );
   };
 
+  const playSecond = useCallback(() => {
+    if (!secondTrack) {
+      setMessage("No second recording scheduled tonight.");
+      return;
+    }
+    clearWaitTimers();
+    pendingNextTrackRef.current = null;
+    segmentPrepDoneRef.current = false;
+    secondFromGapInFlightRef.current = false;
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("rfts-session-start"));
+      window.dispatchEvent(new Event("rfts-second-half-started"));
+    }
+    setPhase("second");
+    const nextQueue = [prepAudio, secondTrack].filter(
+      (track): track is SessionTrack => !!track
+    );
+    skipEffectPlayRef.current = Boolean(audioRef.current);
+    applyQueue(nextQueue);
+    setCurrent(nextQueue[0] || null);
+    setMessage(null);
+    setNeedsUserPlay(false);
+    attemptPlay(nextQueue[0]);
+  }, [secondTrack, prepAudio, applyQueue, clearWaitTimers]);
+
   const startSession = useCallback(() => {
     if (!firstTrack) {
       setMessage("Select goals to build your session lineup.");
       return;
     }
+    /** After first half (gap) or mid–second half — do not restart tonight’s first main. */
+    const ph = phaseRef.current;
+    if (playsPerNight === 2 && secondTrackRef.current && (ph === "waiting" || ph === "second")) {
+      playSecond();
+      return;
+    }
+    clearWaitTimers();
     /** Always start tonight’s session from prep (or first) at 0, not mid–first main. */
     pendingNextTrackRef.current = null;
     segmentPrepDoneRef.current = false;
@@ -529,37 +572,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     setMessage(null);
     setNeedsUserPlay(false);
     attemptPlay(nextQueue[0]);
-  }, [firstTrack, prepAudio, onSessionStart, applyQueue]);
-
-  const playSecond = useCallback(() => {
-    if (!secondTrack) {
-      setMessage("No second recording scheduled tonight.");
-      return;
-    }
-    if (waitTimeoutRef.current) {
-      clearTimeout(waitTimeoutRef.current);
-      waitTimeoutRef.current = null;
-    }
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current);
-      countdownIntervalRef.current = null;
-    }
-    pendingNextTrackRef.current = null;
-    segmentPrepDoneRef.current = false;
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("rfts-session-start"));
-    }
-    setPhase("second");
-    const nextQueue = [prepAudio, secondTrack].filter(
-      (track): track is SessionTrack => !!track
-    );
-    skipEffectPlayRef.current = Boolean(audioRef.current);
-    applyQueue(nextQueue);
-    setCurrent(nextQueue[0] || null);
-    setMessage(null);
-    setNeedsUserPlay(false);
-    attemptPlay(nextQueue[0]);
-  }, [secondTrack, prepAudio, applyQueue]);
+  }, [firstTrack, prepAudio, onSessionStart, applyQueue, playSecond, playsPerNight, clearWaitTimers]);
 
   useImperativeHandle(ref, () => ({ startSession, playSecond }), [startSession, playSecond]);
 
@@ -665,17 +678,6 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       audio.removeEventListener("seeked", onSeeked);
     };
   }, [sessionAudioMounted, current?.url, phase, prepAudio?.url]);
-
-  const clearWaitTimers = useCallback(() => {
-    if (waitTimeoutRef.current) {
-      clearTimeout(waitTimeoutRef.current);
-      waitTimeoutRef.current = null;
-    }
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current);
-      countdownIntervalRef.current = null;
-    }
-  }, []);
 
   const beginSecondAfterGap = useCallback((trigger?: string) => {
     if (phaseRef.current !== "waiting") return;
@@ -1027,6 +1029,20 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const handlePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
+    if (phaseRef.current === "waiting" && playsPerNight === 2) {
+      if (Date.now() >= secondStartAtRef.current) {
+        beginSecondAfterGap("manual_play");
+        return;
+      }
+      void audio
+        .play()
+        .then(() => {
+          setNeedsUserPlay(false);
+          setMessage(null);
+        })
+        .catch(() => setNeedsUserPlay(true));
+      return;
+    }
     const toPlay = resolvePlayTarget();
     if (toPlay) {
       const epochAtPlay = sessionEpochRef.current;
@@ -1080,6 +1096,15 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const handleRestart = () => {
     const audio = audioRef.current;
     if (!audio) return;
+    if (phaseRef.current === "waiting" && playsPerNight === 2) {
+      if (Date.now() >= secondStartAtRef.current) {
+        beginSecondAfterGap("manual_restart");
+        return;
+      }
+      audio.currentTime = 0;
+      void audio.play();
+      return;
+    }
     segmentPrepDoneRef.current = false;
     const c0 = currentRef.current;
     const ph0 = phaseRef.current;
@@ -1147,7 +1172,9 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       </p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <button className="button" onClick={startSession}>
-          Start Session
+          {phase === "waiting" && playsPerNight === 2
+            ? "Start second audio now"
+            : "Start Session"}
         </button>
         {secondTrack && (
           <button className="button button-secondary" onClick={playSecond}>
@@ -1186,7 +1213,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           </p>
           {isMobile && (
             <p style={{ margin: "10px 0 0", color: "#15803d" }}>
-              On a phone, tap Play if the second half (including preparation) does not start when the wait ends.
+              On a phone, tap &ldquo;Start second audio now&rdquo; above if the second half does not begin when the wait ends.
             </p>
           )}
           {coarseMobilePlatform() === "Android" && (
@@ -1265,7 +1292,22 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
             onPause={() => setIsPlaying(false)}
             style={audioSurfaceStyle}
           />
-          {needsUserPlay && (
+          {needsUserPlay && phase === "waiting" && (
+            <div className="card" style={{ marginTop: 12 }}>
+              <p style={{ color: "#b91c1c", marginTop: 0 }}>
+                Tap below so your second audio can start when the wait ends.
+              </p>
+              <button
+                className="button"
+                type="button"
+                onClick={handlePlay}
+                style={{ padding: "18px 24px", fontSize: 18, minHeight: 56, width: "100%" }}
+              >
+                Keep session ready
+              </button>
+            </div>
+          )}
+          {needsUserPlay && phase !== "waiting" && (
             <>
               <div className="card" style={{ marginTop: 12 }}>
                 <p style={{ color: "#b91c1c", marginTop: 0 }}>
@@ -1343,7 +1385,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
               )}
             </>
           )}
-          {isMobile && (
+          {isMobile && phase !== "waiting" && (
             <div
               style={{
                 position: "fixed",

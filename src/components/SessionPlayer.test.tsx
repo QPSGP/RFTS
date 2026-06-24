@@ -389,6 +389,51 @@ describe("SessionPlayer", () => {
     expect(mockAudio.play).toHaveBeenCalled();
   });
 
+  it("Start Session during gap starts second half instead of replaying first", async () => {
+    const SECOND = { title: "Second Recording", url: "/api/stream/audio?id=second-456" };
+    render(
+      <SessionPlayer
+        prepAudio={PREP}
+        firstTrack={FIRST_TRACK}
+        secondTrack={SECOND}
+        gapHours={2.5}
+        playsPerNight={2}
+        autoStart={true}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(PREP.title);
+    });
+
+    let audio = document.querySelector("audio");
+    await act(async () => {
+      audio?.dispatchEvent(new Event("ended"));
+    });
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(FIRST_TRACK.title);
+    });
+
+    audio = document.querySelector("audio");
+    await act(async () => {
+      audio?.dispatchEvent(new Event("ended"));
+    });
+    await waitFor(() => {
+      expect(screen.getByText(/First session complete/i)).toBeInTheDocument();
+    });
+
+    mockAudio.src = "";
+    mockAudio.play.mockClear();
+    const startSecondBtn = screen.getByRole("button", { name: /Start second audio now/i });
+    await userEvent.click(startSecondBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(PREP.title);
+    });
+    expect(mockAudio.src).toBe(PREP.url);
+    expect(mockAudio.src).not.toBe(FIRST_TRACK.url);
+  });
+
   it("hides transport after only nightly audio completes (1 per night)", async () => {
     render(
       <SessionPlayer

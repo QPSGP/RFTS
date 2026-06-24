@@ -2654,44 +2654,6 @@ export default function AdminUsers() {
                               }}
                             >
                               <h5 style={{ margin: "0 0 8px", fontSize: 14 }}>Schedule progress (manual)</h5>
-                              <p style={{ margin: "0 0 8px", fontSize: 13, color: "#334155", lineHeight: 1.45 }}>
-                                {memberPlaysPerNight(user) === 2 ? (
-                                  <>
-                                    <strong>Full session</strong> for this member: <strong>two</strong> main
-                                    audios in one schedule night (first, then second after the gap). One completed
-                                    night here = <strong>1</strong> full session. Preparation audio is extra.
-                                  </>
-                                ) : (
-                                  <>
-                                    <strong>Half session</strong> for this member: <strong>one</strong> main audio
-                                    per schedule <strong>step</strong> in the rotation. Two completed steps ={" "}
-                                    <strong>one</strong> full session (first main + second main). So progress often
-                                    shows as <strong>½, 1, 1½…</strong> full sessions. Preparation audio is extra.
-                                  </>
-                                )}
-                              </p>
-                              <p
-                                style={{
-                                  margin: "0 0 10px",
-                                  fontSize: 15,
-                                  color: "#0f172a",
-                                  fontWeight: 600
-                                }}
-                              >
-                                Full sessions complete:{" "}
-                                <span style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
-                                  {formatFullSessionsFraction(
-                                    memberScheduleProgress[user.email]!.completedScheduleNights,
-                                    memberPlaysPerNight(user)
-                                  )}
-                                </span>
-                                {memberPlaysPerNight(user) === 1 ? (
-                                  <span style={{ fontSize: 13, fontWeight: 400, color: "#64748b" }}>
-                                    {" "}
-                                    (two steps = one full session)
-                                  </span>
-                                ) : null}
-                              </p>
                               <p style={{ margin: "0 0 10px", fontSize: 13, color: "#475569" }}>
                                 {memberPlaysPerNight(user) === 1 ? (
                                   <>
@@ -2736,7 +2698,7 @@ export default function AdminUsers() {
                                   style={{ fontSize: 13, padding: "6px 12px" }}
                                   title={
                                     memberPlaysPerNight(user) === 1
-                                      ? "Subtract one schedule step (½ full session in half-session mode)"
+                                      ? "Subtract one completed schedule step"
                                       : "Subtract one completed schedule night"
                                   }
                                   disabled={!!memberScheduleSaving[user.email]}
@@ -2755,7 +2717,7 @@ export default function AdminUsers() {
                                   style={{ fontSize: 13, padding: "6px 12px" }}
                                   title={
                                     memberPlaysPerNight(user) === 1
-                                      ? "Add one schedule step (½ full session in half-session mode)"
+                                      ? "Add one completed schedule step"
                                       : "Add one completed schedule night"
                                   }
                                   disabled={!!memberScheduleSaving[user.email]}
