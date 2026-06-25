@@ -8,7 +8,7 @@ type PageProps = {
 
 export default async function FacilitatorProfilePage({ params }: PageProps) {
   const profile = await getModeratorApplicationBySlug(params.slug);
-  if (!profile || profile.status !== "approved") {
+  if (!profile) {
     notFound();
   }
 

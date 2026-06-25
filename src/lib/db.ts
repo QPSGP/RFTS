@@ -2313,7 +2313,25 @@ export const deletePendingModeratorApplications = async () => {
 };
 
 export const deleteModerator = async (moderatorId: string) => {
+  const { rows } = await sql<{ email: string }>`
+    SELECT email FROM moderators WHERE id = ${moderatorId}
+  `;
+  const email = rows[0]?.email;
   await sql`DELETE FROM moderators WHERE id = ${moderatorId}`;
+  if (email) {
+    await sql`DELETE FROM moderator_applications WHERE LOWER(email) = LOWER(${email})`;
+  }
+};
+
+/** Remove approved application rows whose facilitator account was deleted. */
+export const pruneOrphanedModeratorApplications = async () => {
+  await sql`
+    DELETE FROM moderator_applications ma
+    WHERE ma.status = 'approved'
+      AND NOT EXISTS (
+        SELECT 1 FROM moderators m WHERE LOWER(m.email) = LOWER(ma.email)
+      )
+  `;
 };
 
 export const createModeratorApplication = async (payload: {
@@ -2469,21 +2487,23 @@ export const getModeratorApplicationByEmail = async (email: string) => {
 export const getModeratorApplicationBySlug = async (slug: string) => {
   const { rows } = await sql<ModeratorApplication>`
     SELECT
-      id,
-      name,
-      email,
-      focus_areas as "focusAreas",
-      experience,
-      links,
-      phone,
-      website,
-      social_links as "socialLinks",
-      photo_url as "photoUrl",
-      profile_slug as "profileSlug",
-      submitted_at as "submittedAt",
-      status
-    FROM moderator_applications
-    WHERE LOWER(profile_slug) = LOWER(${slug})
+      ma.id,
+      ma.name,
+      ma.email,
+      ma.focus_areas as "focusAreas",
+      ma.experience,
+      ma.links,
+      ma.phone,
+      ma.website,
+      ma.social_links as "socialLinks",
+      ma.photo_url as "photoUrl",
+      ma.profile_slug as "profileSlug",
+      ma.submitted_at as "submittedAt",
+      ma.status
+    FROM moderator_applications ma
+    INNER JOIN moderators m ON LOWER(m.email) = LOWER(ma.email) AND m.status = 'active'
+    WHERE LOWER(ma.profile_slug) = LOWER(${slug})
+      AND ma.status = 'approved'
     LIMIT 1
   `;
   return rows[0] || null;

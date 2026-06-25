@@ -11,6 +11,7 @@ import {
   getModeratorByEmail,
   listModeratorApplications,
   listModerators,
+  pruneOrphanedModeratorApplications,
   updateFacilitatorProfile,
   updateModeratorApplication,
   updateModeratorAccount,
@@ -82,6 +83,7 @@ export async function GET() {
   if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
+  await pruneOrphanedModeratorApplications();
   return NextResponse.json({
     applications: await listModeratorApplications(),
     moderators: await listModerators()

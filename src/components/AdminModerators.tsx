@@ -95,6 +95,12 @@ export default function AdminModerators() {
   const toggleFacilitatorSection = (section: FacilitatorAdminSection) => {
     const opening = !openSection[section];
     setOpenSection(opening ? { [section]: true } : { ...openSection, [section]: false });
+    if (
+      opening &&
+      (section === "featuredProfiles" || section === "activeFacilitators")
+    ) {
+      void load();
+    }
   };
 
   const uniqueApplications = useMemo(() => {
@@ -123,6 +129,20 @@ export default function AdminModerators() {
   const approvedApplications = useMemo(
     () => uniqueApplications.filter((app) => app.status === "approved"),
     [uniqueApplications]
+  );
+
+  const activeModeratorEmails = useMemo(
+    () => new Set(moderators.map((m) => m.email.trim().toLowerCase())),
+    [moderators]
+  );
+
+  /** Only facilitators with an active login account — matches Active Facilitators list. */
+  const featuredFacilitatorProfiles = useMemo(
+    () =>
+      approvedApplications.filter((app) =>
+        activeModeratorEmails.has(app.email.trim().toLowerCase())
+      ),
+    [approvedApplications, activeModeratorEmails]
   );
 
   const facilitatorTracks = useMemo(
@@ -789,14 +809,15 @@ export default function AdminModerators() {
           <div className="card" style={{ marginTop: 4 }}>
         <h3 style={{ marginTop: 0 }}>Featured Facilitator Profiles</h3>
         <p style={{ color: "#4b5563" }}>
-          Spotlight pages use the profile slug below. Edit facilitator profiles in Active
-          Facilitators — save updates the public profile and login account together.
+          Spotlight pages use the profile slug below. Only active facilitators appear here (same
+          as <strong>Active Facilitators</strong>). Edit profiles in Active Facilitators — save
+          updates the public page and login account together.
         </p>
         <div className="grid">
-          {approvedApplications.length === 0 ? (
-            <p style={{ color: "#6b7280" }}>No approved facilitator profiles yet.</p>
+          {featuredFacilitatorProfiles.length === 0 ? (
+            <p style={{ color: "#6b7280" }}>No active facilitator profiles yet.</p>
           ) : (
-            approvedApplications.map((app) => {
+            featuredFacilitatorProfiles.map((app) => {
               const draft = getApplicationDraft(app);
               const slug = draft.profileSlug.trim();
               return (
