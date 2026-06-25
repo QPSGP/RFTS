@@ -5,9 +5,9 @@ export default function HowItWorksPage() {
     <main>
       <section className="hero section">
         <span className="pill">How It Works</span>
-        <h1>Personalized sessions that build your goals while you sleep</h1>
+        <h1>Personalized audios that build your goals while you sleep</h1>
         <p>
-          Reach For The Stars turns your goals into a nightly session plan so you can
+          Reach For The Stars turns your goals into a nightly audio plan so you can
           reinforce new habits, focus, and confidence at the time your subconscious is
           most receptive.
         </p>
@@ -37,9 +37,9 @@ export default function HowItWorksPage() {
             </p>
           </div>
           <div className="card">
-            <h3>3. Start your session</h3>
+            <h3>3. Start listening</h3>
             <p>
-              Tap Start Session to play your personalized lineup automatically each
+              Tap Start Session to play your personalized audios automatically each
               night.
             </p>
           </div>
@@ -55,14 +55,14 @@ export default function HowItWorksPage() {
           <div className="card">
             <h3>Preparation + first goal</h3>
             <p>
-              Each session begins with a short preparation audio, then your first goal
+              Your audios each night begin with a short preparation audio, then your first goal
               recording starts right away.
             </p>
           </div>
           <div className="card">
-            <h3>Second session later</h3>
+            <h3>Second audio later</h3>
             <p>
-              If you select two sessions per night, a second recording plays about 2.5
+              If you select two audios per night, a second recording plays about 2.5
               hours later to reinforce your goals while you sleep.
             </p>
           </div>
@@ -74,9 +74,9 @@ export default function HowItWorksPage() {
             </p>
           </div>
           <div className="card">
-            <h3>1 or 2 sessions</h3>
+            <h3>1 or 2 audios</h3>
             <p>
-              You can choose 1 or 2 sessions per night. The default is 2 and the rotation
+              You can choose 1 or 2 audios per night. The default is 2 and the rotation
               stays consistent.
             </p>
           </div>
