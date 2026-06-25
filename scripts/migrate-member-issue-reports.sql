@@ -3,11 +3,12 @@
 
 CREATE TABLE IF NOT EXISTS member_issue_reports (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES users(id) ON DELETE SET NULL,
   member_email text NOT NULL,
   category text NOT NULL DEFAULT '',
   subject text NOT NULL,
   message text NOT NULL,
+  screenshot_url text,
   status text NOT NULL DEFAULT 'open',
   resolution_notes text,
   resolved_at timestamptz,

@@ -1670,7 +1670,25 @@ export const insertMemberIssueReport = async (params: {
     `;
     return true;
   } catch (err) {
-    console.error("[insertMemberIssueReport]", err);
+    if (isMissingScreenshotColumn(err)) {
+      try {
+        await sql`
+          INSERT INTO member_issue_reports (user_id, member_email, category, subject, message)
+          VALUES (
+            ${params.userId},
+            ${params.memberEmail},
+            ${params.category},
+            ${params.subject},
+            ${params.message}
+          )
+        `;
+        return true;
+      } catch (fallbackErr) {
+        logMemberIssueReportsQueryError("insert fallback", fallbackErr);
+        return false;
+      }
+    }
+    logMemberIssueReportsQueryError("insert", err);
     return false;
   }
 };
@@ -1703,6 +1721,30 @@ const mapIssueReportRow = (r: {
   createdAt: r.created_at
 });
 
+type MemberIssueReportRow = {
+  id: string;
+  user_id: string;
+  member_email: string;
+  category: string;
+  subject: string;
+  message: string;
+  screenshot_url?: string | null;
+  status: string;
+  resolution_notes: string | null;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  created_at: string;
+};
+
+function isMissingScreenshotColumn(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /screenshot_url/i.test(msg) && /does not exist|column/i.test(msg);
+}
+
+function logMemberIssueReportsQueryError(label: string, err: unknown): void {
+  console.error(`[member_issue_reports] ${label}`, err);
+}
+
 export const listMemberIssueReportsForMemberEmails = async (
   emails: string[],
   limit = 50
@@ -1710,20 +1752,7 @@ export const listMemberIssueReportsForMemberEmails = async (
   const unique = [...new Set(emails.map((e) => e.trim().toLowerCase()).filter(Boolean))];
   if (!unique.length) return [];
   try {
-    const { rows } = await sql<{
-      id: string;
-      user_id: string;
-      member_email: string;
-      category: string;
-      subject: string;
-      message: string;
-      screenshot_url: string | null;
-      status: MemberIssueReportStatus;
-      resolution_notes: string | null;
-      resolved_at: string | null;
-      resolved_by: string | null;
-      created_at: string;
-    }>`
+    const { rows } = await sql<MemberIssueReportRow & { status: MemberIssueReportStatus }>`
       SELECT
         id,
         user_id,
@@ -1744,29 +1773,58 @@ export const listMemberIssueReportsForMemberEmails = async (
       LIMIT ${limit}
     `;
     return rows.map((r) => mapIssueReportRow(r));
-  } catch {
+  } catch (err) {
+    if (isMissingScreenshotColumn(err)) {
+      try {
+        const { rows } = await sql<MemberIssueReportRow & { status: MemberIssueReportStatus }>`
+          SELECT
+            id,
+            user_id,
+            member_email,
+            category,
+            subject,
+            message,
+            status,
+            resolution_notes,
+            resolved_at,
+            resolved_by,
+            created_at
+          FROM member_issue_reports
+          WHERE LOWER(member_email) = ANY(${toPgArray(unique)}::text[])
+            AND status IN ('open', 'in_progress')
+          ORDER BY created_at DESC
+          LIMIT ${limit}
+        `;
+        return rows.map((r) => mapIssueReportRow(r));
+      } catch (fallbackErr) {
+        logMemberIssueReportsQueryError("list for member emails fallback", fallbackErr);
+        return [];
+      }
+    }
+    logMemberIssueReportsQueryError("list for member emails", err);
     return [];
   }
 };
 
 export const countMemberIssueReports = async (
   statusFilter: "all" | MemberIssueReportStatus
-): Promise<number> => {
+): Promise<{ count: number; queryFailed: boolean }> => {
   try {
     if (statusFilter === "all") {
       const { rows } = await sql<{ c: string }>`
         SELECT COUNT(*)::text AS c FROM member_issue_reports
       `;
-      return parseInt(rows[0]?.c || "0", 10) || 0;
+      return { count: parseInt(rows[0]?.c || "0", 10) || 0, queryFailed: false };
     }
     const { rows } = await sql<{ c: string }>`
       SELECT COUNT(*)::text AS c
       FROM member_issue_reports
       WHERE status = ${statusFilter}
     `;
-    return parseInt(rows[0]?.c || "0", 10) || 0;
-  } catch {
-    return 0;
+    return { count: parseInt(rows[0]?.c || "0", 10) || 0, queryFailed: false };
+  } catch (err) {
+    logMemberIssueReportsQueryError("count", err);
+    return { count: 0, queryFailed: true };
   }
 };
 
@@ -1774,26 +1832,35 @@ export const listMemberIssueReportsAdminPaged = async (params: {
   page: number;
   pageSize: number;
   statusFilter: "all" | MemberIssueReportStatus;
-}): Promise<MemberIssueReportAdmin[]> => {
+}): Promise<{ reports: MemberIssueReportAdmin[]; queryFailed: boolean }> => {
   const pageSize = Math.min(100, Math.max(1, Math.floor(params.pageSize)));
   const page = Math.max(1, Math.floor(params.page));
   const offset = (page - 1) * pageSize;
-  try {
-    if (params.statusFilter === "all") {
-      const { rows } = await sql<{
-        id: string;
-        user_id: string;
-        member_email: string;
-        category: string;
-        subject: string;
-        message: string;
-        screenshot_url: string | null;
-        status: string;
-        resolution_notes: string | null;
-        resolved_at: string | null;
-        resolved_by: string | null;
-        created_at: string;
-      }>`
+
+  const runList = async (includeScreenshot: boolean) => {
+    if (includeScreenshot) {
+      if (params.statusFilter === "all") {
+        return sql<MemberIssueReportRow>`
+          SELECT
+            id,
+            user_id,
+            member_email,
+            category,
+            subject,
+            message,
+            screenshot_url,
+            status,
+            resolution_notes,
+            resolved_at,
+            resolved_by,
+            created_at
+          FROM member_issue_reports
+          ORDER BY created_at DESC
+          LIMIT ${pageSize}
+          OFFSET ${offset}
+        `;
+      }
+      return sql<MemberIssueReportRow>`
         SELECT
           id,
           user_id,
@@ -1808,26 +1875,33 @@ export const listMemberIssueReportsAdminPaged = async (params: {
           resolved_by,
           created_at
         FROM member_issue_reports
+        WHERE status = ${params.statusFilter}
         ORDER BY created_at DESC
         LIMIT ${pageSize}
         OFFSET ${offset}
       `;
-      return rows.map(mapIssueReportRow);
     }
-    const { rows } = await sql<{
-      id: string;
-      user_id: string;
-      member_email: string;
-      category: string;
-      subject: string;
-      message: string;
-      screenshot_url: string | null;
-      status: string;
-      resolution_notes: string | null;
-      resolved_at: string | null;
-      resolved_by: string | null;
-      created_at: string;
-    }>`
+    if (params.statusFilter === "all") {
+      return sql<MemberIssueReportRow>`
+        SELECT
+          id,
+          user_id,
+          member_email,
+          category,
+          subject,
+          message,
+          status,
+          resolution_notes,
+          resolved_at,
+          resolved_by,
+          created_at
+        FROM member_issue_reports
+        ORDER BY created_at DESC
+        LIMIT ${pageSize}
+        OFFSET ${offset}
+      `;
+    }
+    return sql<MemberIssueReportRow>`
       SELECT
         id,
         user_id,
@@ -1835,7 +1909,6 @@ export const listMemberIssueReportsAdminPaged = async (params: {
         category,
         subject,
         message,
-        screenshot_url,
         status,
         resolution_notes,
         resolved_at,
@@ -1847,30 +1920,51 @@ export const listMemberIssueReportsAdminPaged = async (params: {
       LIMIT ${pageSize}
       OFFSET ${offset}
     `;
-    return rows.map(mapIssueReportRow);
-  } catch {
-    return [];
+  };
+
+  try {
+    const { rows } = await runList(true);
+    return { reports: rows.map(mapIssueReportRow), queryFailed: false };
+  } catch (err) {
+    if (isMissingScreenshotColumn(err)) {
+      try {
+        const { rows } = await runList(false);
+        return { reports: rows.map(mapIssueReportRow), queryFailed: false };
+      } catch (fallbackErr) {
+        logMemberIssueReportsQueryError("list admin paged fallback", fallbackErr);
+        return { reports: [], queryFailed: true };
+      }
+    }
+    logMemberIssueReportsQueryError("list admin paged", err);
+    return { reports: [], queryFailed: true };
   }
 };
 
 export const getMemberIssueReportById = async (
   reportId: string
 ): Promise<MemberIssueReportAdmin | null> => {
-  try {
-    const { rows } = await sql<{
-      id: string;
-      user_id: string;
-      member_email: string;
-      category: string;
-      subject: string;
-      message: string;
-      screenshot_url: string | null;
-      status: string;
-      resolution_notes: string | null;
-      resolved_at: string | null;
-      resolved_by: string | null;
-      created_at: string;
-    }>`
+  const runGet = (includeScreenshot: boolean) => {
+    if (includeScreenshot) {
+      return sql<MemberIssueReportRow>`
+        SELECT
+          id,
+          user_id,
+          member_email,
+          category,
+          subject,
+          message,
+          screenshot_url,
+          status,
+          resolution_notes,
+          resolved_at,
+          resolved_by,
+          created_at
+        FROM member_issue_reports
+        WHERE id = ${reportId}::uuid
+        LIMIT 1
+      `;
+    }
+    return sql<MemberIssueReportRow>`
       SELECT
         id,
         user_id,
@@ -1878,7 +1972,6 @@ export const getMemberIssueReportById = async (
         category,
         subject,
         message,
-        screenshot_url,
         status,
         resolution_notes,
         resolved_at,
@@ -1888,9 +1981,24 @@ export const getMemberIssueReportById = async (
       WHERE id = ${reportId}::uuid
       LIMIT 1
     `;
+  };
+
+  try {
+    const { rows } = await runGet(true);
     const r = rows[0];
     return r ? mapIssueReportRow(r) : null;
-  } catch {
+  } catch (err) {
+    if (isMissingScreenshotColumn(err)) {
+      try {
+        const { rows } = await runGet(false);
+        const r = rows[0];
+        return r ? mapIssueReportRow(r) : null;
+      } catch (fallbackErr) {
+        logMemberIssueReportsQueryError("get by id fallback", fallbackErr);
+        return null;
+      }
+    }
+    logMemberIssueReportsQueryError("get by id", err);
     return null;
   }
 };

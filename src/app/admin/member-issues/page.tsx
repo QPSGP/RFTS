@@ -54,10 +54,12 @@ export default function AdminMemberIssuesPage() {
   const [unauthorized, setUnauthorized] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [dbWarning, setDbWarning] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setStatusMsg(null);
+    setDbWarning(null);
     const params = new URLSearchParams({
       page: String(page),
       pageSize: String(pageSize),
@@ -74,6 +76,9 @@ export default function AdminMemberIssuesPage() {
       return;
     }
     const data = await res.json().catch(() => ({}));
+    if (typeof data.dbWarning === "string" && data.dbWarning.trim()) {
+      setDbWarning(data.dbWarning.trim());
+    }
     const list: Report[] = Array.isArray(data.reports) ? data.reports : [];
     const t = typeof data.total === "number" ? data.total : 0;
     const tp = Math.max(1, typeof data.totalPages === "number" ? data.totalPages : Math.ceil(t / pageSize) || 1);
@@ -235,6 +240,12 @@ export default function AdminMemberIssuesPage() {
         ) : null}
       </div>
 
+      {dbWarning && (
+        <p className="status-message status-message--error" style={{ marginBottom: 12 }}>
+          {dbWarning}
+        </p>
+      )}
+
       {statusMsg && (
         <p className="status-message status-message--success" style={{ marginBottom: 12 }}>
           {statusMsg}
@@ -247,7 +258,9 @@ export default function AdminMemberIssuesPage() {
         <div className="card">
           <p style={{ margin: 0, color: "#6b7280" }}>
             {filter === "all"
-              ? "No reports stored yet. Run the latest database schema (member_issue_reports table), then new member reports will appear here after email sends successfully."
+              ? dbWarning
+                ? "Issue reports could not be loaded — see the database message above."
+                : "No reports stored yet. Reports appear here after members submit Report an issue (and the row is saved to Postgres). If members received email but nothing shows here, run the database migrations in scripts/."
               : "No reports match this filter."}
           </p>
         </div>

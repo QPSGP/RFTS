@@ -185,7 +185,7 @@ CREATE INDEX IF NOT EXISTS member_activity_log_user_id
 -- Member "report an issue" submissions (admin queue + resolution notes)
 CREATE TABLE IF NOT EXISTS member_issue_reports (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES users(id) ON DELETE SET NULL,
   member_email text NOT NULL,
   category text NOT NULL DEFAULT '',
   subject text NOT NULL,

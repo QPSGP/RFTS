@@ -39,20 +39,27 @@ export async function GET(request: Request) {
   const page = Math.max(1, Math.floor(Number(pageRaw) || 1));
   const pageSize = Math.min(100, Math.max(1, Math.floor(Number(pageSizeRaw) || 25)));
 
-  const total = await countMemberIssueReports(statusFilter);
-  const reports = await listMemberIssueReportsAdminPaged({
+  const { count: total, queryFailed: countFailed } = await countMemberIssueReports(statusFilter);
+  const { reports, queryFailed: listFailed } = await listMemberIssueReportsAdminPaged({
     page,
     pageSize,
     statusFilter
   });
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const queryFailed = countFailed || listFailed;
 
   return NextResponse.json({
     reports,
     total,
     page,
     pageSize,
-    totalPages
+    totalPages,
+    ...(queryFailed
+      ? {
+          dbWarning:
+            "Could not read the issue reports table. Run scripts/migrate-member-issue-reports.sql and scripts/migrate-member-issue-screenshot.sql on production Postgres."
+        }
+      : {})
   });
 }
 
