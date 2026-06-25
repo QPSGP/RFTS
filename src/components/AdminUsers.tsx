@@ -726,7 +726,12 @@ export default function AdminUsers() {
     setStatus(data?.error || `Delete failed.`);
   };
 
-  const generatePaymentLink = async (email: string) => {
+  const openPaymentLink = async (email: string) => {
+    const cached = paymentLinks[email];
+    if (cached) {
+      window.open(cached, "_blank", "noopener,noreferrer");
+      return;
+    }
     const user = users.find((u) => u.email === email);
     if (!user) return;
     setPaymentLinkLoading(email);
@@ -742,30 +747,11 @@ export default function AdminUsers() {
     const data = await response.json().catch(() => ({}));
     if (response.ok && data.url) {
       setPaymentLinks((prev) => ({ ...prev, [email]: data.url }));
-      if (data.billingPortal) {
-        setStatus(
-          `${email} already has Stripe billing — billing portal link copied below (not a new Checkout).`
-        );
-      } else {
-        setStatus(
-          `Payment link ready for ${data.planName ?? tier}. Send it to the member to complete Stripe Checkout.`
-        );
-      }
+      window.open(data.url, "_blank", "noopener,noreferrer");
     } else {
-      setStatus(data?.error || "Could not generate payment link.");
+      setStatus(data?.error || "Could not open payment link.");
     }
     setPaymentLinkLoading(null);
-  };
-
-  const copyPaymentLink = async (email: string) => {
-    const url = paymentLinks[email];
-    if (!url) return;
-    try {
-      await navigator.clipboard.writeText(url);
-      setStatus(`Payment link copied for ${email}.`);
-    } catch {
-      setStatus("Could not copy — select and copy the link below.");
-    }
   };
 
   const memberHasStripeOnFile = (user: UserRow) => {
@@ -782,7 +768,6 @@ export default function AdminUsers() {
     if (memberHasStripeOnFile(user)) return null;
     const paymentTier =
       updates[user.email]?.subscriptionTier ?? user.subscriptionTier ?? "platinum";
-    const paymentLink = paymentLinks[user.email];
     return (
       <div
         style={{
@@ -795,35 +780,20 @@ export default function AdminUsers() {
         }}
       >
         <p style={{ fontSize: 12, color: "#065f46", margin: "0 0 8px" }}>
-          <strong>New member billing:</strong> generate a Stripe Checkout link for{" "}
+          <strong>New member billing:</strong> open a Stripe Checkout link for{" "}
           {paymentTier === "platinum_managed"
             ? "Platinum Managed ($39.95/mo)"
             : "Gold Member ($19.95/mo)"}
-          . Send it to the member — when they pay, Stripe IDs link automatically.
+          . When the member pays, Stripe IDs link automatically.
         </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          <button
-            type="button"
-            className="button"
-            disabled={paymentLinkLoading === user.email}
-            onClick={() => generatePaymentLink(user.email)}
-          >
-            {paymentLinkLoading === user.email ? "Generating…" : "Generate payment link"}
-          </button>
-          {paymentLink && (
-            <button type="button" className="button" onClick={() => copyPaymentLink(user.email)}>
-              Copy link
-            </button>
-          )}
-        </div>
-        {paymentLink && (
-          <input
-            style={{ ...inputStyle, marginTop: 8, fontSize: 12 }}
-            readOnly
-            value={paymentLink}
-            onFocus={(event) => event.target.select()}
-          />
-        )}
+        <button
+          type="button"
+          className="button"
+          disabled={paymentLinkLoading === user.email}
+          onClick={() => openPaymentLink(user.email)}
+        >
+          {paymentLinkLoading === user.email ? "Opening…" : "Payment Link"}
+        </button>
       </div>
     );
   };
@@ -3053,7 +3023,7 @@ export default function AdminUsers() {
                           </strong>
                           {memberHasStripeOnFile(user)
                             ? " — Stripe billing is on file (see Membership Status)."
-                            : " — no Stripe billing yet. Use Generate payment link in Membership Status (or on the collapsed member row)."}
+                            : " — no Stripe billing yet. Use Payment Link in Membership Status (or on the collapsed member row)."}
                         </p>
                           </div>
                         </div>
