@@ -473,7 +473,6 @@ export default function AdminUsers() {
   const [stripeEdits, setStripeEdits] = useState<
     Record<string, { stripeCustomerId?: string; stripeSubscriptionId?: string }>
   >({});
-  const [paymentLinks, setPaymentLinks] = useState<Record<string, string>>({});
   const [paymentLinkLoading, setPaymentLinkLoading] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState<Record<string, boolean>>({});
   const [memberSectionOpen, setMemberSectionOpen] = useState<
@@ -727,11 +726,6 @@ export default function AdminUsers() {
   };
 
   const openPaymentLink = async (email: string) => {
-    const cached = paymentLinks[email];
-    if (cached) {
-      window.open(cached, "_blank", "noopener,noreferrer");
-      return;
-    }
     const user = users.find((u) => u.email === email);
     if (!user) return;
     setPaymentLinkLoading(email);
@@ -742,11 +736,14 @@ export default function AdminUsers() {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, tier })
+      body: JSON.stringify({
+        email,
+        tier,
+        cancelReturnPath: `${window.location.pathname}${window.location.search}`
+      })
     });
     const data = await response.json().catch(() => ({}));
     if (response.ok && data.url) {
-      setPaymentLinks((prev) => ({ ...prev, [email]: data.url }));
       window.open(data.url, "_blank", "noopener,noreferrer");
     } else {
       setStatus(data?.error || "Could not open payment link.");
@@ -769,17 +766,8 @@ export default function AdminUsers() {
     const paymentTier =
       updates[user.email]?.subscriptionTier ?? user.subscriptionTier ?? "platinum";
     return (
-      <div
-        style={{
-          marginTop: 12,
-          marginBottom: 12,
-          padding: 12,
-          borderRadius: 8,
-          border: "1px solid #d1fae5",
-          background: "#ecfdf5"
-        }}
-      >
-        <p style={{ fontSize: 12, color: "#065f46", margin: "0 0 8px" }}>
+      <div className="callout-accent">
+        <p>
           <strong>New member billing:</strong> open a Stripe Checkout link for{" "}
           {paymentTier === "platinum_managed"
             ? "Platinum Managed ($39.95/mo)"

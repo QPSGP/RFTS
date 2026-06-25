@@ -6,7 +6,8 @@ import { getStripe } from "@/lib/stripe";
 
 const schema = z.object({
   email: z.string().email(),
-  tier: z.enum(["platinum", "platinum_managed"]).optional()
+  tier: z.enum(["platinum", "platinum_managed"]).optional(),
+  cancelReturnPath: z.string().optional()
 });
 
 export async function POST(request: Request) {
@@ -33,7 +34,8 @@ export async function POST(request: Request) {
   const result = await createAdminMemberPaymentLink({
     stripe,
     email: parsed.data.email,
-    tier: parsed.data.tier
+    tier: parsed.data.tier,
+    cancelReturnPath: parsed.data.cancelReturnPath
   });
 
   if (!result.ok) {

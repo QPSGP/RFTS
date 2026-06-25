@@ -23,6 +23,7 @@ export async function GET(request: Request) {
   }
 
   const sessionToken = createUserSessionToken(email);
+  consoleUrl.searchParams.set("billing", "success");
   const response = NextResponse.redirect(consoleUrl);
   setUserSessionCookieOnResponse(response, sessionToken, request);
   response.headers.set("Cache-Control", "no-store");

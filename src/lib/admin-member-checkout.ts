@@ -11,6 +11,15 @@ import { getBillingPortalReturnPath, isStripeBillingConfigured } from "@/lib/mem
 import { createMembershipCheckoutSession } from "@/lib/stripe-checkout";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
+function normalizeAdminCancelReturnPath(path: string | undefined): string {
+  const fallback = "/admin/content";
+  const raw = (path || fallback).trim();
+  if (!raw) return fallback;
+  const pathname = raw.startsWith("/") ? raw.split("?")[0]?.split("#")[0] ?? fallback : fallback;
+  if (!pathname.startsWith("/admin") || pathname.startsWith("//")) return fallback;
+  return pathname;
+}
+
 export type AdminMemberPaymentLinkResult =
   | { ok: true; url: string; tier: "platinum" | "platinum_managed"; planName: string }
   | { ok: true; url: string; billingPortal: true }
@@ -20,6 +29,8 @@ export async function createAdminMemberPaymentLink(opts: {
   stripe: Stripe;
   email: string;
   tier?: "platinum" | "platinum_managed";
+  /** Where Stripe sends the user if they abandon Checkout (e.g. admin members panel). */
+  cancelReturnPath?: string;
 }): Promise<AdminMemberPaymentLinkResult> {
   if (!isStripeBillingConfigured()) {
     return { ok: false, status: 503, error: "Stripe is not configured for live billing." };
@@ -76,6 +87,9 @@ export async function createAdminMemberPaymentLink(opts: {
   const currentStatus = profile?.subscriptionStatus ?? "inactive";
   await ensureSubscription(user.id, tier, currentStatus === "active" ? "active" : "inactive");
 
+  const cancelPath = normalizeAdminCancelReturnPath(opts.cancelReturnPath);
+  const successReturnPath = getBillingPortalReturnPath(user.email);
+
   const session = await createMembershipCheckoutSession(opts.stripe, {
     mode: "subscription",
     client_reference_id: user.id,
@@ -86,8 +100,8 @@ export async function createAdminMemberPaymentLink(opts: {
       plan.trialDays && plan.trialDays > 0
         ? { trial_period_days: plan.trialDays }
         : undefined,
-    success_url: `${baseUrl}/play-options`,
-    cancel_url: `${baseUrl}/member/login`,
+    success_url: `${baseUrl}${successReturnPath}`,
+    cancel_url: `${baseUrl}${cancelPath}?billing=cancel`,
     allow_promotion_codes: true
   });
 
