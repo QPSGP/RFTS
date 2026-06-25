@@ -111,24 +111,22 @@ export function getWelcomeEmailContent(
   <p>When you log in it opens you to your member <strong>“Console”</strong>. Everything is accessible and explained from within the console. Scroll through your console to quickly familiarize yourself with your options and features.</p>
   <p>If you are having any technical issues go to the menu and click on <strong>“Report an issue”</strong>.</p>
 
-  <h2 style="font-size: 1.05em; margin-top: 28px; margin-bottom: 8px;">Recommendations</h2>
-  <ul style="margin: 8px 0; padding-left: 22px;">
-    <li>Two Sessions Per night (repetition)</li>
-    <li>Comfortable headset with mask (when listening while sleeping)</li>
-    <li>Using ReachForTheStars.Today is one of the easiest ways to overcome present challenges and make your goals a reality, all while falling asleep and during sleep!</li>
-  </ul>
+  <h2 style="font-size: 1.05em; margin-top: 28px; margin-bottom: 8px;">Recommendations but not required.</h2>
+  <p>Two Sessions Per night (repetition)</p>
+  <p>Comfortable headset with mask (when listening while sleeping)</p>
+  <p>Using ReachForTheStars.Today is one of the easiest ways to overcome present challenges and make your goals a reality, all while falling asleep and during sleep!</p>
 
   <p style="margin-top: 20px;">Have any questions or concerns?<br />
   We’d love to help. Call the Success Center, Inc. office at <strong>(800) GOAL NOW (462-5669)</strong>, internationally: <strong>+1 818-989-2923</strong>, or send an email to <a href="mailto:customerservice@reachforthestars.today">customerservice@reachforthestars.today</a></p>
 
   <h2 style="font-size: 1.05em; margin-top: 28px; margin-bottom: 8px;">Payment and Cancellation</h2>
-  <p><strong>Gold Member membership:</strong> The Gold Member package has a <strong>14-day free trial</strong> period, after which <strong>$19.95 per month</strong> will be charged to the payment card you entered. Gold membership includes tailored recordings scheduled from your goals, access to the Success Center library, and a 15-minute Goal Changing &amp; Progress Evaluation consultation every 90 days with a Success Center hypnotherapist or coach.</p>
-  <p><strong>Platinum Managed membership:</strong> The Platinum Managed package has a <strong>30-day free trial</strong> period, after which <strong>$39.95 per month</strong> will be charged to the payment card you entered. Platinum Managed includes curated sessions and assigned audios managed by your hypnotherapist, plus the benefits described for Gold membership.</p>
+  <p><strong>Gold Member membership:</strong> The Gold Member package has a <strong>14-day free trial</strong> period, after which <strong>$19.95 per month</strong> will be charged to the payment card you entered. Gold membership includes tailored recordings scheduled from your goals, access to the Success Center library, and a one-time 15-minute Goal Changing &amp; Progress Evaluation consultation every 90 days with a Success Center hypnotherapist or coach.</p>
+  <p><strong>Platinum Managed membership:</strong> The Platinum Managed package has a <strong>30-day free trial</strong> period, after which <strong>$39.95 per month</strong> will be charged to the payment card you entered. Platinum Managed includes curated sessions and assigned audios managed by your hypnotherapist, and a 15-minute Goal Changing &amp; Progress Evaluation consultation every 90 days with a Success Center hypnotherapist or coach.</p>
   <p>To upgrade or cancel your membership, update your credit card or billing information, and see your payment history please go to your profile in your console.</p>
-  <p>You can cancel at any time, being responsible only for the current month you signed up for. Please see the ReachForTheStars.Today Terms and Conditions for details. If you wish to talk to someone directly, feel free to call <strong>(818) 989-2923</strong>.</p>
+  <p>You can cancel at any time from your console, being responsible only for the current month you signed up for. Please see the ReachForTheStars.Today Terms and Conditions for details.</p>
 
   <h2 style="font-size: 1.05em; margin-top: 28px; margin-bottom: 8px;">Technical Support</h2>
-  <p>For any challenges with the ReachForTheStars.Today website itself, you may submit an issue from the menu bar under <strong>“Report an Issue”</strong> or call tech support at <strong>(818) 264-9760</strong> or text us with your name, a brief description of the issue, and the best way/time for us to get back to you.</p>
+  <p>For any challenges with the ReachForTheStars.Today website itself, you may submit an issue from the menu bar under <strong>“Report an Issue”</strong> or text tech support at <strong>(818) 264-9760</strong> with your name, a brief description of the issue, and the best way/time for us to get back to you.</p>
 
   <p style="margin-top: 32px; font-size: 14px; color: #374151;"><strong>Facilitating Goal Manifestation &amp; Self-Actualization Since 1969</strong></p>
   <p style="font-size: 14px; color: #374151;">Hypnosis &amp; Coaching In-Person, by Phone, and on Zoom,</p>
@@ -153,25 +151,25 @@ When you log in it opens you to your member "Console". Everything is accessible 
 
 If you are having any technical issues go to the menu and click on "Report an issue".
 
-Recommendations:
-- Two Sessions Per night (repetition)
-- Comfortable headset with mask (when listening while sleeping)
-- Using ReachForTheStars.Today is one of the easiest ways to overcome present challenges and make your goals a reality, all while falling asleep and during sleep!
+Recommendations but not required.
+Two Sessions Per night (repetition)
+Comfortable headset with mask (when listening while sleeping)
+Using ReachForTheStars.Today is one of the easiest ways to overcome present challenges and make your goals a reality, all while falling asleep and during sleep!
 
 Have any questions or concerns?
 We'd love to help. Call the Success Center, Inc. office at (800) GOAL NOW (462-5669), internationally: +1 818-989-2923, or send an email to customerservice@reachforthestars.today
 
 Payment and Cancellation
-Gold Member membership: The Gold Member package has a 14-day free trial period, after which $19.95 per month will be charged to the payment card you entered. Gold membership includes tailored recordings scheduled from your goals, access to the Success Center library, and a 15-minute Goal Changing & Progress Evaluation consultation every 90 days with a Success Center hypnotherapist or coach.
+Gold Member membership: The Gold Member package has a 14-day free trial period, after which $19.95 per month will be charged to the payment card you entered. Gold membership includes tailored recordings scheduled from your goals, access to the Success Center library, and a one-time 15-minute Goal Changing & Progress Evaluation consultation every 90 days with a Success Center hypnotherapist or coach.
 
-Platinum Managed membership: The Platinum Managed package has a 30-day free trial period, after which $39.95 per month will be charged to the payment card you entered. Platinum Managed includes curated sessions and assigned audios managed by your hypnotherapist, plus the benefits described for Gold membership.
+Platinum Managed membership: The Platinum Managed package has a 30-day free trial period, after which $39.95 per month will be charged to the payment card you entered. Platinum Managed includes curated sessions and assigned audios managed by your hypnotherapist, and a 15-minute Goal Changing & Progress Evaluation consultation every 90 days with a Success Center hypnotherapist or coach.
 
 To upgrade or cancel your membership, update your credit card or billing information, and see your payment history please go to your profile in your console.
 
-You can cancel at any time, being responsible only for the current month you signed up for. Please see the ReachForTheStars.Today Terms and Conditions for details. If you wish to talk to someone directly, feel free to call (818) 989-2923.
+You can cancel at any time from your console, being responsible only for the current month you signed up for. Please see the ReachForTheStars.Today Terms and Conditions for details.
 
 Technical Support
-For any challenges with the ReachForTheStars.Today website itself, you may submit an issue from the menu bar under "Report an Issue" or call tech support at (818) 264-9760 or text us with your name, a brief description of the issue, and the best way/time for us to get back to you.
+For any challenges with the ReachForTheStars.Today website itself, you may submit an issue from the menu bar under "Report an Issue" or text tech support at (818) 264-9760 with your name, a brief description of the issue, and the best way/time for us to get back to you.
 
 Facilitating Goal Manifestation & Self-Actualization Since 1969
 
