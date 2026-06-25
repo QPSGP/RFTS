@@ -14,7 +14,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: npm
-      - run: npm ci
-      - run: npm run test:facilitator-smoke
-      - run: npm run test:production-smoke
+      # Smoke scripts use only Node fetch — no node_modules required.
+      - run: node scripts/facilitator-smoke-test.js https://reachforthestars.today
+      - run: node scripts/production-smoke-test.js https://reachforthestars.today
