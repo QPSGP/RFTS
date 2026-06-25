@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionEmail, isAdminSession } from "@/lib/auth";
-import { sendEmail } from "@/lib/email";
+import { getIssueResolvedStaffMonitorBcc, sendEmail } from "@/lib/email";
 import { getIssueResolvedEmailContent } from "@/lib/email-templates";
 import {
   countMemberIssueReports,
@@ -125,12 +125,14 @@ export async function PATCH(request: Request) {
       resolutionNotes: effectiveResolutionNotes,
       outcome: parsed.data.status === "closed" ? "closed" : "resolved"
     });
+    const monitorBcc = getIssueResolvedStaffMonitorBcc(previous.memberEmail);
     const sendResult = await sendEmail({
       to: previous.memberEmail,
       subject: content.subject,
       html: content.html,
       text: content.text,
-      skipStaffBcc: true
+      skipStaffBcc: true,
+      ...(monitorBcc.length ? { bcc: monitorBcc } : {})
     });
     resolutionEmailSent = sendResult.ok;
     if (!sendResult.ok) {

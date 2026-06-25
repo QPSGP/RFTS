@@ -45,6 +45,36 @@ export function getWelcomeEmailCcRecipients(): string[] {
   return ["terry_bg@msn.com", "Richard@richardleeweatherman.com"];
 }
 
+/** End of default staff monitoring window for issue-resolved member emails (90 days from rollout). */
+const ISSUE_RESOLVED_STAFF_BCC_DEFAULT_UNTIL = "2026-09-16";
+
+const ISSUE_RESOLVED_STAFF_BCC_DEFAULTS = [
+  "Richard@richardleeweatherman.com",
+  "craigmilorogers@gmail.com"
+];
+
+/**
+ * BCC staff while monitoring issue-resolved / closed member emails (90-day window).
+ * Active until ISSUE_RESOLVED_STAFF_BCC_UNTIL (YYYY-MM-DD) or the default end date.
+ * Addresses: ISSUE_RESOLVED_STAFF_BCC if set, else Richard + Craig (Terry's tech contact).
+ */
+export function getIssueResolvedStaffMonitorBcc(memberEmail: string): string[] {
+  const untilRaw =
+    process.env.ISSUE_RESOLVED_STAFF_BCC_UNTIL?.trim() || ISSUE_RESOLVED_STAFF_BCC_DEFAULT_UNTIL;
+  const end = Date.parse(untilRaw);
+  if (Number.isNaN(end) || Date.now() > end) {
+    return [];
+  }
+
+  const explicit = process.env.ISSUE_RESOLVED_STAFF_BCC?.trim();
+  const candidates = explicit
+    ? explicit.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
+    : ISSUE_RESOLVED_STAFF_BCC_DEFAULTS;
+
+  const member = memberEmail.trim().toLowerCase();
+  return [...new Set(candidates.filter(Boolean))].filter((e) => e.toLowerCase() !== member);
+}
+
 function staffBccExcludingRecipients(to: string[]): string[] {
   const recipients = new Set(to.map((e) => e.trim().toLowerCase()));
   return parseStaffBccEmails().filter((e) => !recipients.has(e.trim().toLowerCase()));

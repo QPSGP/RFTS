@@ -174,8 +174,9 @@ export default function AdminMemberIssuesPage() {
           <h1>Member issue reports</h1>
           <p style={{ color: "#4b5563", maxWidth: 640 }}>
             Reports submitted from <strong>Report an issue</strong> (after email to the team succeeds). Update
-            status and resolution notes. When you set status to <strong>Resolved</strong>, the member receives an
-            email (if Resend is configured) with your resolution message when provided.
+            status and resolution notes. When you set status to <strong>Resolved</strong> or <strong>Closed</strong>, the member receives an
+            email with your resolution message when provided. Richard and Craig (tech) are BCC’d on those notices
+            through mid-September 2026 for quality checks.
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
