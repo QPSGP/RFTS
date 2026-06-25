@@ -172,9 +172,18 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   const sortedLibrary = useMemo(() => {
     const copy = [...library];
     if (librarySort === "sku") {
-      return copy.sort((a, b) => (a.skuCode || "").localeCompare(b.skuCode || ""));
+      return copy.sort((a, b) => {
+        const skuA = (a.skuCode || "").trim();
+        const skuB = (b.skuCode || "").trim();
+        if (skuA && !skuB) return -1;
+        if (!skuA && skuB) return 1;
+        if (skuA && skuB) {
+          return skuA.localeCompare(skuB, undefined, { numeric: true, sensitivity: "base" });
+        }
+        return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+      });
     }
-    return copy.sort((a, b) => a.title.localeCompare(b.title));
+    return copy.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
   }, [library, librarySort]);
 
   const hasCategory = (item: LibraryItem, cat: string) =>

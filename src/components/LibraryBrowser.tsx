@@ -18,6 +18,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
   const [hasVerifiedAge, setHasVerifiedAge] = useState(false);
   const [wantsPracticeGrowth, setWantsPracticeGrowth] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [allAudiosSort, setAllAudiosSort] = useState<"title" | "sku">("title");
   const [expandedGoalId, setExpandedGoalId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -98,6 +99,34 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
 
     return { byInterest, unassigned };
   }, [interests, libraryFilteredByAccess, searchQuery]);
+
+  const allAudiosList = useMemo(() => {
+    const term = searchQuery.trim().toLowerCase();
+    const base = term
+      ? libraryFilteredByAccess.filter(
+          (item) =>
+            (item.title || "").toLowerCase().includes(term) ||
+            (item.skuCode || "").toLowerCase().includes(term)
+        )
+      : libraryFilteredByAccess;
+
+    const copy = base.slice();
+    if (allAudiosSort === "sku") {
+      return copy.sort((a, b) => {
+        const skuA = (a.skuCode || "").trim();
+        const skuB = (b.skuCode || "").trim();
+        if (skuA && !skuB) return -1;
+        if (!skuA && skuB) return 1;
+        if (skuA && skuB) {
+          return skuA.localeCompare(skuB, undefined, { numeric: true, sensitivity: "base" });
+        }
+        return (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" });
+      });
+    }
+    return copy.sort((a, b) =>
+      (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" })
+    );
+  }, [libraryFilteredByAccess, searchQuery, allAudiosSort]);
 
   const coverImg = (item: LibraryItem, size: number) => (
     // eslint-disable-next-line @next/next/no-img-element
@@ -196,7 +225,43 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
               }}
             />
           </div>
-          <h3>All Audios</h3>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              flexWrap: "wrap",
+              marginBottom: 8
+            }}
+          >
+            <h3 style={{ margin: 0 }}>All Audios</h3>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 14,
+                fontWeight: 500
+              }}
+            >
+              Sort by
+              <select
+                value={allAudiosSort}
+                onChange={(e) => setAllAudiosSort(e.target.value as "title" | "sku")}
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: 8,
+                  border: "1px solid var(--border, #d1d5db)",
+                  fontSize: 14,
+                  minHeight: 36
+                }}
+                aria-label="Sort all audios by"
+              >
+                <option value="title">Title</option>
+                <option value="sku">SKU</option>
+              </select>
+            </label>
+          </div>
           <div
             role="region"
             aria-label="All audios list"
@@ -210,14 +275,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
             }}
             className="scroll-list"
           >
-            {(searchQuery.trim()
-              ? libraryFilteredByAccess.filter(
-                  (item) =>
-                    (item.title || "").toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
-                    (item.skuCode || "").toLowerCase().includes(searchQuery.trim().toLowerCase())
-                )
-              : libraryFilteredByAccess
-            ).map((item) => (
+            {allAudiosList.map((item) => (
                 <Link
                   key={item.id}
                   href={`/library/${item.id}`}
