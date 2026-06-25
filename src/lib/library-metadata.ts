@@ -1,8 +1,7 @@
+import "server-only";
 import fs from "fs";
 import path from "path";
 import { normalizeSkuCode, stripSkuHyphens } from "./sku-code";
-
-export { normalizeSkuCode, stripSkuHyphens } from "./sku-code";
 
 const dataDir = path.join(process.cwd(), "data");
 

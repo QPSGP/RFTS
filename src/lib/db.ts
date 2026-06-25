@@ -18,7 +18,7 @@ import {
   defaultSubscriptionPlans
 } from "@/lib/content-seed";
 import { generateAffiliateCode, normalizeAffiliateCode } from "@/lib/affiliate-code";
-import { stripSkuHyphens } from "@/lib/library-metadata";
+import { stripSkuHyphens } from "@/lib/sku-code";
 
 function isUniqueViolation(error: unknown): boolean {
   return (error as { code?: string })?.code === "23505";

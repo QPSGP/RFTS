@@ -20,7 +20,7 @@ import {
   minScheduleNightsForCue,
   resolveCurrentScheduleNight
 } from "@/lib/schedule-progress";
-import { stripSkuHyphens } from "@/lib/library-metadata";
+import { stripSkuHyphens } from "@/lib/sku-code";
 
 const schema = z.object({
   /** Preview length; server extends this when the member has passed more nights than requested (see currentNight). */

@@ -9,7 +9,7 @@ import {
   reorderLibraryItems,
   updateLibraryItem
 } from "@/lib/db";
-import { stripSkuHyphens } from "@/lib/library-metadata";
+import { stripSkuHyphens } from "@/lib/sku-code";
 
 const createSchema = z.object({
   title: z.string().min(2),

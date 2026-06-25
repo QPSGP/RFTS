@@ -1,5 +1,5 @@
 import type { Interest, LibraryItem, PlaybackSettings } from "@/lib/types";
-import { stripSkuHyphens } from "@/lib/library-metadata";
+import { stripSkuHyphens } from "@/lib/sku-code";
 
 export type ScheduleNight = {
   night: number;

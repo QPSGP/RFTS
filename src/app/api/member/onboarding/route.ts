@@ -22,7 +22,7 @@ import {
 import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
 import { getBillingPortalReturnPath } from "@/lib/member-billing";
 import { getWelcomeEmailCcRecipients, sendEmail } from "@/lib/email";
-import { stripSkuHyphens } from "@/lib/library-metadata";
+import { stripSkuHyphens } from "@/lib/sku-code";
 import { getPublicSiteUrl } from "@/lib/site-url";
 import {
   getWelcomeEmailContent,

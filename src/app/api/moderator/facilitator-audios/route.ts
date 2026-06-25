@@ -7,7 +7,7 @@ import {
 } from "@/lib/db";
 import { requireActiveModerator } from "@/lib/moderator-member-access";
 import { recordModeratorStaffActivity } from "@/lib/facilitator-staff-activity";
-import { stripSkuHyphens } from "@/lib/library-metadata";
+import { stripSkuHyphens } from "@/lib/sku-code";
 
 const createSchema = z.object({
   title: z.string().min(2),
