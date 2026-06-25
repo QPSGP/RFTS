@@ -12,6 +12,12 @@
       "has": [{ "type": "host", "value": "www.reachforthestars.today" }],
       "destination": "https://reachforthestars.today/:path*",
       "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "rfts-7d4w.vercel.app" }],
+      "destination": "https://reachforthestars.today/:path*",
+      "permanent": true
     }
   ]
 }

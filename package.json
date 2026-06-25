@@ -35,6 +35,7 @@
     "schedule:spreadsheet": "tsx scripts/schedule-spreadsheet-export.ts"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "@vercel/blob": "^2.0.1",
     "@vercel/postgres": "^0.10.0",
     "bcryptjs": "^2.4.3",
