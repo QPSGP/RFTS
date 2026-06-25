@@ -6,7 +6,7 @@ import { flushSync } from "react-dom";
 import { MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER } from "@/lib/member-audio-activity";
 import { MANAGED_MAX_SLOTS_PER_AUDIO } from "@/lib/managed-rotation-limits";
 import type { LibraryItem } from "@/lib/types";
-import { stripSkuHyphens } from "@/lib/library-metadata";
+import { stripSkuHyphens } from "@/lib/sku-code";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 
 type MemberAdminSection =

@@ -1,5 +1,8 @@
 import fs from "fs";
 import path from "path";
+import { normalizeSkuCode, stripSkuHyphens } from "./sku-code";
+
+export { normalizeSkuCode, stripSkuHyphens } from "./sku-code";
 
 const dataDir = path.join(process.cwd(), "data");
 
@@ -18,14 +21,6 @@ const readDescriptions = (): Record<string, string> => {
     descriptionsCache = {};
   }
   return descriptionsCache;
-};
-
-export const stripSkuHyphens = (code: string): string =>
-  code.trim().toUpperCase().replace(/-/g, "");
-
-export const normalizeSkuCode = (prefix: string, number: string, suffix?: string) => {
-  const padded = number.length === 1 ? number.padStart(2, "0") : number;
-  return stripSkuHyphens(`${prefix}${padded}${suffix ?? ""}`);
 };
 
 /** Extract T01 / S01 style codes from a file or display name. */

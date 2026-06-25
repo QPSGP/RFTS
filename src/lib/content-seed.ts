@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import type { Interest, PlaybackSettings, SubscriptionPlan } from "@/lib/types";
-import { normalizeSkuCode, stripSkuHyphens } from "./library-metadata";
+import { normalizeSkuCode, stripSkuHyphens } from "./sku-code";
 
 const dataDir = path.join(process.cwd(), "data");
 
