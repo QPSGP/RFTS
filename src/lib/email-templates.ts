@@ -124,11 +124,11 @@ export function getWelcomeEmailContent(
   <h2 style="font-size: 1.05em; margin-top: 28px; margin-bottom: 8px;">Payment and Cancellation</h2>
   <p><strong>Gold Member membership:</strong> The Gold Member package has a <strong>14-day free trial</strong> period, after which <strong>$19.95 per month</strong> will be charged to the payment card you entered. Gold membership includes tailored recordings scheduled from your goals, access to the Success Center library, and a 15-minute Goal Changing &amp; Progress Evaluation consultation every 90 days with a Success Center hypnotherapist or coach.</p>
   <p><strong>Platinum Managed membership:</strong> The Platinum Managed package has a <strong>14-day free trial</strong> period, after which <strong>$39.95 per month</strong> will be charged to the payment card you entered. Platinum Managed includes curated sessions and assigned audios managed by your hypnotherapist, plus the benefits described for Gold membership.</p>
-  <p>To make changes to your plan, update your credit card or billing information, and see your payment history please go to your profile in your console.</p>
-  <p>You can cancel at any time, being responsible only for the current month you signed up for. Please see the ReachForTheStars.Today Terms and Conditions for details. If you wish to talk to someone directly, feel free to call <strong>(818) 264-9760</strong>.</p>
+  <p>To upgrade or cancel your membership, update your credit card or billing information, and see your payment history please go to your profile in your console.</p>
+  <p>You can cancel at any time, being responsible only for the current month you signed up for. Please see the ReachForTheStars.Today Terms and Conditions for details. If you wish to talk to someone directly, feel free to call <strong>(818) 989-2923</strong>.</p>
 
   <h2 style="font-size: 1.05em; margin-top: 28px; margin-bottom: 8px;">Technical Support</h2>
-  <p>For any challenges with the ReachForTheStars.Today website itself, you may submit an issue from the menu bar under <strong>“Report an Issue”</strong> or call tech support at <strong>(520) 302-4471</strong> or text us with your name, a brief description of the issue, and the best way/time for us to get back to you.</p>
+  <p>For any challenges with the ReachForTheStars.Today website itself, you may submit an issue from the menu bar under <strong>“Report an Issue”</strong> or call tech support at <strong>(818) 264-9760</strong> or text us with your name, a brief description of the issue, and the best way/time for us to get back to you.</p>
 
   <p style="margin-top: 32px; font-size: 14px; color: #374151;"><strong>Facilitating Goal Manifestation &amp; Self-Actualization Since 1969</strong></p>
   <p style="font-size: 14px; color: #374151;">Hypnosis &amp; Coaching In-Person, by Phone, and on Zoom,</p>
@@ -166,12 +166,12 @@ Gold Member membership: The Gold Member package has a 14-day free trial period, 
 
 Platinum Managed membership: The Platinum Managed package has a 14-day free trial period, after which $39.95 per month will be charged to the payment card you entered. Platinum Managed includes curated sessions and assigned audios managed by your hypnotherapist, plus the benefits described for Gold membership.
 
-To make changes to your plan, update your credit card or billing information, and see your payment history please go to your profile in your console.
+To upgrade or cancel your membership, update your credit card or billing information, and see your payment history please go to your profile in your console.
 
-You can cancel at any time, being responsible only for the current month you signed up for. Please see the ReachForTheStars.Today Terms and Conditions for details. If you wish to talk to someone directly, feel free to call (818) 264-9760.
+You can cancel at any time, being responsible only for the current month you signed up for. Please see the ReachForTheStars.Today Terms and Conditions for details. If you wish to talk to someone directly, feel free to call (818) 989-2923.
 
 Technical Support
-For any challenges with the ReachForTheStars.Today website itself, you may submit an issue from the menu bar under "Report an Issue" or call tech support at (520) 302-4471 or text us with your name, a brief description of the issue, and the best way/time for us to get back to you.
+For any challenges with the ReachForTheStars.Today website itself, you may submit an issue from the menu bar under "Report an Issue" or call tech support at (818) 264-9760 or text us with your name, a brief description of the issue, and the best way/time for us to get back to you.
 
 Facilitating Goal Manifestation & Self-Actualization Since 1969
 
