@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import type { Interest, PlaybackSettings, SubscriptionPlan } from "@/lib/types";
+import { normalizeSkuCode, stripSkuHyphens } from "./library-metadata";
 
 const dataDir = path.join(process.cwd(), "data");
 
@@ -60,7 +61,7 @@ export const defaultPlaybackSettings: PlaybackSettings = {
   addNewTrackEveryNights: 14,
   initialTracks: 4,
   cgmrTrackId: "",
-  fallbackTrackId: "T-18"
+  fallbackTrackId: "T18"
 };
 
 type BlobAssets = {
@@ -81,19 +82,10 @@ type LibrarySeedItem = {
   isAdult: boolean;
 };
 
-const normalizeCode = (prefix: string, number: string, suffix?: string) => {
-  const padded = number.length === 1 ? number.padStart(2, "0") : number;
-  return `${prefix.toUpperCase()}-${padded}${suffix ? `-${suffix.toUpperCase()}` : ""}`;
-};
-
 const extractCode = (name: string) => {
-  const match = name
-    .toUpperCase()
-    .match(/([A-Z]{1,3})[\s-]*([0-9]{1,3})([A-Z])?/);
-  if (!match) {
-    return null;
-  }
-  return normalizeCode(match[1], match[2], match[3]);
+  const match = name.toUpperCase().match(/([A-Z]{1,3})[\s-]*([0-9]{1,3})([A-Z])?/);
+  if (!match) return null;
+  return normalizeSkuCode(match[1], match[2], match[3]);
 };
 
 const cleanTitle = (name: string) => {
@@ -130,7 +122,7 @@ export const buildLibrarySeedFromAssets = (): LibrarySeedItem[] => {
     const upper = file.toUpperCase();
     const match = upper.match(/SKU-([A-Z]{1,3})-(\d{1,3})([A-Z])?/);
     if (match) {
-      const code = normalizeCode(match[1], match[2], match[3]);
+      const code = normalizeSkuCode(match[1], match[2], match[3]);
       if (!coverMap.has(code)) {
         coverMap.set(code, file);
       }
@@ -140,9 +132,15 @@ export const buildLibrarySeedFromAssets = (): LibrarySeedItem[] => {
   return audioFiles.map((file, index) => {
     const code = extractCode(file);
     const coverFile = code ? coverMap.get(code) : undefined;
-    const baseCode = code ? code.replace(/-[A-Z]+$/, "") : null;
+    const baseCode = code ? code.replace(/[A-Z]$/, "") : null;
     const description = code
-      ? descriptionMap[code] || (baseCode ? descriptionMap[baseCode] || "" : "")
+      ? descriptionMap[code] ||
+        Object.entries(descriptionMap).find(([k]) => stripSkuHyphens(k) === code)?.[1] ||
+        (baseCode
+          ? descriptionMap[baseCode] ||
+            Object.entries(descriptionMap).find(([k]) => stripSkuHyphens(k) === baseCode)?.[1] ||
+            ""
+          : "")
       : "";
     const coverUrl = coverFile ? blobAssets.covers?.[coverFile] || "" : "";
     const audioUrl = blobAssets.audios?.[file] || "";

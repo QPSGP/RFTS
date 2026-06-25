@@ -1,4 +1,5 @@
 import type { Interest, LibraryItem, PlaybackSettings } from "@/lib/types";
+import { stripSkuHyphens } from "@/lib/library-metadata";
 
 export type ScheduleNight = {
   night: number;
@@ -88,12 +89,14 @@ const buildGoalTrackMap = (
 };
 
 const pickByCode = (library: LibraryItem[], code: string) => {
-  const upper = code.toUpperCase();
+  const norm = stripSkuHyphens(code);
+  if (!norm) return null;
   return (
     library.find(
       (item) =>
-        (item.skuCode || "").toUpperCase().includes(upper) ||
-        (item.title || "").toUpperCase().includes(upper)
+        stripSkuHyphens(item.skuCode || "") === norm ||
+        stripSkuHyphens(item.skuCode || "").includes(norm) ||
+        (item.title || "").toUpperCase().includes(norm)
     ) || null
   );
 };

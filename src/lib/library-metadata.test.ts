@@ -6,8 +6,8 @@ import {
 
 describe("library-metadata", () => {
   it("extracts SKU codes from file names", () => {
-    expect(extractSkuFromName("T-18-abundance.mp3")).toBe("T-18");
-    expect(extractSkuFromName("RFTS T 04 health.mp3")).toBe("T-04");
+    expect(extractSkuFromName("T-18-abundance.mp3")).toBe("T18");
+    expect(extractSkuFromName("RFTS T 04 health.mp3")).toBe("T04");
   });
 
   it("builds titles from file names", () => {
@@ -15,7 +15,7 @@ describe("library-metadata", () => {
   });
 
   it("looks up known recording descriptions", () => {
-    const desc = lookupRecordingDescription("T-18");
+    const desc = lookupRecordingDescription("T18");
     expect(desc.length).toBeGreaterThan(10);
     expect(desc.toLowerCase()).toContain("abundance");
   });

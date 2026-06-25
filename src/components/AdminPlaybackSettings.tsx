@@ -138,7 +138,7 @@ export default function AdminPlaybackSettings() {
             style={inputStyle}
             value={settings.fallbackTrackId}
             onChange={(event) => update("fallbackTrackId", event.target.value)}
-            placeholder="T-18"
+            placeholder="T18"
           />
           <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
             Used when no CGMR is assigned (all members). Plays as the special on every 4th <strong>main play</strong> in

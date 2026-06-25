@@ -388,7 +388,7 @@ export const getPlaybackSettings = () =>
     /** Total rotation size = goal slots + 1 CGMR/T-18 slot; 4 ⇒ three goals (matches defaultPlaybackSettings in content-seed). */
     initialTracks: 4,
     cgmrTrackId: "",
-    fallbackTrackId: "T-18"
+    fallbackTrackId: "T18"
   });
 
 export const savePlaybackSettings = (settings: PlaybackSettings) =>

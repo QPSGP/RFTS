@@ -1,13 +1,14 @@
 import { buildSchedulePreview } from "./scheduler";
 import type { LibraryItem, PlaybackSettings } from "./types";
 
-const mk = (id: string, title: string): LibraryItem => ({
+const mk = (id: string, title: string, sku?: string): LibraryItem => ({
   id,
   title,
   description: "",
   coverUrl: "",
   audioUrl: `https://example.com/${id}.mp3`,
   interestIds: [],
+  skuCode: sku,
   createdAt: "",
   order: 0
 });
@@ -19,14 +20,14 @@ describe("buildSchedulePreview — managed assigned order", () => {
     addNewTrackEveryNights: 99,
     initialTracks: 3,
     cgmrTrackId: "",
-    fallbackTrackId: "T-18"
+    fallbackTrackId: "T18"
   };
 
-  const t18 = mk("t18", "T-18 Abundance");
-  const t26 = mk("t26", "T-26");
-  const t36 = mk("t36", "T-36");
-  const s01 = mk("s01", "S-01 C");
-  const t23 = mk("t23", "T-23");
+  const t18 = mk("t18", "T-18 Abundance", "T18");
+  const t26 = mk("t26", "T-26", "T26");
+  const t36 = mk("t36", "T-36", "T36");
+  const s01 = mk("s01", "S-01 C", "S01");
+  const t23 = mk("t23", "T-23", "T23");
   const library = [t26, t36, s01, t23, t18];
 
   it("keeps three assigned priorities in rotation when initialTracks is still 3 (legacy DB)", () => {
@@ -74,11 +75,11 @@ describe("buildSchedulePreview — gold (platinum) duplicate tracks per night", 
     nightlyGapHours: 2.5,
     addNewTrackEveryNights: 99,
     initialTracks: 3,
-    cgmrTrackId: "T-18",
-    fallbackTrackId: "T-18"
+    cgmrTrackId: "T18",
+    fallbackTrackId: "T18"
   };
 
-  const t18 = mk("t18", "T-18 Abundance");
+  const t18 = mk("t18", "T-18 Abundance", "T18");
   const goalTrack = mk("g1", "Goal track");
   goalTrack.interestIds = ["goal-1"];
 

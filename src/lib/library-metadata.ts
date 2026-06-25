@@ -20,12 +20,15 @@ const readDescriptions = (): Record<string, string> => {
   return descriptionsCache;
 };
 
+export const stripSkuHyphens = (code: string): string =>
+  code.trim().toUpperCase().replace(/-/g, "");
+
 export const normalizeSkuCode = (prefix: string, number: string, suffix?: string) => {
   const padded = number.length === 1 ? number.padStart(2, "0") : number;
-  return `${prefix.toUpperCase()}-${padded}${suffix ? `-${suffix.toUpperCase()}` : ""}`;
+  return stripSkuHyphens(`${prefix}${padded}${suffix ?? ""}`);
 };
 
-/** Extract T-01 / S-01 style codes from a file or display name. */
+/** Extract T01 / S01 style codes from a file or display name. */
 export const extractSkuFromName = (name: string): string | null => {
   const match = name.toUpperCase().match(/([A-Z]{1,3})[\s-]*([0-9]{1,3})([A-Z])?/);
   if (!match) return null;
@@ -45,11 +48,20 @@ export const titleFromFileName = (name: string): string => {
 
 export const lookupRecordingDescription = (skuCode: string): string => {
   const map = readDescriptions();
-  const code = skuCode.trim().toUpperCase();
+  const code = stripSkuHyphens(skuCode);
   if (!code) return "";
   if (map[code]) return map[code];
-  const base = code.replace(/-[A-Z]+$/, "");
-  return base && map[base] ? map[base] : "";
+  for (const [key, value] of Object.entries(map)) {
+    if (stripSkuHyphens(key) === code) return value;
+  }
+  const base = code.replace(/[A-Z]$/, "");
+  if (base && base !== code) {
+    if (map[base]) return map[base];
+    for (const [key, value] of Object.entries(map)) {
+      if (stripSkuHyphens(key) === base) return value;
+    }
+  }
+  return "";
 };
 
 type BlobAssets = {
@@ -74,11 +86,11 @@ const readBlobAssets = (): BlobAssets => {
 };
 
 export const lookupCoverUrlForSku = (skuCode: string): string => {
-  const code = skuCode.trim().toUpperCase();
+  const code = stripSkuHyphens(skuCode);
   if (!code) return "";
   const blobAssets = readBlobAssets();
   const covers = blobAssets.covers || {};
-  const base = code.replace(/-[A-Z]+$/, "");
+  const base = code.replace(/[A-Z]$/, "");
   for (const file of Object.keys(covers)) {
     const match = file.toUpperCase().match(/SKU-([A-Z]{1,3})-(\d{1,3})([A-Z])?/);
     if (!match) continue;

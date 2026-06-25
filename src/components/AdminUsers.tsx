@@ -6,6 +6,7 @@ import { flushSync } from "react-dom";
 import { MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER } from "@/lib/member-audio-activity";
 import { MANAGED_MAX_SLOTS_PER_AUDIO } from "@/lib/managed-rotation-limits";
 import type { LibraryItem } from "@/lib/types";
+import { stripSkuHyphens } from "@/lib/library-metadata";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 
 type MemberAdminSection =
@@ -637,11 +638,11 @@ export default function AdminUsers() {
       const settingsData = await settingsRes.json();
       const s = settingsData.settings;
       setPlaybackSettings({
-        fallbackTrackId: s?.fallbackTrackId ?? "T-18",
+        fallbackTrackId: s?.fallbackTrackId ?? "T18",
         cgmrTrackId: typeof s?.cgmrTrackId === "string" ? s.cgmrTrackId : ""
       });
     } else {
-      setPlaybackSettings({ fallbackTrackId: "T-18", cgmrTrackId: "" });
+      setPlaybackSettings({ fallbackTrackId: "T18", cgmrTrackId: "" });
     }
   };
 
@@ -3054,13 +3055,14 @@ export default function AdminUsers() {
                           /** Personalized CGMR only — matches member schedule API (not first assigned track). */
                           const cgmrTrack = assignedOrdered.find((item) => hasCat(item, "cgmr")) ?? null;
                           const pickByCode = (code: string) => {
-                            const upper = code.trim().toUpperCase();
-                            if (!upper) return null;
+                            const norm = stripSkuHyphens(code);
+                            if (!norm) return null;
                             return (
                               library.find(
                                 (item) =>
-                                  (item.skuCode || "").toUpperCase().includes(upper) ||
-                                  (item.title || "").toUpperCase().includes(upper)
+                                  stripSkuHyphens(item.skuCode || "") === norm ||
+                                  stripSkuHyphens(item.skuCode || "").includes(norm) ||
+                                  (item.title || "").toUpperCase().includes(norm)
                               ) ?? null
                             );
                           };
@@ -3078,7 +3080,7 @@ export default function AdminUsers() {
                               : fallbackGlobal || cgmrGlobal;
                           // For non-managed (Platinum) members, show default fallback (e.g. T-18) in the list so it's visible
                           const isNonManaged = effectiveTier !== "platinum_managed";
-                          const fallbackCode = (playbackSettings?.fallbackTrackId || "T-18").trim().toUpperCase();
+                          const fallbackCode = stripSkuHyphens(playbackSettings?.fallbackTrackId || "T18");
                           const fallbackItem = isNonManaged && fallbackCode
                             ? library.find(
                                 (item) =>
@@ -3123,7 +3125,7 @@ export default function AdminUsers() {
                                         ? `${fallbackItem.skuCode || fallbackItem.title} (default)`
                                         : defaultSpecialTrack
                                           ? `${defaultSpecialTrack.skuCode ? defaultSpecialTrack.skuCode + " – " : ""}${defaultSpecialTrack.title} (global playback)`
-                                          : `${playbackSettings?.fallbackTrackId || "T-18"} (global playback)`}
+                                          : `${playbackSettings?.fallbackTrackId || "T18"} (global playback)`}
                                   </div>
                                 </>
                               )}

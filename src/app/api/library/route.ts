@@ -9,6 +9,7 @@ import {
   reorderLibraryItems,
   updateLibraryItem
 } from "@/lib/db";
+import { stripSkuHyphens } from "@/lib/library-metadata";
 
 const createSchema = z.object({
   title: z.string().min(2),
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
     const msg = parsed.error.flatten().formErrors?.[0] || parsed.error.errors?.[0]?.message || "Invalid input.";
     return NextResponse.json({ error: msg }, { status: 400 });
   }
-  const sku = (parsed.data.skuCode || "").trim();
+  const sku = stripSkuHyphens(parsed.data.skuCode || "");
   if (sku) {
     const existingId = await getLibraryItemIdBySkuCode(sku);
     if (existingId) {
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
   const record = await createLibraryItem({
     title: parsed.data.title,
     description: parsed.data.description,
-    skuCode: parsed.data.skuCode,
+    skuCode: stripSkuHyphens(parsed.data.skuCode || ""),
     fileName: parsed.data.fileName,
     categories: parsed.data.categories,
     coverUrl: parsed.data.coverUrl,
@@ -101,7 +102,7 @@ export async function PATCH(request: Request) {
     const msg = parsed.error.flatten().formErrors?.[0] || parsed.error.errors?.[0]?.message || "Invalid input.";
     return NextResponse.json({ error: msg }, { status: 400 });
   }
-  const sku = (parsed.data.skuCode || "").trim();
+  const sku = stripSkuHyphens(parsed.data.skuCode || "");
   if (sku) {
     const existingId = await getLibraryItemIdBySkuCode(sku, parsed.data.id);
     if (existingId) {
@@ -115,7 +116,7 @@ export async function PATCH(request: Request) {
     id: parsed.data.id,
     title: parsed.data.title,
     description: parsed.data.description,
-    skuCode: parsed.data.skuCode,
+    skuCode: stripSkuHyphens(parsed.data.skuCode || ""),
     fileName: parsed.data.fileName,
     categories: parsed.data.categories,
     coverUrl: parsed.data.coverUrl,

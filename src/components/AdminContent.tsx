@@ -1142,7 +1142,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
           <h3 style={{ marginTop: 0, marginBottom: 4 }}>Step 2: Add audio to the library</h3>
           <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>
             After Step 1, title, SKU, and description are filled when we recognize the file (e.g.{" "}
-            <code>T-18</code>). Review, attach goals if needed, then click <strong>Add Audio</strong>.
+            <code>T18</code>). Review, attach goals if needed, then click <strong>Add Audio</strong>.
           </p>
           <label style={{ fontSize: 13, fontWeight: 600 }}>Title</label>
           <input name="title" placeholder="Title" required style={inputStyle} />
@@ -1157,7 +1157,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600 }}>SKU</label>
-              <input name="skuCode" placeholder="e.g. T-01" style={inputStyle} />
+              <input name="skuCode" placeholder="e.g. T01" style={inputStyle} />
             </div>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600 }}>File name</label>
@@ -1491,7 +1491,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                       onChange={(event) =>
                         setEditDraft({ ...editDraft, skuCode: event.target.value })
                       }
-                      placeholder="SKU (e.g., T-01)"
+                      placeholder="SKU (e.g., T01)"
                       style={inputStyle}
                     />
                     <input

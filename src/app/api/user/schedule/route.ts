@@ -20,6 +20,7 @@ import {
   minScheduleNightsForCue,
   resolveCurrentScheduleNight
 } from "@/lib/schedule-progress";
+import { stripSkuHyphens } from "@/lib/library-metadata";
 
 const schema = z.object({
   /** Preview length; server extends this when the member has passed more nights than requested (see currentNight). */
@@ -182,12 +183,13 @@ export async function GET(request: Request) {
 
   // For non-managed members, include default fallback (e.g. T-18) so the weekly lineup UI can show it
   const isPlatinumNonManaged = profile.subscriptionTier !== "platinum_managed";
-  const fallbackCode = (settings.fallbackTrackId || "T-18").trim().toUpperCase();
+  const fallbackCode = stripSkuHyphens(settings.fallbackTrackId || "T18");
   const fallbackTrack =
     isPlatinumNonManaged && fallbackCode
       ? filteredLibrary.find(
           (item) =>
-            (item.skuCode || "").toUpperCase().includes(fallbackCode) ||
+            stripSkuHyphens(item.skuCode || "") === fallbackCode ||
+            stripSkuHyphens(item.skuCode || "").includes(fallbackCode) ||
             (item.title || "").toUpperCase().includes(fallbackCode)
         ) ?? null
       : null;

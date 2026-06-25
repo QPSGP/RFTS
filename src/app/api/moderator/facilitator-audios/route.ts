@@ -7,6 +7,7 @@ import {
 } from "@/lib/db";
 import { requireActiveModerator } from "@/lib/moderator-member-access";
 import { recordModeratorStaffActivity } from "@/lib/facilitator-staff-activity";
+import { stripSkuHyphens } from "@/lib/library-metadata";
 
 const createSchema = z.object({
   title: z.string().min(2),
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Select at least one assigned member." }, { status: 400 });
   }
 
-  const sku = (parsed.data.skuCode || "").trim();
+  const sku = stripSkuHyphens(parsed.data.skuCode || "");
   if (sku) {
     const existingId = await getLibraryItemIdBySkuCode(sku);
     if (existingId) {

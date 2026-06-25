@@ -18,10 +18,16 @@ import {
   defaultSubscriptionPlans
 } from "@/lib/content-seed";
 import { generateAffiliateCode, normalizeAffiliateCode } from "@/lib/affiliate-code";
+import { stripSkuHyphens } from "@/lib/library-metadata";
 
 function isUniqueViolation(error: unknown): boolean {
   return (error as { code?: string })?.code === "23505";
 }
+
+const normalizeLibrarySku = (item: LibraryItem): LibraryItem => ({
+  ...item,
+  skuCode: item.skuCode ? stripSkuHyphens(item.skuCode) : item.skuCode
+});
 
 export type DbUser = {
   id: string;
@@ -1333,7 +1339,7 @@ export const listLibrary = async () => {
     FROM library_items
     ORDER BY LOWER(title) ASC
   `;
-  return rows;
+  return rows.map(normalizeLibrarySku);
 };
 
 export const listPersonalizedLibraryForUser = async (email: string) => {
@@ -1364,7 +1370,7 @@ export const listPersonalizedLibraryForUser = async (email: string) => {
       )
     ORDER BY LOWER(title) ASC
   `;
-  return rows;
+  return rows.map(normalizeLibrarySku);
 };
 
 export const listFacilitatorLibraryItems = async (moderatorId: string) => {
@@ -1390,7 +1396,7 @@ export const listFacilitatorLibraryItems = async (moderatorId: string) => {
     WHERE moderator_id = ${moderatorId}
     ORDER BY created_at DESC
   `;
-  return rows;
+  return rows.map(normalizeLibrarySku);
 };
 
 export const getLibraryItem = async (id: string) => {
@@ -1416,7 +1422,7 @@ export const getLibraryItem = async (id: string) => {
     WHERE id = ${id}
     LIMIT 1
   `;
-  return rows[0] || null;
+  return rows[0] ? normalizeLibrarySku(rows[0]) : null;
 };
 
 /** Returns the id of a library item that has this SKU, or null. Optional excludeId for updates. */
@@ -1427,19 +1433,22 @@ export const getLibraryItemIdBySkuCode = async (
   if (!skuCode || typeof skuCode !== "string" || !skuCode.trim()) {
     return null;
   }
-  const trimmed = skuCode.trim();
+  const trimmed = stripSkuHyphens(skuCode);
+  if (!trimmed) {
+    return null;
+  }
   let rows: { id: string }[];
   if (excludeId) {
     const result = await sql<{ id: string }>`
       SELECT id FROM library_items
-      WHERE TRIM(sku_code) = ${trimmed} AND id != ${excludeId}
+      WHERE REPLACE(TRIM(sku_code), '-', '') = ${trimmed} AND id != ${excludeId}
       LIMIT 1
     `;
     rows = result.rows;
   } else {
     const result = await sql<{ id: string }>`
       SELECT id FROM library_items
-      WHERE TRIM(sku_code) = ${trimmed}
+      WHERE REPLACE(TRIM(sku_code), '-', '') = ${trimmed}
       LIMIT 1
     `;
     rows = result.rows;
@@ -2067,11 +2076,12 @@ export const createLibraryItem = async (payload: {
   `;
   const order = (orderRows[0]?.max || 0) + 1;
   const inCatalog = payload.inGeneralCatalog ?? (payload.moderatorId ? false : true);
+  const skuCode = stripSkuHyphens(payload.skuCode || "");
   const { rows } = await sql<LibraryItem>`
     INSERT INTO library_items
       (title, description, sku_code, file_name, categories, cover_url, audio_url, interest_ids, allowed_user_emails, order_index, is_adult, moderator_id, in_general_catalog)
     VALUES
-      (${payload.title}, ${payload.description}, ${payload.skuCode}, ${payload.fileName ?? ""}, ${toPgArray(payload.categories)}::text[],
+      (${payload.title}, ${payload.description}, ${skuCode}, ${payload.fileName ?? ""}, ${toPgArray(payload.categories)}::text[],
        ${payload.coverUrl}, ${payload.audioUrl},
        ${toPgArray(payload.interestIds)}::text[], ${toPgArray(payload.allowedUserEmails)}::text[],
        ${order}, ${payload.isAdult ?? false}, ${payload.moderatorId ?? null}, ${inCatalog})
@@ -2092,7 +2102,7 @@ export const createLibraryItem = async (payload: {
       order_index as "order",
       is_adult as "isAdult"
   `;
-  return rows[0];
+  return normalizeLibrarySku(rows[0]);
 };
 
 export const updateLibraryItem = async (payload: {
@@ -2110,12 +2120,13 @@ export const updateLibraryItem = async (payload: {
   isAdult?: boolean;
   inGeneralCatalog?: boolean;
 }) => {
+  const skuCode = stripSkuHyphens(payload.skuCode || "");
   const { rows } = await sql<LibraryItem>`
     UPDATE library_items
     SET
       title = ${payload.title},
       description = ${payload.description},
-      sku_code = ${payload.skuCode},
+      sku_code = ${skuCode},
       file_name = ${payload.fileName ?? ""},
       categories = ${toPgArray(payload.categories)}::text[],
       cover_url = ${payload.coverUrl},
@@ -2143,7 +2154,7 @@ export const updateLibraryItem = async (payload: {
       order_index as "order",
       is_adult as "isAdult"
   `;
-  return rows[0] || null;
+  return rows[0] ? normalizeLibrarySku(rows[0]) : null;
 };
 
 export const reorderLibraryItems = async (orderedIds: string[]) => {
@@ -2985,18 +2996,30 @@ export const getPlaybackSettings = async () => {
     WHERE id = 1
     LIMIT 1
   `;
-  return rows[0] || defaultPlaybackSettings;
+  if (!rows[0]) {
+    return normalizePlaybackSkuFields(defaultPlaybackSettings);
+  }
+  return normalizePlaybackSkuFields(rows[0]);
 };
 
+const normalizePlaybackSkuFields = (settings: PlaybackSettings): PlaybackSettings => ({
+  ...settings,
+  cgmrTrackId: settings.cgmrTrackId ? stripSkuHyphens(settings.cgmrTrackId) : settings.cgmrTrackId,
+  fallbackTrackId: settings.fallbackTrackId
+    ? stripSkuHyphens(settings.fallbackTrackId)
+    : settings.fallbackTrackId
+});
+
 export const savePlaybackSettings = async (settings: PlaybackSettings) => {
+  const normalized = normalizePlaybackSkuFields(settings);
   const addEvery = canonicalAddNewTrackEveryMainPlays();
   await sql`
     INSERT INTO playback_settings
       (id, plays_per_recording, nightly_gap_hours, add_new_track_every_nights, initial_tracks, cgmr_track_id, fallback_track_id)
     VALUES
-      (1, ${settings.playsPerRecording}, ${settings.nightlyGapHours},
-       ${addEvery}, ${settings.initialTracks},
-       ${settings.cgmrTrackId}, ${settings.fallbackTrackId})
+      (1, ${normalized.playsPerRecording}, ${normalized.nightlyGapHours},
+       ${addEvery}, ${normalized.initialTracks},
+       ${normalized.cgmrTrackId}, ${normalized.fallbackTrackId})
     ON CONFLICT (id)
     DO UPDATE SET
       plays_per_recording = EXCLUDED.plays_per_recording,

@@ -26,17 +26,17 @@ describe("schedule progress / playlist cue", () => {
     addNewTrackEveryNights: 99,
     initialTracks: 3,
     cgmrTrackId: "",
-    fallbackTrackId: "T-18"
+    fallbackTrackId: "T18"
   };
 
   const library = [
-    mk("t26", "T-26", "T-26"),
-    mk("t36", "T-36", "T-36"),
-    mk("s01", "S-01 C", "S-01 C"),
-    mk("t18", "T-18", "T-18")
+    mk("t26", "T-26", "T26"),
+    mk("t36", "T-36", "T36"),
+    mk("s01", "S-01 C", "S01C"),
+    mk("t18", "T-18", "T18")
   ];
 
-  it("places T-18 as 4th main play in next cue after one full 2-audio night", () => {
+  it("places T18 as 4th main play in next cue after one full 2-audio night", () => {
     const schedule = buildSchedulePreview({
       interests: [],
       library,
@@ -109,8 +109,8 @@ describe("schedule progress / playlist cue", () => {
       {
         night: 1,
         tracks: [
-          { id: "dup", title: "Same", skuCode: "T-01" },
-          { id: "dup", title: "Same", skuCode: "T-01" }
+          { id: "dup", title: "Same", skuCode: "T01" },
+          { id: "dup", title: "Same", skuCode: "T01" }
         ]
       }
     ];

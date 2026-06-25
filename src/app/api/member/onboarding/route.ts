@@ -22,6 +22,7 @@ import {
 import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
 import { getBillingPortalReturnPath } from "@/lib/member-billing";
 import { getWelcomeEmailCcRecipients, sendEmail } from "@/lib/email";
+import { stripSkuHyphens } from "@/lib/library-metadata";
 import { getPublicSiteUrl } from "@/lib/site-url";
 import {
   getWelcomeEmailContent,
@@ -148,12 +149,13 @@ export async function POST(request: Request) {
   // Assign fallback track (e.g. T-18) to new member so they get it in their schedule until a CGMR is assigned.
   try {
     const settings = await getPlaybackSettings();
-    const fallbackCode = (settings.fallbackTrackId || "T-18").trim().toUpperCase();
+    const fallbackCode = stripSkuHyphens(settings.fallbackTrackId || "T18");
     if (fallbackCode) {
       const library = await listLibrary();
       const fallbackItem = library.find(
         (item) =>
-          (item.skuCode || "").toUpperCase().includes(fallbackCode) ||
+          stripSkuHyphens(item.skuCode || "") === fallbackCode ||
+          stripSkuHyphens(item.skuCode || "").includes(fallbackCode) ||
           (item.title || "").toUpperCase().includes(fallbackCode)
       );
       if (fallbackItem) {

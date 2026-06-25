@@ -9,7 +9,7 @@ const schema = z.object({
   addNewTrackEveryNights: z.number().int().min(1).max(60),
   initialTracks: z.number().int().min(1).max(10),
   cgmrTrackId: z.string().optional().default(""),
-  fallbackTrackId: z.string().optional().default("T-18")
+  fallbackTrackId: z.string().optional().default("T18")
 });
 
 export async function GET() {

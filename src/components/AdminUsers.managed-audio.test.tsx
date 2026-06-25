@@ -75,7 +75,7 @@ function setupFetchMock() {
         ok: true,
         json: () =>
           Promise.resolve({
-            settings: { fallbackTrackId: "T-18", cgmrTrackId: "" }
+            settings: { fallbackTrackId: "T18", cgmrTrackId: "" }
           })
       } as Response);
     }
@@ -212,7 +212,7 @@ describe("AdminUsers Platinum Managed rotation", () => {
           ok: true,
           json: () =>
             Promise.resolve({
-              settings: { fallbackTrackId: "T-18", cgmrTrackId: "" }
+              settings: { fallbackTrackId: "T18", cgmrTrackId: "" }
             })
         } as Response);
       }
@@ -323,7 +323,7 @@ describe("AdminUsers Platinum Managed rotation", () => {
           ok: true,
           json: () =>
             Promise.resolve({
-              settings: { fallbackTrackId: "T-18", cgmrTrackId: "" }
+              settings: { fallbackTrackId: "T18", cgmrTrackId: "" }
             })
         } as Response);
       }
