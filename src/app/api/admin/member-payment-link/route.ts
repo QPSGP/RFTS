@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminMemberPaymentLink } from "@/lib/admin-member-checkout";
-import { isAdminSession } from "@/lib/auth";
+import { getSessionEmail, isAdminSession } from "@/lib/auth";
 import { getStripe } from "@/lib/stripe";
 
 const schema = z.object({
@@ -35,7 +35,8 @@ export async function POST(request: Request) {
     stripe,
     email: parsed.data.email,
     tier: parsed.data.tier,
-    cancelReturnPath: parsed.data.cancelReturnPath
+    cancelReturnPath: parsed.data.cancelReturnPath,
+    adminEmail: getSessionEmail()
   });
 
   if (!result.ok) {

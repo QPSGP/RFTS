@@ -1,9 +1,13 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 import { getAdminByEmail, getModeratorByEmail, getUserProfile } from "@/lib/db";
+import { getProductionCookieDomain } from "@/lib/site-url";
 
 const sessionCookie = "rfts_session";
+const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
+const ADMIN_BILLING_RETURN_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 const getSecret = () => process.env.SESSION_SECRET || "dev-secret";
 
@@ -52,25 +56,89 @@ export const createSessionToken = (email: string) => {
   return `${payload}|${signature}`;
 };
 
+function createTimedStaffToken(email: string, ttlMs: number): string {
+  const expiry = (Date.now() + ttlMs).toString();
+  const nonce = crypto.randomBytes(8).toString("hex");
+  const payload = `${email}|${expiry}|${nonce}`;
+  const signature = sign(payload);
+  return Buffer.from(`${payload}|${signature}`).toString("base64url");
+}
+
+function verifyTimedStaffToken(tokenEnc: string): string | null {
+  let raw: string;
+  try {
+    raw = Buffer.from(tokenEnc, "base64url").toString("utf8");
+  } catch {
+    return null;
+  }
+  const parts = raw.split("|");
+  if (parts.length !== 4) return null;
+  const [email, expiryStr, nonce, signature] = parts;
+  const payload = `${email}|${expiryStr}|${nonce}`;
+  if (sign(payload) !== signature) return null;
+  const expiry = parseInt(expiryStr, 10);
+  if (Number.isNaN(expiry) || Date.now() > expiry) return null;
+  return email;
+}
+
+/** Short-lived token in Stripe return URLs to restore admin session after cross-site redirect. */
+export function createAdminBillingReturnToken(email: string): string {
+  return createTimedStaffToken(email, ADMIN_BILLING_RETURN_TTL_MS);
+}
+
+export function verifyAdminBillingReturnToken(tokenEnc: string): string | null {
+  return verifyTimedStaffToken(tokenEnc);
+}
+
+type CookieRequestHint = Pick<Request, "headers" | "url"> | null | undefined;
+
+function staffCookieSecure(request?: CookieRequestHint): boolean {
+  if (process.env.COOKIE_INSECURE === "1" || process.env.COOKIE_SECURE === "0") return false;
+  if (process.env.NODE_ENV !== "production") return false;
+  if (request) {
+    const xf = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+    if (xf === "http") return false;
+    try {
+      if (new URL(request.url).protocol === "http:") return false;
+    } catch {
+      /* ignore */
+    }
+  }
+  return true;
+}
+
+function staffCookieDomain(request?: CookieRequestHint): string | undefined {
+  return getProductionCookieDomain(request?.headers.get("host"));
+}
+
+function staffSessionCookieOptions(request?: CookieRequestHint) {
+  const domain = staffCookieDomain(request);
+  return {
+    httpOnly: true,
+    secure: staffCookieSecure(request),
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: SESSION_MAX_AGE_SECONDS,
+    ...(domain ? { domain } : {})
+  };
+}
+
+export function setSessionCookieOnResponse(
+  response: NextResponse,
+  token: string,
+  request?: CookieRequestHint
+): void {
+  response.cookies.set(sessionCookie, token, staffSessionCookieOptions(request));
+}
+
 export const setSession = (token: string) => {
   const cookieStore = cookies();
-  cookieStore.set(sessionCookie, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/"
-  });
+  cookieStore.set(sessionCookie, token, staffSessionCookieOptions());
 };
 
 export const clearSession = () => {
   const cookieStore = cookies();
-  cookieStore.set(sessionCookie, "", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 0
-  });
+  cookieStore.set(sessionCookie, "", { ...staffSessionCookieOptions(), maxAge: 0 });
 };
 
 export const getSessionEmail = () => {

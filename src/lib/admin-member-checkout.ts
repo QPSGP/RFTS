@@ -9,6 +9,7 @@ import {
 import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
 import { getBillingPortalReturnPath, isStripeBillingConfigured } from "@/lib/member-billing";
 import { createMembershipCheckoutSession } from "@/lib/stripe-checkout";
+import { createAdminBillingReturnToken } from "@/lib/auth";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
 function normalizeAdminCancelReturnPath(path: string | undefined): string {
@@ -18,6 +19,21 @@ function normalizeAdminCancelReturnPath(path: string | undefined): string {
   const pathname = raw.startsWith("/") ? raw.split("?")[0]?.split("#")[0] ?? fallback : fallback;
   if (!pathname.startsWith("/admin") || pathname.startsWith("//")) return fallback;
   return pathname;
+}
+
+function buildAdminStripeReturnUrl(
+  baseUrl: string,
+  adminEmail: string,
+  nextPath: string,
+  billing?: "cancel"
+): string {
+  const token = createAdminBillingReturnToken(adminEmail);
+  const normalizedNext = normalizeAdminCancelReturnPath(nextPath);
+  const nextWithQuery = billing ? `${normalizedNext}?billing=${billing}` : normalizedNext;
+  const url = new URL("/admin/billing-return", baseUrl);
+  url.searchParams.set("t", token);
+  url.searchParams.set("next", nextWithQuery);
+  return url.toString();
 }
 
 export type AdminMemberPaymentLinkResult =
@@ -31,6 +47,8 @@ export async function createAdminMemberPaymentLink(opts: {
   tier?: "platinum" | "platinum_managed";
   /** Where Stripe sends the user if they abandon Checkout (e.g. admin members panel). */
   cancelReturnPath?: string;
+  /** Admin who opened the link — used to restore session after Stripe redirect. */
+  adminEmail?: string | null;
 }): Promise<AdminMemberPaymentLinkResult> {
   if (!isStripeBillingConfigured()) {
     return { ok: false, status: 503, error: "Stripe is not configured for live billing." };
@@ -54,11 +72,22 @@ export async function createAdminMemberPaymentLink(opts: {
 
   if (hasExistingStripe) {
     try {
+      const portalReturnPath = opts.adminEmail?.trim()
+        ? (() => {
+            const returnUrl = buildAdminStripeReturnUrl(
+              baseUrl,
+              opts.adminEmail!.trim(),
+              normalizeAdminCancelReturnPath(opts.cancelReturnPath)
+            );
+            const parsed = new URL(returnUrl);
+            return `${parsed.pathname}${parsed.search}`;
+          })()
+        : getBillingPortalReturnPath(user.email);
       const portalUrl = await createBillingPortalSessionUrl(opts.stripe, {
         stripeCustomerId: stripeRow?.stripeCustomerId,
         stripeSubscriptionId: stripeRow?.stripeSubscriptionId,
         baseUrl,
-        returnPath: getBillingPortalReturnPath(user.email)
+        returnPath: portalReturnPath
       });
       if (portalUrl) {
         return { ok: true, url: portalUrl, billingPortal: true };
@@ -89,6 +118,9 @@ export async function createAdminMemberPaymentLink(opts: {
 
   const cancelPath = normalizeAdminCancelReturnPath(opts.cancelReturnPath);
   const successReturnPath = getBillingPortalReturnPath(user.email);
+  const cancelUrl = opts.adminEmail?.trim()
+    ? buildAdminStripeReturnUrl(baseUrl, opts.adminEmail.trim(), cancelPath, "cancel")
+    : `${baseUrl}${cancelPath}?billing=cancel`;
 
   const session = await createMembershipCheckoutSession(opts.stripe, {
     mode: "subscription",
@@ -101,7 +133,7 @@ export async function createAdminMemberPaymentLink(opts: {
         ? { trial_period_days: plan.trialDays }
         : undefined,
     success_url: `${baseUrl}${successReturnPath}`,
-    cancel_url: `${baseUrl}${cancelPath}?billing=cancel`,
+    cancel_url: cancelUrl,
     allow_promotion_codes: true
   });
 
