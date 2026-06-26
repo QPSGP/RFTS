@@ -107,7 +107,7 @@ export default function FaqsPage() {
           <div className="card">
             <h3>Can I choose 1 or 2 recordings per night?</h3>
             <p>
-              Yes. Members can choose 1 or 2 sessions per night. The default is 2, and the
+              Yes. Members can choose 1 or 2 audios per night. The default is 2, and the
               rest of the rotation is managed by the program.
             </p>
           </div>

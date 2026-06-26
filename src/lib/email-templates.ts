@@ -112,7 +112,7 @@ export function getWelcomeEmailContent(
   <p>If you are having any technical issues go to the menu and click on <strong>“Report an issue”</strong>.</p>
 
   <h2 style="font-size: 1.05em; margin-top: 28px; margin-bottom: 8px;">Recommendations but not required.</h2>
-  <p>Two audios per night (repetition)</p>
+  <p>Two Audios Per night (repetition)</p>
   <p>Comfortable headset with mask (when listening while sleeping)</p>
   <p>Using ReachForTheStars.Today is one of the easiest ways to overcome present challenges and make your goals a reality, all while falling asleep and during sleep!</p>
 
@@ -152,7 +152,7 @@ When you log in it opens you to your member "Console". Everything is accessible 
 If you are having any technical issues go to the menu and click on "Report an issue".
 
 Recommendations but not required.
-Two audios per night (repetition)
+Two Audios Per night (repetition)
 Comfortable headset with mask (when listening while sleeping)
 Using ReachForTheStars.Today is one of the easiest ways to overcome present challenges and make your goals a reality, all while falling asleep and during sleep!
 
