@@ -1054,6 +1054,15 @@ button.section-title {
   align-items: start;
 }
 
+.facilitator-console-main {
+  min-height: 420px;
+}
+
+.facilitator-console-nav {
+  position: sticky;
+  top: 12px;
+}
+
 @media (max-width: 900px) {
   .facilitator-console-layout {
     grid-template-columns: 1fr;

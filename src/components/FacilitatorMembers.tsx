@@ -84,6 +84,37 @@ function tierLabel(tier: MemberRow["subscriptionTier"]): string {
   return "Unknown tier";
 }
 
+/** Sort key: last name, first name, then email. */
+function memberSortKey(member: MemberRow): string {
+  const last = (member.lastName ?? "").trim().toLowerCase();
+  const first = (member.firstName ?? "").trim().toLowerCase();
+  return `${last}\t${first}\t${member.email.toLowerCase()}`;
+}
+
+/** Display for search results: Last, First (falls back to email). */
+function memberSortDisplayName(member: MemberRow): string {
+  const last = (member.lastName ?? "").trim();
+  const first = (member.firstName ?? "").trim();
+  if (last && first) return `${last}, ${first}`;
+  if (last) return last;
+  if (first) return first;
+  return member.email;
+}
+
+function memberMatchesSearch(member: MemberRow, term: string): boolean {
+  if (!term) return true;
+  const haystack = [
+    member.email,
+    member.firstName ?? "",
+    member.lastName ?? "",
+    memberSortDisplayName(member),
+    memberLabel(member)
+  ]
+    .join(" ")
+    .toLowerCase();
+  return haystack.includes(term);
+}
+
 function countInOrder(order: string[], itemId: string): number {
   return order.filter((id) => id === itemId).length;
 }
@@ -136,6 +167,8 @@ function lineupAlgorithmNote(
   return parts.join(" · ") || "—";
 }
 
+type ConsolePanel = "client" | "add-member" | "member-audios" | "lineup";
+
 export default function FacilitatorMembers() {
   const [facilitatorName, setFacilitatorName] = useState("");
   const [members, setMembers] = useState<MemberRow[]>([]);
@@ -163,7 +196,8 @@ export default function FacilitatorMembers() {
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [memberAudiosOpen, setMemberAudiosOpen] = useState(false);
+  const [consolePanel, setConsolePanel] = useState<ConsolePanel>("client");
+  const [clientSearch, setClientSearch] = useState("");
   type AudioListFilter = "all" | "private" | "in_library";
   const [audioListFilter, setAudioListFilter] = useState<AudioListFilter>("all");
   const [facilitatorAudios, setFacilitatorAudios] = useState<FacilitatorAudioRow[]>([]);
@@ -178,7 +212,6 @@ export default function FacilitatorMembers() {
   const [audioUploadStatus, setAudioUploadStatus] = useState<string | null>(null);
   const [audioSaveStatus, setAudioSaveStatus] = useState<string | null>(null);
   const [audioUploading, setAudioUploading] = useState(false);
-  const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [newMemberPassword, setNewMemberPassword] = useState("");
   const [newMemberFirstName, setNewMemberFirstName] = useState("");
@@ -212,7 +245,6 @@ export default function FacilitatorMembers() {
     {}
   );
   const [scheduleLoading, setScheduleLoading] = useState(false);
-  const [lineupPreviewOpen, setLineupPreviewOpen] = useState(false);
   const [lineupMemberEmail, setLineupMemberEmail] = useState("");
   const [lineupNights, setLineupNights] = useState(14);
   const [lineupMessage, setLineupMessage] = useState<string | null>(null);
@@ -291,7 +323,9 @@ export default function FacilitatorMembers() {
     const membersData = await membersRes.json();
     const memberList = membersData.members ?? [];
     setMembers(memberList);
-    if (memberList.length === 0) setAddMemberOpen(true);
+    if (memberList.length === 0) {
+      setConsolePanel("add-member");
+    }
 
     const issuesRes = await fetch("/api/moderator/member-issues");
     if (issuesRes.ok) {
@@ -320,8 +354,8 @@ export default function FacilitatorMembers() {
   }, []);
 
   useEffect(() => {
-    if (memberAudiosOpen) void loadFacilitatorAudios();
-  }, [memberAudiosOpen, loadFacilitatorAudios]);
+    if (consolePanel === "member-audios") void loadFacilitatorAudios();
+  }, [consolePanel, loadFacilitatorAudios]);
 
   useEffect(() => {
     if (members.length === 0) return;
@@ -427,9 +461,9 @@ export default function FacilitatorMembers() {
   }, [members, lineupMemberEmail]);
 
   useEffect(() => {
-    if (!lineupPreviewOpen || !lineupMemberEmail) return;
+    if (consolePanel !== "lineup" || !lineupMemberEmail) return;
     void loadSchedulePreview(lineupMemberEmail, lineupNights);
-  }, [lineupPreviewOpen, lineupMemberEmail, lineupNights]);
+  }, [consolePanel, lineupMemberEmail, lineupNights]);
 
   const toggleClientSection = (section: ClientSection) => {
     const opening = openClientSection !== section;
@@ -760,6 +794,28 @@ export default function FacilitatorMembers() {
 
   const registeredMembers = useMemo(() => members.filter((member) => member.registered), [members]);
 
+  const sortedMembers = useMemo(
+    () => members.slice().sort((a, b) => memberSortKey(a).localeCompare(memberSortKey(b))),
+    [members]
+  );
+
+  const filteredMembers = useMemo(() => {
+    const term = clientSearch.trim().toLowerCase();
+    return sortedMembers.filter((member) => memberMatchesSearch(member, term));
+  }, [clientSearch, sortedMembers]);
+
+  const selectClient = (email: string) => {
+    setStatus(null);
+    setSelectedEmail(email);
+    setConsolePanel("client");
+  };
+
+  const openConsolePanel = (panel: ConsolePanel) => {
+    setStatus(null);
+    setConsolePanel(panel);
+    if (panel === "member-audios") void loadFacilitatorAudios();
+  };
+
   const buildLineupIdLabels = (email: string) => {
     const idLabels = new Map<string, string>();
     library.forEach((item) => idLabels.set(item.id, trackLabel(item)));
@@ -874,58 +930,102 @@ export default function FacilitatorMembers() {
       )}
 
       <div className="facilitator-console-layout">
-        <section className="card">
-          <h2 style={{ marginTop: 0 }}>Your clients</h2>
-          <p style={{ fontSize: 12, color: "#64748b", marginTop: 0 }}>
-            Tap a client to open details; tap again to close.
+        <section className="card facilitator-console-nav">
+          <h2 style={{ marginTop: 0 }}>Clients</h2>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <span style={{ fontSize: 12, fontWeight: 600 }}>Client search</span>
+            <input
+              style={inputStyle}
+              type="search"
+              placeholder="Last name, first name, or email…"
+              value={clientSearch}
+              onChange={(e) => setClientSearch(e.target.value)}
+              aria-label="Client search"
+            />
+          </label>
+          <p style={{ fontSize: 12, color: "#64748b", margin: "8px 0 0" }}>
+            Sorted by last name, first name. Click a client to view details on the right.
           </p>
           {members.length === 0 ? (
-            <p style={{ color: "#64748b", lineHeight: 1.6 }}>
-              No clients yet. Use <strong>Add new member</strong> below to create one, or ask admin to
-              assign existing members in Facilitators Section.
+            <p style={{ color: "#64748b", lineHeight: 1.6, marginTop: 12 }}>
+              No clients yet. Use <strong>Add new member</strong> below, or ask admin to assign members.
             </p>
+          ) : filteredMembers.length === 0 ? (
+            <p style={{ color: "#64748b", marginTop: 12 }}>No matching clients.</p>
           ) : (
-            <div className="stack">
-              {members.map((member) => (
+            <div className="stack" style={{ marginTop: 8, maxHeight: 320, overflowY: "auto" }}>
+              {filteredMembers.map((member) => (
                 <button
                   key={member.email}
                   type="button"
                   className="button button-secondary"
-                  aria-pressed={selectedEmail === member.email}
+                  aria-pressed={selectedEmail === member.email && consolePanel === "client"}
                   style={{
                     textAlign: "left",
                     display: "block",
                     width: "100%",
-                    background: selectedEmail === member.email ? "#ecfdf5" : undefined,
-                    borderColor: selectedEmail === member.email ? "#10b981" : undefined
+                    background:
+                      selectedEmail === member.email && consolePanel === "client"
+                        ? "#ecfdf5"
+                        : undefined,
+                    borderColor:
+                      selectedEmail === member.email && consolePanel === "client"
+                        ? "#10b981"
+                        : undefined
                   }}
-                  onClick={() => {
-                    setStatus(null);
-                    setSelectedEmail((prev) =>
-                      prev === member.email ? null : member.email
-                    );
-                  }}
+                  onClick={() => selectClient(member.email)}
                 >
-                  <strong style={{ display: "block" }}>{memberLabel(member)}</strong>
+                  <strong style={{ display: "block" }}>{memberSortDisplayName(member)}</strong>
                   <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
+                    {member.email}
+                  </span>
+                  <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 2 }}>
                     {member.registered
-                      ? `${tierLabel(member.subscriptionTier)} - ${member.subscriptionStatus ?? "inactive"}`
+                      ? tierLabel(member.subscriptionTier) + " · " + (member.subscriptionStatus ?? "inactive")
                       : "Not registered yet"}
                   </span>
                 </button>
               ))}
             </div>
           )}
-          <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid #e5e7eb" }}>
+          <div
+            style={{
+              marginTop: 16,
+              paddingTop: 12,
+              borderTop: "1px solid #e5e7eb",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8
+            }}
+          >
             <button
               type="button"
-              className={adminSectionToggleClass(addMemberOpen, true)}
-              aria-expanded={addMemberOpen}
-              onClick={() => setAddMemberOpen((open) => !open)}
+              className={adminSectionToggleClass(consolePanel === "add-member", true)}
+              onClick={() => openConsolePanel("add-member")}
             >
-              {addMemberOpen ? "▼" : "▶"} Add new member
+              Add new member
             </button>
-            {addMemberOpen && (
+            <button
+              type="button"
+              className={adminSectionToggleClass(consolePanel === "member-audios", true)}
+              onClick={() => openConsolePanel("member-audios")}
+            >
+              Member audios{facilitatorAudios.length ? " (" + facilitatorAudios.length + ")" : ""}
+            </button>
+            <button
+              type="button"
+              className={adminSectionToggleClass(consolePanel === "lineup", true)}
+              onClick={() => openConsolePanel("lineup")}
+            >
+              Audio lineup
+            </button>
+          </div>
+        </section>
+
+        <section className="card facilitator-console-main">
+          {consolePanel === "add-member" && (
+            <>
+              <h2 style={{ marginTop: 0 }}>Add new member</h2>
               <div className="card" style={{ marginTop: 8 }}>
                 <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, lineHeight: 1.5 }}>
                   Creates a member account and assigns them to you automatically. They can sign in at{" "}
@@ -996,19 +1096,11 @@ export default function FacilitatorMembers() {
                   )}
                 </div>
               </div>
-            )}
-          </div>
-          <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid #e5e7eb" }}>
-            <button
-              type="button"
-              className={adminSectionToggleClass(memberAudiosOpen, true)}
-              aria-expanded={memberAudiosOpen}
-              onClick={() => setMemberAudiosOpen((open) => !open)}
-            >
-              {memberAudiosOpen ? "▼" : "▶"} Member audios
-              {facilitatorAudios.length ? ` — ${facilitatorAudios.length}` : ""}
-            </button>
-            {memberAudiosOpen && (
+            </>
+          )}
+          {consolePanel === "member-audios" && (
+            <>
+              <h2 style={{ marginTop: 0 }}>Member audios</h2>
               <div className="card" style={{ marginTop: 8 }}>
                 <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, lineHeight: 1.5 }}>
                   Upload recordings for your assigned members only. They appear in rotation pickers
@@ -1146,18 +1238,11 @@ export default function FacilitatorMembers() {
                   </div>
                 )}
               </div>
-            )}
-          </div>
-          <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid #e5e7eb" }}>
-            <button
-              type="button"
-              className={adminSectionToggleClass(lineupPreviewOpen, true)}
-              aria-expanded={lineupPreviewOpen}
-              onClick={() => setLineupPreviewOpen((open) => !open)}
-            >
-              {lineupPreviewOpen ? "▼" : "▶"} Audio lineup
-            </button>
-            {lineupPreviewOpen && (
+            </>
+          )}
+          {consolePanel === "lineup" && (
+            <>
+              <h2 style={{ marginTop: 0 }}>Audio lineup</h2>
               <div className="card" style={{ marginTop: 8 }}>
                 <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, lineHeight: 1.5 }}>
                   Upcoming audio lineup from tonight — same algorithm as the member app. Night 1 is
@@ -1222,20 +1307,17 @@ export default function FacilitatorMembers() {
                   </>
                 )}
               </div>
-            )}
-          </div>
-        </section>
-
-        <section className="card">
-          {!selectedEmail ? (
+            </>
+          )}
+          {consolePanel === "client" && !selectedEmail ? (
             <p style={{ color: "#64748b", lineHeight: 1.6 }}>
-              Select a client from the list on the left. You will see profile details, recent
-              activity, <strong>Gold member goals</strong>, and—for{" "}
-              <strong>Platinum Managed</strong> members—rotation controls.
+              Search for a client on the left and click their name to view profile, goals,
+              rotation, and activity. Or use <strong>Add new member</strong>,{" "}
+              <strong>Member audios</strong>, or <strong>Audio lineup</strong> in the sidebar.
             </p>
-          ) : detailLoading ? (
+          ) : consolePanel === "client" && detailLoading ? (
             <p>Loading member details…</p>
-          ) : (
+          ) : consolePanel === "client" && selectedEmail ? (
             <>
               <h2 style={{ marginTop: 0 }}>{memberLabel(selectedMember!)}</h2>
               <p style={{ color: "#64748b", marginBottom: 16 }}>{selectedEmail}</p>
@@ -1716,7 +1798,8 @@ export default function FacilitatorMembers() {
               )}
               </div>
             </>
-          )}
+
+          ) : null}
         </section>
       </div>
     </>
