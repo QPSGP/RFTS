@@ -167,7 +167,7 @@ function lineupAlgorithmNote(
   return parts.join(" · ") || "—";
 }
 
-type ConsolePanel = "client" | "add-member" | "member-audios" | "lineup";
+type ConsolePanel = "client" | "add-member" | "member-audios" | "add-audio";
 
 export default function FacilitatorMembers() {
   const [facilitatorName, setFacilitatorName] = useState("");
@@ -354,7 +354,7 @@ export default function FacilitatorMembers() {
   }, []);
 
   useEffect(() => {
-    if (consolePanel === "member-audios") void loadFacilitatorAudios();
+    if (consolePanel === "member-audios" || consolePanel === "add-audio") void loadFacilitatorAudios();
   }, [consolePanel, loadFacilitatorAudios]);
 
   useEffect(() => {
@@ -472,11 +472,6 @@ export default function FacilitatorMembers() {
     const firstRegistered = members.find((member) => member.registered);
     if (firstRegistered) setLineupMemberEmail(firstRegistered.email);
   }, [members, lineupMemberEmail]);
-
-  useEffect(() => {
-    if (consolePanel !== "lineup" || !lineupMemberEmail) return;
-    void loadSchedulePreview(lineupMemberEmail, lineupNights);
-  }, [consolePanel, lineupMemberEmail, lineupNights]);
 
   const toggleClientSection = (section: ClientSection) => {
     const opening = openClientSection !== section;
@@ -702,6 +697,7 @@ export default function FacilitatorMembers() {
     }
     setAudioSaveStatus("Audio saved for your selected members.");
     setAudioDraft({ title: "", description: "", audioUrl: "", coverUrl: "", skuCode: "" });
+    setConsolePanel("member-audios");
     await loadFacilitatorAudios();
     const libRes = await fetch("/api/moderator/library");
     if (libRes.ok) {
@@ -805,8 +801,6 @@ export default function FacilitatorMembers() {
     [library]
   );
 
-  const registeredMembers = useMemo(() => members.filter((member) => member.registered), [members]);
-
   const sortedMembers = useMemo(
     () => members.slice().sort((a, b) => memberSortKey(a).localeCompare(memberSortKey(b))),
     [members]
@@ -826,7 +820,7 @@ export default function FacilitatorMembers() {
   const openConsolePanel = (panel: ConsolePanel) => {
     setStatus(null);
     setConsolePanel(panel);
-    if (panel === "member-audios") void loadFacilitatorAudios();
+    if (panel === "member-audios" || panel === "add-audio") void loadFacilitatorAudios();
   };
 
   const buildLineupIdLabels = (email: string) => {
@@ -932,7 +926,7 @@ export default function FacilitatorMembers() {
         <h1>Welcome, {facilitatorName || "Facilitator"}</h1>
         <p>
           Manage members assigned to you — add clients, upload member audios, set Gold member goals,
-          preview nightly lineups, and edit Platinum Managed rotations.
+          preview each client&apos;s nightly lineup, and edit Platinum Managed rotations.
         </p>
       </section>
 
@@ -1027,10 +1021,10 @@ export default function FacilitatorMembers() {
             </button>
             <button
               type="button"
-              className={adminSectionToggleClass(consolePanel === "lineup", true)}
-              onClick={() => openConsolePanel("lineup")}
+              className={adminSectionToggleClass(consolePanel === "add-audio", true)}
+              onClick={() => openConsolePanel("add-audio")}
             >
-              Audio lineup
+              Add new audio
             </button>
           </div>
         </section>
@@ -1116,10 +1110,9 @@ export default function FacilitatorMembers() {
               <h2 style={{ marginTop: 0 }}>Member audios</h2>
               <div className="card" style={{ marginTop: 8 }}>
                 <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, lineHeight: 1.5 }}>
-                  Your uploads for assigned clients only (not the full Success Center catalog).
-                  New tracks are private to selected members until admin adds them to the general
-                  library for all members. They appear in rotation pickers and each member&apos;s library
-                  when selected below.
+                  Your uploads for assigned clients only (not the full Success Center catalog). Open a
+                  client on the left for their nightly <strong>Audio lineup</strong>. Use{" "}
+                  <strong>Add new audio</strong> in the sidebar to upload a new track.
                 </p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
                   <button
@@ -1145,7 +1138,7 @@ export default function FacilitatorMembers() {
                   </button>
                 </div>
                 {filteredFacilitatorAudios.length > 0 ? (
-                  <ul style={{ margin: "0 0 12px", paddingLeft: 18, fontSize: 13 }}>
+                  <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
                     {filteredFacilitatorAudios.map((row) => (
                       <li key={row.id} style={{ marginBottom: 6 }}>
                         <strong>{row.title}</strong>
@@ -1163,10 +1156,22 @@ export default function FacilitatorMembers() {
                     ))}
                   </ul>
                 ) : (
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 12px" }}>
-                    No audios in this view.
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>
+                    No audios in this view. Use <strong>Add new audio</strong> to upload one.
                   </p>
                 )}
+              </div>
+            </>
+          )}
+          {consolePanel === "add-audio" && (
+            <>
+              <h2 style={{ marginTop: 0 }}>Add new audio</h2>
+              <div className="card" style={{ marginTop: 8 }}>
+                <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, lineHeight: 1.5 }}>
+                  Upload a recording for selected assigned members. New tracks are private to those
+                  members until admin adds them to the general library. They appear in rotation pickers
+                  and each member&apos;s library.
+                </p>
                 {members.length === 0 ? (
                   <p style={{ fontSize: 12, color: "#92400e" }}>
                     Assign members before uploading audio.
@@ -1274,80 +1279,11 @@ export default function FacilitatorMembers() {
               </div>
             </>
           )}
-          {consolePanel === "lineup" && (
-            <>
-              <h2 style={{ marginTop: 0 }}>Audio lineup</h2>
-              <div className="card" style={{ marginTop: 8 }}>
-                <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, lineHeight: 1.5 }}>
-                  Upcoming audio lineup from tonight — same algorithm as the member app. Night 1 is
-                  always tonight; higher numbers are upcoming nights.
-                </p>
-                {registeredMembers.length === 0 ? (
-                  <p style={{ fontSize: 12, color: "#92400e" }}>
-                    No registered clients yet. Members must complete signup before a lineup can be
-                    previewed.
-                  </p>
-                ) : (
-                  <>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: 8,
-                        alignItems: "flex-end",
-                        marginBottom: 12
-                      }}
-                    >
-                      <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
-                        <span style={{ fontSize: 12, fontWeight: 600 }}>Client</span>
-                        <select
-                          style={inputStyle}
-                          value={lineupMemberEmail}
-                          onChange={(e) => setLineupMemberEmail(e.target.value)}
-                        >
-                          {registeredMembers.map((member) => (
-                            <option key={member.email} value={member.email}>
-                              {memberLabel(member)} — {tierLabel(member.subscriptionTier)}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        <span style={{ fontSize: 12, fontWeight: 600 }}>Nights</span>
-                        <select
-                          style={{ ...inputStyle, width: 120 }}
-                          value={lineupNights}
-                          onChange={(e) => setLineupNights(Number(e.target.value))}
-                        >
-                          <option value={7}>7 nights</option>
-                          <option value={14}>14 nights</option>
-                          <option value={21}>21 nights</option>
-                          <option value={30}>30 nights</option>
-                          <option value={42}>42 nights</option>
-                        </select>
-                      </label>
-                      <button
-                        type="button"
-                        className="button button-secondary"
-                        disabled={!lineupMemberEmail || scheduleLoading}
-                        onClick={() =>
-                          lineupMemberEmail && void loadSchedulePreview(lineupMemberEmail, lineupNights)
-                        }
-                      >
-                        {scheduleLoading ? "Loading…" : "Refresh lineup"}
-                      </button>
-                    </div>
-                    {lineupMemberEmail ? renderLineupPreview(lineupMemberEmail, true) : null}
-                  </>
-                )}
-              </div>
-            </>
-          )}
           {consolePanel === "client" && !selectedEmail ? (
             <p style={{ color: "#64748b", lineHeight: 1.6 }}>
-              Search for a client on the left and click their name to view profile, goals,
-              rotation, and activity. Or use <strong>Add new member</strong>,{" "}
-              <strong>Member audios</strong>, or <strong>Audio lineup</strong> in the sidebar.
+              Search for a client on the left and click their name to view profile, goals, nightly
+              audio lineup, rotation, and activity. Or use <strong>Add new member</strong>,{" "}
+              <strong>Member audios</strong>, or <strong>Add new audio</strong> in the sidebar.
             </p>
           ) : consolePanel === "client" && detailLoading ? (
             <p>Loading member details…</p>
