@@ -14,6 +14,79 @@ const GOAL_IMAGES: Record<string, string> = {
   "Balanced Life": "/Images/BalancedLife.jpg"
 };
 
+/** Research sources for the homepage benefits section (index 0 = source 1 in the list). */
+const MEDITATION_SOURCES = [
+  {
+    title: "De Gruyter — mindfulness and health research review",
+    href: "https://www.degruyter.com/document/doi/10.1515/hmbci-2013-0056/html"
+  },
+  {
+    title: "Harvard Health — what meditation can do for your mind, mood, and health",
+    href: "https://www.health.harvard.edu/staying-healthy/what-meditation-can-do-for-your-mind-mood-and-health-"
+  },
+  {
+    title: "NIH NCCIH — meditation and mindfulness: what you need to know",
+    href: "https://www.nccih.nih.gov/health/meditation-and-mindfulness-what-you-need-to-know"
+  },
+  {
+    title: "Mayo Clinic — meditation overview and health benefits",
+    href: "https://www.mayoclinic.org/tests-procedures/meditation/about/pac-20385120"
+  },
+  {
+    title: "Columbia University — how meditation can help you focus",
+    href: "https://sps.columbia.edu/news/how-meditation-can-help-you-focus"
+  },
+  {
+    title: "Harvard Gazette — eight weeks to a better brain (MGH/Harvard study)",
+    href: "https://news.harvard.edu/gazette/story/2011/01/eight-weeks-to-a-better-brain/"
+  }
+] as const;
+
+/** Each benefit links to the most relevant source above (sourceIndex 0–5). */
+const MEDITATION_BENEFITS: { label: string; sourceIndex: number }[] = [
+  { label: "Reduced Stress", sourceIndex: 1 },
+  { label: "Memory Enhancement", sourceIndex: 5 },
+  { label: "Blood Pressure Regulation", sourceIndex: 3 },
+  { label: "Better Pain Management", sourceIndex: 3 },
+  { label: "Better Sleep", sourceIndex: 2 },
+  { label: "Physical/Psychological Resilience", sourceIndex: 0 },
+  { label: "Increased Focus & Attention Span", sourceIndex: 4 },
+  { label: "Improved Emotional Health", sourceIndex: 1 },
+  { label: "Enhanced Will Power", sourceIndex: 5 },
+  { label: "Greater Self-Awareness", sourceIndex: 3 }
+];
+
+function MeditationBenefitLink({
+  label,
+  sourceIndex
+}: {
+  label: string;
+  sourceIndex: number;
+}) {
+  const source = MEDITATION_SOURCES[sourceIndex];
+  const sourceNum = sourceIndex + 1;
+  return (
+    <a
+      href={source.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="card"
+      style={{
+        display: "block",
+        textDecoration: "none",
+        color: "inherit",
+        transition: "border-color 0.15s ease, box-shadow 0.15s ease"
+      }}
+      aria-label={`${label} — research source ${sourceNum}: ${source.title}`}
+    >
+      {label}
+      <span style={{ display: "block", marginTop: 8, fontSize: 13, color: "#0f766e" }}>
+        Source [{sourceNum}]
+      </span>
+    </a>
+  );
+}
+
 function GoalImageLink({ label, src }: { label: string; src: string }) {
   return (
     <a
@@ -159,50 +232,24 @@ export default function HomePage() {
           <h2 className="section-title">10 Scientifically Proven Benefits</h2>
         </div>
         <section className="grid grid-2" style={{ marginTop: 16 }}>
-          <div className="card">Reduced Stress</div>
-          <div className="card">Memory Enhancement</div>
-          <div className="card">Blood Pressure Regulation</div>
-          <div className="card">Better Pain Management</div>
-          <div className="card">Better Sleep</div>
-          <div className="card">Physical/Psychological Resilience</div>
-          <div className="card">Increased Focus & Attention Span</div>
-          <div className="card">Improved Emotional Health</div>
-          <div className="card">Enhanced Will Power</div>
-          <div className="card">Greater Self-Awareness</div>
+          {MEDITATION_BENEFITS.map((benefit) => (
+            <MeditationBenefitLink
+              key={benefit.label}
+              label={benefit.label}
+              sourceIndex={benefit.sourceIndex}
+            />
+          ))}
         </section>
         <div className="card" style={{ marginTop: 16 }}>
           <h3>Sources</h3>
           <ol>
-            <li>
-              <a href="https://www.degruyter.com/document/doi/10.1515/hmbci-2013-0056/html" target="_blank" rel="noopener noreferrer">
-                https://www.degruyter.com/document/doi/10.1515/hmbci-2013-0056/html
-              </a>
-            </li>
-            <li>
-              <a href="https://www.health.harvard.edu/staying-healthy/what-meditation-can-do-for-your-mind-mood-and-health-" target="_blank" rel="noopener noreferrer">
-                https://www.health.harvard.edu/staying-healthy/what-meditation-can-do-for-your-mind-mood-and-health-
-              </a>
-            </li>
-            <li>
-              <a href="https://health.ucdavis.edu/health-news/newsroom/10-health-benefits-of-meditation/2019/07" target="_blank" rel="noopener noreferrer">
-                https://health.ucdavis.edu/health-news/newsroom/10-health-benefits-of-meditation/2019/07
-              </a>
-            </li>
-            <li>
-              <a href="https://www.mayoclinic.org/tests-procedures/meditation/about/pac-20385120" target="_blank" rel="noopener noreferrer">
-                https://www.mayoclinic.org/tests-procedures/meditation/about/pac-20385120
-              </a>
-            </li>
-            <li>
-              <a href="https://sps.columbia.edu/news/how-meditation-can-help-you-focus" target="_blank" rel="noopener noreferrer">
-                https://sps.columbia.edu/news/how-meditation-can-help-you-focus
-              </a>
-            </li>
-            <li>
-              <a href="https://news.harvard.edu/gazette/story/2011/01/eight-weeks-to-a-better-brain/" target="_blank" rel="noopener noreferrer">
-                https://news.harvard.edu/gazette/story/2011/01/eight-weeks-to-a-better-brain/
-              </a>
-            </li>
+            {MEDITATION_SOURCES.map((source, index) => (
+              <li key={source.href} id={`meditation-source-${index + 1}`}>
+                <a href={source.href} target="_blank" rel="noopener noreferrer">
+                  {source.title}
+                </a>
+              </li>
+            ))}
           </ol>
         </div>
       </section>

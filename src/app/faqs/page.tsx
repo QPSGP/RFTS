@@ -100,7 +100,7 @@ export default function FaqsPage() {
             <p>
               Each session begins with a short preparation audio, then your first goal
               recording starts immediately. A second recording can play about 2.5 hours
-              later if you choose two sessions per night.
+              later if you choose two audios per night.
             </p>
           </div>
 
