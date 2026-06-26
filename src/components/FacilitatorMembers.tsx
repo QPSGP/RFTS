@@ -362,11 +362,24 @@ export default function FacilitatorMembers() {
     setAudioMemberPick((prev) => {
       const next = { ...prev };
       for (const m of members) {
-        if (next[m.email] === undefined) next[m.email] = true;
+        if (next[m.email] === undefined) next[m.email] = false;
       }
       return next;
     });
   }, [members]);
+
+  const setAllAudioMemberPick = (checked: boolean) => {
+    setAudioMemberPick((prev) => {
+      const next = { ...prev };
+      for (const m of members) {
+        next[m.email] = checked;
+      }
+      return next;
+    });
+  };
+
+  const allAudioMembersSelected =
+    members.length > 0 && members.every((m) => audioMemberPick[m.email] === true);
 
   const loadMemberDetail = useCallback(async (email: string, memberTier: MemberRow["subscriptionTier"]) => {
     setDetailLoading(true);
@@ -1103,9 +1116,10 @@ export default function FacilitatorMembers() {
               <h2 style={{ marginTop: 0 }}>Member audios</h2>
               <div className="card" style={{ marginTop: 8 }}>
                 <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, lineHeight: 1.5 }}>
-                  Upload recordings for your assigned members only. They appear in rotation pickers
-                  and in the library for those members. Admin can later include a track in the
-                  general library for everyone.
+                  Your uploads for assigned clients only (not the full Success Center catalog).
+                  New tracks are private to selected members until admin adds them to the general
+                  library for all members. They appear in rotation pickers and each member&apos;s library
+                  when selected below.
                 </p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
                   <button
@@ -1159,7 +1173,27 @@ export default function FacilitatorMembers() {
                   </p>
                 ) : (
                   <div className="stack" style={{ gap: 8 }}>
-                    <label style={{ fontSize: 12, fontWeight: 600 }}>Members who can access this audio</label>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: 8
+                      }}
+                    >
+                      <label style={{ fontSize: 12, fontWeight: 600, margin: 0 }}>
+                        Members who can access this audio
+                      </label>
+                      <button
+                        type="button"
+                        className="button button-secondary"
+                        style={{ fontSize: 12, padding: "4px 10px" }}
+                        onClick={() => setAllAudioMemberPick(!allAudioMembersSelected)}
+                      >
+                        {allAudioMembersSelected ? "Clear all" : "Select all"}
+                      </button>
+                    </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       {members.map((m) => (
                         <label
@@ -1168,12 +1202,12 @@ export default function FacilitatorMembers() {
                         >
                           <input
                             type="checkbox"
-                            checked={audioMemberPick[m.email] ?? true}
+                            checked={audioMemberPick[m.email] ?? false}
                             onChange={(e) =>
                               setAudioMemberPick((p) => ({ ...p, [m.email]: e.target.checked }))
                             }
                           />
-                          {memberLabel(m)}
+                          {memberSortDisplayName(m)}
                         </label>
                       ))}
                     </div>
