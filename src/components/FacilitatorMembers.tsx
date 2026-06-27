@@ -1231,7 +1231,6 @@ export default function FacilitatorMembers() {
                   </p>
                 ) : (
                   <div className="stack" style={{ gap: 8 }}>
-                    {renderAudioMemberPickSection("bottom")}
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-end" }}>
                       <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
                         <span style={{ fontSize: 12 }}>Audio file (up to 100 MB)</span>
@@ -1287,10 +1286,13 @@ export default function FacilitatorMembers() {
                     <button type="button" className="button" onClick={() => void saveFacilitatorAudio()}>
                       Save audio for selected members
                     </button>
+                    {renderAudioMemberPickSection("top")}
+                    <button type="button" className="button" onClick={() => void saveFacilitatorAudio()}>
+                      Add audio for selected members
+                    </button>
                     {audioSaveStatus && (
                       <p style={{ fontSize: 12, color: "#047857", margin: 0 }}>{audioSaveStatus}</p>
                     )}
-                    {renderAudioMemberPickSection("top")}
                   </div>
                 )}
               </div>
