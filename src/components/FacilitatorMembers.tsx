@@ -84,6 +84,13 @@ function tierLabel(tier: MemberRow["subscriptionTier"]): string {
   return "Unknown tier";
 }
 
+/** Sort key: last name, first name, then email. */
+function memberSortKey(member: MemberRow): string {
+  const last = (member.lastName ?? "").trim().toLowerCase();
+  const first = (member.firstName ?? "").trim().toLowerCase();
+  return `${last}\t${first}\t${member.email.toLowerCase()}`;
+}
+
 /** Display for lists: Last, First (falls back to email). */
 function memberSortDisplayName(member: MemberRow): string {
   const last = (member.lastName ?? "").trim();
@@ -374,6 +381,13 @@ export default function FacilitatorMembers() {
   const allAudioMembersSelected =
     members.length > 0 && members.every((m) => audioMemberPick[m.email] === true);
 
+  /** Client sidebar: alphabetical. Add-new-audio pickers: newest assigned last in API → reverse. */
+  const membersAlphabetical = useMemo(
+    () => members.slice().sort((a, b) => memberSortKey(a).localeCompare(memberSortKey(b))),
+    [members]
+  );
+  const membersNewestFirst = useMemo(() => [...members].reverse(), [members]);
+
   const renderAudioMemberPickSection = (border: "top" | "bottom" | "none" = "none") => (
     <div
       style={{
@@ -408,7 +422,7 @@ export default function FacilitatorMembers() {
         </button>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {members.map((m) => (
+        {membersNewestFirst.map((m) => (
           <label
             key={m.email}
             style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}
@@ -849,8 +863,8 @@ export default function FacilitatorMembers() {
 
   const filteredMembers = useMemo(() => {
     const term = clientSearch.trim().toLowerCase();
-    return members.filter((member) => memberMatchesSearch(member, term));
-  }, [clientSearch, members]);
+    return membersAlphabetical.filter((member) => memberMatchesSearch(member, term));
+  }, [clientSearch, membersAlphabetical]);
 
   const selectClient = (email: string) => {
     setStatus(null);
@@ -996,7 +1010,7 @@ export default function FacilitatorMembers() {
             />
           </label>
           <p style={{ fontSize: 12, color: "#64748b", margin: "8px 0 0" }}>
-            Newest clients first. Click a client to view details on the right.
+            Sorted by last name, first name. Click a client to view details on the right.
           </p>
           {members.length === 0 ? (
             <p style={{ color: "#64748b", lineHeight: 1.6, marginTop: 12 }}>
@@ -1276,11 +1290,11 @@ export default function FacilitatorMembers() {
                       onChange={(e) => setAudioDraft((d) => ({ ...d, skuCode: e.target.value }))}
                     />
                     <button type="button" className="button" onClick={() => void saveFacilitatorAudio()}>
-                      Save audio for selected members
+                      Save audio for selected members below
                     </button>
                     {renderAudioMemberPickSection("top")}
                     <button type="button" className="button" onClick={() => void saveFacilitatorAudio()}>
-                      Add audio for selected members
+                      Save audio for selected members above
                     </button>
                     {audioSaveStatus && (
                       <p style={{ fontSize: 12, color: "#047857", margin: 0 }}>{audioSaveStatus}</p>

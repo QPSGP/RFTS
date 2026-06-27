@@ -32,9 +32,7 @@ export async function GET() {
     return NextResponse.json({ error: moderator.error }, { status: moderator.status });
   }
   const assignedEmails = moderator.assignedUserEmails;
-  /** Newest assigned clients first (facilitators often work CGMR for the latest addition). */
-  const assignedNewestFirst = [...assignedEmails].reverse();
-  const summaries = await getMemberSummariesByEmails(assignedNewestFirst);
+  const summaries = await getMemberSummariesByEmails(assignedEmails);
   const registered = await listUsersByEmails(assignedEmails);
   const byEmail = new Map(registered.map((row) => [row.email.toLowerCase(), row]));
 
