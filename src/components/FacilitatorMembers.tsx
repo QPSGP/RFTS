@@ -872,6 +872,10 @@ export default function FacilitatorMembers() {
 
   const openConsolePanel = (panel: ConsolePanel) => {
     setStatus(null);
+    if (consolePanel === panel) {
+      setConsolePanel("client");
+      return;
+    }
     setConsolePanel(panel);
     if (panel === "member-audios" || panel === "add-audio") void loadFacilitatorAudios();
   };
