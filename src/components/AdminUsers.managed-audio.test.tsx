@@ -112,11 +112,19 @@ function setupFetchMock() {
   });
 }
 
-async function openManagedRotationSection(user: ReturnType<typeof userEvent.setup>) {
+async function selectMemberFromSidebar(
+  user: ReturnType<typeof userEvent.setup>,
+  displayName: RegExp | string
+) {
+  const namePattern = typeof displayName === "string" ? new RegExp(displayName, "i") : displayName;
   await waitFor(() => {
-    expect(screen.getByRole("button", { name: /View \/ Edit member/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: namePattern })).toBeInTheDocument();
   });
-  await user.click(screen.getByRole("button", { name: /View \/ Edit member/i }));
+  await user.click(screen.getByRole("button", { name: namePattern }));
+}
+
+async function openManagedRotationSection(user: ReturnType<typeof userEvent.setup>) {
+  await selectMemberFromSidebar(user, /Tester, Managed/i);
   await waitFor(() => {
     expect(screen.getByRole("button", { name: /Rotation Order/i })).toBeInTheDocument();
   });
@@ -246,10 +254,10 @@ describe("AdminUsers Platinum Managed rotation", () => {
     render(<AdminUsers />);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /View \/ Edit member/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Tester, Managed/i })).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole("button", { name: /View \/ Edit member/i }));
+    await user.click(screen.getByRole("button", { name: /Tester, Managed/i }));
     await user.click(screen.getByRole("button", { name: /Rotation Order/i }));
 
     await screen.findByRole("status", { name: /loading saved rotation from server/i });
@@ -363,9 +371,9 @@ describe("AdminUsers Platinum Managed rotation", () => {
     render(<AdminUsers />);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /View \/ Edit member/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Test, Kim/i })).toBeInTheDocument();
     });
-    await user.click(screen.getByRole("button", { name: /View \/ Edit member/i }));
+    await user.click(screen.getByRole("button", { name: /Test, Kim/i }));
     await user.click(screen.getByRole("button", { name: /Rotation Order/i }));
     await waitFor(() => {
       expect(

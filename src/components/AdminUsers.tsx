@@ -56,6 +56,22 @@ type UserRow = {
   referredByAffiliateCode?: string | null;
 };
 
+/** Sort key: last name, first name, then email. */
+function memberSortKey(user: UserRow): string {
+  const last = (user.lastName ?? "").trim().toLowerCase();
+  const first = (user.firstName ?? "").trim().toLowerCase();
+  return `${last}\t${first}\t${user.email.toLowerCase()}`;
+}
+
+function memberSortDisplayName(user: UserRow): string {
+  const last = (user.lastName ?? "").trim();
+  const first = (user.firstName ?? "").trim();
+  if (last && first) return `${last}, ${first}`;
+  if (last) return last;
+  if (first) return first;
+  return user.email;
+}
+
 const inputStyle = {
   padding: 10,
   borderRadius: 8,
@@ -502,6 +518,9 @@ export default function AdminUsers() {
   const [newAudioDrafts, setNewAudioDrafts] = useState<Record<string, NewAudioDraft>>({});
   const [memberSearchTerm, setMemberSearchTerm] = useState("");
   const [memberTierFilter, setMemberTierFilter] = useState<"all" | "platinum" | "platinum_managed">("all");
+  type ClientListSort = "alphabetical" | "newest";
+  const [clientListSort, setClientListSort] = useState<ClientListSort>("alphabetical");
+  const [selectedMemberEmail, setSelectedMemberEmail] = useState<string | null>(null);
   const [addNewMemberOpen, setAddNewMemberOpen] = useState(false);
   const [memberActivity, setMemberActivity] = useState<Record<string, MemberActivityRow[]>>({});
   const [memberActivityLoading, setMemberActivityLoading] = useState<Record<string, boolean>>({});
@@ -578,6 +597,46 @@ export default function AdminUsers() {
     
     return filtered;
   }, [users, memberSearchTerm, memberTierFilter]);
+
+  const clientListOrderedUsers = useMemo(() => {
+    if (clientListSort === "newest") return filteredUsers;
+    return filteredUsers
+      .slice()
+      .sort((a, b) => memberSortKey(a).localeCompare(memberSortKey(b)));
+  }, [filteredUsers, clientListSort]);
+
+  const selectedUser = useMemo(
+    () => users.find((u) => u.email === selectedMemberEmail) ?? null,
+    [users, selectedMemberEmail]
+  );
+
+  const selectMember = async (email: string) => {
+    setAddNewMemberOpen(false);
+    setSelectedMemberEmail(email);
+    setProfileOpen({ [email]: true });
+    setStatus(null);
+    await loadMemberAudioFromServer(email);
+    if (!profileDrafts[email]) {
+      void loadProfile(email);
+    }
+    void loadMemberActivity(email);
+  };
+
+  const closeMemberEditor = () => {
+    setSelectedMemberEmail(null);
+    setProfileOpen({});
+  };
+
+  const openAddNewMemberPanel = () => {
+    setAddNewMemberOpen((open) => {
+      const next = !open;
+      if (next) {
+        setSelectedMemberEmail(null);
+        setProfileOpen({});
+      }
+      return next;
+    });
+  };
 
   const resolveGoalNames = (goalIds: string[]) => {
     return goalIds
@@ -719,6 +778,10 @@ export default function AdminUsers() {
     });
     if (response.ok) {
       setStatus("Member deleted.");
+      if (selectedMemberEmail === email) {
+        setSelectedMemberEmail(null);
+        setProfileOpen({});
+      }
       await load();
       return;
     }
@@ -1768,153 +1831,204 @@ export default function AdminUsers() {
     "div",
     { className: "card" },
     <>
-      <div style={{ marginBottom: addNewMemberOpen ? 8 : 0 }}>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            gap: 12,
-            marginBottom: 8
-          }}
-        >
-          <h2 style={{ margin: 0 }}>Member Accounts</h2>
-          <button
-            type="button"
-            className={adminSectionToggleClass(addNewMemberOpen)}
-            onClick={() => setAddNewMemberOpen((open) => !open)}
-            aria-expanded={addNewMemberOpen}
-            aria-controls="admin-add-new-member-panel"
-          >
-            {addNewMemberOpen ? "Hide add new member" : "Add new member"}
-          </button>
-        </div>
-        {!addNewMemberOpen && (
-          <p style={{ color: "#4b5563", margin: 0 }}>
-            Search and manage members below, or use <strong>Add new member</strong> to create an
-            account.
-          </p>
-        )}
-      </div>
-      {addNewMemberOpen && (
-        <p style={{ color: "#4b5563", marginTop: 0 }}>
-          Create member accounts, assign tiers, and activate subscriptions. Member passwords are
-          stored as a secure hash; you cannot view an existing password—enter a new one below or in
-          the expanded profile to reset login for any member.
-        </p>
-      )}
+      <h2 style={{ margin: 0 }}>Member Accounts</h2>
+      <p style={{ color: "#4b5563", margin: "8px 0 16px" }}>
+        Search members on the left, select one to edit on the right, or use{" "}
+        <strong>Add new member</strong> in the sidebar.
+      </p>
       {dataLoadNotice && (
         <p style={{ color: "#b45309", marginTop: 8, marginBottom: 0 }} role="status">
           {dataLoadNotice}
         </p>
       )}
       {status && <p>{status}</p>}
-      {addNewMemberOpen && (
-        <div id="admin-add-new-member-panel" className="card" style={{ marginTop: 16 }}>
-          <h3 style={{ marginTop: 0 }}>Create member</h3>
-          <div className="grid">
-            <input
-              style={inputStyle}
-              value={createEmail}
-              onChange={(event) => setCreateEmail(event.target.value)}
-              placeholder="Email"
-            />
-            <input
-              style={inputStyle}
-              value={createPassword}
-              onChange={(event) => setCreatePassword(event.target.value)}
-              placeholder="Temporary password"
-              type="password"
-            />
-            <input
-              style={inputStyle}
-              value={createFirstName}
-              onChange={(event) => setCreateFirstName(event.target.value)}
-              placeholder="First name"
-            />
-            <input
-              style={inputStyle}
-              value={createLastName}
-              onChange={(event) => setCreateLastName(event.target.value)}
-              placeholder="Last name"
-            />
-            <select
-              style={inputStyle}
-              value={createTier || "platinum"}
-              onChange={(event) =>
-                setCreateTier(event.target.value as UserRow["subscriptionTier"])
+
+      <div className="facilitator-console-layout" style={{ marginTop: 16 }}>
+        <section className="card facilitator-console-nav">
+          <h3 style={{ marginTop: 0 }}>Members</h3>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 8, marginBottom: 8 }}>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 0 }}>
+              <span style={{ fontSize: 12, fontWeight: 600 }}>Member search</span>
+              <input
+                style={inputStyle}
+                type="search"
+                placeholder="Last name, first name, or email…"
+                value={memberSearchTerm}
+                onChange={(event) => setMemberSearchTerm(event.target.value)}
+                aria-label="Member search"
+              />
+            </label>
+            <button
+              type="button"
+              className="button button-secondary"
+              style={{ fontSize: 11, padding: "8px 10px", whiteSpace: "nowrap", flexShrink: 0 }}
+              onClick={() =>
+                setClientListSort((sort) => (sort === "alphabetical" ? "newest" : "alphabetical"))
+              }
+              aria-pressed={clientListSort === "newest"}
+              title={
+                clientListSort === "alphabetical"
+                  ? "Show most recently added members first"
+                  : "Show alphabetical order"
               }
             >
-              <option value="platinum">Gold Member ($19.95/mo)</option>
-              <option value="platinum_managed">Platinum Managed Member ($39.95/mo)</option>
-            </select>
-            <select
-              style={inputStyle}
-              value={createStatus || "inactive"}
-              onChange={(event) =>
-                setCreateStatus(
-                  event.target.value as UserRow["subscriptionStatus"]
-                )
-              }
-            >
-              <option value="inactive">Inactive</option>
-              <option value="active">Active</option>
-              <option value="past_due">Past Due</option>
-              <option value="canceled">Canceled</option>
-            </select>
-            <select
-              style={inputStyle}
-              value={createPlaysPerNight}
-              onChange={(event) =>
-                setCreatePlaysPerNight(Number(event.target.value) as 1 | 2)
-              }
-            >
-              <option value={2}>2 audios per night (default)</option>
-              <option value={1}>1 audio per step</option>
-            </select>
-            <button className="button" type="button" onClick={createUser}>
-              Create Member
+              {clientListSort === "alphabetical" ? "Newest" : "A–Z"}
             </button>
           </div>
-        </div>
-      )}
-
-      <div className="card" style={{ marginTop: 16 }}>
-          <h3>Existing Members</h3>
+          <select
+            style={{ ...inputStyle, marginBottom: 8 }}
+            value={memberTierFilter}
+            onChange={(event) =>
+              setMemberTierFilter(event.target.value as "all" | "platinum" | "platinum_managed")
+            }
+          >
+            <option value="all">All memberships</option>
+            <option value="platinum">Gold Member</option>
+            <option value="platinum_managed">Platinum Managed Member</option>
+          </select>
+          <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 8px" }}>
+            {clientListSort === "alphabetical"
+              ? "Sorted by last name, first name."
+              : "Newest members first."}
+            {filteredUsers.length !== users.length
+              ? ` Showing ${filteredUsers.length} of ${users.length}.`
+              : ""}
+          </p>
           {users.length === 0 ? (
-            <p>No member accounts yet.</p>
+            <p style={{ color: "#64748b", lineHeight: 1.6 }}>No member accounts yet.</p>
+          ) : clientListOrderedUsers.length === 0 ? (
+            <p style={{ color: "#64748b" }}>
+              No members match your search or filter. Try clearing the search or choosing All
+              memberships.
+            </p>
           ) : (
+            <div className="stack" style={{ maxHeight: 320, overflowY: "auto" }}>
+              {clientListOrderedUsers.map((user) => {
+                const tier = user.subscriptionTier || "platinum";
+                const tierName =
+                  tier === "platinum_managed" ? "Platinum Managed" : "Gold Member";
+                const isSelected =
+                  selectedMemberEmail === user.email && !addNewMemberOpen;
+                return (
+                  <button
+                    key={user.id}
+                    type="button"
+                    className="button button-secondary"
+                    aria-pressed={isSelected}
+                    style={{
+                      textAlign: "left",
+                      display: "block",
+                      width: "100%",
+                      background: isSelected ? "#ecfdf5" : undefined,
+                      borderColor: isSelected ? "#10b981" : undefined
+                    }}
+                    onClick={() => void selectMember(user.email)}
+                  >
+                    <strong style={{ display: "block" }}>{memberSortDisplayName(user)}</strong>
+                    <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
+                      {user.email}
+                    </span>
+                    <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                      {tierName} · {user.subscriptionStatus ?? "inactive"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <div
+            style={{
+              marginTop: 16,
+              paddingTop: 12,
+              borderTop: "1px solid #e5e7eb"
+            }}
+          >
+            <button
+              type="button"
+              className={adminSectionToggleClass(addNewMemberOpen, true)}
+              onClick={openAddNewMemberPanel}
+              aria-expanded={addNewMemberOpen}
+              aria-controls="admin-add-new-member-panel"
+            >
+              {addNewMemberOpen ? "Hide add new member" : "Add new member"}
+            </button>
+          </div>
+        </section>
+
+        <section className="card facilitator-console-main">
+          {addNewMemberOpen ? (
             <>
-              <div style={{ marginBottom: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+              <h3 style={{ marginTop: 0 }}>Create member</h3>
+              <p style={{ color: "#4b5563", marginTop: 0, lineHeight: 1.5 }}>
+                Create member accounts, assign tiers, and activate subscriptions. Passwords are stored
+                as a secure hash — enter a new password here or in the member profile to reset login.
+              </p>
+              <div id="admin-add-new-member-panel" className="grid">
                 <input
-                  style={{ ...inputStyle, maxWidth: 300, flex: "1 1 200px" }}
-                  placeholder="Search by name or email..."
-                  value={memberSearchTerm}
-                  onChange={(event) => setMemberSearchTerm(event.target.value)}
+                  style={inputStyle}
+                  value={createEmail}
+                  onChange={(event) => setCreateEmail(event.target.value)}
+                  placeholder="Email"
+                />
+                <input
+                  style={inputStyle}
+                  value={createPassword}
+                  onChange={(event) => setCreatePassword(event.target.value)}
+                  placeholder="Temporary password"
+                  type="password"
+                />
+                <input
+                  style={inputStyle}
+                  value={createFirstName}
+                  onChange={(event) => setCreateFirstName(event.target.value)}
+                  placeholder="First name"
+                />
+                <input
+                  style={inputStyle}
+                  value={createLastName}
+                  onChange={(event) => setCreateLastName(event.target.value)}
+                  placeholder="Last name"
                 />
                 <select
-                  style={{ ...inputStyle, maxWidth: 200, flex: "0 0 auto" }}
-                  value={memberTierFilter}
-                  onChange={(event) => setMemberTierFilter(event.target.value as "all" | "platinum" | "platinum_managed")}
+                  style={inputStyle}
+                  value={createTier || "platinum"}
+                  onChange={(event) =>
+                    setCreateTier(event.target.value as UserRow["subscriptionTier"])
+                  }
                 >
-                  <option value="all">All Memberships</option>
-                  <option value="platinum">Gold Member</option>
-                  <option value="platinum_managed">Platinum Managed Member</option>
+                  <option value="platinum">Gold Member ($19.95/mo)</option>
+                  <option value="platinum_managed">Platinum Managed Member ($39.95/mo)</option>
                 </select>
-                {filteredUsers.length !== users.length && (
-                  <span style={{ fontSize: 12, color: "#64748b" }}>
-                    Showing {filteredUsers.length} of {users.length} members
-                  </span>
-                )}
+                <select
+                  style={inputStyle}
+                  value={createStatus || "inactive"}
+                  onChange={(event) =>
+                    setCreateStatus(event.target.value as UserRow["subscriptionStatus"])
+                  }
+                >
+                  <option value="inactive">Inactive</option>
+                  <option value="active">Active</option>
+                  <option value="past_due">Past Due</option>
+                  <option value="canceled">Canceled</option>
+                </select>
+                <select
+                  style={inputStyle}
+                  value={createPlaysPerNight}
+                  onChange={(event) =>
+                    setCreatePlaysPerNight(Number(event.target.value) as 1 | 2)
+                  }
+                >
+                  <option value={2}>2 audios per night (default)</option>
+                  <option value={1}>1 audio per step</option>
+                </select>
+                <button className="button" type="button" onClick={createUser}>
+                  Create Member
+                </button>
               </div>
-              {filteredUsers.length === 0 ? (
-                <p style={{ color: "#64748b" }}>
-                  No members match your search or membership filter. Try clearing the search box or
-                  setting membership to &quot;All Memberships.&quot;
-                </p>
-              ) : (
-                <div className="grid">
-                  {filteredUsers.map((user) => {
+            </>
+          ) : selectedUser ? (
+            (() => {
+              const user = selectedUser;
                   const rawActivity = memberActivity[user.email] || [];
                   const actFilter = memberActivityFilter[user.email] ?? "all";
                   const actPageSize = memberActivityPageSize[user.email] ?? 20;
@@ -1931,99 +2045,77 @@ export default function AdminUsers() {
                   const audioHydrating = !!memberAudioHydrating[audioKey];
 
                   return (
-                <div key={user.id} className="card">
-                  <strong>
-                    {user.firstName || user.lastName
-                      ? [user.firstName, user.lastName].filter(Boolean).join(" ")
-                      : user.email}
-                  </strong>
-                  {user.firstName != null || user.lastName != null ? (
-                    <p style={{ margin: "4px 0 0 0", fontSize: "0.9em", color: "#6b7280" }}>
-                      {user.email}
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      gap: 12,
+                      marginBottom: 12
+                    }}
+                  >
+                    <div>
+                      <h3 style={{ margin: 0 }}>
+                        {user.firstName || user.lastName
+                          ? [user.firstName, user.lastName].filter(Boolean).join(" ")
+                          : user.email}
+                      </h3>
+                      <p style={{ margin: "4px 0 0", color: "#64748b" }}>{user.email}</p>
+                      <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+                        Goals: {user.goalIds?.length || 0} ·{" "}
+                        {effectiveTier === "platinum_managed"
+                          ? "Platinum Managed Member"
+                          : "Gold Member"}{" "}
+                        · {user.subscriptionStatus ?? "inactive"} ·{" "}
+                        {memberPlaysPerNight(user) === 2 ? "2 audios/night" : "1 audio/step"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={closeMemberEditor}
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <div
+                    style={{
+                      marginBottom: 16,
+                      paddingBottom: 16,
+                      borderBottom: "1px solid #e5e7eb"
+                    }}
+                  >
+                    <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 8px 0" }}>
+                      <strong>Member login password:</strong> hashed in the database (cannot be displayed).
+                      Set a new password so they can sign in at /member/login.
                     </p>
-                  ) : null}
-                  {!profileOpen[user.email] && (
-                    <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
-                      Goals: {user.goalIds?.length || 0} · {effectiveTier === "platinum_managed" ? "Platinum Managed Member" : "Gold Member"} · {user.subscriptionStatus ?? "inactive"} ·{" "}
-                      {memberPlaysPerNight(user) === 2 ? "2 audios/night" : "1 audio/step"}
-                    </p>
-                  )}
-                  {!profileOpen[user.email] && (
-                    <>
-                      <button
-                        className={adminSectionToggleClass(false)}
-                        type="button"
-                        onClick={async () => {
-                          setProfileOpen({ ...profileOpen, [user.email]: true });
-                          setStatus(null);
-                          await loadMemberAudioFromServer(user.email);
-                          if (!profileDrafts[user.email]) {
-                            void loadProfile(user.email);
-                          }
-                          void loadMemberActivity(user.email);
-                        }}
-                      >
-                        View / Edit member
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                      <label htmlFor={`member-pw-${user.email}`} className="sr-only">
+                        New password for {user.email}
+                      </label>
+                      <input
+                        id={`member-pw-${user.email}`}
+                        style={{ ...inputStyle, flex: "1 1 200px", maxWidth: 280 }}
+                        placeholder="New password (min 6 characters)"
+                        type="password"
+                        autoComplete="new-password"
+                        value={resetPasswords[user.email] || ""}
+                        onChange={(event) =>
+                          setResetPasswords({
+                            ...resetPasswords,
+                            [user.email]: event.target.value
+                          })
+                        }
+                      />
+                      <button className="button" type="button" onClick={() => updateUser(user.email)}>
+                        Set password
                       </button>
-                      <div
-                        style={{
-                          marginTop: 12,
-                          paddingTop: 12,
-                          borderTop: "1px solid #e5e7eb"
-                        }}
-                      >
-                        <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 8px 0" }}>
-                          <strong>Member login password:</strong> hashed in the database (cannot be displayed). Set a new
-                          password so they can sign in at /member/login.
-                        </p>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-                          <label htmlFor={`member-pw-${user.email}`} className="sr-only">
-                            New password for {user.email}
-                          </label>
-                          <input
-                            id={`member-pw-${user.email}`}
-                            style={{ ...inputStyle, flex: "1 1 200px", maxWidth: 280 }}
-                            placeholder="New password (min 6 characters)"
-                            type="password"
-                            autoComplete="new-password"
-                            value={resetPasswords[user.email] || ""}
-                            onChange={(event) =>
-                              setResetPasswords({
-                                ...resetPasswords,
-                                [user.email]: event.target.value
-                              })
-                            }
-                          />
-                          <button className="button" type="button" onClick={() => updateUser(user.email)}>
-                            Set password
-                          </button>
-                        </div>
-                      </div>
-                      {renderMemberPaymentLinkBlock(user)}
-                    </>
-                  )}
-                  {profileOpen[user.email] && (
-                    <>
-                      <button
-                        className={adminSectionToggleClass(true)}
-                        type="button"
-                        aria-expanded={true}
-                        onClick={async () => {
-                          const next = !profileOpen[user.email];
-                          setProfileOpen({ ...profileOpen, [user.email]: next });
-                          if (next) {
-                            setStatus(null);
-                            await loadMemberAudioFromServer(user.email);
-                            if (!profileDrafts[user.email]) {
-                              void loadProfile(user.email);
-                            }
-                            void loadMemberActivity(user.email);
-                          }
-                        }}
-                      >
-                        {profileOpen[user.email] ? "Hide member editor" : "View member editor"}
-                      </button>
-                      <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                    </div>
+                    {renderMemberPaymentLinkBlock(user)}
+                  </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       <button
                         type="button"
                         className={adminSectionToggleClass(memberSectionIsOpen(user.email, "notes"), true)}
@@ -3741,10 +3833,7 @@ export default function AdminUsers() {
                         </>
                       )}
                       </div>
-                    </>
-                  )}
-                  {!profileOpen[user.email] && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 16 }}>
                       <button className="button" onClick={() => updateUser(user.email)}>
                         Save
                       </button>
@@ -3774,15 +3863,17 @@ export default function AdminUsers() {
                         Delete Member
                       </button>
                     </div>
-                  )}
                 </div>
                   );
-                  })}
-              </div>
-            )}
-            </>
+            })()
+          ) : (
+            <p style={{ color: "#64748b", lineHeight: 1.6 }}>
+              Select a member from the list on the left to view and edit their profile, membership,
+              goals, rotation, personalized audio, and activity.
+            </p>
           )}
-        </div>
+        </section>
+      </div>
     </>
   );
 }
