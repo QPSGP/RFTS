@@ -95,7 +95,7 @@ export default function TopicLandingPage({ content }: { content: TopicLandingCon
       {related.length > 0 && (
         <section className="section">
           <div className="section-head">
-            <span className="eyebrow">Related topics</span>
+            <span className="eyebrow">Explore</span>
             <h2 className="section-title">Other wellness focus areas</h2>
           </div>
           <div className="grid grid-3">
@@ -118,8 +118,8 @@ export default function TopicLandingPage({ content }: { content: TopicLandingCon
         <div className="card glow" style={{ textAlign: "center", padding: 28 }}>
           <h2 style={{ marginTop: 0 }}>Ready to start?</h2>
           <p style={{ color: "#64748b", marginBottom: 16 }}>
-            Choose your membership and set goals tonight. Your personalized audios begin the first
-            night you press Start Session.
+            Set goals tonight. Your personalized audios begin the first night you press Start
+            Session.
           </p>
           <a className="button" href={TOPIC_SIGNUP_HREF}>
             Start your journey

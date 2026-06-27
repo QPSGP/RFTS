@@ -63,10 +63,10 @@ export default function AudioGate({ item }: AudioGateProps) {
       <div className="card">
         <h2>Subscription Required</h2>
         <p>
-          This audio is available to active subscribers. Choose a plan to continue.
+          This audio is available to active subscribers. Start your membership to continue.
         </p>
         <a className="button" href="/signup/step-1-subscription-selection">
-          Choose Subscription
+          Start Your Journey
         </a>
       </div>
     );

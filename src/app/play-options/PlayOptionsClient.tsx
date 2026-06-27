@@ -145,7 +145,7 @@ export default function PlayOptionsClient({
           </p>
           <div className="cta-row" style={{ marginTop: 16 }}>
             <a className="button" href="/signup/step-1-subscription-selection">
-              Choose Subscription
+              Start Your Journey
             </a>
             <a className="button button-secondary" href="/member/login">
               Switch Account

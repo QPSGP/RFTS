@@ -3,6 +3,7 @@
 import { put } from "@vercel/blob/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Interest } from "@/lib/types";
+import { filterLibraryBySearch } from "@/lib/library-search";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 import AdminAudioPreview from "@/components/AdminAudioPreview";
 
@@ -201,14 +202,8 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   }, [sortedLibrary, libraryCategoryFilter]);
 
   const searchFilteredLibrary = useMemo(() => {
-    const term = librarySearch.trim().toLowerCase();
-    if (!term) return filteredLibrary;
-    return filteredLibrary.filter(
-      (item) =>
-        (item.title || "").toLowerCase().includes(term) ||
-        (item.skuCode || "").toLowerCase().includes(term)
-    );
-  }, [filteredLibrary, librarySearch]);
+    return filterLibraryBySearch(filteredLibrary, librarySearch, interests);
+  }, [filteredLibrary, librarySearch, interests]);
 
   const facilitatorLibraryCounts = useMemo(() => {
     const facilitatorAll = library.filter(isFacilitatorTrack).length;
@@ -1022,7 +1017,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
               Search
               <input
                 type="search"
-                placeholder="Name or SKU..."
+                placeholder="Keywords, title, SKU, goal..."
                 value={librarySearch}
                 onChange={(e) => setLibrarySearch(e.target.value)}
                 style={{

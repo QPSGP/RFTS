@@ -13,7 +13,7 @@ export default function BlogExploreNav() {
         </div>
       </details>
       <details className="login-toggle">
-        <summary>Wellness</summary>
+        <summary>Other wellness focus areas</summary>
         <div className="menu-panel">
           {WELLNESS_BENEFIT_LINKS.map((benefit) => (
             <a key={benefit.label} href={benefit.path}>{benefit.label}</a>

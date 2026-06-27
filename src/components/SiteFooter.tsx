@@ -35,7 +35,7 @@ export default function SiteFooter({ showCta = true, showStartJourney = true }: 
             </div>
           </div>
           <div>
-            <h3 style={{ marginTop: 0 }}>Wellness topics</h3>
+            <h3 style={{ marginTop: 0 }}>Other wellness focus areas</h3>
             <div className="stack">
               {WELLNESS_BENEFIT_LINKS.map((benefit) => (
                 <a key={benefit.label} href={benefit.path}>{benefit.label}</a>
@@ -64,7 +64,7 @@ export default function SiteFooter({ showCta = true, showStartJourney = true }: 
             </div>
           </div>
         </div>
-        <p style={{ marginTop: 16 }}>
+        <p style={{ marginTop: 16, textAlign: "center" }}>
           Copyright © 2026. All rights reserved. Success Center, Inc.
         </p>
       </div>

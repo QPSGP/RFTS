@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { libraryItemCoverSrc } from "@/lib/library-display";
+import { buildInterestNameMap, libraryItemMatchesSearch } from "@/lib/library-search";
 import type { Interest, LibraryItem } from "@/lib/types";
 
 type LibraryBrowserProps = {
@@ -55,6 +56,8 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
     showSkuToMember(item) && item.skuCode ? `${item.skuCode} — ${item.title}` : item.title;
 
   const canAccessAdult = adultConsent && hasVerifiedAge;
+  const interestNameById = useMemo(() => buildInterestNameMap(interests), [interests]);
+
   const libraryFilteredByAccess = useMemo(() => {
     return library.filter((item) => {
       if (isCgmr(item)) return false;
@@ -70,12 +73,9 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
       byInterest.set(interest.id, []);
     });
     const unassigned: LibraryItem[] = [];
-    const term = searchQuery.trim().toLowerCase();
-    const libraryForUser = term
-      ? libraryFilteredByAccess.filter(
-          (item) =>
-            (item.title || "").toLowerCase().includes(term) ||
-            (item.skuCode || "").toLowerCase().includes(term)
+    const libraryForUser = searchQuery.trim()
+      ? libraryFilteredByAccess.filter((item) =>
+          libraryItemMatchesSearch(item, searchQuery, interestNameById)
         )
       : libraryFilteredByAccess;
 
@@ -98,15 +98,12 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
     unassigned.sort(sortByTitle);
 
     return { byInterest, unassigned };
-  }, [interests, libraryFilteredByAccess, searchQuery]);
+  }, [interests, libraryFilteredByAccess, searchQuery, interestNameById]);
 
   const allAudiosList = useMemo(() => {
-    const term = searchQuery.trim().toLowerCase();
-    const base = term
-      ? libraryFilteredByAccess.filter(
-          (item) =>
-            (item.title || "").toLowerCase().includes(term) ||
-            (item.skuCode || "").toLowerCase().includes(term)
+    const base = searchQuery.trim()
+      ? libraryFilteredByAccess.filter((item) =>
+          libraryItemMatchesSearch(item, searchQuery, interestNameById)
         )
       : libraryFilteredByAccess;
 
@@ -126,7 +123,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
     return copy.sort((a, b) =>
       (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" })
     );
-  }, [libraryFilteredByAccess, searchQuery, allAudiosSort]);
+  }, [libraryFilteredByAccess, searchQuery, allAudiosSort, interestNameById]);
 
   const coverImg = (item: LibraryItem, size: number) => (
     // eslint-disable-next-line @next/next/no-img-element
@@ -190,7 +187,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
           <h2>Subscription Required</h2>
           <p>Activate your subscription to unlock playback.</p>
           <a className="button" href="/signup/step-1-subscription-selection">
-            Choose Subscription
+            Start Your Journey
           </a>
         </div>
       )}
@@ -204,18 +201,18 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
           </p>
           <div style={{ marginBottom: 12 }}>
             <label htmlFor="library-search" style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
-              Search by name or SKU
+              Search library
             </label>
             <input
               id="library-search"
               type="search"
-              placeholder="Search by name or SKU..."
+              placeholder="Keywords, title, SKU, goal, or description..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="library-search-input"
               style={{
                 width: "100%",
-                maxWidth: 480,
+                maxWidth: 640,
                 padding: "12px 16px",
                 fontSize: 16,
                 minHeight: 44,
@@ -224,6 +221,13 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
                 boxSizing: "border-box"
               }}
             />
+            {searchQuery.trim() && (
+              <p style={{ margin: "8px 0 0", fontSize: 14, color: "#64748b" }}>
+                {allAudiosList.length === 0
+                  ? "No audios match your search."
+                  : `${allAudiosList.length} audio${allAudiosList.length === 1 ? "" : "s"} match your search.`}
+              </p>
+            )}
           </div>
           <div
             style={{

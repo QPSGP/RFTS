@@ -39,7 +39,7 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
 
   const startCheckout = async () => {
     if (!selectedPlan) {
-      setStatus("Select a plan to continue.");
+      setStatus("Continue to checkout to activate your membership.");
       return;
     }
     setIsLoading(true);
@@ -84,7 +84,7 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
         ))}
       </div>
       <div className="membership-package-section">
-        <div className="section-heading">Select Your Membership</div>
+        <div className="section-heading">Gold Member membership</div>
         <div className="plan-grid">
         {visiblePlans.map((plan) => {
           const displayName =

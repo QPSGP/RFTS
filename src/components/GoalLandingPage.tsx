@@ -109,8 +109,8 @@ export default function GoalLandingPage({ content }: { content: GoalLandingConte
         <div className="card glow" style={{ textAlign: "center", padding: 28 }}>
           <h2 style={{ marginTop: 0 }}>Ready to start?</h2>
           <p style={{ color: "#64748b", marginBottom: 16 }}>
-            Choose your membership, set {content.label.toLowerCase()} among your goals tonight, and
-            press Start Session on your first night.
+            Set {content.label.toLowerCase()} among your goals tonight. Your personalized audios
+            begin the first night you press Start Session.
           </p>
           <a className="button" href={GOAL_SIGNUP_HREF}>
             Start your journey
