@@ -23,6 +23,52 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "guided-meditation-memory-goal-mental-focus",
+    title: "Memory as a nightly goal: guided meditation for focus and recall",
+    metaTitle: "Memory Goal — Guided Meditation for Focus & Recall | RFTS Blog",
+    metaDescription:
+      "Choose memory among your Reach For The Stars goals and hear guided meditations for focus and recall at bedtime and during sleep. Transcript excerpt included.",
+    publishedAt: "2026-06-27",
+    readMinutes: 5,
+    excerpt:
+      "Memory and mental focus work best when they are goals you reinforce every night — not a random track you play once when you remember.",
+    goalSlug: "memory",
+    sections: [
+      {
+        paragraphs: [
+          "People search for memory improvement meditation, brain training, and sharper focus — often while juggling too many apps and playlists. Reach For The Stars treats memory as one of up to ten prioritized goals. When memory is in your rotation, relevant guided audios play automatically while you fall asleep and, if you choose two audios per night, again during sleep.",
+          "That matches how many members think about mental excellence: steady repetition at a receptive time, aligned with what you actually want to remember and focus on — not generic background audio."
+        ]
+      },
+      {
+        heading: "Why a memory goal beats a one-off session",
+        paragraphs: [
+          "A single calming recording can help one night. Lasting recall and attention usually come from consistent practice. Research on meditation links regular sessions to working memory and focus over weeks.",
+          "With Reach For The Stars, you set memory among your goals, press Start Session at bedtime, and your schedule rotates priorities so memory themes return on a predictable cadence."
+        ]
+      },
+      {
+        heading: "Sleep, consolidation, and your second nightly audio",
+        paragraphs: [
+          "Sleep plays a central role in memory consolidation. The default program includes two audios per night: preparation and your first goal recording as you fall asleep, then optional reinforcement about 2.5 hours later while you are still in restorative sleep.",
+          "Members often describe clearer recall and steadier focus when they stay consistent for several weeks — not from one perfect night."
+        ]
+      },
+      {
+        heading: "Get started tonight",
+        paragraphs: [
+          "Choose your goals and complete registration to activate your membership. Order memory and related priorities by importance — your personalized audios begin the first night you press Start Session.",
+          "Read How It Works for the complete nightly flow, or use Start your journey below to sign up tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Memory and mental focus (excerpt)",
+      quote:
+        "Your mind is clear and ready to receive… what you choose to remember becomes easier to recall… focus sharpens with each calm breath… you trust your memory to serve you now and lifelong…"
+    }
+  },
+  {
     slug: "guided-sleep-meditation-better-sleep",
     title: "Guided sleep meditation: why nightly audios help you sleep better",
     metaTitle: "Guided Sleep Meditation for Better Sleep (Nightly Audios) | RFTS Blog",

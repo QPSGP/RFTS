@@ -12,6 +12,7 @@ import AdminLogoutButton from "@/components/AdminLogoutButton";
 import AffiliateAdmin from "@/components/AffiliateAdmin";
 import AffiliatePayoutAdmin from "@/components/AffiliatePayoutAdmin";
 import ScheduleAlgorithmTool from "@/components/ScheduleAlgorithmTool";
+import AdminSitePages from "@/components/AdminSitePages";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 
 const contentConsoleSections = {
@@ -22,6 +23,7 @@ const contentConsoleSections = {
   subscriptions: false,
   goals: false,
   library: false,
+  sitePages: false,
   admins: false,
   scheduleAlgorithm: false
 } as const;
@@ -138,6 +140,14 @@ export default function AdminContentPage() {
             Audio Library Section (facilitator private / all)
           </button>
           <button
+            className={adminSectionToggleClass(openSections.sitePages, true)}
+            type="button"
+            aria-expanded={openSections.sitePages}
+            onClick={() => toggleSection("sitePages", "admin-site-pages")}
+          >
+            Site &amp; landing pages
+          </button>
+          <button
             className={adminSectionToggleClass(openSections.scheduleAlgorithm, true)}
             type="button"
             aria-expanded={openSections.scheduleAlgorithm}
@@ -190,6 +200,11 @@ export default function AdminContentPage() {
               setOpenSections((prev) => ({ ...prev, scheduleAlgorithm: false }))
             }
           />
+        </section>
+      )}
+      {openSections.sitePages && (
+        <section id="admin-site-pages" style={{ marginBottom: 20 }}>
+          <AdminSitePages />
         </section>
       )}
       {isFirstAdmin && openSections.admins && (
