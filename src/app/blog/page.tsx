@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import BlogExploreNav from "@/components/BlogExploreNav";
 import SiteFooter from "@/components/SiteFooter";
 import { getBlogPostsNewestFirst } from "@/lib/blog-posts";
-import { GOAL_LANDING_PAGES } from "@/lib/goal-landing-pages";
-import { getTopicLandingPage, TOPIC_LANDING_PAGES } from "@/lib/topic-landing-pages";
+import { getTopicLandingPage } from "@/lib/topic-landing-pages";
 
 export const metadata: Metadata = {
   title: "Wellness Blog — Sleep, Stress, Pain & Memory | Reach For The Stars",
@@ -29,6 +29,9 @@ export default function BlogPage() {
   return (
     <main>
       <section className="hero section">
+        <div className="blog-hero-top">
+          <BlogExploreNav />
+        </div>
         <span className="pill">Blog</span>
         <h1>Wellness articles &amp; session excerpts</h1>
         <p>
@@ -58,52 +61,6 @@ export default function BlogPage() {
               </a>
             );
           })}
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="section-head">
-          <span className="eyebrow">Wellness</span>
-          <h2 className="section-title">Wellness topic pages</h2>
-        </div>
-        <p style={{ color: "#64748b", marginBottom: 16 }}>
-          SEO-focused guides on sleep, stress relief, pain comfort, and memory — each with related
-          blog articles.
-        </p>
-        <div className="grid grid-3">
-          {TOPIC_LANDING_PAGES.map((page) => (
-            <a
-              key={page.slug}
-              href={page.path}
-              className="card"
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              {page.pill}
-            </a>
-          ))}
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="section-head">
-          <span className="eyebrow">Goals</span>
-          <h2 className="section-title">Goal landing pages</h2>
-        </div>
-        <p style={{ color: "#64748b", marginBottom: 16 }}>
-          Explore the same focus areas as our homepage — health, wealth, relationships, memory,
-          inspiration, and spirituality.
-        </p>
-        <div className="grid grid-3">
-          {GOAL_LANDING_PAGES.map((page) => (
-            <a
-              key={page.slug}
-              href={page.path}
-              className="card"
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              {page.label}
-            </a>
-          ))}
         </div>
       </section>
 

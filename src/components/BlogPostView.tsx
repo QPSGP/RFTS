@@ -1,3 +1,4 @@
+import BlogExploreNav from "@/components/BlogExploreNav";
 import SiteFooter from "@/components/SiteFooter";
 import { GOAL_SIGNUP_HREF } from "@/lib/goal-landing-pages";
 import { getTopicLandingPage } from "@/lib/topic-landing-pages";
@@ -18,6 +19,9 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
     <main>
       <article>
         <section className="hero section">
+          <div className="blog-hero-top">
+            <BlogExploreNav />
+          </div>
           <span className="pill">Blog</span>
           <h1>{post.title}</h1>
           <p style={{ color: "#64748b", fontSize: 14, marginBottom: 8 }}>

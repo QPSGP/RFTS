@@ -196,6 +196,30 @@ main {
   right: 0;
 }
 
+.blog-hero-top {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.blog-explore-nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.blog-explore-nav summary {
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.blog-explore-nav summary:hover {
+  color: #0f766e;
+}
+
 .mobile-only {
   display: none;
 }

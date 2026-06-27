@@ -1,5 +1,5 @@
 import { GOAL_LANDING_PAGES } from "@/lib/goal-landing-pages";
-import { TOPIC_LANDING_PAGES } from "@/lib/topic-landing-pages";
+import { WELLNESS_BENEFIT_LINKS } from "@/lib/meditation-benefits";
 
 type SiteFooterProps = {
   showCta?: boolean;
@@ -24,7 +24,24 @@ export default function SiteFooter({ showCta = true, showStartJourney = true }: 
         </div>
       )}
       <div className="card">
-        <div className="grid grid-4" style={{ gap: 16 }}>
+        <div className="grid grid-3" style={{ gap: 16 }}>
+          <div>
+            <h3 style={{ marginTop: 0 }}>Goals</h3>
+            <div className="stack">
+              <a href="/blog">Blog &amp; articles</a>
+              {GOAL_LANDING_PAGES.map((page) => (
+                <a key={page.slug} href={page.path}>{page.label}</a>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h3 style={{ marginTop: 0 }}>Wellness topics</h3>
+            <div className="stack">
+              {WELLNESS_BENEFIT_LINKS.map((benefit) => (
+                <a key={benefit.label} href={benefit.path}>{benefit.label}</a>
+              ))}
+            </div>
+          </div>
           <div>
             <h3 style={{ marginTop: 0 }}>Legal</h3>
             <div className="stack">
@@ -38,26 +55,7 @@ export default function SiteFooter({ showCta = true, showStartJourney = true }: 
                 Success Center
               </a>
             </div>
-          </div>
-          <div>
-            <h3 style={{ marginTop: 0 }}>Goals</h3>
-            <div className="stack">
-              <a href="/blog">Blog &amp; articles</a>
-              {GOAL_LANDING_PAGES.map((page) => (
-                <a key={page.slug} href={page.path}>{page.label}</a>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 style={{ marginTop: 0 }}>Wellness topics</h3>
-            <div className="stack">
-              {TOPIC_LANDING_PAGES.map((page) => (
-                <a key={page.slug} href={page.path}>{page.pill}</a>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 style={{ marginTop: 0 }}>Contact Us</h3>
+            <h3 style={{ marginTop: 16 }}>Contact Us</h3>
             <div className="stack">
               <a href="mailto:customerservice@reachforthestars.today">
                 customerservice@reachforthestars.today

@@ -1,65 +1,23 @@
 /* eslint-disable react/no-unescaped-entities */
 import SiteFooter from "@/components/SiteFooter";
 import { HOMEPAGE_GOAL_CARDS } from "@/lib/homepage-goals";
+import { MEDITATION_SOURCES, WELLNESS_BENEFIT_LINKS } from "@/lib/meditation-benefits";
 
 const SIGNUP_STEP1_HREF = "/signup/step-1-subscription-selection";
 
-/** Research sources for the homepage benefits section (index 0 = source 1 in the list). */
-const MEDITATION_SOURCES = [
-  {
-    title: "De Gruyter — mindfulness and health research review",
-    href: "https://www.degruyter.com/document/doi/10.1515/hmbci-2013-0056/html"
-  },
-  {
-    title: "Harvard Health — what meditation can do for your mind, mood, and health",
-    href: "https://www.health.harvard.edu/staying-healthy/what-meditation-can-do-for-your-mind-mood-and-health-"
-  },
-  {
-    title: "NIH NCCIH — meditation and mindfulness: what you need to know",
-    href: "https://www.nccih.nih.gov/health/meditation-and-mindfulness-what-you-need-to-know"
-  },
-  {
-    title: "Mayo Clinic — meditation overview and health benefits",
-    href: "https://www.mayoclinic.org/tests-procedures/meditation/about/pac-20385120"
-  },
-  {
-    title: "Columbia University — how meditation can help you focus",
-    href: "https://sps.columbia.edu/news/how-meditation-can-help-you-focus"
-  },
-  {
-    title: "Harvard Gazette — eight weeks to a better brain (MGH/Harvard study)",
-    href: "https://news.harvard.edu/gazette/story/2011/01/eight-weeks-to-a-better-brain/"
-  }
-] as const;
-
-/** Each benefit links to the most relevant source above (sourceIndex 0–5). */
-const MEDITATION_BENEFITS: { label: string; sourceIndex: number }[] = [
-  { label: "Reduced Stress", sourceIndex: 1 },
-  { label: "Memory Enhancement", sourceIndex: 5 },
-  { label: "Blood Pressure Regulation", sourceIndex: 3 },
-  { label: "Better Pain Management", sourceIndex: 3 },
-  { label: "Better Sleep", sourceIndex: 2 },
-  { label: "Physical/Psychological Resilience", sourceIndex: 0 },
-  { label: "Increased Focus & Attention Span", sourceIndex: 4 },
-  { label: "Improved Emotional Health", sourceIndex: 1 },
-  { label: "Enhanced Will Power", sourceIndex: 5 },
-  { label: "Greater Self-Awareness", sourceIndex: 3 }
-];
-
 function MeditationBenefitLink({
   label,
+  path,
   sourceIndex
 }: {
   label: string;
+  path: string;
   sourceIndex: number;
 }) {
-  const source = MEDITATION_SOURCES[sourceIndex];
   const sourceNum = sourceIndex + 1;
   return (
     <a
-      href={source.href}
-      target="_blank"
-      rel="noopener noreferrer"
+      href={path}
       className="card"
       style={{
         display: "block",
@@ -67,7 +25,7 @@ function MeditationBenefitLink({
         color: "inherit",
         transition: "border-color 0.15s ease, box-shadow 0.15s ease"
       }}
-      aria-label={`${label} — research source ${sourceNum}: ${source.title}`}
+      aria-label={`${label} — learn more with research source ${sourceNum}`}
     >
       {label}
       <span style={{ display: "block", marginTop: 8, fontSize: 13, color: "#0f766e" }}>
@@ -207,10 +165,11 @@ export default function HomePage() {
           <h2 className="section-title">10 Scientifically Proven Benefits</h2>
         </div>
         <section className="grid grid-2" style={{ marginTop: 16 }}>
-          {MEDITATION_BENEFITS.map((benefit) => (
+          {WELLNESS_BENEFIT_LINKS.map((benefit) => (
             <MeditationBenefitLink
               key={benefit.label}
               label={benefit.label}
+              path={benefit.path}
               sourceIndex={benefit.sourceIndex}
             />
           ))}
