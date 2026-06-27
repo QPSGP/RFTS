@@ -64,7 +64,7 @@ export default function SiteFooter({ showCta = true, showStartJourney = true }: 
             </div>
           </div>
         </div>
-        <p style={{ marginTop: 16, textAlign: "center" }}>
+        <p style={{ marginTop: 16, textAlign: "center", fontWeight: 700 }}>
           Copyright © 2026. All rights reserved. Success Center, Inc.
         </p>
       </div>
