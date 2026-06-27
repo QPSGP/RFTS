@@ -381,6 +381,59 @@ export default function FacilitatorMembers() {
   const allAudioMembersSelected =
     members.length > 0 && members.every((m) => audioMemberPick[m.email] === true);
 
+  const renderAudioMemberPickSection = (border: "top" | "bottom" | "none" = "none") => (
+    <div
+      style={{
+        ...(border === "bottom"
+          ? { marginBottom: 8, paddingBottom: 16, borderBottom: "1px solid #e5e7eb" }
+          : {}),
+        ...(border === "top"
+          ? { marginTop: 8, paddingTop: 16, borderTop: "1px solid #e5e7eb" }
+          : {})
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 8,
+          marginBottom: 8
+        }}
+      >
+        <label style={{ fontSize: 12, fontWeight: 600, margin: 0 }}>
+          Members who can access this audio
+        </label>
+        <button
+          type="button"
+          className="button button-secondary"
+          style={{ fontSize: 12, padding: "4px 10px" }}
+          onClick={() => setAllAudioMemberPick(!allAudioMembersSelected)}
+        >
+          {allAudioMembersSelected ? "Clear all" : "Select all"}
+        </button>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {members.map((m) => (
+          <label
+            key={m.email}
+            style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}
+          >
+            <input
+              type="checkbox"
+              checked={audioMemberPick[m.email] ?? false}
+              onChange={(e) =>
+                setAudioMemberPick((p) => ({ ...p, [m.email]: e.target.checked }))
+              }
+            />
+            {memberSortDisplayName(m)}
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+
   const loadMemberDetail = useCallback(async (email: string, memberTier: MemberRow["subscriptionTier"]) => {
     setDetailLoading(true);
     setProfileDetail(null);
@@ -1178,6 +1231,7 @@ export default function FacilitatorMembers() {
                   </p>
                 ) : (
                   <div className="stack" style={{ gap: 8 }}>
+                    {renderAudioMemberPickSection("bottom")}
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-end" }}>
                       <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
                         <span style={{ fontSize: 12 }}>Audio file (up to 100 MB)</span>
@@ -1236,53 +1290,7 @@ export default function FacilitatorMembers() {
                     {audioSaveStatus && (
                       <p style={{ fontSize: 12, color: "#047857", margin: 0 }}>{audioSaveStatus}</p>
                     )}
-                    <div
-                      style={{
-                        marginTop: 8,
-                        paddingTop: 16,
-                        borderTop: "1px solid #e5e7eb"
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          flexWrap: "wrap",
-                          gap: 8,
-                          marginBottom: 8
-                        }}
-                      >
-                        <label style={{ fontSize: 12, fontWeight: 600, margin: 0 }}>
-                          Members who can access this audio
-                        </label>
-                        <button
-                          type="button"
-                          className="button button-secondary"
-                          style={{ fontSize: 12, padding: "4px 10px" }}
-                          onClick={() => setAllAudioMemberPick(!allAudioMembersSelected)}
-                        >
-                          {allAudioMembersSelected ? "Clear all" : "Select all"}
-                        </button>
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        {members.map((m) => (
-                          <label
-                            key={m.email}
-                            style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={audioMemberPick[m.email] ?? false}
-                              onChange={(e) =>
-                                setAudioMemberPick((p) => ({ ...p, [m.email]: e.target.checked }))
-                              }
-                            />
-                            {memberSortDisplayName(m)}
-                          </label>
-                        ))}
-                      </div>
-                    </div>
+                    {renderAudioMemberPickSection("top")}
                   </div>
                 )}
               </div>
