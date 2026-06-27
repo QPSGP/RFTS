@@ -47,6 +47,18 @@ export function audioLandingPath(slug: string): string {
   return `${AUDIO_LANDING_PATH_PREFIX}/${slug}`;
 }
 
+export function isExcludedFromAudioLanding(item: LibraryItem): boolean {
+  const isCgmr = (item.categories || []).some((category) => category.toLowerCase() === "cgmr");
+  return isCgmr || !!item.isAdult;
+}
+
+/** Library rows that may have a public /audio/[slug] marketing page. */
+export function libraryItemsForAudioLanding(library: LibraryItem[]): LibraryItem[] {
+  return library.filter(
+    (item) => item.audioUrl?.trim() && !isExcludedFromAudioLanding(item)
+  );
+}
+
 function summaryForItem(item: LibraryItem): string {
   const fromItem = (item.description || "").trim();
   if (fromItem) return fromItem;
@@ -97,9 +109,9 @@ export function buildAudioLandingContent(
 }
 
 export function buildAllAudioLandingContent(library: LibraryItem[]): AudioLandingContent[] {
-  return library
-    .filter((item) => item.audioUrl?.trim())
-    .map((item) => buildAudioLandingContent(item, library))
+  const eligible = libraryItemsForAudioLanding(library);
+  return eligible
+    .map((item) => buildAudioLandingContent(item, eligible))
     .sort((a, b) => {
       const skuA = (a.skuCode || "").trim();
       const skuB = (b.skuCode || "").trim();

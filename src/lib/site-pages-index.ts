@@ -10,9 +10,7 @@ export type SitePageCategory =
   | "goals"
   | "wellness"
   | "blog"
-  | "audio"
-  | "member"
-  | "admin";
+  | "audio";
 
 export type SitePageEntry = {
   category: SitePageCategory;
@@ -26,9 +24,7 @@ const CATEGORY_LABELS: Record<SitePageCategory, string> = {
   goals: "Goal landing pages",
   wellness: "Wellness topic pages",
   blog: "Blog articles",
-  audio: "Audio track landings",
-  member: "Member & signup",
-  admin: "Admin & staff"
+  audio: "Audio track landings"
 };
 
 const TOPIC_PATHS = new Set(
@@ -48,20 +44,6 @@ const MARKETING_LABELS: Record<string, string> = {
   "/signup/step-1-subscription-selection": "Signup",
   "/blog": "Blog index"
 };
-
-const MEMBER_APP_PATHS: { label: string; path: string }[] = [
-  { label: "Member login", path: "/member/login" },
-  { label: "Member library (browse)", path: "/library" },
-  { label: "Play options / console", path: "/play-options" },
-  { label: "Member profile", path: "/member/profile" },
-  { label: "Facilitator login", path: "/login" }
-];
-
-const ADMIN_PATHS: { label: string; path: string }[] = [
-  { label: "Admin content console", path: "/admin/content" },
-  { label: "Admin dashboard", path: "/admin/dashboard" },
-  { label: "Member issue reports", path: "/admin/member-issues" }
-];
 
 export function buildSitePageIndex(library: LibraryItem[]): SitePageEntry[] {
   const entries: SitePageEntry[] = [];
@@ -114,33 +96,6 @@ export function buildSitePageIndex(library: LibraryItem[]): SitePageEntry[] {
     });
   }
 
-  for (const item of MEMBER_APP_PATHS) {
-    entries.push({
-      category: "member",
-      categoryLabel: CATEGORY_LABELS.member,
-      label: item.label,
-      path: item.path
-    });
-  }
-
-  for (const item of library.filter((row) => row.audioUrl?.trim())) {
-    entries.push({
-      category: "member",
-      categoryLabel: CATEGORY_LABELS.member,
-      label: `Library playback · ${item.skuCode ? `${item.skuCode} — ` : ""}${item.title}`,
-      path: `/library/${item.id}`
-    });
-  }
-
-  for (const item of ADMIN_PATHS) {
-    entries.push({
-      category: "admin",
-      categoryLabel: CATEGORY_LABELS.admin,
-      label: item.label,
-      path: item.path
-    });
-  }
-
   return entries;
 }
 
@@ -149,9 +104,7 @@ export const SITE_PAGE_CATEGORIES: SitePageCategory[] = [
   "goals",
   "wellness",
   "blog",
-  "audio",
-  "member",
-  "admin"
+  "audio"
 ];
 
 export function groupSitePagesByCategory(entries: SitePageEntry[]): Record<SitePageCategory, SitePageEntry[]> {

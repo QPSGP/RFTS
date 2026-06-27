@@ -16,9 +16,7 @@ const CATEGORY_ORDER: SitePageCategory[] = [
   "goals",
   "wellness",
   "blog",
-  "audio",
-  "member",
-  "admin"
+  "audio"
 ];
 
 export default function AdminSitePages() {
@@ -72,8 +70,8 @@ export default function AdminSitePages() {
     <div className="card">
       <h2 style={{ marginTop: 0 }}>Site &amp; landing pages</h2>
       <p style={{ color: "#64748b", marginBottom: 8 }}>
-        {data.total} URLs — marketing, goals, wellness, blog, audio track landings, member app, and
-        admin. Open links to preview; audio landings are not on the public menu yet.
+        {data.total} URLs — marketing, goals, wellness, blog, and audio track landings. Open
+        links to preview; audio landings are not on the public menu yet.
       </p>
       {data.audioLandingNote && (
         <p style={{ color: "#0f766e", fontSize: 14, marginBottom: 16 }}>{data.audioLandingNote}</p>
