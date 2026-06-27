@@ -18,10 +18,6 @@
       "has": [{ "type": "host", "value": "rfts-7d4w.vercel.app" }],
       "destination": "https://reachforthestars.today/:path*",
       "permanent": true
-    },
-    { "source": "/sleep-meditation", "destination": "/health", "permanent": true },
-    { "source": "/stress-relief", "destination": "/health", "permanent": true },
-    { "source": "/pain-relief", "destination": "/health", "permanent": true },
-    { "source": "/memory-improvement", "destination": "/memory", "permanent": true }
+    }
   ]
 }

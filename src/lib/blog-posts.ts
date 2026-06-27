@@ -1,4 +1,4 @@
-import type { GoalLandingSlug } from "@/lib/goal-landing-pages";
+import type { TopicLandingSlug } from "@/lib/topic-landing-pages";
 
 export type BlogPost = {
   slug: string;
@@ -9,7 +9,7 @@ export type BlogPost = {
   readMinutes: number;
   excerpt: string;
   /** Links to a wellness landing page when relevant */
-  topicSlug?: GoalLandingSlug;
+  topicSlug?: TopicLandingSlug;
   sections: { heading?: string; paragraphs: string[] }[];
   /** Short transcript-style excerpt from a guided session (SEO + authenticity) */
   transcriptExcerpt: {
@@ -29,7 +29,7 @@ export const BLOG_POSTS: BlogPost[] = [
     readMinutes: 5,
     excerpt:
       "Guided sleep meditation works best when it is consistent, personalized, and timed for the moments your mind is most receptive — especially as you fall asleep.",
-    topicSlug: "health",
+    topicSlug: "sleep-meditation",
     sections: [
       {
         paragraphs: [
@@ -62,7 +62,7 @@ export const BLOG_POSTS: BlogPost[] = [
     readMinutes: 5,
     excerpt:
       "Bedtime is one of the best times for stress relief meditation because your body is already winding down — guided audios meet you there instead of adding another daytime task.",
-    topicSlug: "health",
+    topicSlug: "stress-relief",
     sections: [
       {
         paragraphs: [
@@ -94,7 +94,7 @@ export const BLOG_POSTS: BlogPost[] = [
     readMinutes: 6,
     excerpt:
       "Pain relief meditation is not a replacement for medical care — it is a mind-body tool many people use alongside treatment to ease tension and improve sleep when pain keeps them awake.",
-    topicSlug: "health",
+    topicSlug: "pain-relief",
     sections: [
       {
         paragraphs: [
@@ -126,7 +126,7 @@ export const BLOG_POSTS: BlogPost[] = [
     readMinutes: 5,
     excerpt:
       "Memory improvement meditation searches often pair with questions about focus and brain training. Sleep plays a central role in consolidation — reinforcing learning messages at night can support both.",
-    topicSlug: "memory",
+    topicSlug: "memory-improvement",
     sections: [
       {
         paragraphs: [
@@ -158,7 +158,7 @@ export const BLOG_POSTS: BlogPost[] = [
     readMinutes: 5,
     excerpt:
       "Burnout recovery needs rest you can actually keep. Nightly guided audios fit caregivers and high-stress workers who cannot add another daytime wellness task.",
-    topicSlug: "health",
+    topicSlug: "stress-relief",
     sections: [
       {
         paragraphs: [

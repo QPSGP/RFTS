@@ -1,5 +1,6 @@
 import SiteFooter from "@/components/SiteFooter";
-import { getGoalLandingPage, GOAL_SIGNUP_HREF } from "@/lib/goal-landing-pages";
+import { GOAL_SIGNUP_HREF } from "@/lib/goal-landing-pages";
+import { getTopicLandingPage } from "@/lib/topic-landing-pages";
 import type { BlogPost } from "@/lib/blog-posts";
 
 function formatDate(iso: string): string {
@@ -11,7 +12,7 @@ function formatDate(iso: string): string {
 }
 
 export default function BlogPostView({ post }: { post: BlogPost }) {
-  const topicPage = post.topicSlug ? getGoalLandingPage(post.topicSlug) : null;
+  const topicPage = post.topicSlug ? getTopicLandingPage(post.topicSlug) : null;
 
   return (
     <main>

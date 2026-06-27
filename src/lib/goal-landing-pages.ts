@@ -265,14 +265,3 @@ export function getRelatedGoalPages(slugs: GoalLandingSlug[]): GoalLandingConten
 }
 
 export const GOAL_SIGNUP_HREF = SIGNUP;
-
-/** @deprecated Use GOAL_LANDING_PAGES */
-export const TOPIC_LANDING_PAGES = GOAL_LANDING_PAGES;
-/** @deprecated Use GoalLandingSlug */
-export type TopicLandingSlug = GoalLandingSlug;
-/** @deprecated Use getGoalLandingPage */
-export const getTopicLandingPage = getGoalLandingPage;
-/** @deprecated Use getRelatedGoalPages */
-export const getRelatedTopicPages = getRelatedGoalPages;
-/** @deprecated Use GOAL_SIGNUP_HREF */
-export const TOPIC_SIGNUP_HREF = SIGNUP;

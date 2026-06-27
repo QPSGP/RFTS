@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import SiteFooter from "@/components/SiteFooter";
 import { getBlogPostsNewestFirst } from "@/lib/blog-posts";
-import { GOAL_LANDING_PAGES, getGoalLandingPage } from "@/lib/goal-landing-pages";
+import { GOAL_LANDING_PAGES } from "@/lib/goal-landing-pages";
+import { getTopicLandingPage, TOPIC_LANDING_PAGES } from "@/lib/topic-landing-pages";
 
 export const metadata: Metadata = {
   title: "Wellness Blog — Sleep, Stress, Pain & Memory | Reach For The Stars",
@@ -40,7 +41,7 @@ export default function BlogPage() {
       <section className="section">
         <div className="stack" style={{ gap: 16 }}>
           {posts.map((post) => {
-            const topic = post.topicSlug ? getGoalLandingPage(post.topicSlug) : null;
+            const topic = post.topicSlug ? getTopicLandingPage(post.topicSlug) : null;
             return (
               <a
                 key={post.slug}
@@ -50,7 +51,7 @@ export default function BlogPage() {
               >
                 <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 8px" }}>
                   {formatDate(post.publishedAt)} · {post.readMinutes} min
-                  {topic ? ` · ${topic.label}` : ""}
+                  {topic ? ` · ${topic.pill}` : ""}
                 </p>
                 <h2 style={{ margin: "0 0 8px", fontSize: 20 }}>{post.title}</h2>
                 <p style={{ margin: 0, color: "#64748b", lineHeight: 1.6 }}>{post.excerpt}</p>
@@ -62,7 +63,30 @@ export default function BlogPage() {
 
       <section className="section">
         <div className="section-head">
-          <span className="eyebrow">Topics</span>
+          <span className="eyebrow">Wellness</span>
+          <h2 className="section-title">Wellness topic pages</h2>
+        </div>
+        <p style={{ color: "#64748b", marginBottom: 16 }}>
+          SEO-focused guides on sleep, stress relief, pain comfort, and memory — each with related
+          blog articles.
+        </p>
+        <div className="grid grid-3">
+          {TOPIC_LANDING_PAGES.map((page) => (
+            <a
+              key={page.slug}
+              href={page.path}
+              className="card"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              {page.pill}
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-head">
+          <span className="eyebrow">Goals</span>
           <h2 className="section-title">Goal landing pages</h2>
         </div>
         <p style={{ color: "#64748b", marginBottom: 16 }}>
