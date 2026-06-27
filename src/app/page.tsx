@@ -147,15 +147,6 @@ export default function HomePage() {
               <p>{goal.tagline}</p>
             </div>
           ))}
-          <div className="card">
-            <GoalImageLink
-              label="Balanced Life"
-              src="/Images/BalancedLife.jpg"
-              href={SIGNUP_STEP1_HREF}
-            />
-            <h3>Balanced Life</h3>
-            <p>A life free of smoking, overeating, and other bad habits</p>
-          </div>
         </section>
       </section>
 

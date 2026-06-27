@@ -41,6 +41,20 @@ export const HOMEPAGE_GOAL_CARDS = [
     path: "/spirituality",
     imageSrc: "/Images/Spirtuality.jpg",
     tagline: "A greater connection with your spirituality"
+  },
+  {
+    slug: "overcoming-addiction",
+    label: "Overcoming Addiction",
+    path: "/overcoming-addiction",
+    imageSrc: "/Images/BalancedLife.jpg",
+    tagline: "Freedom from smoking, overeating, and other unwanted habits"
+  },
+  {
+    slug: "balanced-life",
+    label: "Balanced Life",
+    path: "/balanced-life",
+    imageSrc: "/Images/BalancedLife.jpg",
+    tagline: "A life free of smoking, overeating, and other bad habits"
   }
 ] as const;
 

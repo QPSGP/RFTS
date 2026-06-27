@@ -66,7 +66,7 @@ const GOAL_DETAILS: Record<
       { title: "Start Session at bedtime", body: "Your schedule plays automatically each night." },
       { title: "Stay consistent", body: "Repetition over weeks builds the mindset shifts you want." }
     ],
-    relatedSlugs: ["memory", "spirituality", "relationship"]
+    relatedSlugs: ["memory", "spirituality", "overcoming-addiction"]
   },
   wealth: {
     title: "Guided meditation for wealth and financial abundance",
@@ -242,6 +242,82 @@ const GOAL_DETAILS: Record<
       { title: "Deepen over time", body: "Repetition supports lasting inner alignment." }
     ],
     relatedSlugs: ["relationship", "health", "inspiration"]
+  },
+  "overcoming-addiction": {
+    title: "Guided meditation for overcoming addiction and habit change",
+    metaTitle: "Overcoming Addiction — Guided Meditation & Habit Change | Reach For The Stars",
+    metaDescription:
+      "Support freedom from smoking, overeating, and unwanted habits with personalized guided meditations each night while you sleep.",
+    heroLead:
+      "Overcoming addiction and unwanted habits starts with consistent mindset reinforcement. Reach For The Stars schedules habit-change goals in rotation so supportive messages reach your subconscious each night.",
+    eyebrow: "Habit freedom",
+    sectionTitle: "Nightly audios for overcoming addiction goals",
+    sectionSubtitle:
+      "Smoking cessation, overeating, and other habit goals play in rotation — preparation at bedtime, reinforcement during sleep.",
+    howItHelps: [
+      {
+        title: "Replace old patterns",
+        body:
+          "Goal-based audios reinforce the intentions you choose — calm, control, and balanced living instead of automatic habits."
+      },
+      {
+        title: "Bedtime priming",
+        body:
+          "Hearing supportive messages as you fall asleep helps prime next-day choices without adding another daytime task."
+      },
+      {
+        title: "Facilitator support",
+        body:
+          "Work with a facilitator on personalized recordings (CGMR) alongside library goals when you need extra customization."
+      }
+    ],
+    nightlySteps: [
+      {
+        title: "Set habit-change goals",
+        body: "Include overcoming addiction, balanced life, and control among your top ten priorities."
+      },
+      { title: "Start Session at bedtime", body: "Your schedule plays automatically each night." },
+      { title: "Stay consistent", body: "Repetition over weeks builds the mindset shifts that support lasting change." }
+    ],
+    relatedSlugs: ["health", "inspiration", "balanced-life"]
+  },
+  "balanced-life": {
+    title: "Guided meditation for a balanced life free of bad habits",
+    metaTitle: "Balanced Life — Freedom from Bad Habits | Reach For The Stars",
+    metaDescription:
+      "Build a balanced life free of smoking, overeating, and other bad habits with personalized guided meditations each night while you sleep.",
+    heroLead:
+      "A balanced life free of smoking, overeating, and other bad habits starts with consistent nightly reinforcement. Reach For The Stars rotates balanced-living goals so your subconscious hears supportive messages while you fall asleep and during sleep.",
+    eyebrow: "Balanced living",
+    sectionTitle: "Nightly audios for balanced life goals",
+    sectionSubtitle:
+      "Replace unwanted habits with chosen priorities — calm, control, health, and balance — on a schedule that runs each night.",
+    howItHelps: [
+      {
+        title: "Whole-life balance",
+        body:
+          "Balanced Life goals address smoking, overeating, stress, and other patterns that pull you off center — not just one habit at a time."
+      },
+      {
+        title: "Nightly reinforcement",
+        body:
+          "Goal audios play at bedtime and optionally again during sleep, when the mind is receptive to new intentions."
+      },
+      {
+        title: "Goals you control",
+        body:
+          "Pick up to ten priorities and reorder them anytime; your lineup updates automatically when you press Start Session."
+      }
+    ],
+    nightlySteps: [
+      {
+        title: "Select balanced-life goals",
+        body: "Include freedom from bad habits, calm, health, and related priorities among your top ten."
+      },
+      { title: "Start Session at bedtime", body: "Your personalized schedule plays each night." },
+      { title: "Stay consistent", body: "Members report steadier choices when nightly audios become routine." }
+    ],
+    relatedSlugs: ["overcoming-addiction", "health", "spirituality"]
   }
 };
 

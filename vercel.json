@@ -18,6 +18,7 @@
       "has": [{ "type": "host", "value": "rfts-7d4w.vercel.app" }],
       "destination": "https://reachforthestars.today/:path*",
       "permanent": true
-    }
+    },
+    { "source": "/addiction", "destination": "/overcoming-addiction", "permanent": true }
   ]
 }

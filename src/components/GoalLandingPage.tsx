@@ -33,10 +33,7 @@ export default function GoalLandingPage({ content }: { content: GoalLandingConte
           />
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 16 }}>
-          <a className="button" href={GOAL_SIGNUP_HREF}>
-            Start your journey
-          </a>
-          <a className="button button-secondary" href="/how-it-works">
+          <a className="button" href="/how-it-works">
             How it works
           </a>
         </div>
