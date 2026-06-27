@@ -1,4 +1,5 @@
 import SiteFooter from "@/components/SiteFooter";
+import { getBlogPostsNewestFirst } from "@/lib/blog-posts";
 import {
   getRelatedTopicPages,
   TOPIC_SIGNUP_HREF,
@@ -7,6 +8,9 @@ import {
 
 export default function TopicLandingPage({ content }: { content: TopicLandingContent }) {
   const related = getRelatedTopicPages(content.relatedSlugs);
+  const relatedArticles = getBlogPostsNewestFirst().filter(
+    (post) => post.topicSlug === content.slug
+  );
 
   return (
     <main>
@@ -59,6 +63,28 @@ export default function TopicLandingPage({ content }: { content: TopicLandingCon
           <a href="/faqs">FAQs</a>.
         </p>
       </section>
+
+      {relatedArticles.length > 0 && (
+        <section className="section">
+          <div className="section-head">
+            <span className="eyebrow">Articles</span>
+            <h2 className="section-title">Related reading</h2>
+          </div>
+          <div className="stack" style={{ gap: 12 }}>
+            {relatedArticles.map((post) => (
+              <a
+                key={post.slug}
+                href={`/blog/${post.slug}`}
+                className="card"
+                style={{ display: "block", textDecoration: "none", color: "inherit" }}
+              >
+                <h3 style={{ margin: "0 0 8px", fontSize: 18 }}>{post.title}</h3>
+                <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>{post.excerpt}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {related.length > 0 && (
         <section className="section">
