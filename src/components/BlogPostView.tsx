@@ -1,6 +1,6 @@
 import BlogExploreNav from "@/components/BlogExploreNav";
 import SiteFooter from "@/components/SiteFooter";
-import { GOAL_SIGNUP_HREF } from "@/lib/goal-landing-pages";
+import { GOAL_SIGNUP_HREF, getGoalLandingPage } from "@/lib/goal-landing-pages";
 import { getTopicLandingPage } from "@/lib/topic-landing-pages";
 import type { BlogPost } from "@/lib/blog-posts";
 
@@ -14,6 +14,7 @@ function formatDate(iso: string): string {
 
 export default function BlogPostView({ post }: { post: BlogPost }) {
   const topicPage = post.topicSlug ? getTopicLandingPage(post.topicSlug) : null;
+  const goalPage = post.goalSlug ? getGoalLandingPage(post.goalSlug) : null;
 
   return (
     <main>
@@ -65,6 +66,13 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
               &ldquo;{post.transcriptExcerpt.quote}&rdquo;
             </p>
           </div>
+
+          {goalPage && (
+            <p style={{ marginBottom: 16 }}>
+              Related goal:{" "}
+              <a href={goalPage.path}>{goalPage.title}</a>
+            </p>
+          )}
 
           {topicPage && (
             <p style={{ marginBottom: 16 }}>

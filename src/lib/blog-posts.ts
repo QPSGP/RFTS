@@ -1,3 +1,4 @@
+import type { GoalLandingSlug } from "@/lib/goal-landing-pages";
 import type { TopicLandingSlug } from "@/lib/topic-landing-pages";
 
 export type BlogPost = {
@@ -10,6 +11,8 @@ export type BlogPost = {
   excerpt: string;
   /** Links to a wellness landing page when relevant */
   topicSlug?: TopicLandingSlug;
+  /** Links to a goal landing page when relevant */
+  goalSlug?: GoalLandingSlug;
   sections: { heading?: string; paragraphs: string[] }[];
   /** Short transcript-style excerpt from a guided session (SEO + authenticity) */
   transcriptExcerpt: {

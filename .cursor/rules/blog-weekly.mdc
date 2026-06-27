@@ -1,0 +1,25 @@
+---
+description: Weekly blog article cadence — one post per week linking to signup, rotating goals and wellness topics.
+globs:
+  - "**/blog/**"
+  - "**/blog-posts.ts"
+  - "**/blog-weekly-plan.ts"
+  - "**/marketing-plan.md"
+  - "**/BLOG_WEEKLY_CADENCE.md"
+alwaysApply: false
+---
+
+# Weekly blog cadence
+
+When the user asks about blog, SEO, marketing content, or publishing articles:
+
+1. Run `npm run blog:check-cadence` in `rfts-platform/` (or read `getBlogCadenceStatus()` in `src/lib/blog-weekly-plan.ts`).
+2. If **due** (no post in 7+ days), remind the user and offer to draft the **suggested next topic** from the rotation.
+3. Every new article must:
+   - Be added to `src/lib/blog-posts.ts`
+   - Link to the matching **goal** or **wellness** landing page in copy
+   - Drive signup via `/signup/step-1-subscription-selection` (CTA is on `BlogPostView`; mention signup in article body too)
+   - Include a transcript excerpt (existing blog pattern)
+4. Rotate through goals and wellness areas — do not repeat the same focus every week unless the queue says so.
+
+Full process: `rfts-platform/docs/BLOG_WEEKLY_CADENCE.md`
