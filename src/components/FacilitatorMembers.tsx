@@ -198,6 +198,8 @@ export default function FacilitatorMembers() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [consolePanel, setConsolePanel] = useState<ConsolePanel>("client");
   const [clientSearch, setClientSearch] = useState("");
+  type ClientListSort = "alphabetical" | "newest";
+  const [clientListSort, setClientListSort] = useState<ClientListSort>("alphabetical");
   type AudioListFilter = "all" | "private" | "in_library";
   const [audioListFilter, setAudioListFilter] = useState<AudioListFilter>("all");
   const [facilitatorAudios, setFacilitatorAudios] = useState<FacilitatorAudioRow[]>([]);
@@ -861,10 +863,15 @@ export default function FacilitatorMembers() {
     [library]
   );
 
+  const clientListOrderedMembers = useMemo(
+    () => (clientListSort === "newest" ? membersNewestFirst : membersAlphabetical),
+    [clientListSort, membersAlphabetical, membersNewestFirst]
+  );
+
   const filteredMembers = useMemo(() => {
     const term = clientSearch.trim().toLowerCase();
-    return membersAlphabetical.filter((member) => memberMatchesSearch(member, term));
-  }, [clientSearch, membersAlphabetical]);
+    return clientListOrderedMembers.filter((member) => memberMatchesSearch(member, term));
+  }, [clientSearch, clientListOrderedMembers]);
 
   const selectClient = (email: string) => {
     setStatus(null);
@@ -998,19 +1005,39 @@ export default function FacilitatorMembers() {
       <div className="facilitator-console-layout">
         <section className="card facilitator-console-nav">
           <h2 style={{ marginTop: 0 }}>Clients</h2>
-          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 600 }}>Client search</span>
-            <input
-              style={inputStyle}
-              type="search"
-              placeholder="Last name, first name, or email…"
-              value={clientSearch}
-              onChange={(e) => setClientSearch(e.target.value)}
-              aria-label="Client search"
-            />
-          </label>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 0 }}>
+              <span style={{ fontSize: 12, fontWeight: 600 }}>Client search</span>
+              <input
+                style={inputStyle}
+                type="search"
+                placeholder="Last name, first name, or email…"
+                value={clientSearch}
+                onChange={(e) => setClientSearch(e.target.value)}
+                aria-label="Client search"
+              />
+            </label>
+            <button
+              type="button"
+              className="button button-secondary"
+              style={{ fontSize: 11, padding: "8px 10px", whiteSpace: "nowrap", flexShrink: 0 }}
+              onClick={() =>
+                setClientListSort((sort) => (sort === "alphabetical" ? "newest" : "alphabetical"))
+              }
+              aria-pressed={clientListSort === "newest"}
+              title={
+                clientListSort === "alphabetical"
+                  ? "Show most recently added clients first"
+                  : "Show alphabetical order"
+              }
+            >
+              {clientListSort === "alphabetical" ? "Newest" : "A–Z"}
+            </button>
+          </div>
           <p style={{ fontSize: 12, color: "#64748b", margin: "8px 0 0" }}>
-            Sorted by last name, first name. Click a client to view details on the right.
+            {clientListSort === "alphabetical"
+              ? "Sorted by last name, first name. Click a client to view details on the right."
+              : "Newest clients first. Click a client to view details on the right."}
           </p>
           {members.length === 0 ? (
             <p style={{ color: "#64748b", lineHeight: 1.6, marginTop: 12 }}>
