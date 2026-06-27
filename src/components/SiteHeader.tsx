@@ -1,5 +1,18 @@
 import { headers } from "next/headers";
 import { getSessionConsoleType } from "@/lib/auth";
+import { GOAL_LANDING_PAGES } from "@/lib/goal-landing-pages";
+
+function GoalNavLinks() {
+  return (
+    <>
+      {GOAL_LANDING_PAGES.map((page) => (
+        <a key={page.slug} href={page.path}>
+          {page.label}
+        </a>
+      ))}
+    </>
+  );
+}
 
 export default async function SiteHeader() {
   const pathname = (await headers()).get("x-rfts-pathname") ?? "";
@@ -29,6 +42,13 @@ export default async function SiteHeader() {
                 <a href="/how-it-works">How It Works</a>
                 <a href="/science">Science</a>
                 <a href="/faqs">FAQs</a>
+                <a href="/blog">Blog</a>
+                <details className="menu-toggle-nested">
+                  <summary>Goals</summary>
+                  <div className="menu-panel menu-panel-nested">
+                    <GoalNavLinks />
+                  </div>
+                </details>
                 {consoleType === "admin" && <a href="/facilitator">Facilitators</a>}
                 {consoleType === "admin" && <a href="/affiliates">Affiliates</a>}
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
@@ -52,6 +72,13 @@ export default async function SiteHeader() {
             <a href="/how-it-works">How It Works</a>
             <a href="/science">Science</a>
             <a href="/faqs">FAQs</a>
+            <a href="/blog">Blog</a>
+            <details className="login-toggle">
+              <summary>Goals</summary>
+              <div className="menu-panel">
+                <GoalNavLinks />
+              </div>
+            </details>
             {consoleType === "admin" && <a href="/facilitator">Facilitators</a>}
             {consoleType === "admin" && <a href="/affiliates">Affiliates</a>}
             {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}

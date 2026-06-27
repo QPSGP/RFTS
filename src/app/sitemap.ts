@@ -2,12 +2,12 @@ import type { MetadataRoute } from "next";
 import { BLOG_POSTS } from "@/lib/blog-posts";
 import { PUBLIC_MARKETING_PATHS } from "@/lib/site-routes";
 import { getPublicSiteUrl } from "@/lib/site-url";
-import { TOPIC_LANDING_PAGES } from "@/lib/topic-landing-pages";
+import { GOAL_LANDING_PAGES } from "@/lib/goal-landing-pages";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = getPublicSiteUrl();
   const topicDates = Object.fromEntries(
-    TOPIC_LANDING_PAGES.map((page) => [page.path, "2026-03-18"])
+    GOAL_LANDING_PAGES.map((page) => [page.path, "2026-03-19"])
   ) as Record<string, string>;
   const blogDates = Object.fromEntries(
     BLOG_POSTS.map((post) => [`/blog/${post.slug}`, post.publishedAt])

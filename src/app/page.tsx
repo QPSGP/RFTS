@@ -1,18 +1,8 @@
 /* eslint-disable react/no-unescaped-entities */
 import SiteFooter from "@/components/SiteFooter";
+import { HOMEPAGE_GOAL_CARDS } from "@/lib/homepage-goals";
 
-// Local goal images from /Images — each links to signup step 1 (subscription selection)
 const SIGNUP_STEP1_HREF = "/signup/step-1-subscription-selection";
-
-const GOAL_IMAGES: Record<string, string> = {
-  Health: "/Images/Health.jpg",
-  Wealth: "/Images/Wealth.jpeg",
-  Relationship: "/Images/Relationship.jpeg",
-  Memory: "/Images/Memory.jpg",
-  Inspiration: "/Images/Inspiration.jpg",
-  Spirituality: "/Images/Spirtuality.jpg",
-  "Balanced Life": "/Images/BalancedLife.jpg"
-};
 
 /** Research sources for the homepage benefits section (index 0 = source 1 in the list). */
 const MEDITATION_SOURCES = [
@@ -87,11 +77,11 @@ function MeditationBenefitLink({
   );
 }
 
-function GoalImageLink({ label, src }: { label: string; src: string }) {
+function GoalImageLink({ label, src, href }: { label: string; src: string; href: string }) {
   return (
     <a
-      href={SIGNUP_STEP1_HREF}
-      aria-label={`${label}: Begin membership — subscription selection (step 1)`}
+      href={href}
+      aria-label={`${label}: Learn more about ${label} goals`}
       style={{
         display: "block",
         aspectRatio: "16/10",
@@ -188,38 +178,23 @@ export default function HomePage() {
           </h2>
         </div>
         <section className="grid grid-3" style={{ marginTop: 16 }}>
-          <div className="card glow">
-            <GoalImageLink label="Health" src={GOAL_IMAGES.Health} />
-            <h3>Health</h3>
-            <p>Healthy longevity, vibrant energy, a body to delight in</p>
-          </div>
-          <div className="card glow">
-            <GoalImageLink label="Wealth" src={GOAL_IMAGES.Wealth} />
-            <h3>Wealth</h3>
-            <p>Financial Abundance</p>
-          </div>
-          <div className="card glow">
-            <GoalImageLink label="Relationship" src={GOAL_IMAGES.Relationship} />
-            <h3>Relationship</h3>
-            <p>A joyful new or enhanced present relationship</p>
-          </div>
+          {HOMEPAGE_GOAL_CARDS.map((goal) => (
+            <div key={goal.slug} className="card glow">
+              <GoalImageLink label={goal.label} src={goal.imageSrc} href={goal.path} />
+              <h3>
+                <a href={goal.path} style={{ color: "inherit", textDecoration: "none" }}>
+                  {goal.label}
+                </a>
+              </h3>
+              <p>{goal.tagline}</p>
+            </div>
+          ))}
           <div className="card">
-            <GoalImageLink label="Memory" src={GOAL_IMAGES.Memory} />
-            <h3>Memory</h3>
-            <p>The memory and mental focus you want now and lifelong</p>
-          </div>
-          <div className="card">
-            <GoalImageLink label="Inspiration" src={GOAL_IMAGES.Inspiration} />
-            <h3>Inspiration</h3>
-            <p>Inspiration at Will for creative and entrepreneurial endeavors</p>
-          </div>
-          <div className="card">
-            <GoalImageLink label="Spirituality" src={GOAL_IMAGES.Spirituality} />
-            <h3>Spirituality</h3>
-            <p>A greater connection with your spirituality</p>
-          </div>
-          <div className="card">
-            <GoalImageLink label="Balanced Life" src={GOAL_IMAGES["Balanced Life"]} />
+            <GoalImageLink
+              label="Balanced Life"
+              src="/Images/BalancedLife.jpg"
+              href={SIGNUP_STEP1_HREF}
+            />
             <h3>Balanced Life</h3>
             <p>A life free of smoking, overeating, and other bad habits</p>
           </div>

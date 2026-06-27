@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import SiteFooter from "@/components/SiteFooter";
 import { getBlogPostsNewestFirst } from "@/lib/blog-posts";
-import { TOPIC_LANDING_PAGES, getTopicLandingPage } from "@/lib/topic-landing-pages";
+import { GOAL_LANDING_PAGES, getGoalLandingPage } from "@/lib/goal-landing-pages";
 
 export const metadata: Metadata = {
   title: "Wellness Blog — Sleep, Stress, Pain & Memory | Reach For The Stars",
@@ -40,7 +40,7 @@ export default function BlogPage() {
       <section className="section">
         <div className="stack" style={{ gap: 16 }}>
           {posts.map((post) => {
-            const topic = post.topicSlug ? getTopicLandingPage(post.topicSlug) : null;
+            const topic = post.topicSlug ? getGoalLandingPage(post.topicSlug) : null;
             return (
               <a
                 key={post.slug}
@@ -50,7 +50,7 @@ export default function BlogPage() {
               >
                 <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 8px" }}>
                   {formatDate(post.publishedAt)} · {post.readMinutes} min
-                  {topic ? ` · ${topic.pill}` : ""}
+                  {topic ? ` · ${topic.label}` : ""}
                 </p>
                 <h2 style={{ margin: "0 0 8px", fontSize: 20 }}>{post.title}</h2>
                 <p style={{ margin: 0, color: "#64748b", lineHeight: 1.6 }}>{post.excerpt}</p>
@@ -63,21 +63,21 @@ export default function BlogPage() {
       <section className="section">
         <div className="section-head">
           <span className="eyebrow">Topics</span>
-          <h2 className="section-title">Wellness landing pages</h2>
+          <h2 className="section-title">Goal landing pages</h2>
         </div>
         <p style={{ color: "#64748b", marginBottom: 16 }}>
-          Explore focused pages for common searches — sleep meditation, stress relief, pain relief,
-          and memory improvement.
+          Explore the same focus areas as our homepage — health, wealth, relationships, memory,
+          inspiration, and spirituality.
         </p>
-        <div className="grid grid-2">
-          {TOPIC_LANDING_PAGES.map((page) => (
+        <div className="grid grid-3">
+          {GOAL_LANDING_PAGES.map((page) => (
             <a
               key={page.slug}
               href={page.path}
               className="card"
               style={{ textDecoration: "none", color: "inherit" }}
             >
-              {page.pill}
+              {page.label}
             </a>
           ))}
         </div>

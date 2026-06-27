@@ -1,5 +1,5 @@
 import SiteFooter from "@/components/SiteFooter";
-import { getTopicLandingPage, TOPIC_SIGNUP_HREF } from "@/lib/topic-landing-pages";
+import { getGoalLandingPage, GOAL_SIGNUP_HREF } from "@/lib/goal-landing-pages";
 import type { BlogPost } from "@/lib/blog-posts";
 
 function formatDate(iso: string): string {
@@ -11,7 +11,7 @@ function formatDate(iso: string): string {
 }
 
 export default function BlogPostView({ post }: { post: BlogPost }) {
-  const topicPage = post.topicSlug ? getTopicLandingPage(post.topicSlug) : null;
+  const topicPage = post.topicSlug ? getGoalLandingPage(post.topicSlug) : null;
 
   return (
     <main>
@@ -74,7 +74,7 @@ export default function BlogPostView({ post }: { post: BlogPost }) {
               Set your goals, press Start Session at bedtime, and let Reach For The Stars handle
               the schedule.
             </p>
-            <a className="button" href={TOPIC_SIGNUP_HREF}>
+            <a className="button" href={GOAL_SIGNUP_HREF}>
               Start your journey
             </a>
           </div>

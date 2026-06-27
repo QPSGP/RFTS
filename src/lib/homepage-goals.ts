@@ -1,0 +1,49 @@
+/** Homepage goal cards — shared by home page and goal landing pages. */
+export const HOMEPAGE_GOAL_CARDS = [
+  {
+    slug: "health",
+    label: "Health",
+    path: "/health",
+    imageSrc: "/Images/Health.jpg",
+    tagline: "Healthy longevity, vibrant energy, a body to delight in"
+  },
+  {
+    slug: "wealth",
+    label: "Wealth",
+    path: "/wealth",
+    imageSrc: "/Images/Wealth.jpeg",
+    tagline: "Financial Abundance"
+  },
+  {
+    slug: "relationship",
+    label: "Relationship",
+    path: "/relationship",
+    imageSrc: "/Images/Relationship.jpeg",
+    tagline: "A joyful new or enhanced present relationship"
+  },
+  {
+    slug: "memory",
+    label: "Memory",
+    path: "/memory",
+    imageSrc: "/Images/Memory.jpg",
+    tagline: "The memory and mental focus you want now and lifelong"
+  },
+  {
+    slug: "inspiration",
+    label: "Inspiration",
+    path: "/inspiration",
+    imageSrc: "/Images/Inspiration.jpg",
+    tagline: "Inspiration at Will for creative and entrepreneurial endeavors"
+  },
+  {
+    slug: "spirituality",
+    label: "Spirituality",
+    path: "/spirituality",
+    imageSrc: "/Images/Spirtuality.jpg",
+    tagline: "A greater connection with your spirituality"
+  }
+] as const;
+
+export type GoalLandingSlug = (typeof HOMEPAGE_GOAL_CARDS)[number]["slug"];
+
+export const GOAL_LANDING_SLUGS: GoalLandingSlug[] = HOMEPAGE_GOAL_CARDS.map((g) => g.slug);

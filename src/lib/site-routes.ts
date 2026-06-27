@@ -1,5 +1,5 @@
 import { BLOG_POSTS } from "@/lib/blog-posts";
-import { TOPIC_LANDING_PAGES } from "@/lib/topic-landing-pages";
+import { GOAL_LANDING_PAGES } from "@/lib/goal-landing-pages";
 
 /** Public marketing routes included in sitemap (no auth-only paths). */
 export const PUBLIC_MARKETING_PATHS = [
@@ -14,6 +14,6 @@ export const PUBLIC_MARKETING_PATHS = [
   "/terms-and-condition",
   "/signup/step-1-subscription-selection",
   "/blog",
-  ...TOPIC_LANDING_PAGES.map((page) => page.path),
+  ...GOAL_LANDING_PAGES.map((page) => page.path),
   ...BLOG_POSTS.map((post) => `/blog/${post.slug}`)
 ] as const;

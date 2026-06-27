@@ -1,4 +1,4 @@
-import { TOPIC_LANDING_PAGES } from "@/lib/topic-landing-pages";
+import { GOAL_LANDING_PAGES } from "@/lib/goal-landing-pages";
 
 type SiteFooterProps = {
   showCta?: boolean;
@@ -39,11 +39,11 @@ export default function SiteFooter({ showCta = true, showStartJourney = true }: 
             </div>
           </div>
           <div>
-            <h3 style={{ marginTop: 0 }}>Wellness topics</h3>
+            <h3 style={{ marginTop: 0 }}>Goals</h3>
             <div className="stack">
               <a href="/blog">Blog &amp; articles</a>
-              {TOPIC_LANDING_PAGES.map((page) => (
-                <a key={page.slug} href={page.path}>{page.pill}</a>
+              {GOAL_LANDING_PAGES.map((page) => (
+                <a key={page.slug} href={page.path}>{page.label}</a>
               ))}
             </div>
           </div>
