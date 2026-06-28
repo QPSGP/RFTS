@@ -40,9 +40,20 @@ type MemberProfileDetail = {
   lastName?: string | null;
   gender?: string | null;
   yearBorn?: number | null;
+  birthDate?: string | null;
   contactNumber?: string | null;
+  bestContactTimes?: string | null;
   timeZone?: string | null;
   occupation?: string | null;
+  incomeGoal?: string | null;
+  incomeGoalYear?: number | null;
+  incomeGoalRelation?: string | null;
+  isFirstResponder?: boolean | null;
+  wantsPracticeGrowth?: boolean | null;
+  adultConsent?: boolean | null;
+  wantsPolyamory?: boolean | null;
+  hadLgdSession?: boolean | null;
+  referralSource?: string | null;
   notes?: string | null;
 };
 
@@ -91,6 +102,40 @@ function subscriptionStatusLabel(status: string | null | undefined): string {
   if (status === "past_due") return "Past due";
   if (status === "canceled") return "Canceled";
   return status;
+}
+
+function formatProfileDate(value: string | null | undefined): string | null {
+  if (!value?.trim()) return null;
+  const trimmed = value.trim().slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const parsed = new Date(`${trimmed}T12:00:00`);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      });
+    }
+  }
+  return trimmed;
+}
+
+function renderProfileDetailRow(label: string, value: string | null | undefined) {
+  const text = (value ?? "").trim();
+  if (!text) return null;
+  return (
+    <p style={{ margin: "0 0 8px" }}>
+      <strong>{label}:</strong> {text}
+    </p>
+  );
+}
+
+function renderProfileYesNo(label: string, value: boolean | null | undefined) {
+  return (
+    <p style={{ margin: "0 0 8px" }}>
+      <strong>{label}:</strong> {value ? "Yes" : "No"}
+    </p>
+  );
 }
 
 /** Sort key: last name, first name, then email. */
@@ -236,6 +281,7 @@ export default function FacilitatorMembers() {
   const [goalsSaving, setGoalsSaving] = useState(false);
   type ClientSection =
     | "summary"
+    | "profile"
     | "notes"
     | "subscription"
     | "goals"
@@ -1531,7 +1577,7 @@ export default function FacilitatorMembers() {
                       </div>
                     </div>
                     <div className="card" style={{ background: "#f8fafc" }}>
-                      <h3 style={{ marginTop: 0 }}>Profile</h3>
+                      <h3 style={{ marginTop: 0 }}>Membership</h3>
                 {!profileDetail?.registered ? (
                   <p style={{ color: "#92400e" }}>
                     This person has not completed signup yet. They will appear here once they
@@ -1549,20 +1595,101 @@ export default function FacilitatorMembers() {
                         ? "Half session (1 audio/night)"
                         : "Full session (2 audios/night)"}
                     </p>
-                    {profileDetail.profile?.contactNumber && (
-                      <p><strong>Phone:</strong> {profileDetail.profile.contactNumber}</p>
-                    )}
-                    {profileDetail.profile?.timeZone && (
-                      <p><strong>Time zone:</strong> {profileDetail.profile.timeZone}</p>
-                    )}
-                    {profileDetail.profile?.occupation && (
-                      <p><strong>Occupation:</strong> {profileDetail.profile.occupation}</p>
-                    )}
                   </div>
                 )}
                     </div>
                   </div>
                 )}
+
+              {profileDetail?.registered && selectedEmail && (
+                <>
+                  <button
+                    type="button"
+                    className={adminSectionToggleClass(openClientSection === "profile", true)}
+                    onClick={() => toggleClientSection("profile")}
+                  >
+                    Client profile
+                  </button>
+                  {openClientSection === "profile" && (
+                    <div className="card" style={{ marginTop: 4, marginBottom: 8 }}>
+                      <p style={{ fontSize: 13, color: "#64748b", marginTop: 0, lineHeight: 1.5 }}>
+                        Personal details from signup and profile — same fields members enter during
+                        onboarding.
+                      </p>
+                      {profileDetail.profile ? (
+                        <div style={{ fontSize: 14 }}>
+                          <div className="section-heading" style={{ marginTop: 8, marginBottom: 8 }}>
+                            Personal details
+                          </div>
+                          {renderProfileDetailRow(
+                            "Name",
+                            [profileDetail.profile.firstName, profileDetail.profile.lastName]
+                              .filter(Boolean)
+                              .join(" ")
+                          )}
+                          {renderProfileDetailRow(
+                            "Birthdate",
+                            formatProfileDate(profileDetail.profile.birthDate) ??
+                              (profileDetail.profile.yearBorn
+                                ? String(profileDetail.profile.yearBorn)
+                                : null)
+                          )}
+                          {renderProfileDetailRow("Gender", profileDetail.profile.gender)}
+                          {renderProfileDetailRow("Occupation", profileDetail.profile.occupation)}
+                          {renderProfileDetailRow("Phone", profileDetail.profile.contactNumber)}
+                          {renderProfileDetailRow(
+                            "Best time(s) to reach",
+                            profileDetail.profile.bestContactTimes
+                          )}
+                          {renderProfileDetailRow("Time zone", profileDetail.profile.timeZone)}
+                          {renderProfileDetailRow(
+                            "Income goal",
+                            profileDetail.profile.incomeGoal
+                          )}
+                          {renderProfileDetailRow(
+                            "Income goal year",
+                            profileDetail.profile.incomeGoalYear
+                              ? String(profileDetail.profile.incomeGoalYear)
+                              : null
+                          )}
+                          {renderProfileDetailRow(
+                            "Income goal relation",
+                            profileDetail.profile.incomeGoalRelation
+                          )}
+                          {renderProfileDetailRow(
+                            "Referral source",
+                            profileDetail.profile.referralSource
+                          )}
+                          <div className="section-heading" style={{ marginTop: 16, marginBottom: 8 }}>
+                            Interests & preferences
+                          </div>
+                          {renderProfileYesNo(
+                            "Life Guidance Discovery Session interest",
+                            profileDetail.profile.hadLgdSession
+                          )}
+                          {renderProfileYesNo("First responder", profileDetail.profile.isFirstResponder)}
+                          {renderProfileYesNo(
+                            "Build practice (therapist/healer/coach)",
+                            profileDetail.profile.wantsPracticeGrowth
+                          )}
+                          {renderProfileYesNo(
+                            "Adult content consent",
+                            profileDetail.profile.adultConsent
+                          )}
+                          {renderProfileYesNo(
+                            "Polyamory-related audios",
+                            profileDetail.profile.wantsPolyamory
+                          )}
+                        </div>
+                      ) : (
+                        <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>
+                          No profile details on file yet.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
 
               {profileDetail?.registered && selectedEmail && (
                 <>
