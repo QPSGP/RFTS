@@ -40,6 +40,14 @@ function cutoffIso(minAgeDays: number): string {
   return new Date(Date.now() - ms).toISOString();
 }
 
+function toPgUuidArray(values: string[]): string {
+  if (!values.length) return "{}";
+  const escaped = values.map((value) =>
+    `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`
+  );
+  return `{${escaped.join(",")}}`;
+}
+
 export async function listSmokeTestUsers(minAgeDays = 0): Promise<SmokeTestUserRow[]> {
   const cutoff = cutoffIso(minAgeDays);
   const { rows } = await sql<{
@@ -83,7 +91,7 @@ export async function deleteSmokeTestUsersOlderThanDays(minAgeDays: number): Pro
 
   const ids = matches.map((row) => row.id);
   const del = await sql`
-    DELETE FROM users WHERE id = ANY(${ids}::uuid[])
+    DELETE FROM users WHERE id = ANY(${toPgUuidArray(ids)}::uuid[])
   `;
 
   return {
