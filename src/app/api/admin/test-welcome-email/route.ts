@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
 import { getWelcomeEmailCcRecipients, sendEmail } from "@/lib/email";
-import { getWelcomeEmailContent } from "@/lib/email-templates";
+import {
+  getWelcomeEmailContent,
+  welcomeEmailHasUpdatedPlatinumCopy,
+  WELCOME_EMAIL_PLATINUM_MANAGED_COPY
+} from "@/lib/email-templates";
 
 const bodySchema = z.object({
   to: z.string().email().optional(),
@@ -17,9 +21,36 @@ function authorizedCron(request: Request): boolean {
   return auth === `Bearer ${secret}`;
 }
 
+async function authorize(request: Request): Promise<boolean> {
+  if (authorizedCron(request)) return true;
+  return isAdminSession();
+}
+
+function welcomeEmailVerification(firstName?: string, lastName?: string) {
+  const welcome = getWelcomeEmailContent(firstName, lastName);
+  return {
+    welcome,
+    platinumCopyOk: welcomeEmailHasUpdatedPlatinumCopy(welcome),
+    platinumManagedCopy: WELCOME_EMAIL_PLATINUM_MANAGED_COPY
+  };
+}
+
+/** Preview deployed welcome email copy without sending mail. */
+export async function GET(request: Request) {
+  if (!(await authorize(request))) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const { platinumCopyOk, platinumManagedCopy } = welcomeEmailVerification("Smoke", "Test");
+  return NextResponse.json({
+    ok: true,
+    platinumCopyOk,
+    platinumManagedCopy
+  });
+}
+
 export async function POST(request: Request) {
-  const admin = await isAdminSession();
-  if (!admin && !authorizedCron(request)) {
+  if (!(await authorize(request))) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
@@ -38,7 +69,22 @@ export async function POST(request: Request) {
     parsed.data.to?.trim() ||
     process.env.SIGNUP_EMAIL_TEST_TO?.trim() ||
     "Richard@richardleeweatherman.com";
-  const welcome = getWelcomeEmailContent(parsed.data.firstName, parsed.data.lastName);
+  const { welcome, platinumCopyOk, platinumManagedCopy } = welcomeEmailVerification(
+    parsed.data.firstName,
+    parsed.data.lastName
+  );
+
+  if (!platinumCopyOk) {
+    return NextResponse.json(
+      {
+        error: "Welcome email template still uses outdated Platinum Managed copy.",
+        platinumCopyOk,
+        platinumManagedCopy
+      },
+      { status: 500 }
+    );
+  }
+
   const welcomeCc = getWelcomeEmailCcRecipients();
 
   const result = await sendEmail({
@@ -58,6 +104,8 @@ export async function POST(request: Request) {
     ok: true,
     to,
     cc: welcomeCc,
-    subject: welcome.subject
+    subject: welcome.subject,
+    platinumCopyOk,
+    platinumManagedCopy
   });
 }

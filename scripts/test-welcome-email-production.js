@@ -35,17 +35,35 @@ if (!secret) {
   process.exit(1);
 }
 
+const authHeaders = {
+  Authorization: `Bearer ${secret}`
+};
+
 async function main() {
   const url = `${base}/api/admin/test-welcome-email`;
   console.log("Welcome email smoke test");
   console.log("  url:", url);
   console.log("  to:", to);
 
+  const previewRes = await fetch(url, { headers: authHeaders });
+  const preview = await previewRes.json().catch(() => ({}));
+  if (!previewRes.ok) {
+    console.error("Preview FAIL:", previewRes.status, preview.error || preview);
+    process.exit(1);
+  }
+  if (!preview.platinumCopyOk) {
+    console.error("Preview FAIL: production welcome email still has outdated Platinum copy.");
+    console.error("  expected phrase containing: curated guided meditations");
+    console.error("  deployed copy:", preview.platinumManagedCopy || "(missing)");
+    process.exit(1);
+  }
+  console.log("Preview OK: Platinum Managed copy uses curated guided meditations.");
+
   const res = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${secret}`
+      ...authHeaders
     },
     body: JSON.stringify({
       to,
@@ -56,7 +74,11 @@ async function main() {
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    console.error("FAIL:", res.status, data.error || data);
+    console.error("Send FAIL:", res.status, data.error || data);
+    process.exit(1);
+  }
+  if (!data.platinumCopyOk) {
+    console.error("Send FAIL: email sent from outdated template.");
     process.exit(1);
   }
   console.log("OK:", JSON.stringify(data, null, 2));
