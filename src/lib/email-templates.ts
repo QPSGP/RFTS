@@ -121,7 +121,7 @@ export function getWelcomeEmailContent(
 
   <h2 style="font-size: 1.05em; margin-top: 28px; margin-bottom: 8px;">Payment and Cancellation</h2>
   <p><strong>Gold Member membership:</strong> The Gold Member package has a <strong>14-day free trial</strong> period, after which <strong>$19.95 per month</strong> will be charged to the payment card you entered. Gold membership includes tailored recordings scheduled from your goals, access to the Success Center library, and a one-time 15-minute Goal Changing &amp; Progress Evaluation consultation after 90 days with a Success Center hypnotherapist or coach.</p>
-  <p><strong>Platinum Managed membership:</strong> The Platinum Managed package has a <strong>30-day free trial</strong> period, after which <strong>$39.95 per month</strong> will be charged to the payment card you entered. Platinum Managed includes curated sessions and assigned audios managed by your hypnotherapist, and a 15-minute Goal Changing &amp; Progress Evaluation consultation every 90 days with a Success Center hypnotherapist or coach.</p>
+  <p><strong>Platinum Managed membership:</strong> The Platinum Managed package has a <strong>30-day free trial</strong> period, after which <strong>$39.95 per month</strong> will be charged to the payment card you entered. Platinum Managed includes curated guided meditations and assigned audios managed by your hypnotherapist, and a 15-minute Goal Changing &amp; Progress Evaluation consultation every 90 days with a Success Center hypnotherapist or coach.</p>
   <p>To upgrade or cancel your membership, update your credit card or billing information, and see your payment history please go to your profile in your console.</p>
   <p>You can cancel at any time from your console, being responsible only for the current month you signed up for. Please see the ReachForTheStars.Today Terms and Conditions for details.</p>
 
@@ -162,7 +162,7 @@ We'd love to help. Call the Success Center, Inc. office at (800) GOAL NOW (462-5
 Payment and Cancellation
 Gold Member membership: The Gold Member package has a 14-day free trial period, after which $19.95 per month will be charged to the payment card you entered. Gold membership includes tailored recordings scheduled from your goals, access to the Success Center library, and a one-time 15-minute Goal Changing & Progress Evaluation consultation after 90 days with a Success Center hypnotherapist or coach.
 
-Platinum Managed membership: The Platinum Managed package has a 30-day free trial period, after which $39.95 per month will be charged to the payment card you entered. Platinum Managed includes curated sessions and assigned audios managed by your hypnotherapist, and a 15-minute Goal Changing & Progress Evaluation consultation every 90 days with a Success Center hypnotherapist or coach.
+Platinum Managed membership: The Platinum Managed package has a 30-day free trial period, after which $39.95 per month will be charged to the payment card you entered. Platinum Managed includes curated guided meditations and assigned audios managed by your hypnotherapist, and a 15-minute Goal Changing & Progress Evaluation consultation every 90 days with a Success Center hypnotherapist or coach.
 
 To upgrade or cancel your membership, update your credit card or billing information, and see your payment history please go to your profile in your console.
 
