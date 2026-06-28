@@ -84,6 +84,15 @@ function tierLabel(tier: MemberRow["subscriptionTier"]): string {
   return "Unknown tier";
 }
 
+function subscriptionStatusLabel(status: string | null | undefined): string {
+  if (!status) return "Inactive";
+  if (status === "active") return "Active";
+  if (status === "inactive") return "Inactive";
+  if (status === "past_due") return "Past due";
+  if (status === "canceled") return "Canceled";
+  return status;
+}
+
 /** Sort key: last name, first name, then email. */
 function memberSortKey(member: MemberRow): string {
   const last = (member.lastName ?? "").trim().toLowerCase();
@@ -225,11 +234,30 @@ export default function FacilitatorMembers() {
   const [goalSearch, setGoalSearch] = useState("");
   const [goalsSaveStatus, setGoalsSaveStatus] = useState<string | null>(null);
   const [goalsSaving, setGoalsSaving] = useState(false);
-  type ClientSection = "summary" | "notes" | "goals" | "schedule" | "rotation" | "issues" | "activity";
+  type ClientSection =
+    | "summary"
+    | "notes"
+    | "subscription"
+    | "goals"
+    | "schedule"
+    | "rotation"
+    | "issues"
+    | "activity";
   const [openClientSection, setOpenClientSection] = useState<ClientSection | null>(null);
   const [notesDraft, setNotesDraft] = useState<Record<string, string>>({});
   const [notesSaveStatus, setNotesSaveStatus] = useState<string | null>(null);
   const [notesSaving, setNotesSaving] = useState(false);
+  const [subscriptionDetail, setSubscriptionDetail] = useState<{
+    hasStripeOnFile: boolean;
+    stripeCustomerId: string | null;
+    stripeSubscriptionId: string | null;
+  } | null>(null);
+  const [subscriptionTierDraft, setSubscriptionTierDraft] = useState<
+    Record<string, "platinum" | "platinum_managed">
+  >({});
+  const [paymentLinkLoading, setPaymentLinkLoading] = useState(false);
+  const [subscriptionSaving, setSubscriptionSaving] = useState(false);
+  const [subscriptionSaveStatus, setSubscriptionSaveStatus] = useState<string | null>(null);
   const [activitySummary, setActivitySummary] = useState<
     Record<
       string,
@@ -453,6 +481,8 @@ export default function FacilitatorMembers() {
     setGoalSearch("");
     setGoalsSaveStatus(null);
     setNotesSaveStatus(null);
+    setSubscriptionDetail(null);
+    setSubscriptionSaveStatus(null);
     setOpenClientSection(null);
     try {
       let tier = memberTier;
@@ -478,6 +508,24 @@ export default function FacilitatorMembers() {
           ...prev,
           [email]: data.member?.profile?.notes ?? ""
         }));
+      }
+
+      const subscriptionRes = await fetch(
+        `/api/moderator/members/subscription?email=${encodeURIComponent(email)}`
+      );
+      if (subscriptionRes.ok) {
+        const subData = await subscriptionRes.json();
+        setSubscriptionDetail({
+          hasStripeOnFile: Boolean(subData.hasStripeOnFile),
+          stripeCustomerId: subData.stripeCustomerId ?? null,
+          stripeSubscriptionId: subData.stripeSubscriptionId ?? null
+        });
+        if (subData.subscriptionTier === "platinum" || subData.subscriptionTier === "platinum_managed") {
+          setSubscriptionTierDraft((prev) => ({
+            ...prev,
+            [email]: subData.subscriptionTier
+          }));
+        }
       }
 
       const activityRes = await fetch(
@@ -623,6 +671,104 @@ export default function FacilitatorMembers() {
       );
     } finally {
       setNotesSaving(false);
+    }
+  };
+
+  const refreshMemberListRow = (email: string, tier: MemberRow["subscriptionTier"], status: string) => {
+    setMembers((prev) =>
+      prev.map((row) =>
+        row.email === email
+          ? { ...row, subscriptionTier: tier, subscriptionStatus: status }
+          : row
+      )
+    );
+    setProfileDetail((prev) =>
+      prev ? { ...prev, subscriptionTier: tier, subscriptionStatus: status } : prev
+    );
+  };
+
+  const openMemberPaymentLink = async (email: string) => {
+    const tier =
+      subscriptionTierDraft[email] ??
+      profileDetail?.subscriptionTier ??
+      selectedMember?.subscriptionTier ??
+      "platinum_managed";
+    setPaymentLinkLoading(true);
+    setSubscriptionSaveStatus(null);
+    try {
+      const response = await fetch("/api/moderator/members/payment-link", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          tier,
+          cancelReturnPath: `${window.location.pathname}${window.location.search}`
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.url) {
+        setSubscriptionSaveStatus(data?.error || "Could not open payment link.");
+        return;
+      }
+      window.open(data.url, "_blank", "noopener,noreferrer");
+      setSubscriptionSaveStatus(
+        data.billingPortal
+          ? "Opened Stripe billing portal for this member."
+          : `Opened Stripe Checkout for ${data.planName ?? tierLabel(tier)}.`
+      );
+    } finally {
+      setPaymentLinkLoading(false);
+    }
+  };
+
+  const saveMemberSubscriptionTier = async (email: string) => {
+    const tier = subscriptionTierDraft[email];
+    if (!tier) return;
+    setSubscriptionSaving(true);
+    setSubscriptionSaveStatus(null);
+    try {
+      const response = await fetch("/api/moderator/members/subscription", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, tier })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setSubscriptionSaveStatus(data?.error || "Could not save membership tier.");
+        return;
+      }
+      refreshMemberListRow(email, data.subscriptionTier, data.subscriptionStatus);
+      setSubscriptionSaveStatus("Membership tier saved.");
+    } finally {
+      setSubscriptionSaving(false);
+    }
+  };
+
+  const setMemberSubscriptionStatus = async (email: string, status: "active" | "inactive") => {
+    setSubscriptionSaving(true);
+    setSubscriptionSaveStatus(null);
+    try {
+      const response = await fetch("/api/moderator/members/subscription", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, status })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setSubscriptionSaveStatus(data?.error || "Could not update member status.");
+        return;
+      }
+      refreshMemberListRow(email, data.subscriptionTier, data.subscriptionStatus);
+      setSubscriptionSaveStatus(
+        status === "inactive"
+          ? "Member marked inactive. They cannot use the library until reactivated."
+          : "Member marked active."
+      );
+    } finally {
+      setSubscriptionSaving(false);
     }
   };
 
@@ -1463,6 +1609,108 @@ export default function FacilitatorMembers() {
                           }}
                         >
                           {notesSaveStatus}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {profileDetail?.registered && selectedEmail && (
+                <>
+                  <button
+                    type="button"
+                    className={adminSectionToggleClass(openClientSection === "subscription", true)}
+                    onClick={() => toggleClientSection("subscription")}
+                  >
+                    Manage subscription
+                  </button>
+                  {openClientSection === "subscription" && (
+                    <div className="card" style={{ marginTop: 4, marginBottom: 8 }}>
+                      <p style={{ fontSize: 13, color: "#64748b", marginTop: 0, lineHeight: 1.5 }}>
+                        Start Stripe Checkout for a new membership, open billing when Stripe is on
+                        file, or mark the client inactive without deleting their account.
+                      </p>
+                      <p style={{ fontSize: 14, marginBottom: 12 }}>
+                        <strong>Plan:</strong> {tierLabel(profileDetail.subscriptionTier)} ·{" "}
+                        <strong>Status:</strong>{" "}
+                        {subscriptionStatusLabel(profileDetail.subscriptionStatus)}
+                        {subscriptionDetail?.hasStripeOnFile && (
+                          <span style={{ color: "#047857" }}> · Stripe billing on file</span>
+                        )}
+                      </p>
+                      <select
+                        style={inputStyle}
+                        value={
+                          subscriptionTierDraft[selectedEmail] ??
+                          profileDetail.subscriptionTier ??
+                          "platinum"
+                        }
+                        onChange={(e) =>
+                          setSubscriptionTierDraft((prev) => ({
+                            ...prev,
+                            [selectedEmail]: e.target.value as "platinum" | "platinum_managed"
+                          }))
+                        }
+                      >
+                        <option value="platinum">Gold Member ($19.95/mo)</option>
+                        <option value="platinum_managed">Platinum Managed ($39.95/mo)</option>
+                      </select>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+                        <button
+                          type="button"
+                          className="button button-secondary"
+                          disabled={subscriptionSaving}
+                          onClick={() => void saveMemberSubscriptionTier(selectedEmail)}
+                        >
+                          {subscriptionSaving ? "Saving…" : "Save plan"}
+                        </button>
+                        <button
+                          type="button"
+                          className="button"
+                          disabled={paymentLinkLoading}
+                          onClick={() => void openMemberPaymentLink(selectedEmail)}
+                        >
+                          {paymentLinkLoading
+                            ? "Opening…"
+                            : subscriptionDetail?.hasStripeOnFile
+                              ? "Manage billing (Stripe)"
+                              : "Start subscription (Stripe Checkout)"}
+                        </button>
+                        {profileDetail.subscriptionStatus === "active" ? (
+                          <button
+                            type="button"
+                            className="button button-secondary"
+                            disabled={subscriptionSaving}
+                            onClick={() => void setMemberSubscriptionStatus(selectedEmail, "inactive")}
+                          >
+                            Make inactive
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="button button-secondary"
+                            disabled={subscriptionSaving}
+                            onClick={() => void setMemberSubscriptionStatus(selectedEmail, "active")}
+                          >
+                            Make active
+                          </button>
+                        )}
+                      </div>
+                      <p style={{ fontSize: 12, color: "#64748b", marginTop: 12, marginBottom: 0 }}>
+                        <strong>Inactive</strong> blocks library and playback access. The account
+                        stays on your client list — nothing is deleted.
+                      </p>
+                      {subscriptionSaveStatus && (
+                        <p
+                          style={{
+                            fontSize: 12,
+                            marginTop: 12,
+                            marginBottom: 0,
+                            color: subscriptionSaveStatus.includes("Could not") ? "#b91c1c" : "#047857"
+                          }}
+                        >
+                          {subscriptionSaveStatus}
                         </p>
                       )}
                     </div>
