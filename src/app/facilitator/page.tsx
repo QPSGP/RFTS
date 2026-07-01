@@ -157,7 +157,8 @@ export default function FacilitatorPage() {
           Tell us about your practice and how you plan to use Reach For The Stars with
           your clients—whether you intend to refer, manage, or both. Applications are
           reviewed by our team; approved facilitators get access to the platform and
-          affiliate terms.
+          affiliate terms. If you plan to upload your own recordings, review our{" "}
+          <a href="/creator-content-license">Creator Content License Agreement</a>.
         </p>
         <form onSubmit={submit} className="grid" style={{ marginTop: 16 }}>
           <input name="name" placeholder="Full name" required style={inputStyle} />

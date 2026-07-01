@@ -268,6 +268,7 @@ export default function FacilitatorMembers() {
   const [audioUploadStatus, setAudioUploadStatus] = useState<string | null>(null);
   const [audioSaveStatus, setAudioSaveStatus] = useState<string | null>(null);
   const [audioUploading, setAudioUploading] = useState(false);
+  const [contentLicenseAccepted, setContentLicenseAccepted] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [newMemberPassword, setNewMemberPassword] = useState("");
   const [newMemberFirstName, setNewMemberFirstName] = useState("");
@@ -931,6 +932,10 @@ export default function FacilitatorMembers() {
       setAudioSaveStatus("Select at least one assigned member.");
       return;
     }
+    if (!contentLicenseAccepted) {
+      setAudioSaveStatus("Accept the Creator Content License before saving.");
+      return;
+    }
     setAudioSaveStatus(null);
     const res = await fetch("/api/moderator/facilitator-audios", {
       method: "POST",
@@ -941,7 +946,8 @@ export default function FacilitatorMembers() {
         audioUrl: audioDraft.audioUrl.trim(),
         coverUrl: audioDraft.coverUrl.trim(),
         skuCode: audioDraft.skuCode.trim(),
-        memberEmails
+        memberEmails,
+        contentLicenseAccepted: true as const
       })
     });
     const data = await res.json().catch(() => ({}));
@@ -951,6 +957,7 @@ export default function FacilitatorMembers() {
     }
     setAudioSaveStatus("Audio saved for your selected members.");
     setAudioDraft({ title: "", description: "", audioUrl: "", coverUrl: "", skuCode: "" });
+    setContentLicenseAccepted(false);
     setConsolePanel("member-audios");
     await loadFacilitatorAudios();
     const libRes = await fetch("/api/moderator/library");
@@ -1512,6 +1519,21 @@ export default function FacilitatorMembers() {
                       Save audio for selected members below
                     </button>
                     {renderAudioMemberPickSection("top")}
+                    <label style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 12 }}>
+                      <input
+                        type="checkbox"
+                        checked={contentLicenseAccepted}
+                        onChange={(e) => setContentLicenseAccepted(e.target.checked)}
+                        style={{ marginTop: 2 }}
+                      />
+                      <span>
+                        I own or control the rights to this recording and agree to the{" "}
+                        <a href="/creator-content-license" target="_blank" rel="noreferrer">
+                          Creator Content License Agreement
+                        </a>
+                        .
+                      </span>
+                    </label>
                     <button type="button" className="button" onClick={() => void saveFacilitatorAudio()}>
                       Save audio for selected members above
                     </button>

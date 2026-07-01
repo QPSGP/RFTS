@@ -51,6 +51,9 @@ export default function SiteFooter({ showCta = true, showStartJourney = true }: 
               <a href="/terms-and-conditions">
                 Terms and Conditions
               </a>
+              <a href="/creator-content-license">
+                Creator Content License
+              </a>
               <a href="https://www.acesuccess.com/" target="_blank" rel="noreferrer">
                 Success Center
               </a>

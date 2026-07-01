@@ -41,6 +41,7 @@ const MARKETING_LABELS: Record<string, string> = {
   "/privacy-policy": "Privacy policy",
   "/terms-and-conditions": "Terms and conditions",
   "/terms-and-condition": "Terms (legacy)",
+  "/creator-content-license": "Creator content license",
   "/signup/step-1-subscription-selection": "Signup",
   "/blog": "Blog index"
 };

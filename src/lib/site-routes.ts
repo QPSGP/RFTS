@@ -13,6 +13,7 @@ export const PUBLIC_MARKETING_PATHS = [
   "/privacy-policy",
   "/terms-and-conditions",
   "/terms-and-condition",
+  "/creator-content-license",
   "/signup/step-1-subscription-selection",
   "/blog",
   ...GOAL_LANDING_PAGES.map((page) => page.path),

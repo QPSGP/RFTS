@@ -15,7 +15,10 @@ const createSchema = z.object({
   audioUrl: z.string().url(),
   coverUrl: z.string().optional().default(""),
   skuCode: z.string().optional().default(""),
-  memberEmails: z.array(z.string().email()).optional()
+  memberEmails: z.array(z.string().email()).optional(),
+  contentLicenseAccepted: z.literal(true, {
+    errorMap: () => ({ message: "Creator Content License acceptance is required." })
+  })
 });
 
 export async function GET() {

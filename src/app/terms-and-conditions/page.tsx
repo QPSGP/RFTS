@@ -40,7 +40,9 @@ export default function TermsPage() {
           <h2>Content and Use</h2>
           <p>
             All content is provided for personal use only. You may not copy,
-            distribute, or resell content without written permission.
+            distribute, or resell content without written permission. If you
+            upload content as a facilitator or creator, you also agree to our{" "}
+            <a href="/creator-content-license">Creator Content License Agreement</a>.
           </p>
         </div>
         <div className="card">
