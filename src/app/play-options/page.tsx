@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
+import PlayOptionsAndroidTips from "@/components/PlayOptionsAndroidTips";
 import SessionPlayer, { SessionPlayerHandle } from "@/components/SessionPlayer";
 import { getMemberTonightTrackItems } from "@/lib/schedule-progress";
 
@@ -319,6 +320,7 @@ export default function PlayOptionsPage() {
         </section>
       )}
       <ScreenWakeToggle />
+      <PlayOptionsAndroidTips gapHours={gapHours} playsPerNight={playsPerNightSetting} />
       <section className="grid">
         <div className="card">
           <h3>My Profile</h3>
