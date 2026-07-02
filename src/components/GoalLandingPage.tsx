@@ -1,5 +1,10 @@
 import SiteFooter from "@/components/SiteFooter";
 import {
+  LandingTrialCtaBand,
+  LandingTrialCtaButtons,
+  LANDING_TRIAL_CTA_LABEL
+} from "@/components/LandingTrialCta";
+import {
   getRelatedGoalPages,
   GOAL_SIGNUP_HREF,
   type GoalLandingContent
@@ -32,11 +37,7 @@ export default function GoalLandingPage({ content }: { content: GoalLandingConte
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           />
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 16 }}>
-          <a className="button" href="/how-it-works">
-            How it works
-          </a>
-        </div>
+        <LandingTrialCtaButtons signupHref={GOAL_SIGNUP_HREF} />
       </section>
 
       <section className="section">
@@ -54,6 +55,11 @@ export default function GoalLandingPage({ content }: { content: GoalLandingConte
           ))}
         </div>
       </section>
+
+      <LandingTrialCtaBand
+        signupHref={GOAL_SIGNUP_HREF}
+        body={`Set ${content.label.toLowerCase()} among your goals and listen while you sleep — try Reach For The Stars free for 14 days.`}
+      />
 
       <section className="section">
         <div className="section-head">
@@ -110,7 +116,7 @@ export default function GoalLandingPage({ content }: { content: GoalLandingConte
             begin the first night you press Start Session.
           </p>
           <a className="button" href={GOAL_SIGNUP_HREF}>
-            Start your journey
+            {LANDING_TRIAL_CTA_LABEL}
           </a>
         </div>
       </section>

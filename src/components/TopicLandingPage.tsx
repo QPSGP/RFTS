@@ -1,4 +1,9 @@
 import SiteFooter from "@/components/SiteFooter";
+import {
+  LandingTrialCtaBand,
+  LandingTrialCtaButtons,
+  LANDING_TRIAL_CTA_LABEL
+} from "@/components/LandingTrialCta";
 import { getBlogPostsNewestFirst } from "@/lib/blog-posts";
 import {
   getRelatedTopicPages,
@@ -18,14 +23,7 @@ export default function TopicLandingPage({ content }: { content: TopicLandingCon
         <span className="pill">{content.pill}</span>
         <h1>{content.title}</h1>
         <p>{content.heroLead}</p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 16 }}>
-          <a className="button" href={TOPIC_SIGNUP_HREF}>
-            Start your journey
-          </a>
-          <a className="button button-secondary" href="/how-it-works">
-            How it works
-          </a>
-        </div>
+        <LandingTrialCtaButtons signupHref={TOPIC_SIGNUP_HREF} />
       </section>
 
       <section className="section">
@@ -43,6 +41,11 @@ export default function TopicLandingPage({ content }: { content: TopicLandingCon
           ))}
         </div>
       </section>
+
+      <LandingTrialCtaBand
+        signupHref={TOPIC_SIGNUP_HREF}
+        body={`${content.title} — personalized nightly audios while you sleep. Try Reach For The Stars free for 14 days.`}
+      />
 
       <section className="section">
         <div className="section-head">
@@ -122,7 +125,7 @@ export default function TopicLandingPage({ content }: { content: TopicLandingCon
             Session.
           </p>
           <a className="button" href={TOPIC_SIGNUP_HREF}>
-            Start your journey
+            {LANDING_TRIAL_CTA_LABEL}
           </a>
         </div>
       </section>
