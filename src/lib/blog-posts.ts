@@ -102,15 +102,15 @@ export const BLOG_POSTS: BlogPost[] = [
     }
   },
   {
-    slug: "stress-relief-meditation-before-bed",
-    title: "Stress relief meditation before bed: calm your nervous system at night",
-    metaTitle: "Stress Relief Meditation Before Bed | Reach For The Stars Blog",
+    slug: "stress-relief-meditation-during-sleep",
+    title: "Stress relief meditation while going to sleep and during sleep: calm your nervous system at night",
+    metaTitle: "Stress Relief Meditation During Sleep | Reach For The Stars Blog",
     metaDescription:
-      "Stress relief meditation and guided relaxation at bedtime. How nightly goal audios reduce anxiety and support emotional balance while you sleep.",
+      "Stress relief meditation and guided relaxation while going to sleep and during sleep. How nightly goal audios reduce anxiety and support emotional balance.",
     publishedAt: "2026-03-17",
     readMinutes: 5,
     excerpt:
-      "Bedtime is one of the best times for stress relief meditation because your body is already winding down — guided audios meet you there instead of adding another daytime task.",
+      "While going to sleep and during sleep are ideal times for stress relief meditation — your body is winding down and guided audios meet you there instead of adding another daytime task.",
     topicSlug: "stress-relief",
     sections: [
       {
