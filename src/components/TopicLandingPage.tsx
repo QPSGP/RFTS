@@ -4,14 +4,22 @@ import {
   LandingTrialCtaButtons,
   LANDING_TRIAL_CTA_LABEL
 } from "@/components/LandingTrialCta";
+import RelatedAudioLandings from "@/components/RelatedAudioLandings";
 import { getBlogPostsNewestFirst } from "@/lib/blog-posts";
+import type { AudioLandingCard } from "@/lib/audio-landing-relations";
 import {
   getRelatedTopicPages,
   TOPIC_SIGNUP_HREF,
   type TopicLandingContent
 } from "@/lib/topic-landing-pages";
 
-export default function TopicLandingPage({ content }: { content: TopicLandingContent }) {
+export default function TopicLandingPage({
+  content,
+  relatedAudios = []
+}: {
+  content: TopicLandingContent;
+  relatedAudios?: AudioLandingCard[];
+}) {
   const related = getRelatedTopicPages(content.relatedSlugs);
   const relatedArticles = getBlogPostsNewestFirst().filter(
     (post) => post.topicSlug === content.slug
@@ -45,6 +53,11 @@ export default function TopicLandingPage({ content }: { content: TopicLandingCon
       <LandingTrialCtaBand
         signupHref={TOPIC_SIGNUP_HREF}
         body={`${content.title} — personalized nightly audios while you sleep. Try Reach For The Stars free for 14 days.`}
+      />
+
+      <RelatedAudioLandings
+        heading={`Related audios for ${content.pill.toLowerCase()}`}
+        audios={relatedAudios}
       />
 
       <section className="section">

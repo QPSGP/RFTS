@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import GoalLandingPage from "@/components/GoalLandingPage";
+import { findRelatedAudioLandingsForGoal } from "@/lib/audio-landing-relations";
+import { listLibrary } from "@/lib/db";
 import { getGoalLandingPage, type GoalLandingSlug } from "@/lib/goal-landing-pages";
 
 export function buildGoalLandingPage(slug: GoalLandingSlug) {
@@ -18,8 +20,10 @@ export function buildGoalLandingPage(slug: GoalLandingSlug) {
     }
   };
 
-  function Page() {
-    return <GoalLandingPage content={pageContent} />;
+  async function Page() {
+    const library = await listLibrary();
+    const relatedAudios = findRelatedAudioLandingsForGoal(slug, library);
+    return <GoalLandingPage content={pageContent} relatedAudios={relatedAudios} />;
   }
 
   return { metadata, Page };

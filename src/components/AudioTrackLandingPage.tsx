@@ -1,4 +1,9 @@
 import SiteFooter from "@/components/SiteFooter";
+import {
+  LandingTrialCtaBand,
+  LandingTrialCtaButtons,
+  LANDING_TRIAL_CTA_LABEL
+} from "@/components/LandingTrialCta";
 import { libraryItemCoverSrc } from "@/lib/library-display";
 import type { AudioLandingContent } from "@/lib/audio-landing";
 
@@ -54,11 +59,13 @@ export default function AudioTrackLandingPage({ content }: { content: AudioLandi
             &ldquo;{content.transcriptSnippet}&rdquo;
           </p>
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-          <a className="button" href={content.signupHref}>Start your journey</a>
-          <a className="button button-secondary" href="/how-it-works">How it works</a>
-        </div>
+        <LandingTrialCtaButtons signupHref={content.signupHref} />
       </section>
+
+      <LandingTrialCtaBand
+        signupHref={content.signupHref}
+        body="Set your goals tonight and hear guided audios like this in your nightly rotation — try Reach For The Stars free for 14 days."
+      />
 
       <section className="section">
         <div className="card glow" style={{ textAlign: "center", padding: 28 }}>
@@ -67,7 +74,7 @@ export default function AudioTrackLandingPage({ content }: { content: AudioLandi
             Set your goals tonight and press Start Session on your first night. Reach For The Stars
             schedules personalized audios while you fall asleep and during sleep.
           </p>
-          <a className="button" href={content.signupHref}>Start your journey</a>
+          <a className="button" href={content.signupHref}>{LANDING_TRIAL_CTA_LABEL}</a>
         </div>
       </section>
 

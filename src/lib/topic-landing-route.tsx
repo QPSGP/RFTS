@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import TopicLandingPage from "@/components/TopicLandingPage";
+import { findRelatedAudioLandingsForTopic } from "@/lib/audio-landing-relations";
+import { listLibrary } from "@/lib/db";
 import { getTopicLandingPage, type TopicLandingSlug } from "@/lib/topic-landing-pages";
 
 export function buildTopicLandingPage(slug: TopicLandingSlug) {
@@ -18,8 +20,10 @@ export function buildTopicLandingPage(slug: TopicLandingSlug) {
     }
   };
 
-  function Page() {
-    return <TopicLandingPage content={pageContent} />;
+  async function Page() {
+    const library = await listLibrary();
+    const relatedAudios = findRelatedAudioLandingsForTopic(slug, library);
+    return <TopicLandingPage content={pageContent} relatedAudios={relatedAudios} />;
   }
 
   return { metadata, Page };

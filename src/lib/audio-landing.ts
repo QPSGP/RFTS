@@ -52,11 +52,39 @@ export function isExcludedFromAudioLanding(item: LibraryItem): boolean {
   return isCgmr || !!item.isAdult;
 }
 
+/** Facilitator member-only uploads — page may exist for staff preview but must not be indexed. */
+export function isPrivateFacilitatorAudio(item: LibraryItem): boolean {
+  return Boolean(item.moderatorId) && item.inGeneralCatalog === false;
+}
+
+/** Non-marketing utility tracks (interval music, etc.). */
+export function isUtilityAudioTrack(item: LibraryItem): boolean {
+  const title = (item.title || "").toLowerCase();
+  if (/interval\s+music/.test(title)) return true;
+  if (/ramp\s+out|ramp\s+in/.test(title)) return true;
+  if (/^prep(?:aration)?\b/.test(title)) return true;
+  return false;
+}
+
+/** Eligible for Google indexing and sitemap — public catalog tracks only. */
+export function isIndexableAudioLanding(item: LibraryItem): boolean {
+  if (!item.audioUrl?.trim()) return false;
+  if (isExcludedFromAudioLanding(item)) return false;
+  if (isPrivateFacilitatorAudio(item)) return false;
+  if (isUtilityAudioTrack(item)) return false;
+  return true;
+}
+
 /** Library rows that may have a public /audio/[slug] marketing page. */
 export function libraryItemsForAudioLanding(library: LibraryItem[]): LibraryItem[] {
   return library.filter(
     (item) => item.audioUrl?.trim() && !isExcludedFromAudioLanding(item)
   );
+}
+
+/** Subset of audio landing pages that should be indexed and listed in the sitemap. */
+export function libraryItemsForIndexableAudioLanding(library: LibraryItem[]): LibraryItem[] {
+  return library.filter(isIndexableAudioLanding);
 }
 
 function summaryForItem(item: LibraryItem): string {
@@ -67,6 +95,17 @@ function summaryForItem(item: LibraryItem): string {
     if (fromCatalog) return fromCatalog;
   }
   return "A guided audio session from the Reach For The Stars library — personalized for your nightly goals.";
+}
+
+const SEO_META_HOOK = "14-day free trial — hear it in your nightly rotation.";
+
+/** Meta description with trial hook for search snippets. */
+export function buildSeoMetaDescription(summary: string): string {
+  const trimmed = summary.trim();
+  const maxSummaryLen = Math.max(60, 160 - SEO_META_HOOK.length - 1);
+  const base =
+    trimmed.length > maxSummaryLen ? `${trimmed.slice(0, maxSummaryLen - 1).trim()}…` : trimmed;
+  return base ? `${base} ${SEO_META_HOOK}` : SEO_META_HOOK;
 }
 
 function transcriptSnippetFromSummary(summary: string, title: string): string {
@@ -96,8 +135,7 @@ export function buildAudioLandingContent(
     title,
     skuCode: item.skuCode,
     metaTitle: `${skuLabel}${title} | Reach For The Stars`,
-    metaDescription:
-      summary.length > 155 ? `${summary.slice(0, 152).trim()}…` : summary,
+    metaDescription: buildSeoMetaDescription(summary),
     summary,
     transcriptSnippet: transcriptSnippetFromSummary(summary, title),
     transcriptLabel: item.skuCode
@@ -106,6 +144,22 @@ export function buildAudioLandingContent(
     coverUrl: item.coverUrl,
     signupHref: SIGNUP
   };
+}
+
+export function buildIndexableAudioLandingContent(library: LibraryItem[]): AudioLandingContent[] {
+  const eligible = libraryItemsForIndexableAudioLanding(library);
+  return eligible
+    .map((item) => buildAudioLandingContent(item, eligible))
+    .sort((a, b) => {
+      const skuA = (a.skuCode || "").trim();
+      const skuB = (b.skuCode || "").trim();
+      if (skuA && skuB) {
+        return skuA.localeCompare(skuB, undefined, { numeric: true, sensitivity: "base" });
+      }
+      if (skuA) return -1;
+      if (skuB) return 1;
+      return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+    });
 }
 
 export function buildAllAudioLandingContent(library: LibraryItem[]): AudioLandingContent[] {
@@ -130,4 +184,12 @@ export function findAudioLandingBySlug(
 ): AudioLandingContent | undefined {
   const pages = buildAllAudioLandingContent(library);
   return pages.find((page) => page.slug === slug);
+}
+
+export function findLibraryItemByAudioLandingSlug(
+  slug: string,
+  library: LibraryItem[]
+): LibraryItem | undefined {
+  const eligible = libraryItemsForAudioLanding(library);
+  return eligible.find((item) => resolveAudioLandingSlug(item, eligible) === slug);
 }

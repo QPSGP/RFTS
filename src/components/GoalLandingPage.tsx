@@ -4,13 +4,21 @@ import {
   LandingTrialCtaButtons,
   LANDING_TRIAL_CTA_LABEL
 } from "@/components/LandingTrialCta";
+import RelatedAudioLandings from "@/components/RelatedAudioLandings";
+import type { AudioLandingCard } from "@/lib/audio-landing-relations";
 import {
   getRelatedGoalPages,
   GOAL_SIGNUP_HREF,
   type GoalLandingContent
 } from "@/lib/goal-landing-pages";
 
-export default function GoalLandingPage({ content }: { content: GoalLandingContent }) {
+export default function GoalLandingPage({
+  content,
+  relatedAudios = []
+}: {
+  content: GoalLandingContent;
+  relatedAudios?: AudioLandingCard[];
+}) {
   const related = getRelatedGoalPages(content.relatedSlugs);
 
   return (
@@ -59,6 +67,11 @@ export default function GoalLandingPage({ content }: { content: GoalLandingConte
       <LandingTrialCtaBand
         signupHref={GOAL_SIGNUP_HREF}
         body={`Set ${content.label.toLowerCase()} among your goals and listen while you sleep — try Reach For The Stars free for 14 days.`}
+      />
+
+      <RelatedAudioLandings
+        heading={`Related audios for ${content.label.toLowerCase()}`}
+        audios={relatedAudios}
       />
 
       <section className="section">

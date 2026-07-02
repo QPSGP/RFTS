@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import BlogPostView from "@/components/BlogPostView";
+import { findRelatedAudioLandingsForBlogPost } from "@/lib/audio-landing-relations";
 import { BLOG_POSTS, getBlogPost } from "@/lib/blog-posts";
+import { listLibrary } from "@/lib/db";
 
 type Props = { params: { slug: string } };
 
@@ -24,8 +26,13 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-export default function BlogPostPage({ params }: Props) {
+export default async function BlogPostPage({ params }: Props) {
   const post = getBlogPost(params.slug);
   if (!post) notFound();
-  return <BlogPostView post={post} />;
+  const library = await listLibrary();
+  const relatedAudios = findRelatedAudioLandingsForBlogPost(library, {
+    topicSlug: post.topicSlug,
+    goalSlug: post.goalSlug
+  });
+  return <BlogPostView post={post} relatedAudios={relatedAudios} />;
 }
