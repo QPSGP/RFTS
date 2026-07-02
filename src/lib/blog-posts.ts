@@ -103,7 +103,7 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "stress-relief-meditation-during-sleep",
-    title: "Stress relief meditation while going to sleep and during sleep: calm your nervous system at night",
+    title: "Stress relief meditation while falling asleep and during sleep: calm your nervous system at night",
     metaTitle: "Stress Relief Meditation During Sleep | Reach For The Stars Blog",
     metaDescription:
       "Stress relief meditation and guided relaxation while going to sleep and during sleep. How nightly goal audios reduce anxiety and support emotional balance.",
