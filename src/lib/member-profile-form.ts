@@ -118,24 +118,24 @@ export const memberProfilePatchSchema = z.object({
   wantsPolyamory: z.boolean().optional(),
   hadLgdSession: z.boolean().optional(),
   referralSource: z.string().optional(),
-  notes: z.string().optional()
+  notes: z.string().nullable().optional()
 });
 
 export type MemberProfilePatch = z.infer<typeof memberProfilePatchSchema>;
 
 export function draftToMemberProfilePatch(draft: MemberProfileDraft): MemberProfilePatch {
-  return {
+  return memberProfilePatchSchema.parse({
     firstName: draft.firstName,
     lastName: draft.lastName,
     gender: draft.gender,
-    yearBorn: draft.yearBorn.trim() ? draft.yearBorn.trim() : undefined,
+    yearBorn: draft.yearBorn.trim() || undefined,
     birthDate: draft.birthDate.trim() || undefined,
     contactNumber: draft.contactNumber,
     bestContactTimes: draft.bestContactTimes,
     timeZone: draft.timeZone,
     occupation: draft.occupation,
     incomeGoal: draft.incomeGoal,
-    incomeGoalYear: draft.incomeGoalYear.trim() ? draft.incomeGoalYear.trim() : undefined,
+    incomeGoalYear: draft.incomeGoalYear.trim() || undefined,
     incomeGoalRelation: draft.incomeGoalRelation,
     isFirstResponder: draft.isFirstResponder,
     wantsPracticeGrowth: draft.wantsPracticeGrowth,
@@ -143,7 +143,7 @@ export function draftToMemberProfilePatch(draft: MemberProfileDraft): MemberProf
     wantsPolyamory: draft.wantsPolyamory,
     hadLgdSession: draft.hadLgdSession,
     referralSource: draft.referralSource
-  };
+  });
 }
 
 export function buildUpsertMemberProfilePayload(
