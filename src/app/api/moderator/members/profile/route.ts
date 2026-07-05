@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireModeratorAssignedMember } from "@/lib/moderator-member-access";
 import { recordModeratorStaffActivity } from "@/lib/facilitator-staff-activity";
+import {
+  buildUpsertMemberProfilePayload,
+  memberProfilePatchSchema
+} from "@/lib/member-profile-form";
 import { getMemberProfileByUserId, getUserByEmail, getUserProfile, upsertMemberProfile } from "@/lib/db";
 
 const querySchema = z.object({
@@ -10,7 +14,8 @@ const querySchema = z.object({
 
 const updateSchema = z.object({
   email: z.string().email(),
-  notes: z.string().nullable().optional()
+  notes: z.string().nullable().optional(),
+  profile: memberProfilePatchSchema.optional()
 });
 
 export async function GET(request: Request) {
@@ -65,33 +70,20 @@ export async function PATCH(request: Request) {
   }
 
   const existing = await getMemberProfileByUserId(user.id);
-  const nextNotes =
-    parsed.data.notes !== undefined ? parsed.data.notes : existing?.notes ?? null;
+  const patch = parsed.data.profile ?? {};
+  if (parsed.data.notes !== undefined && patch.notes === undefined) {
+    patch.notes = parsed.data.notes;
+  }
 
-  await upsertMemberProfile({
-    userId: user.id,
-    firstName: existing?.firstName ?? null,
-    lastName: existing?.lastName ?? null,
-    gender: existing?.gender ?? null,
-    yearBorn: existing?.yearBorn ?? null,
-    birthDate: existing?.birthDate ?? undefined,
-    contactNumber: existing?.contactNumber ?? null,
-    bestContactTimes: existing?.bestContactTimes ?? null,
-    timeZone: existing?.timeZone ?? null,
-    occupation: existing?.occupation ?? null,
-    incomeGoal: existing?.incomeGoal ?? null,
-    incomeGoalYear: existing?.incomeGoalYear ?? null,
-    incomeGoalRelation: existing?.incomeGoalRelation ?? null,
-    isFirstResponder: existing?.isFirstResponder ?? false,
-    wantsPracticeGrowth: existing?.wantsPracticeGrowth ?? false,
-    adultConsent: existing?.adultConsent ?? false,
-    wantsPolyamory: existing?.wantsPolyamory ?? false,
-    hadLgdSession: existing?.hadLgdSession ?? false,
-    referralSource: existing?.referralSource ?? null,
-    notes: nextNotes
-  });
+  const payload = buildUpsertMemberProfilePayload(user.id, existing, patch);
+  await upsertMemberProfile(payload);
 
-  await recordModeratorStaffActivity(`updated_member_notes:${access.memberEmail}`);
+  const activityAction =
+    parsed.data.profile && Object.keys(parsed.data.profile).length > 0
+      ? `updated_member_profile:${access.memberEmail}`
+      : `updated_member_notes:${access.memberEmail}`;
+  await recordModeratorStaffActivity(activityAction);
 
-  return NextResponse.json({ ok: true, notes: nextNotes });
+  const updated = await getMemberProfileByUserId(user.id);
+  return NextResponse.json({ ok: true, profile: updated });
 }

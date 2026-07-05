@@ -3,6 +3,12 @@
 import { put } from "@vercel/blob/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
+import MemberProfileEditor from "@/components/MemberProfileEditor";
+import {
+  draftToMemberProfilePatch,
+  memberProfileToDraft,
+  type MemberProfileDraft
+} from "@/lib/member-profile-form";
 import { MANAGED_MAX_SLOTS_PER_AUDIO } from "@/lib/managed-rotation-limits";
 
 function sanitizePathSegment(name: string): string {
@@ -102,40 +108,6 @@ function subscriptionStatusLabel(status: string | null | undefined): string {
   if (status === "past_due") return "Past due";
   if (status === "canceled") return "Canceled";
   return status;
-}
-
-function formatProfileDate(value: string | null | undefined): string | null {
-  if (!value?.trim()) return null;
-  const trimmed = value.trim().slice(0, 10);
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    const parsed = new Date(`${trimmed}T12:00:00`);
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-      });
-    }
-  }
-  return trimmed;
-}
-
-function renderProfileDetailRow(label: string, value: string | null | undefined) {
-  const text = (value ?? "").trim();
-  if (!text) return null;
-  return (
-    <p style={{ margin: "0 0 8px" }}>
-      <strong>{label}:</strong> {text}
-    </p>
-  );
-}
-
-function renderProfileYesNo(label: string, value: boolean | null | undefined) {
-  return (
-    <p style={{ margin: "0 0 8px" }}>
-      <strong>{label}:</strong> {value ? "Yes" : "No"}
-    </p>
-  );
 }
 
 /** Sort key: last name, first name, then email. */
@@ -294,6 +266,9 @@ export default function FacilitatorMembers() {
   const [notesDraft, setNotesDraft] = useState<Record<string, string>>({});
   const [notesSaveStatus, setNotesSaveStatus] = useState<string | null>(null);
   const [notesSaving, setNotesSaving] = useState(false);
+  const [profileDrafts, setProfileDrafts] = useState<Record<string, MemberProfileDraft>>({});
+  const [profileSaveStatus, setProfileSaveStatus] = useState<string | null>(null);
+  const [profileSaving, setProfileSaving] = useState(false);
   const [subscriptionDetail, setSubscriptionDetail] = useState<{
     hasStripeOnFile: boolean;
     stripeCustomerId: string | null;
@@ -555,6 +530,10 @@ export default function FacilitatorMembers() {
           ...prev,
           [email]: data.member?.profile?.notes ?? ""
         }));
+        setProfileDrafts((prev) => ({
+          ...prev,
+          [email]: memberProfileToDraft(data.member?.profile)
+        }));
       }
 
       const subscriptionRes = await fetch(
@@ -683,6 +662,56 @@ export default function FacilitatorMembers() {
       }));
     } finally {
       setScheduleLoading(false);
+    }
+  };
+
+  const saveMemberProfile = async (email: string) => {
+    const draft = profileDrafts[email];
+    if (!draft) return;
+    setProfileSaving(true);
+    setProfileSaveStatus(null);
+    try {
+      const response = await fetch("/api/moderator/members/profile", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          profile: draftToMemberProfilePatch(draft)
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setProfileSaveStatus(data?.error || "Could not save profile.");
+        return;
+      }
+      const savedProfile = data.profile ?? null;
+      setProfileSaveStatus("Client profile saved.");
+      setProfileDetail((prev) =>
+        prev
+          ? {
+              ...prev,
+              profile: savedProfile
+            }
+          : prev
+      );
+      setProfileDrafts((prev) => ({
+        ...prev,
+        [email]: memberProfileToDraft(savedProfile)
+      }));
+      setMembers((prev) =>
+        prev.map((row) =>
+          row.email === email
+            ? {
+                ...row,
+                firstName: savedProfile?.firstName ?? row.firstName,
+                lastName: savedProfile?.lastName ?? row.lastName
+              }
+            : row
+        )
+      );
+    } finally {
+      setProfileSaving(false);
     }
   };
 
@@ -1632,80 +1661,49 @@ export default function FacilitatorMembers() {
                   >
                     Client profile
                   </button>
-                  {openClientSection === "profile" && (
+                  {openClientSection === "profile" && selectedEmail && (
                     <div className="card" style={{ marginTop: 4, marginBottom: 8 }}>
                       <p style={{ fontSize: 13, color: "#64748b", marginTop: 0, lineHeight: 1.5 }}>
-                        Personal details from signup and profile — same fields members enter during
-                        onboarding.
+                        Add or update the same personal details members enter during signup — name,
+                        contact info, preferences, and goal-related fields.
                       </p>
-                      {profileDetail.profile ? (
-                        <div style={{ fontSize: 14 }}>
-                          <div className="section-heading" style={{ marginTop: 8, marginBottom: 8 }}>
-                            Personal details
-                          </div>
-                          {renderProfileDetailRow(
-                            "Name",
-                            [profileDetail.profile.firstName, profileDetail.profile.lastName]
-                              .filter(Boolean)
-                              .join(" ")
+                      {profileDrafts[selectedEmail] ? (
+                        <>
+                          <MemberProfileEditor
+                            draft={profileDrafts[selectedEmail]}
+                            onChange={(next) =>
+                              setProfileDrafts((prev) => ({
+                                ...prev,
+                                [selectedEmail]: next
+                              }))
+                            }
+                            inputStyle={inputStyle}
+                          />
+                          <button
+                            type="button"
+                            className="button"
+                            style={{ marginTop: 16 }}
+                            disabled={profileSaving}
+                            onClick={() => void saveMemberProfile(selectedEmail)}
+                          >
+                            {profileSaving ? "Saving profile…" : "Save client profile"}
+                          </button>
+                          {profileSaveStatus && (
+                            <p
+                              style={{
+                                fontSize: 12,
+                                marginTop: 8,
+                                marginBottom: 0,
+                                color: profileSaveStatus.includes("Could not") ? "#b91c1c" : "#047857"
+                              }}
+                            >
+                              {profileSaveStatus}
+                            </p>
                           )}
-                          {renderProfileDetailRow(
-                            "Birthdate",
-                            formatProfileDate(profileDetail.profile.birthDate) ??
-                              (profileDetail.profile.yearBorn
-                                ? String(profileDetail.profile.yearBorn)
-                                : null)
-                          )}
-                          {renderProfileDetailRow("Gender", profileDetail.profile.gender)}
-                          {renderProfileDetailRow("Occupation", profileDetail.profile.occupation)}
-                          {renderProfileDetailRow("Phone", profileDetail.profile.contactNumber)}
-                          {renderProfileDetailRow(
-                            "Best time(s) to reach",
-                            profileDetail.profile.bestContactTimes
-                          )}
-                          {renderProfileDetailRow("Time zone", profileDetail.profile.timeZone)}
-                          {renderProfileDetailRow(
-                            "Income goal",
-                            profileDetail.profile.incomeGoal
-                          )}
-                          {renderProfileDetailRow(
-                            "Income goal year",
-                            profileDetail.profile.incomeGoalYear
-                              ? String(profileDetail.profile.incomeGoalYear)
-                              : null
-                          )}
-                          {renderProfileDetailRow(
-                            "Income goal relation",
-                            profileDetail.profile.incomeGoalRelation
-                          )}
-                          {renderProfileDetailRow(
-                            "Referral source",
-                            profileDetail.profile.referralSource
-                          )}
-                          <div className="section-heading" style={{ marginTop: 16, marginBottom: 8 }}>
-                            Interests & preferences
-                          </div>
-                          {renderProfileYesNo(
-                            "Life Guidance Discovery Session interest",
-                            profileDetail.profile.hadLgdSession
-                          )}
-                          {renderProfileYesNo("First responder", profileDetail.profile.isFirstResponder)}
-                          {renderProfileYesNo(
-                            "Build practice (therapist/healer/coach)",
-                            profileDetail.profile.wantsPracticeGrowth
-                          )}
-                          {renderProfileYesNo(
-                            "Adult content consent",
-                            profileDetail.profile.adultConsent
-                          )}
-                          {renderProfileYesNo(
-                            "Polyamory-related audios",
-                            profileDetail.profile.wantsPolyamory
-                          )}
-                        </div>
+                        </>
                       ) : (
                         <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>
-                          No profile details on file yet.
+                          Loading profile…
                         </p>
                       )}
                     </div>
