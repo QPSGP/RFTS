@@ -12,12 +12,21 @@ type Report = {
   subject: string;
   message: string;
   screenshotUrl: string | null;
+  attachmentUrls: string[];
   status: string;
   resolutionNotes: string | null;
   resolvedAt: string | null;
   resolvedBy: string | null;
   createdAt: string;
 };
+
+function isLikelyImageUrl(url: string): boolean {
+  return /\.(png|jpe?g|webp|gif)(\?|$)/i.test(url);
+}
+
+function isLikelyVideoUrl(url: string): boolean {
+  return /\.(mp4|webm|mov)(\?|$)/i.test(url);
+}
 
 type StatusFilter = "all" | "open" | "in_progress" | "resolved" | "closed";
 
@@ -314,29 +323,53 @@ export default function AdminMemberIssuesPage() {
                         >
                           {r.message}
                         </pre>
-                        {r.screenshotUrl ? (
-                          <div style={{ marginTop: 10, maxWidth: 420 }}>
-                            <a
-                              href={r.screenshotUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ fontSize: 13 }}
-                            >
-                              View screenshot
-                            </a>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={r.screenshotUrl}
-                              alt="Member screenshot"
-                              style={{
-                                display: "block",
-                                marginTop: 8,
-                                maxWidth: "100%",
-                                maxHeight: 280,
-                                borderRadius: 8,
-                                border: "1px solid #e5e7eb"
-                              }}
-                            />
+                        {(r.attachmentUrls?.length ? r.attachmentUrls : r.screenshotUrl ? [r.screenshotUrl] : []).length ? (
+                          <div style={{ marginTop: 10, maxWidth: 420, display: "grid", gap: 12 }}>
+                            {(r.attachmentUrls?.length
+                              ? r.attachmentUrls
+                              : r.screenshotUrl
+                                ? [r.screenshotUrl]
+                                : []
+                            ).map((url, index) => (
+                              <div key={`${r.id}-attachment-${index}`}>
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ fontSize: 13 }}
+                                >
+                                  View attachment {index + 1}
+                                </a>
+                                {isLikelyImageUrl(url) ? (
+                                  /* eslint-disable-next-line @next/next/no-img-element */
+                                  <img
+                                    src={url}
+                                    alt={`Member attachment ${index + 1}`}
+                                    style={{
+                                      display: "block",
+                                      marginTop: 8,
+                                      maxWidth: "100%",
+                                      maxHeight: 280,
+                                      borderRadius: 8,
+                                      border: "1px solid #e5e7eb"
+                                    }}
+                                  />
+                                ) : isLikelyVideoUrl(url) ? (
+                                  <video
+                                    src={url}
+                                    controls
+                                    style={{
+                                      display: "block",
+                                      marginTop: 8,
+                                      maxWidth: "100%",
+                                      maxHeight: 280,
+                                      borderRadius: 8,
+                                      border: "1px solid #e5e7eb"
+                                    }}
+                                  />
+                                ) : null}
+                              </div>
+                            ))}
                           </div>
                         ) : null}
                       </>

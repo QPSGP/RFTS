@@ -2,6 +2,17 @@
 
 import { put } from "@vercel/blob/client";
 import { useEffect, useRef, useState } from "react";
+import {
+  formatReportIssueAttachmentTypes,
+  formatReportIssueMaxAttachmentSizeMb,
+  isReportIssueAttachmentType,
+  isReportIssueImageType,
+  REPORT_ISSUE_ATTACHMENT_ACCEPT,
+  REPORT_ISSUE_MAX_ATTACHMENT_BYTES,
+  REPORT_ISSUE_MAX_ATTACHMENTS,
+  REPORT_ISSUE_UPLOAD_PATH_PREFIX
+} from "@/lib/report-issue-attachments";
+import { collectClientDiagnosticContext } from "@/lib/report-issue-context";
 
 const inputStyle = {
   padding: 12,
@@ -20,64 +31,91 @@ const CATEGORIES = [
   { value: "other", label: "Other" }
 ];
 
-const SCREENSHOT_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
-const MAX_SCREENSHOT_BYTES = 5 * 1024 * 1024;
+type AttachmentPreview = {
+  file: File;
+  previewUrl: string | null;
+};
 
 function sanitizePathSegment(name: string): string {
-  return name.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "screenshot";
+  return name.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "attachment";
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024 * 1024) {
+    return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export default function ReportIssueForm() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState("");
-  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
-  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [attachmentPreviews, setAttachmentPreviews] = useState<AttachmentPreview[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<"success" | "error" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (!screenshotFile) {
-      setScreenshotPreview(null);
-      return;
-    }
-    const url = URL.createObjectURL(screenshotFile);
-    setScreenshotPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [screenshotFile]);
+    const previews = attachmentFiles.map((file) => ({
+      file,
+      previewUrl: isReportIssueImageType(file.type) ? URL.createObjectURL(file) : null
+    }));
+    setAttachmentPreviews(previews);
+    return () => {
+      previews.forEach((preview) => {
+        if (preview.previewUrl) URL.revokeObjectURL(preview.previewUrl);
+      });
+    };
+  }, [attachmentFiles]);
 
-  const clearScreenshot = () => {
-    setScreenshotFile(null);
+  const clearAttachments = () => {
+    setAttachmentFiles([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const onScreenshotChange = (file: File | null) => {
-    if (!file) {
-      clearScreenshot();
-      return;
-    }
-    if (!SCREENSHOT_TYPES.has(file.type)) {
-      setStatus("Screenshot must be PNG, JPEG, WebP, or GIF.");
-      setStatusType("error");
-      clearScreenshot();
-      return;
-    }
-    if (file.size > MAX_SCREENSHOT_BYTES) {
-      setStatus("Screenshot must be 5 MB or smaller.");
-      setStatusType("error");
-      clearScreenshot();
-      return;
-    }
-    setStatus(null);
-    setStatusType(null);
-    setScreenshotFile(file);
+  const removeAttachment = (index: number) => {
+    setAttachmentFiles((current) => current.filter((_, i) => i !== index));
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const uploadScreenshot = async (file: File): Promise<string | null> => {
-    const ext = file.name.match(/\.[^.]+$/)?.[0] || ".png";
-    const pathname = `issue-screenshots/${Date.now()}-${sanitizePathSegment(file.name.replace(/\.[^.]+$/, ""))}${ext}`;
+  const onAttachmentsChange = (fileList: FileList | null) => {
+    if (!fileList?.length) return;
+    const errors: string[] = [];
+    const next = [...attachmentFiles];
+    for (const file of Array.from(fileList)) {
+      if (next.length >= REPORT_ISSUE_MAX_ATTACHMENTS) {
+        errors.push(`You can attach up to ${REPORT_ISSUE_MAX_ATTACHMENTS} files.`);
+        break;
+      }
+      if (!isReportIssueAttachmentType(file.type)) {
+        errors.push(`"${file.name}" must be ${formatReportIssueAttachmentTypes()}.`);
+        continue;
+      }
+      if (file.size > REPORT_ISSUE_MAX_ATTACHMENT_BYTES) {
+        errors.push(
+          `"${file.name}" must be ${formatReportIssueMaxAttachmentSizeMb()} MB or smaller.`
+        );
+        continue;
+      }
+      next.push(file);
+    }
+    if (errors.length) {
+      setStatus(errors[0]);
+      setStatusType("error");
+    } else {
+      setStatus(null);
+      setStatusType(null);
+    }
+    setAttachmentFiles(next.slice(0, REPORT_ISSUE_MAX_ATTACHMENTS));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const uploadAttachment = async (file: File): Promise<string | null> => {
+    const ext = file.name.match(/\.[^.]+$/)?.[0] || ".bin";
+    const pathname = `${REPORT_ISSUE_UPLOAD_PATH_PREFIX}${Date.now()}-${sanitizePathSegment(file.name.replace(/\.[^.]+$/, ""))}${ext}`;
     const tokenRes = await fetch("/api/member/report-issue-screenshot-handler", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -92,12 +130,12 @@ export default function ReportIssueForm() {
       throw new Error(
         typeof tokenData?.error === "string"
           ? tokenData.error
-          : "Could not upload screenshot. You can send the report without it."
+          : "Could not upload attachment. You can send the report without it."
       );
     }
     const clientToken = tokenData?.clientToken;
     if (!clientToken) {
-      throw new Error("Could not upload screenshot. You can send the report without it.");
+      throw new Error("Could not upload attachment. You can send the report without it.");
     }
     const blob = await put(pathname, file, {
       access: "public",
@@ -117,14 +155,14 @@ export default function ReportIssueForm() {
     }
     setIsSubmitting(true);
     try {
-      let screenshotUrl: string | undefined;
-      if (screenshotFile) {
+      const attachmentUrls: string[] = [];
+      for (const file of attachmentFiles) {
         try {
-          const url = await uploadScreenshot(screenshotFile);
-          if (url) screenshotUrl = url;
+          const url = await uploadAttachment(file);
+          if (url) attachmentUrls.push(url);
         } catch (uploadErr) {
           const uploadMsg =
-            uploadErr instanceof Error ? uploadErr.message : "Screenshot upload failed.";
+            uploadErr instanceof Error ? uploadErr.message : "Attachment upload failed.";
           setStatus(uploadMsg);
           setStatusType("error");
           setIsSubmitting(false);
@@ -139,7 +177,8 @@ export default function ReportIssueForm() {
           subject: subject.trim(),
           message: message.trim(),
           category: category || undefined,
-          screenshotUrl
+          attachmentUrls: attachmentUrls.length ? attachmentUrls : undefined,
+          clientContext: collectClientDiagnosticContext()
         })
       });
       const data = await response.json().catch(() => ({}));
@@ -149,7 +188,7 @@ export default function ReportIssueForm() {
         setSubject("");
         setMessage("");
         setCategory("");
-        clearScreenshot();
+        clearAttachments();
       } else {
         setStatus(data?.error ?? "Something went wrong. Please try again.");
         setStatusType("error");
@@ -162,11 +201,18 @@ export default function ReportIssueForm() {
     }
   };
 
-  const showScreenshotHint =
+  const showAttachmentHint =
     category === "technical" || category === "playback" || category === "support";
+  const attachmentHint = showAttachmentHint
+    ? "For technical or playback issues, a screenshot or short screen recording helps us diagnose the problem faster."
+    : `You can attach up to ${REPORT_ISSUE_MAX_ATTACHMENTS} files (${formatReportIssueAttachmentTypes()}, up to ${formatReportIssueMaxAttachmentSizeMb()} MB each).`;
 
   return (
     <form onSubmit={handleSubmit} className="grid" style={{ gap: 16 }}>
+      <p style={{ margin: 0, fontSize: 12, color: "#64748b", lineHeight: 1.45 }}>
+        Your account email, membership settings, and browser/device details are attached
+        automatically — you do not need to type those in.
+      </p>
       <div>
         <label htmlFor="report-category" style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
           Category
@@ -217,44 +263,75 @@ export default function ReportIssueForm() {
         />
       </div>
       <div>
-        <label htmlFor="report-screenshot" style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
-          Screenshot <span style={{ color: "#64748b", fontWeight: 400 }}>(optional)</span>
+        <label htmlFor="report-attachments" style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
+          Attachments{" "}
+          <span style={{ color: "#64748b", fontWeight: 400 }}>
+            (optional, up to {REPORT_ISSUE_MAX_ATTACHMENTS})
+          </span>
         </label>
         <input
-          id="report-screenshot"
+          id="report-attachments"
           ref={fileInputRef}
           type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
-          onChange={(e) => onScreenshotChange(e.target.files?.[0] ?? null)}
+          multiple
+          accept={REPORT_ISSUE_ATTACHMENT_ACCEPT}
+          disabled={attachmentFiles.length >= REPORT_ISSUE_MAX_ATTACHMENTS}
+          onChange={(e) => onAttachmentsChange(e.target.files)}
           style={{ ...inputStyle, padding: 8 }}
         />
         <p style={{ margin: "8px 0 0", fontSize: 12, color: "#64748b", lineHeight: 1.45 }}>
-          {showScreenshotHint
-            ? "For technical or playback issues, a screenshot of what you see on screen helps us diagnose the problem faster."
-            : "You can attach one screenshot (PNG, JPEG, WebP, or GIF, up to 5 MB)."}
+          {attachmentHint}
         </p>
-        {screenshotPreview ? (
-          <div style={{ marginTop: 12 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={screenshotPreview}
-              alt="Screenshot preview"
-              style={{
-                maxWidth: "100%",
-                maxHeight: 240,
-                borderRadius: 8,
-                border: "1px solid #e5e7eb"
-              }}
-            />
-            <button
-              type="button"
-              className="button button-secondary"
-              style={{ marginTop: 8, fontSize: 13, padding: "6px 12px" }}
-              onClick={clearScreenshot}
-            >
-              Remove screenshot
-            </button>
-          </div>
+        {attachmentPreviews.length ? (
+          <ul style={{ margin: "12px 0 0", padding: 0, listStyle: "none", display: "grid", gap: 12 }}>
+            {attachmentPreviews.map((preview, index) => (
+              <li
+                key={`${preview.file.name}-${preview.file.size}-${index}`}
+                style={{
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 8,
+                  padding: 10
+                }}
+              >
+                {preview.previewUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={preview.previewUrl}
+                    alt={`Attachment preview ${index + 1}`}
+                    style={{
+                      display: "block",
+                      maxWidth: "100%",
+                      maxHeight: 240,
+                      borderRadius: 8,
+                      marginBottom: 8
+                    }}
+                  />
+                ) : (
+                  <p style={{ margin: "0 0 8px", fontSize: 13 }}>
+                    Video: {preview.file.name} ({formatFileSize(preview.file.size)})
+                  </p>
+                )}
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  style={{ fontSize: 13, padding: "6px 12px" }}
+                  onClick={() => removeAttachment(index)}
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {attachmentFiles.length ? (
+          <button
+            type="button"
+            className="button button-secondary"
+            style={{ marginTop: 8, fontSize: 13, padding: "6px 12px" }}
+            onClick={clearAttachments}
+          >
+            Remove all attachments
+          </button>
         ) : null}
       </div>
       <button

@@ -1,14 +1,18 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
+import {
+  REPORT_ISSUE_ATTACHMENT_TYPES,
+  REPORT_ISSUE_MAX_ATTACHMENT_BYTES,
+  REPORT_ISSUE_UPLOAD_PATH_PREFIX
+} from "@/lib/report-issue-attachments";
 import { getUserSessionEmail } from "@/lib/user-auth";
 
-const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
-const MAX_SIZE_BYTES = 5 * 1024 * 1024;
+const LEGACY_UPLOAD_PATH_PREFIX = "issue-screenshots/";
 
 export async function POST(request: Request) {
   const email = await getUserSessionEmail();
   if (!email) {
-    return NextResponse.json({ error: "You must be logged in to upload a screenshot." }, { status: 401 });
+    return NextResponse.json({ error: "You must be logged in to upload an attachment." }, { status: 401 });
   }
   let body: HandleUploadBody;
   try {
@@ -21,12 +25,15 @@ export async function POST(request: Request) {
       body,
       request,
       onBeforeGenerateToken: async (pathname) => {
-        if (!pathname.startsWith("issue-screenshots/")) {
+        if (
+          !pathname.startsWith(REPORT_ISSUE_UPLOAD_PATH_PREFIX) &&
+          !pathname.startsWith(LEGACY_UPLOAD_PATH_PREFIX)
+        ) {
           throw new Error("Invalid upload path.");
         }
         return {
-          allowedContentTypes: IMAGE_TYPES,
-          maximumSizeInBytes: MAX_SIZE_BYTES,
+          allowedContentTypes: [...REPORT_ISSUE_ATTACHMENT_TYPES],
+          maximumSizeInBytes: REPORT_ISSUE_MAX_ATTACHMENT_BYTES,
           addRandomSuffix: true
         };
       }
@@ -36,7 +43,7 @@ export async function POST(request: Request) {
     const message = e instanceof Error ? e.message : String(e);
     console.error("[report-issue-screenshot-handler]", message);
     const hint = !process.env.BLOB_READ_WRITE_TOKEN
-      ? " Screenshot upload is not configured on the server."
+      ? " Attachment upload is not configured on the server."
       : "";
     return NextResponse.json({ error: message + hint }, { status: 400 });
   }

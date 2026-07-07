@@ -57,7 +57,7 @@ export async function GET(request: Request) {
     ...(queryFailed
       ? {
           dbWarning:
-            "Could not read the issue reports table. Run scripts/migrate-member-issue-reports.sql and scripts/migrate-member-issue-screenshot.sql on production Postgres."
+            "Could not read the issue reports table. Run scripts/migrate-member-issue-reports.sql, scripts/migrate-member-issue-screenshot.sql, and scripts/migrate-member-issue-attachments.sql on production Postgres."
         }
       : {})
   });

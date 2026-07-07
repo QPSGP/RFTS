@@ -13,7 +13,7 @@ export default async function ReportIssuePage() {
         <h1>Report an issue</h1>
         <p>
           Found a bug, have a suggestion, or need help? Send us a message and we’ll get back to you.
-          For technical issues, you can attach a screenshot of what you see on screen.
+          For technical issues, you can attach screenshots or short screen recordings (up to 3 files, 20 MB each).
         </p>
       </section>
       <div className="card" style={{ maxWidth: 560 }}>
