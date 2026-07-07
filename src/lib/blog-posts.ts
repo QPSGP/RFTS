@@ -23,6 +23,66 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "weight-loss-hypnosis-guided-meditation-sleep",
+    title: "Weight loss hypnosis and guided meditation while you sleep",
+    metaTitle: "Weight Loss Hypnosis & Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "How hypnosis and guided meditation support natural weight control — stress eating, sleep, and nightly goal audios. Adapted from Success Center, Inc. with transcript excerpt.",
+    publishedAt: "2026-07-07",
+    readMinutes: 6,
+    excerpt:
+      "Hypnosis for weight loss works through habit change at the subconscious level — especially when guided meditations repeat while you fall asleep and during sleep, not as another daytime chore.",
+    goalSlug: "health",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for weight loss hypnosis or guided meditation for natural weight control often already know diets alone are not enough. The missing piece is often habit — emotional eating, stress cravings, and the inner script that says healthy choices have to feel like punishment.",
+          "Reach For The Stars treats health as one of your prioritized goals. When health and related themes are in your rotation, guided audios play automatically at bedtime and, if you choose two audios per night, again during sleep — the same receptive windows hypnotherapists have used for decades to support weight release and steady energy."
+        ]
+      },
+      {
+        heading: "Does hypnosis help with weight loss?",
+        paragraphs: [
+          "Research on hypnotherapy and weight loss has reported better outcomes when hypnosis is combined with behavioral change than diet alone in several studies — though results vary by person and program. Effective work is suggestion-based: you remain in control while your conscious and subconscious minds learn greater self-awareness and healthier responses.",
+          "Hypnosis is a relaxed state that unlocks access to the subconscious — where hunger cues, cravings, and emotional patterns often live. Guided imagery and positive suggestion can make healthy eating and enjoyable movement feel rewarding rather than forced, which matters because most people only sustain what feels good over time."
+        ]
+      },
+      {
+        heading: "Stress eating and emotional eating",
+        paragraphs: [
+          "Stress releases cortisol, which can interfere with healthy weight loss. Many people reach for sugar or excess carbs when tension spikes — not from true hunger but from a learned calming response.",
+          "Suggestions to meet stress with physical relaxation, emotional calm, and problem-solving behavior — instead of a box of snacks — are a core part of positive stress management. Pairing that with a health goal in your nightly rotation reinforces the same message when you are not willpower-depleted at 10 p.m."
+        ]
+      },
+      {
+        heading: "Weight loss while you sleep",
+        paragraphs: [
+          "Sleep quality and weight are linked: deep, restorative rest supports steady energy and better choices the next day. Guided meditations can suggest releasing weight during rejuvenating sleep and resolving challenges on the subconscious level overnight.",
+          "Reach For The Stars schedules health-focused recordings in rotation over weeks — including the repeated exposure many practitioners associate with lasting mindset change — without requiring extra time in your busy day. Press Start Session at bedtime; your personalized audios handle the rest."
+        ]
+      },
+      {
+        heading: "A note on expectations",
+        paragraphs: [
+          "Guided meditation and hypnosis are mind-body tools that support habit change — not a substitute for medical advice, nutrition counseling, or treatment when you need professional care. If you have a health condition affecting weight, work with your clinician alongside any wellness practice.",
+          "Members who see the best results tend to stay consistent for several weeks, choose health among their top goals, and treat nightly audios as one part of a whole approach to the body they want to delight in."
+        ]
+      },
+      {
+        heading: "Get started tonight",
+        paragraphs: [
+          "Choose health among your goals and complete registration to activate your membership. Order your priorities by importance — your personalized audios begin the first night you press Start Session.",
+          "Explore our health goal page for how nightly rotation works, or use Start your journey below to sign up tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Healthy weight and vibrant energy (excerpt)",
+      quote:
+        "Healthy eating feels good to you now… you choose foods that nourish and satisfy… movement you enjoy becomes natural… your body releases what it no longer needs… steady energy carries you through the day…"
+    }
+  },
+  {
     slug: "guided-meditation-memory-goal-mental-focus",
     title: "Memory as a nightly goal: guided meditation for focus and recall",
     metaTitle: "Memory Goal — Guided Meditation for Focus & Recall | RFTS Blog",
