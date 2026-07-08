@@ -86,6 +86,7 @@ export type UserProfile = {
   goalIds: string[];
   goalUpdatedAt: string | null;
   playsPerNight: number;
+  screenWakeEnabled: boolean;
   subscriptionStatus: DbSubscription["status"] | null;
   subscriptionTier: DbSubscription["tier"] | null;
   stripeCustomerId: string | null;
@@ -368,6 +369,14 @@ export const setUserPlaysPerNight = async (userId: string, playsPerNight: number
     RETURNING id, email, password_hash, goal_ids, goal_updated_at, plays_per_night, created_at
   `;
   return rows[0];
+};
+
+export const setUserScreenWakeEnabled = async (userId: string, enabled: boolean) => {
+  await sql`
+    UPDATE users
+    SET screen_wake_enabled = ${enabled}
+    WHERE id = ${userId}
+  `;
 };
 
 export const upsertMemberProfile = async (profile: MemberProfile) => {
@@ -790,6 +799,7 @@ export const getUserProfile = async (email: string) => {
       COALESCE(u.goal_ids, ARRAY[]::text[]) AS "goalIds",
       u.goal_updated_at AS "goalUpdatedAt",
       COALESCE(u.plays_per_night, 2) AS "playsPerNight",
+      COALESCE(u.screen_wake_enabled, false) AS "screenWakeEnabled",
       s.status AS "subscriptionStatus",
       s.tier AS "subscriptionTier",
       s.stripe_customer_id AS "stripeCustomerId",

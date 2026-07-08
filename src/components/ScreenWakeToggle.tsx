@@ -1,6 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  fetchAccountScreenWakePreference,
+  readScreenWakePreference,
+  saveAccountScreenWakePreference,
+  writeScreenWakePreference
+} from "@/lib/screen-wake-preference";
 
 const buttonStyle = { marginTop: 12 };
 
@@ -23,30 +29,6 @@ function shouldAutoEnableWakeOnSessionStart(): boolean {
   return isAppleMobileUa() || isAndroidUa();
 }
 
-const SCREEN_WAKE_PREF_KEY = "rfts-screen-wake-enabled";
-
-function readScreenWakePreference(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    return window.localStorage.getItem(SCREEN_WAKE_PREF_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function writeScreenWakePreference(enabled: boolean) {
-  if (typeof window === "undefined") return;
-  try {
-    if (enabled) {
-      window.localStorage.setItem(SCREEN_WAKE_PREF_KEY, "1");
-    } else {
-      window.localStorage.removeItem(SCREEN_WAKE_PREF_KEY);
-    }
-  } catch {
-    // ignore quota / private mode
-  }
-}
-
 type ScreenWakeToggleProps = {
   title?: string;
   description?: string;
@@ -55,10 +37,12 @@ type ScreenWakeToggleProps = {
 export default function ScreenWakeToggle({
   title = "Keep Screen Awake",
   description =
-    "When you start a session, we try to turn on screen wake automatically in Chrome, Safari, and Edge on phones and tablets. If it does not turn on, tap Enable Screen Wake while this page is visible. Your choice is remembered for future sessions. Screen wake helps the app stay active but may not stop sleep while your phone is locked—unlock and tap Play if the second recording is late. Firefox and some browsers may not support screen wake."
+    "When you start a session, we try to turn on screen wake automatically in Chrome, Safari, and Edge on phones and tablets. If it does not turn on, tap Enable Screen Wake while this page is visible. Your choice is saved to your account and remembered on this device. Screen wake helps the app stay active but may not stop sleep while your phone is locked—unlock and tap Play if the second recording is late. Firefox and some browsers may not support screen wake."
 }: ScreenWakeToggleProps) {
   const [wakeLockSupported, setWakeLockSupported] = useState(true);
   const [wakeLockActive, setWakeLockActive] = useState(false);
+  /** Saved preference (localStorage), independent of whether the OS wake lock is held right now. */
+  const [prefEnabled, setPrefEnabled] = useState(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const userWantsWakeLockRef = useRef(false);
   /** Android: auto wake for the full guided session (not only the inter-half gap). */
@@ -77,9 +61,6 @@ export default function ScreenWakeToggle({
   useEffect(() => {
     if (typeof navigator !== "undefined" && !("wakeLock" in navigator)) {
       setWakeLockSupported(false);
-    }
-    if (readScreenWakePreference()) {
-      userWantsWakeLockRef.current = true;
     }
   }, []);
 
@@ -102,6 +83,7 @@ export default function ScreenWakeToggle({
         if (opts.setUserIntent) {
           userWantsWakeLockRef.current = true;
           writeScreenWakePreference(true);
+          setPrefEnabled(true);
           setFeedback("Screen wake enabled. Your screen will stay on during playback.");
         }
         return;
@@ -111,6 +93,7 @@ export default function ScreenWakeToggle({
         if (opts.setUserIntent) {
           userWantsWakeLockRef.current = true;
           writeScreenWakePreference(true);
+          setPrefEnabled(true);
         }
         wakeLockRef.current = sentinel;
         setWakeLockActive(true);
@@ -130,6 +113,7 @@ export default function ScreenWakeToggle({
         });
         if (opts.setUserIntent) {
           writeScreenWakePreference(true);
+          setPrefEnabled(true);
           setFeedback("Screen wake enabled. Your screen will stay on during playback.");
         } else if (
           androidSessionWakeActiveRef.current ||
@@ -148,6 +132,39 @@ export default function ScreenWakeToggle({
     []
   );
   acquireScreenWakeLockRef.current = acquireScreenWakeLock;
+
+  const applySavedPreference = useCallback(
+    (enabled: boolean, opts?: { tryAcquire?: boolean }) => {
+      userWantsWakeLockRef.current = enabled;
+      setPrefEnabled(enabled);
+      writeScreenWakePreference(enabled);
+      if (enabled && opts?.tryAcquire !== false && document.visibilityState === "visible") {
+        void acquireScreenWakeLock({ setUserIntent: true, feedbackOnError: false });
+      }
+    },
+    [acquireScreenWakeLock]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const accountPref = await fetchAccountScreenWakePreference();
+      if (cancelled) return;
+      const localPref = readScreenWakePreference();
+      const enabled = accountPref ?? localPref;
+      if (accountPref !== null && accountPref !== localPref) {
+        writeScreenWakePreference(accountPref);
+      } else if (accountPref === null && localPref) {
+        void saveAccountScreenWakePreference(true);
+      }
+      if (enabled) {
+        applySavedPreference(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [applySavedPreference]);
 
   const releaseGapAutoWakeOnly = useCallback(async () => {
     if (gapWakePollIntervalRef.current !== null) {
@@ -184,8 +201,12 @@ export default function ScreenWakeToggle({
     if (!opts?.afterSession) {
       userWantsWakeLockRef.current = false;
       writeScreenWakePreference(false);
+      setPrefEnabled(false);
+      void saveAccountScreenWakePreference(false);
     } else {
-      userWantsWakeLockRef.current = readScreenWakePreference();
+      const saved = readScreenWakePreference();
+      userWantsWakeLockRef.current = saved;
+      setPrefEnabled(saved);
     }
     const hadLock = wakeLockRef.current !== null;
     try {
@@ -218,6 +239,9 @@ export default function ScreenWakeToggle({
     setIsLoading(true);
     setFeedback(null);
     userWantsWakeLockRef.current = true;
+    setPrefEnabled(true);
+    writeScreenWakePreference(true);
+    void saveAccountScreenWakePreference(true);
     try {
       await acquireScreenWakeLock({ setUserIntent: true, feedbackOnError: true });
     } finally {
@@ -271,6 +295,7 @@ export default function ScreenWakeToggle({
       const savedPref = readScreenWakePreference();
       if (savedPref) {
         userWantsWakeLockRef.current = true;
+        setPrefEnabled(true);
       }
       if (!shouldAutoEnableWakeOnSessionStart() && !savedPref) return;
       if (isAndroidUa()) {
@@ -368,6 +393,8 @@ export default function ScreenWakeToggle({
     };
   }, [acquireScreenWakeLock, releaseWakeLock, releaseGapAutoWakeOnly]);
 
+  const wakeEnabled = prefEnabled || wakeLockActive;
+
   return (
     <section className="card" style={{ marginBottom: 24 }}>
       <h3>{title}</h3>
@@ -377,12 +404,12 @@ export default function ScreenWakeToggle({
           <button
             className="button"
             style={buttonStyle}
-            onClick={() => (wakeLockActive ? releaseWakeLock() : requestWakeLock())}
+            onClick={() => (wakeEnabled ? releaseWakeLock() : requestWakeLock())}
             disabled={isLoading}
           >
             {isLoading
               ? "Enabling..."
-              : wakeLockActive
+              : wakeEnabled
                 ? "Disable Screen Wake"
                 : "Enable Screen Wake"}
           </button>
@@ -390,7 +417,7 @@ export default function ScreenWakeToggle({
             <p
               style={{
                 marginTop: 12,
-                color: wakeLockActive ? "#059669" : feedback.includes("Could not") ? "#b45309" : "#4b5563",
+                color: wakeEnabled ? "#059669" : feedback.includes("Could not") ? "#b45309" : "#4b5563",
                 fontSize: 14
               }}
             >

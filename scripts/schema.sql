@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   goal_ids text[] DEFAULT ARRAY[]::text[],
   goal_updated_at timestamptz,
   plays_per_night integer NOT NULL DEFAULT 2,
+  screen_wake_enabled boolean NOT NULL DEFAULT false,
   created_at timestamptz DEFAULT now()
 );
 
@@ -411,6 +412,8 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_details_submitted bool
 ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_payouts_enabled boolean NOT NULL DEFAULT false;
 CREATE UNIQUE INDEX IF NOT EXISTS users_stripe_connect_account_id_unique
   ON users (stripe_connect_account_id) WHERE stripe_connect_account_id IS NOT NULL;
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS screen_wake_enabled boolean NOT NULL DEFAULT false;
 
 -- Facilitator-owned library tracks (private to assigned members until admin promotes)
 ALTER TABLE library_items ADD COLUMN IF NOT EXISTS moderator_id uuid REFERENCES moderators(id) ON DELETE SET NULL;
