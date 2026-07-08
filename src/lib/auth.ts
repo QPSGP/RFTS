@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getAdminByEmail, getModeratorByEmail, getUserProfile } from "@/lib/db";
+import { getAdminByEmail, getModeratorByEmail, getUserByEmail } from "@/lib/db";
 import { getProductionCookieDomain } from "@/lib/site-url";
 
 const sessionCookie = "rfts_session";
@@ -193,7 +193,7 @@ export const getSessionConsoleType = async (): Promise<"admin" | "moderator" | "
   const { getUserSessionEmail } = await import("./user-auth");
   const email = await getUserSessionEmail();
   if (!email) return null;
-  const profile = await getUserProfile(email);
-  if (!profile) return null;
+  const user = await getUserByEmail(email);
+  if (!user) return null;
   return "member";
 };

@@ -86,7 +86,6 @@ export type UserProfile = {
   goalIds: string[];
   goalUpdatedAt: string | null;
   playsPerNight: number;
-  screenWakeEnabled: boolean;
   subscriptionStatus: DbSubscription["status"] | null;
   subscriptionTier: DbSubscription["tier"] | null;
   stripeCustomerId: string | null;
@@ -372,11 +371,29 @@ export const setUserPlaysPerNight = async (userId: string, playsPerNight: number
 };
 
 export const setUserScreenWakeEnabled = async (userId: string, enabled: boolean) => {
-  await sql`
-    UPDATE users
-    SET screen_wake_enabled = ${enabled}
-    WHERE id = ${userId}
-  `;
+  try {
+    await sql`
+      UPDATE users
+      SET screen_wake_enabled = ${enabled}
+      WHERE id = ${userId}
+    `;
+  } catch (err) {
+    console.error("[setUserScreenWakeEnabled]", err instanceof Error ? err.message : err);
+  }
+};
+
+export const getUserScreenWakeEnabled = async (userId: string): Promise<boolean> => {
+  try {
+    const { rows } = await sql<{ enabled: boolean }>`
+      SELECT COALESCE(screen_wake_enabled, false) AS enabled
+      FROM users
+      WHERE id = ${userId}
+      LIMIT 1
+    `;
+    return rows[0]?.enabled ?? false;
+  } catch {
+    return false;
+  }
 };
 
 export const upsertMemberProfile = async (profile: MemberProfile) => {
@@ -799,7 +816,6 @@ export const getUserProfile = async (email: string) => {
       COALESCE(u.goal_ids, ARRAY[]::text[]) AS "goalIds",
       u.goal_updated_at AS "goalUpdatedAt",
       COALESCE(u.plays_per_night, 2) AS "playsPerNight",
-      COALESCE(u.screen_wake_enabled, false) AS "screenWakeEnabled",
       s.status AS "subscriptionStatus",
       s.tier AS "subscriptionTier",
       s.stripe_customer_id AS "stripeCustomerId",

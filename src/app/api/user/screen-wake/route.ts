@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getUserProfile, setUserScreenWakeEnabled } from "@/lib/db";
+import { getUserProfile, getUserScreenWakeEnabled, setUserScreenWakeEnabled } from "@/lib/db";
 import { getUserSessionEmail } from "@/lib/user-auth";
 
 const putSchema = z.object({
@@ -16,7 +16,9 @@ export async function GET() {
   if (!profile) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
-  const res = NextResponse.json({ screenWakeEnabled: profile.screenWakeEnabled });
+  const res = NextResponse.json({
+    screenWakeEnabled: await getUserScreenWakeEnabled(profile.id)
+  });
   res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
   return res;
 }
