@@ -14,7 +14,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import SessionPlayer from "./SessionPlayer";
 
-const PREP = { title: "Preparation", url: "/api/stream/audio?prep=1" };
+const PREP = { title: "Intro relaxation music", url: "/api/stream/audio?prep=1" };
 const FIRST_TRACK = { title: "First Goal Recording", url: "/api/stream/audio?id=first-123" };
 
 function mockAudioElement() {
@@ -133,7 +133,7 @@ describe("SessionPlayer", () => {
     });
   });
 
-  it("after prep ends, tap play loads the main track (not preparation again)", async () => {
+  it("after intro ends, tap play loads the main track (not intro relaxation music again)", async () => {
     render(
       <SessionPlayer
         prepAudio={PREP}
@@ -203,7 +203,7 @@ describe("SessionPlayer", () => {
     expect(mockAudio.play).toHaveBeenCalled();
   });
 
-  it("when first track is cued, Start Session restarts the session from preparation audio (beginning of session)", async () => {
+  it("when first track is cued, Start Session restarts the session from intro relaxation music (beginning of session)", async () => {
     render(
       <SessionPlayer
         prepAudio={PREP}

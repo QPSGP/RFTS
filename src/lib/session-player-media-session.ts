@@ -4,6 +4,8 @@
  * HTML audio; does not guarantee the tab will never be suspended.
  */
 
+import { INTRO_RELAXATION_MUSIC_LABEL } from "@/lib/intro-relaxation-music";
+
 const ARTIST = "Reach For The Stars";
 const ALBUM = "Tonight’s session";
 
@@ -75,7 +77,7 @@ export function syncSessionMediaSession(p: SyncSessionMediaSessionParams): void 
   } else if (p.current) {
     const isPrep = !!(p.prep && p.current.url === p.prep.url);
     if (isPrep) {
-      title = `Preparation — ${displayTitle(p.current)}`;
+      title = `${INTRO_RELAXATION_MUSIC_LABEL} — ${displayTitle(p.current)}`;
     } else if (p.phase === "second") {
       title = `Second recording — ${displayTitle(p.current)}`;
     } else {

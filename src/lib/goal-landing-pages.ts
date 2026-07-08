@@ -40,7 +40,7 @@ const GOAL_DETAILS: Record<
     eyebrow: "Physical wellbeing",
     sectionTitle: "Nightly audios for your health goals",
     sectionSubtitle:
-      "Select health-related priorities and hear guided meditations in rotation — preparation at bedtime, reinforcement during sleep.",
+      "Select health-related priorities and hear guided meditations in rotation — intro relaxation music at bedtime, reinforcement during sleep.",
     howItHelps: [
       {
         title: "Holistic health focus",
@@ -78,7 +78,7 @@ const GOAL_DETAILS: Record<
     eyebrow: "Financial growth",
     sectionTitle: "Build an abundance mindset while you sleep",
     sectionSubtitle:
-      "Wealth goals rotate through your nightly lineup alongside preparation and optional second audios during sleep.",
+      "Wealth goals rotate through your nightly lineup alongside intro relaxation music and optional second audios during sleep.",
     howItHelps: [
       {
         title: "Prosperity in rotation",
@@ -148,7 +148,7 @@ const GOAL_DETAILS: Record<
     eyebrow: "Memory & focus",
     sectionTitle: "Mental excellence through nightly repetition",
     sectionSubtitle:
-      "Memory goals rotate in your schedule alongside preparation and optional second audios during sleep.",
+      "Memory goals rotate in your schedule alongside intro relaxation music and optional second audios during sleep.",
     howItHelps: [
       {
         title: "Memory in your rotation",
@@ -218,7 +218,7 @@ const GOAL_DETAILS: Record<
     eyebrow: "Inner life",
     sectionTitle: "Spiritual growth through nightly practice",
     sectionSubtitle:
-      "Spirituality goals play in rotation with preparation and optional reinforcement during sleep.",
+      "Spirituality goals play in rotation with intro relaxation music and optional reinforcement during sleep.",
     howItHelps: [
       {
         title: "Sacred routine",
@@ -253,7 +253,7 @@ const GOAL_DETAILS: Record<
     eyebrow: "Habit freedom",
     sectionTitle: "Nightly audios for overcoming addiction goals",
     sectionSubtitle:
-      "Smoking cessation, overeating, and other habit goals play in rotation — preparation at bedtime, reinforcement during sleep.",
+      "Smoking cessation, overeating, and other habit goals play in rotation — intro relaxation music at bedtime, reinforcement during sleep.",
     howItHelps: [
       {
         title: "Replace old patterns",

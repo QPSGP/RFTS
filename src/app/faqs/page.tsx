@@ -98,8 +98,8 @@ export default function FaqsPage() {
           <div className="card">
             <h3>What happens during a session?</h3>
             <p>
-              Each session begins with a short preparation audio, then your first goal
-              recording starts immediately. A second recording can play about 2.5 hours
+              Each session begins with short intro relaxation music, then your first goal recording
+              starts immediately. A second recording can play about 2.5 hours
               later if you choose two audios per night.
             </p>
           </div>

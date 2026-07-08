@@ -23,6 +23,10 @@ import {
   syncSessionMediaSession
 } from "@/lib/session-player-media-session";
 
+import {
+  INTRO_RELAXATION_MUSIC_LABEL
+} from "@/lib/intro-relaxation-music";
+
 type SessionTrack = {
   title: string;
   url: string;
@@ -81,7 +85,7 @@ type SessionPlayerProps = {
 
 export type SessionPlayerHandle = {
   startSession: () => void;
-  /** Start tonight’s second recording (preparation audio first when configured). */
+  /** Start tonight’s second recording (intro relaxation music first when configured). */
   playSecond: () => void;
 };
 
@@ -241,7 +245,7 @@ function buildPlayOptionsLogLine(
   const label = displayNameForSessionTrack(c);
   let kind: string;
   if (prep && c.url === prep.url) {
-    kind = "Preparation audio";
+    kind = INTRO_RELAXATION_MUSIC_LABEL;
   } else if (ph === "second") {
     kind = `Second: ${label}`;
   } else {
@@ -506,7 +510,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       () => {
         setMessage(
           phaseRef.current === "second"
-            ? "Tap play to start the second half (preparation, then your second track)."
+            ? "Tap play to start the second half (intro relaxation music, then your second track)."
             : "Tap play to start the session."
         );
         setNeedsUserPlay(true);
@@ -607,7 +611,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         () => {
           setMessage(
             phaseRef.current === "second"
-              ? "Tap play to start the second half (preparation, then your second track)."
+              ? "Tap play to start the second half (intro relaxation music, then your second track)."
               : "Tap play to start the session."
           );
           setNeedsUserPlay(true);
@@ -905,7 +909,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
             () => {
               setMessage(
                 phaseRef.current === "second"
-                  ? "Tap play to start the second half (preparation, then your second track)."
+                  ? "Tap play to start the second half (intro relaxation music, then your second track)."
                   : "Tap play to start the session."
               );
               setNeedsUserPlay(true);
@@ -1167,8 +1171,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       <h3>Tonight&apos;s Audio</h3>
       <p style={{ color: "#4b5563" }}>
         {playsPerNight === 1
-          ? "Plays a short preparation audio, then your goal audio for tonight. Your next audio is scheduled for tomorrow."
-          : `Plays a short preparation audio, then your first goal audio. The second audio is scheduled ${gapHours} hours later and also begins with preparation audio when you play it.`}
+          ? "Plays short intro relaxation music, then your goal audio for tonight. Your next audio is scheduled for tomorrow."
+          : `Plays short intro relaxation music, then your first goal audio. The second audio is scheduled ${gapHours} hours later and also begins with intro relaxation music when you play it.`}
       </p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <button className="button" onClick={startSession}>
@@ -1412,7 +1416,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
                 </strong>
                 {prepAudio && (
                   <div style={{ marginBottom: 2 }}>
-                    Prep: {displayNameForSessionTrack(prepAudio)}
+                    Intro: {displayNameForSessionTrack(prepAudio)}
                     {current?.url === prepAudio.url && " (now playing)"}
                   </div>
                 )}

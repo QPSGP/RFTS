@@ -53,10 +53,10 @@ export default function HowItWorksPage() {
         </div>
         <div className="grid grid-2">
           <div className="card">
-            <h3>Preparation + first goal</h3>
+            <h3>Intro relaxation music, then first goal</h3>
             <p>
-              Your audios each night begin with a short preparation audio, then your first goal
-              recording starts right away.
+              Each night begins with short intro relaxation music, then your first goal recording
+              starts right away.
             </p>
           </div>
           <div className="card">

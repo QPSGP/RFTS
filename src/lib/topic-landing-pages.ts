@@ -47,7 +47,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       {
         title: "Relaxation before sleep",
         body:
-          "Each night begins with a short preparation audio, then your first goal recording — a structured wind-down instead of scrolling or worrying."
+          "Each night begins with short intro relaxation music, then your first goal recording — a structured wind-down instead of scrolling or worrying."
       },
       {
         title: "Reinforcement while you sleep",
@@ -161,7 +161,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       },
       {
         title: "Nightly guided sessions",
-        body: "Preparation plus goal audios — optional second play during sleep."
+        body: "Intro relaxation music plus goal audios — optional second play during sleep."
       },
       {
         title: "Track what helps",
@@ -250,7 +250,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
     ],
     nightlySteps: [
       { title: "Select calm and health goals", body: "Prioritize rest, balance, and cardiovascular wellness among your goals." },
-      { title: "Listen at bedtime", body: "Preparation and goal audios play as you fall asleep." },
+      { title: "Listen at bedtime", body: "Intro relaxation music and goal audios play as you fall asleep." },
       { title: "Track with your doctor", body: "Use meditation alongside medical care and regular checkups." }
     ],
     relatedSlugs: ["stress-relief", "sleep-meditation", "resilience-meditation"]
@@ -326,7 +326,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
     ],
     nightlySteps: [
       { title: "Pick emotional health goals", body: "Prioritize calm, confidence, balance, or inspiration." },
-      { title: "Nightly audios", body: "Preparation plus one or two goal recordings per night." },
+      { title: "Nightly audios", body: "Intro relaxation music plus one or two goal recordings per night." },
       { title: "Notice shifts", body: "Emotional benefits often emerge over several weeks of use." }
     ],
     relatedSlugs: ["stress-relief", "self-awareness", "will-power"]
@@ -402,7 +402,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
     ],
     nightlySteps: [
       { title: "Choose insight goals", body: "Select inspiration, spirituality, or balance among your priorities." },
-      { title: "Listen nightly", body: "Preparation and goal audios play as you wind down." },
+      { title: "Listen nightly", body: "Intro relaxation music and goal audios play as you wind down." },
       { title: "Reflect over time", body: "Members report clearer self-understanding after steady use." }
     ],
     relatedSlugs: ["emotional-health", "will-power", "memory-improvement"]

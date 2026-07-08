@@ -4,6 +4,7 @@ import { put } from "@vercel/blob/client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER } from "@/lib/member-audio-activity";
+import { isIntroRelaxationMusicLogLabel, INTRO_RELAXATION_MUSIC_LABEL } from "@/lib/intro-relaxation-music";
 import { MANAGED_MAX_SLOTS_PER_AUDIO } from "@/lib/managed-rotation-limits";
 import type { LibraryItem } from "@/lib/types";
 import { stripSkuHyphens } from "@/lib/sku-code";
@@ -240,7 +241,7 @@ function extractPlayOptionsAudioTitle(d: string): string | null {
   if (!/^Play\s+Options\b/i.test(t)) return null;
   let rest = t.replace(/^Play\s+Options\s*/i, "").trim();
   rest = rest.replace(PLAYED_AUDIO_LOC_SEP, "").trim();
-  if (/^Preparation audio$/i.test(rest)) return "Preparation audio";
+  if (isIntroRelaxationMusicLogLabel(rest)) return INTRO_RELAXATION_MUSIC_LABEL;
   const fs = /^(First|Second)\s*[:：]\s*(.+)$/is.exec(rest);
   if (fs) {
     const title = (fs[2] || "").trim().replace(/\s+/g, " ");
@@ -363,8 +364,8 @@ function formatPlayedAudioTitle(action: string, details: string | null | undefin
     return d.replace(/\s+/g, " ").trim();
   }
   const rest = loc.rest.trim();
-  if (/^Preparation audio\s*$/i.test(rest)) {
-    return "Preparation audio";
+  if (isIntroRelaxationMusicLogLabel(rest)) {
+    return INTRO_RELAXATION_MUSIC_LABEL;
   }
   /* ASCII or fullwidth colon after First/Second (some titles use Unicode punctuation). */
   const fs = /^(First|Second)\s*[:：]\s*([\s\S]+)$/i.exec(rest);
@@ -386,7 +387,7 @@ function formatPlayedAudioContext(action: string, details: string | null): strin
   if (loc) {
     if (loc.where === "library") return "Audio library";
     const rest = loc.rest.trim();
-    if (/^Preparation audio\s*$/i.test(rest)) return "Play Options · preparation";
+    if (isIntroRelaxationMusicLogLabel(rest)) return "Play Options · intro relaxation music";
     const fs = /^(First|Second)\s*:/i.exec(rest);
     if (fs) return `Play Options · ${fs[1].toLowerCase()} recording`;
     return "Play Options";

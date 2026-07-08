@@ -241,10 +241,10 @@ export default function PlayOptionsClient({
         <div className="card" id="meditation-session">
           <h3>Guided Meditation Audios</h3>
           <p>
-            Start a guided audio tailored to your goals. A preparation audio is played first, then your
-            first goal audio starts. A second audio is scheduled {gapHours} hours later if you have
-            enabled 2 audios per night (it also uses preparation audio when it starts). Your schedule
-            audio advances after you finish listening.
+            Start a guided audio tailored to your goals. Short intro relaxation music plays first,
+            then your first goal audio starts. A second audio is scheduled {gapHours} hours later if
+            you have enabled 2 audios per night (the second session also begins with intro
+            relaxation music). Your schedule audio advances after you finish listening.
           </p>
           {schedule.length > 0 && tonightTracksWithUrls.length > 0 && (
               <div style={{ marginTop: 12 }}>

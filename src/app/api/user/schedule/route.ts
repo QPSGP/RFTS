@@ -20,6 +20,7 @@ import {
   minScheduleNightsForCue,
   resolveCurrentScheduleNight
 } from "@/lib/schedule-progress";
+import { INTRO_RELAXATION_MUSIC_LABEL } from "@/lib/intro-relaxation-music";
 import { stripSkuHyphens } from "@/lib/sku-code";
 
 const schema = z.object({
@@ -28,6 +29,7 @@ const schema = z.object({
 });
 
 const dataDir = path.join(process.cwd(), "data");
+
 const PREP_AUDIO_NAME = "RFTS_starting_music.mp3";
 
 const readJson = <T>(fileName: string, fallback: T): T => {
@@ -169,7 +171,7 @@ export async function GET(request: Request) {
   );
   const hasPrep = !!blobAssets.audios?.[PREP_AUDIO_NAME];
   const prepAudio = hasPrep
-    ? { title: "Preparation Audio", url: "/api/stream/audio?prep=1" }
+    ? { title: INTRO_RELAXATION_MUSIC_LABEL, url: "/api/stream/audio?prep=1" }
     : null;
   const scheduleWithStreamUrls = schedule.map((night) => ({
     ...night,

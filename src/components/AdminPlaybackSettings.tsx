@@ -48,7 +48,7 @@ export default function AdminPlaybackSettings() {
       <p style={{ fontSize: 14, color: "#4b5563", marginBottom: 12, lineHeight: 1.5 }}>
         All fields use the same rule: a <strong>main play</strong> is one scheduled listening slot (first or second
         recording on a schedule night when the member uses 2 per night, or the single recording when they use 1 per
-        night). Preparation audio does not count. A <strong>listening session</strong> is one full schedule night
+        night). Intro relaxation music does not count. A <strong>listening session</strong> is one full schedule night
         (1 or 2 main plays, depending on their setting). CGMR or the default code fills every{" "}
         <strong>4th main play</strong> in order; other numbers below count <strong>main plays</strong> only.
       </p>

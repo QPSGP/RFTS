@@ -110,7 +110,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         heading: "Sleep, consolidation, and your second nightly audio",
         paragraphs: [
-          "Sleep plays a central role in memory consolidation. The default program includes two audios per night: preparation and your first goal recording as you fall asleep, then optional reinforcement about 2.5 hours later while you are still in restorative sleep.",
+          "Sleep plays a central role in memory consolidation. The default program includes two audios per night: intro relaxation music and your first goal recording as you fall asleep, then optional reinforcement about 2.5 hours later while you are still in restorative sleep.",
           "Members often describe clearer recall and steadier focus when they stay consistent for several weeks — not from one perfect night."
         ]
       },
@@ -156,7 +156,7 @@ export const BLOG_POSTS: BlogPost[] = [
       }
     ],
     transcriptExcerpt: {
-      sessionTitle: "Preparation for restful sleep (excerpt)",
+      sessionTitle: "Intro relaxation music for restful sleep (excerpt)",
       quote:
         "Allow your body to settle… with each breath, release the day… you are safe to rest now… your mind can follow your chosen intention for peaceful, restorative sleep…"
     }
@@ -176,7 +176,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         paragraphs: [
           "Stress relief meditation searches often spike in the evening, when the mind replays the day. A short guided relaxation can interrupt that loop — especially when the messages match goals you care about, like calm, confidence, or balance.",
-          "With Reach For The Stars, your stress-related goals rotate through a nightly schedule. You hear preparation, then goal audios, without opening a library or choosing tracks when you are exhausted."
+          "With Reach For The Stars, your stress-related goals rotate through a nightly schedule. You hear intro relaxation music, then goal audios, without opening a library or choosing tracks when you are exhausted."
         ]
       },
       {
@@ -294,7 +294,7 @@ export const BLOG_POSTS: BlogPost[] = [
     title: "Why two audios per night reinforce your goals while you sleep",
     metaTitle: "Two Audios Per Night: How Nightly Reinforcement Works | RFTS Blog",
     metaDescription:
-      "Why Reach For The Stars plays two personalized audios per night — preparation, first goal, and a second session during sleep for deeper reinforcement.",
+      "Why Reach For The Stars plays two personalized audios per night — intro relaxation music, first goal, and a second session during sleep for deeper reinforcement.",
     publishedAt: "2026-03-13",
     readMinutes: 4,
     excerpt:
@@ -302,7 +302,7 @@ export const BLOG_POSTS: BlogPost[] = [
     sections: [
       {
         paragraphs: [
-          "Members can choose one or two audios per night; the default is two. The first session includes preparation and your first goal recording as you fall asleep — a high-suggestibility window for guided meditation.",
+          "Members can choose one or two audios per night; the default is two. The first session includes intro relaxation music and your first goal recording as you fall asleep — a high-suggestibility window for guided meditation.",
           "The second play targets the same goals during sleep, when the brain is still processing and consolidating. It is the same logic behind spaced repetition, applied to your wellness priorities."
         ]
       },
