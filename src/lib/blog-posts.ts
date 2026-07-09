@@ -23,6 +23,59 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "guided-meditation-inspiration-creativity-at-will",
+    title: "Guided meditation for inspiration: creativity at will while you sleep",
+    metaTitle: "Inspiration & Creativity — Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "How nightly guided meditations support inspiration at will — for writers, entrepreneurs, and anyone who wants creative momentum without daytime willpower. Links to the Inspiration goal.",
+    publishedAt: "2026-07-08",
+    readMinutes: 6,
+    excerpt:
+      "Inspiration is not something you wait for at your desk. When creativity is a prioritized goal, guided meditations repeat at bedtime and during sleep so motivation reaches your subconscious when you are most receptive.",
+    goalSlug: "inspiration",
+    sections: [
+      {
+        paragraphs: [
+          "Writers stare at blank pages. Entrepreneurs stall before the next pitch. Artists and professionals alike know the feeling: you want to create, but the spark is not there when the calendar says it should be.",
+          "Reach For The Stars treats inspiration as one of up to ten goals you prioritize. When creativity, motivation, or entrepreneurial drive is in your rotation, guided audios play automatically while you fall asleep — and again during sleep if you choose two audios per night. That is the same receptive window hypnotherapists have used for decades to install confidence, follow-through, and what Terry Brussel-Rogers calls inspiration at will."
+        ]
+      },
+      {
+        heading: "What “inspiration at will” means",
+        paragraphs: [
+          "Classic creativity work in hypnosis pairs relaxation with suggestion: you learn to enter a focused, open state and associate it with real situations — a blank page, a new project, an audience, a business decision. Over time, those situations themselves can trigger the same inner readiness instead of dread or procrastination.",
+          "You do not need to carve out extra daytime hours. Nightly guided meditations reinforce the same messages when your conscious mind is quiet and your subconscious is listening — which is why members often describe waking with clearer ideas or renewed drive for work they had been avoiding."
+        ]
+      },
+      {
+        heading: "Why bedtime beats “trying harder” during the day",
+        paragraphs: [
+          "Daytime inspiration often competes with email, notifications, and fatigue. By the time you sit down to create, you may already be depleted. Bedtime practice sidesteps that fight: intro relaxation music, then your first goal recording as you drift off, then optional reinforcement about 2.5 hours later while you are still in restorative sleep.",
+          "The program rotates priorities over weeks so inspiration themes return on a predictable cadence — not one random track you forget to play. Pair inspiration with wealth or memory goals if you want entrepreneurial focus and sharper recall alongside creative momentum."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits writers, speakers, coaches, side-hustle builders, and anyone whose success depends on showing up with fresh ideas. It also supports people returning to a creative practice after burnout or a long pause — when guilt and pressure make inspiration harder, not easier.",
+          "Guided meditation is a mind-body tool for habit and mindset, not a substitute for professional mental health care when you need clinical support. If creative blocks are tied to anxiety or trauma, work with a qualified clinician alongside any wellness practice."
+        ]
+      },
+      {
+        heading: "Get started tonight",
+        paragraphs: [
+          "Choose inspiration among your goals and complete registration to activate your membership. Order creativity, motivation, and related priorities by importance — your personalized audios begin the first night you press Start Session.",
+          "Explore our inspiration goal page for how nightly rotation works, or use Start your journey below to sign up tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Inspiration and creative confidence (excerpt)",
+      quote:
+        "Ideas flow easily to you now… you feel inspired at will… a blank page invites you instead of intimidating you… you trust your creative voice… motivation carries you into action tomorrow…"
+    }
+  },
+  {
     slug: "weight-loss-hypnosis-guided-meditation-sleep",
     title: "Weight loss hypnosis and guided meditation while you sleep",
     metaTitle: "Weight Loss Hypnosis & Guided Meditation at Night | RFTS Blog",
