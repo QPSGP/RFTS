@@ -31,6 +31,12 @@ const CATEGORIES = [
   { value: "other", label: "Other" }
 ];
 
+type ReportIssueFormProps = {
+  /** Admin console: posts to admin API and queues for other admins. */
+  mode?: "member" | "admin";
+  onSubmitted?: () => void;
+};
+
 type AttachmentPreview = {
   file: File;
   previewUrl: string | null;
@@ -47,7 +53,11 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function ReportIssueForm() {
+export default function ReportIssueForm({
+  mode = "member",
+  onSubmitted
+}: ReportIssueFormProps) {
+  const isAdminMode = mode === "admin";
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState("");
@@ -169,26 +179,35 @@ export default function ReportIssueForm() {
           return;
         }
       }
-      const response = await fetch("/api/member/report-issue", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject: subject.trim(),
-          message: message.trim(),
-          category: category || undefined,
-          attachmentUrls: attachmentUrls.length ? attachmentUrls : undefined,
-          clientContext: collectClientDiagnosticContext()
-        })
-      });
+      const response = await fetch(
+        isAdminMode ? "/api/admin/member-issue-reports" : "/api/member/report-issue",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subject: subject.trim(),
+            message: message.trim(),
+            category: category || undefined,
+            attachmentUrls: attachmentUrls.length ? attachmentUrls : undefined,
+            clientContext: collectClientDiagnosticContext()
+          })
+        }
+      );
       const data = await response.json().catch(() => ({}));
       if (response.ok) {
-        setStatus(data?.message ?? "Thank you. We received your report.");
+        setStatus(
+          data?.message ??
+            (isAdminMode
+              ? "Report filed for other admins to resolve."
+              : "Thank you. We received your report.")
+        );
         setStatusType("success");
         setSubject("");
         setMessage("");
         setCategory("");
         clearAttachments();
+        onSubmitted?.();
       } else {
         setStatus(data?.error ?? "Something went wrong. Please try again.");
         setStatusType("error");
@@ -210,8 +229,9 @@ export default function ReportIssueForm() {
   return (
     <form onSubmit={handleSubmit} className="grid" style={{ gap: 16 }}>
       <p style={{ margin: 0, fontSize: 12, color: "#64748b", lineHeight: 1.45 }}>
-        Your account email, membership settings, and browser/device details are attached
-        automatically — you do not need to type those in.
+        {isAdminMode
+          ? "This files an internal ticket in the shared admin queue so another admin can resolve it. Browser/device details are attached automatically."
+          : "Your account email, membership settings, and browser/device details are attached automatically — you do not need to type those in."}
       </p>
       <div>
         <label htmlFor="report-category" style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
@@ -340,7 +360,7 @@ export default function ReportIssueForm() {
         disabled={isSubmitting}
         aria-busy={isSubmitting}
       >
-        {isSubmitting ? "Sending…" : "Send report"}
+        {isSubmitting ? "Sending…" : isAdminMode ? "File for other admins" : "Send report"}
       </button>
       {status && (
         <p

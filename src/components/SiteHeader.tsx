@@ -1,11 +1,17 @@
 import { headers } from "next/headers";
 import { getSessionConsoleType } from "@/lib/auth";
+import { isMemberLoggedIn } from "@/lib/member-session";
+
+export const dynamic = "force-dynamic";
 
 export default async function SiteHeader() {
   const pathname = (await headers()).get("x-rfts-pathname") ?? "";
   const onMemberLoginPage = pathname === "/member/login";
 
-  const consoleType = await getSessionConsoleType();
+  const [consoleType, memberLoggedIn] = await Promise.all([
+    getSessionConsoleType(),
+    isMemberLoggedIn()
+  ]);
   const consoleLink =
     consoleType === "admin"
       ? { label: "Admin Console", href: "/admin/content" }
@@ -17,6 +23,8 @@ export default async function SiteHeader() {
       ? { label: "Members Console", href: "/play-options" }
       : null;
   const showMemberReportIssue = consoleType === "member";
+  const showAdminReportIssue = consoleType === "admin";
+  const showGuestSignupActions = !memberLoggedIn;
   return (
     <header id="page-top" className="site-header">
       <div className="site-header-inner">
@@ -35,6 +43,7 @@ export default async function SiteHeader() {
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
                 {memberConsoleLink && <a href={memberConsoleLink.href}>{memberConsoleLink.label}</a>}
                 {showMemberReportIssue && <a href="/member/report-issue">Report an issue</a>}
+                {showAdminReportIssue && <a href="/admin/member-issues#file-issue">Report an issue</a>}
               </div>
             </details>
             <a href="/" className="brand">
@@ -59,15 +68,16 @@ export default async function SiteHeader() {
             {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
             {memberConsoleLink && <a href={memberConsoleLink.href}>{memberConsoleLink.label}</a>}
             {showMemberReportIssue && <a href="/member/report-issue">Report an issue</a>}
+            {showAdminReportIssue && <a href="/admin/member-issues#file-issue">Report an issue</a>}
           </nav>
           <div className="header-actions">
-            {consoleType !== "member" && (
+            {showGuestSignupActions && (
               <a className="button header-cta header-start-btn" href="/signup/step-1-subscription-selection">
                 <span className="header-btn-long">Start Your Journey</span>
                 <span className="header-btn-short">Start</span>
               </a>
             )}
-            {consoleType !== "member" && (
+            {showGuestSignupActions && (
               <details className="login-toggle">
                 <summary className="button header-cta">Login</summary>
                 <div className="menu-panel">

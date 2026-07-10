@@ -110,3 +110,37 @@ export function appendReportIssueContext(
   const trimmed = memberMessage.trimEnd();
   return trimmed ? `${trimmed}\n\n${block}` : block;
 }
+
+export function formatAdminReportIssueContextBlock(
+  adminEmail: string,
+  client?: ClientDiagnosticContext | null
+): string {
+  const lines = [
+    "--- Automatic diagnostic context ---",
+    `Reporter: admin (${adminEmail})`,
+    "Source: Internal admin issue report"
+  ];
+  if (client) {
+    lines.push(
+      `Page: ${client.pageUrl || "—"}`,
+      `User-Agent: ${client.userAgent || "—"}`,
+      `Platform: ${client.platform || "—"}`,
+      `Language: ${client.language || "—"}`,
+      `Time zone: ${client.timeZone || "—"}`,
+      `Screen: ${client.screen || "—"}`,
+      `Viewport: ${client.viewport || "—"}`,
+      `Collected at: ${client.collectedAt || "—"}`
+    );
+  }
+  return lines.join("\n");
+}
+
+export function appendAdminReportIssueContext(
+  message: string,
+  adminEmail: string,
+  client?: ClientDiagnosticContext | null
+): string {
+  const block = formatAdminReportIssueContextBlock(adminEmail, client);
+  const trimmed = message.trimEnd();
+  return trimmed ? `${trimmed}\n\n${block}` : block;
+}

@@ -76,7 +76,7 @@ export default function AdminContentPage() {
             Activity Dashboard
           </Link>
           <Link href="/admin/member-issues" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
-            Member issue reports
+            Issue reports
           </Link>
           <AdminLogoutButton />
         </div>

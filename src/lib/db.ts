@@ -1671,7 +1671,8 @@ export type MemberIssueReportStatus = "open" | "in_progress" | "resolved" | "clo
 
 export type MemberIssueReportAdmin = {
   id: string;
-  userId: string;
+  /** Null when an admin filed an internal ticket (no member account). */
+  userId: string | null;
   memberEmail: string;
   category: string;
   subject: string;
@@ -1685,8 +1686,13 @@ export type MemberIssueReportAdmin = {
   createdAt: string;
 };
 
+/** Admin-filed tickets have no member user_id; resolution emails should not go to the reporter as a "member". */
+export const isAdminFiledIssueReport = (
+  report: Pick<MemberIssueReportAdmin, "userId"> | { userId?: string | null }
+): boolean => !report.userId;
+
 export const insertMemberIssueReport = async (params: {
-  userId: string;
+  userId: string | null;
   memberEmail: string;
   category: string;
   subject: string;
@@ -1696,11 +1702,12 @@ export const insertMemberIssueReport = async (params: {
 }): Promise<boolean> => {
   const attachmentUrls = (params.attachmentUrls ?? []).map((url) => url.trim()).filter(Boolean);
   const screenshotUrl = params.screenshotUrl?.trim() || attachmentUrls[0] || null;
+  const userId = params.userId?.trim() || null;
   try {
     await sql`
       INSERT INTO member_issue_reports (user_id, member_email, category, subject, message, screenshot_url, attachment_urls)
       VALUES (
-        ${params.userId},
+        ${userId},
         ${params.memberEmail},
         ${params.category},
         ${params.subject},
@@ -1716,7 +1723,7 @@ export const insertMemberIssueReport = async (params: {
         await sql`
           INSERT INTO member_issue_reports (user_id, member_email, category, subject, message, screenshot_url)
           VALUES (
-            ${params.userId},
+            ${userId},
             ${params.memberEmail},
             ${params.category},
             ${params.subject},
@@ -1731,7 +1738,7 @@ export const insertMemberIssueReport = async (params: {
             await sql`
               INSERT INTO member_issue_reports (user_id, member_email, category, subject, message)
               VALUES (
-                ${params.userId},
+                ${userId},
                 ${params.memberEmail},
                 ${params.category},
                 ${params.subject},
@@ -1753,7 +1760,7 @@ export const insertMemberIssueReport = async (params: {
         await sql`
           INSERT INTO member_issue_reports (user_id, member_email, category, subject, message)
           VALUES (
-            ${params.userId},
+            ${userId},
             ${params.memberEmail},
             ${params.category},
             ${params.subject},
@@ -1773,7 +1780,7 @@ export const insertMemberIssueReport = async (params: {
 
 const mapIssueReportRow = (r: {
   id: string;
-  user_id: string;
+  user_id: string | null;
   member_email: string;
   category: string;
   subject: string;
@@ -1789,7 +1796,7 @@ const mapIssueReportRow = (r: {
   const attachmentUrls = resolveReportIssueAttachmentUrls(r.attachment_urls, r.screenshot_url);
   return {
     id: r.id,
-    userId: r.user_id,
+    userId: r.user_id || null,
     memberEmail: r.member_email,
     category: r.category,
     subject: r.subject,
@@ -1806,7 +1813,7 @@ const mapIssueReportRow = (r: {
 
 type MemberIssueReportRow = {
   id: string;
-  user_id: string;
+  user_id: string | null;
   member_email: string;
   category: string;
   subject: string;

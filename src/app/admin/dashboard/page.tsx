@@ -258,7 +258,7 @@ export default function AdminDashboardPage() {
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <Link href="/admin/member-issues" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
-            Member issue reports
+            Issue reports
           </Link>
           <Link href="/admin/content" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
             Content Console

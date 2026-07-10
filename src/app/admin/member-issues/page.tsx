@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import AdminLogoutButton from "@/components/AdminLogoutButton";
+import ReportIssueForm from "@/app/member/report-issue/ReportIssueForm";
 
 type Report = {
   id: string;
-  userId: string;
+  userId: string | null;
   memberEmail: string;
   category: string;
   subject: string;
@@ -19,6 +20,10 @@ type Report = {
   resolvedBy: string | null;
   createdAt: string;
 };
+
+function isAdminFiled(report: Report): boolean {
+  return !report.userId;
+}
 
 function isLikelyImageUrl(url: string): boolean {
   return /\.(png|jpe?g|webp|gif)(\?|$)/i.test(url);
@@ -64,6 +69,7 @@ export default function AdminMemberIssuesPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [dbWarning, setDbWarning] = useState<string | null>(null);
+  const [showFileForm, setShowFileForm] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -90,7 +96,10 @@ export default function AdminMemberIssuesPage() {
     }
     const list: Report[] = Array.isArray(data.reports) ? data.reports : [];
     const t = typeof data.total === "number" ? data.total : 0;
-    const tp = Math.max(1, typeof data.totalPages === "number" ? data.totalPages : Math.ceil(t / pageSize) || 1);
+    const tp = Math.max(
+      1,
+      typeof data.totalPages === "number" ? data.totalPages : Math.ceil(t / pageSize) || 1
+    );
     setTotal(t);
     setTotalPages(tp);
     if (t > 0 && page > tp) {
@@ -123,6 +132,13 @@ export default function AdminMemberIssuesPage() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.location.hash === "#file-issue") {
+      setShowFileForm(true);
+    }
+  }, []);
+
   const save = async (id: string) => {
     const d = drafts[id];
     if (!d) return;
@@ -145,7 +161,9 @@ export default function AdminMemberIssuesPage() {
       return;
     }
     let msg = "Saved.";
-    if (data.resolutionEmailSent === true) {
+    if (data.adminFiled === true && (d.status === "resolved" || d.status === "closed")) {
+      msg += " Internal admin ticket — no member email sent.";
+    } else if (data.resolutionEmailSent === true) {
       msg += " Member was emailed about the report status (resolved or closed).";
     } else if (data.resolutionEmailSent === false) {
       msg +=
@@ -158,7 +176,7 @@ export default function AdminMemberIssuesPage() {
   if (unauthorized) {
     return (
       <main>
-        <h1>Member issue reports</h1>
+        <h1>Issue reports</h1>
         <p>Admin login required.</p>
         <Link href="/login" className="button">
           Log in
@@ -180,27 +198,67 @@ export default function AdminMemberIssuesPage() {
         }}
       >
         <div>
-          <h1>Member issue reports</h1>
+          <h1>Issue reports</h1>
           <p style={{ color: "#4b5563", maxWidth: 640 }}>
-            Reports submitted from <strong>Report an issue</strong> (after email to the team succeeds). Update
-            status and resolution notes. When you set status to <strong>Resolved</strong> or <strong>Closed</strong>, the member receives an
-            email with your resolution message when provided. Richard and Craig (tech) are BCC’d on those notices
-            through mid-September 2026 for quality checks.
+            Member reports from <strong>Report an issue</strong>, plus internal tickets filed by
+            admins. Update status and resolution notes. When you set a <strong>member</strong> report
+            to <strong>Resolved</strong> or <strong>Closed</strong>, the member receives an email with
+            your resolution message when provided. Internal admin tickets stay in this queue only (no
+            member email).
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <button type="button" className="button button-secondary" style={{ fontSize: 13 }} onClick={() => void load()}>
+          <button
+            type="button"
+            className="button"
+            style={{ fontSize: 13 }}
+            onClick={() => setShowFileForm((v) => !v)}
+          >
+            {showFileForm ? "Hide file form" : "File an issue"}
+          </button>
+          <button
+            type="button"
+            className="button button-secondary"
+            style={{ fontSize: 13 }}
+            onClick={() => void load()}
+          >
             Refresh
           </button>
-          <Link href="/admin/dashboard" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
+          <Link
+            href="/admin/dashboard"
+            className="button button-secondary"
+            style={{ padding: "8px 12px", fontSize: 13 }}
+          >
             Activity Dashboard
           </Link>
-          <Link href="/admin/content" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
+          <Link
+            href="/admin/content"
+            className="button button-secondary"
+            style={{ padding: "8px 12px", fontSize: 13 }}
+          >
             Content Console
           </Link>
           <AdminLogoutButton />
         </div>
       </section>
+
+      {showFileForm ? (
+        <section id="file-issue" className="card" style={{ marginBottom: 24, maxWidth: 560 }}>
+          <h2 style={{ marginTop: 0, fontSize: 18 }}>File an issue for other admins</h2>
+          <p style={{ color: "#4b5563", fontSize: 14, marginTop: 0 }}>
+            Use this for bugs, ops notes, or handoffs. The report is emailed to the team and appears
+            in the queue below for another admin to resolve.
+          </p>
+          <ReportIssueForm
+            mode="admin"
+            onSubmitted={() => {
+              setFilter("open");
+              setPage(1);
+              void load();
+            }}
+          />
+        </section>
+      ) : null}
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
         {(
@@ -227,7 +285,9 @@ export default function AdminMemberIssuesPage() {
         ))}
       </div>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 16 }}>
+      <div
+        style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 16 }}
+      >
         <label style={{ fontSize: 14, color: "#374151", display: "flex", alignItems: "center", gap: 8 }}>
           Per page
           <select
@@ -270,7 +330,7 @@ export default function AdminMemberIssuesPage() {
             {filter === "all"
               ? dbWarning
                 ? "Issue reports could not be loaded — see the database message above."
-                : "No reports stored yet. Reports appear here after members submit Report an issue (and the row is saved to Postgres). If members received email but nothing shows here, run the database migrations in scripts/."
+                : "No reports stored yet. Members can submit from Report an issue; admins can use File an issue above."
               : "No reports match this filter."}
           </p>
         </div>
@@ -280,7 +340,7 @@ export default function AdminMemberIssuesPage() {
             <thead>
               <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
                 <th style={{ padding: "10px 8px", fontWeight: 600 }}>When</th>
-                <th style={{ padding: "10px 8px", fontWeight: 600 }}>Member</th>
+                <th style={{ padding: "10px 8px", fontWeight: 600 }}>From</th>
                 <th style={{ padding: "10px 8px", fontWeight: 600 }}>Category</th>
                 <th style={{ padding: "10px 8px", fontWeight: 600 }}>Subject</th>
                 <th style={{ padding: "10px 8px", fontWeight: 600 }}>Status</th>
@@ -293,7 +353,16 @@ export default function AdminMemberIssuesPage() {
                   <td style={{ padding: "10px 8px", color: "#4b5563", whiteSpace: "nowrap" }}>
                     {formatWhen(r.createdAt)}
                   </td>
-                  <td style={{ padding: "10px 8px" }}>{r.memberEmail}</td>
+                  <td style={{ padding: "10px 8px" }}>
+                    {r.memberEmail}
+                    {isAdminFiled(r) ? (
+                      <div style={{ fontSize: 12, color: "#0f766e", marginTop: 4 }}>
+                        Admin (internal)
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>Member</div>
+                    )}
+                  </td>
                   <td style={{ padding: "10px 8px", color: "#4b5563" }}>{r.category || "—"}</td>
                   <td style={{ padding: "10px 8px" }}>
                     <strong>{r.subject}</strong>
@@ -323,7 +392,12 @@ export default function AdminMemberIssuesPage() {
                         >
                           {r.message}
                         </pre>
-                        {(r.attachmentUrls?.length ? r.attachmentUrls : r.screenshotUrl ? [r.screenshotUrl] : []).length ? (
+                        {(r.attachmentUrls?.length
+                          ? r.attachmentUrls
+                          : r.screenshotUrl
+                            ? [r.screenshotUrl]
+                            : []
+                        ).length ? (
                           <div style={{ marginTop: 10, maxWidth: 420, display: "grid", gap: 12 }}>
                             {(r.attachmentUrls?.length
                               ? r.attachmentUrls
@@ -344,7 +418,7 @@ export default function AdminMemberIssuesPage() {
                                   /* eslint-disable-next-line @next/next/no-img-element */
                                   <img
                                     src={url}
-                                    alt={`Member attachment ${index + 1}`}
+                                    alt={`Attachment ${index + 1}`}
                                     style={{
                                       display: "block",
                                       marginTop: 8,
@@ -388,7 +462,11 @@ export default function AdminMemberIssuesPage() {
                       onChange={(e) =>
                         setDrafts((prev) => ({
                           ...prev,
-                          [r.id]: { ...prev[r.id], status: e.target.value, resolutionNotes: prev[r.id]?.resolutionNotes ?? "" }
+                          [r.id]: {
+                            ...prev[r.id],
+                            status: e.target.value,
+                            resolutionNotes: prev[r.id]?.resolutionNotes ?? ""
+                          }
                         }))
                       }
                     >
@@ -405,7 +483,11 @@ export default function AdminMemberIssuesPage() {
                     </label>
                     <textarea
                       id={`res-${r.id}`}
-                      placeholder="How it was resolved (included in member email when you set status to Resolved)"
+                      placeholder={
+                        isAdminFiled(r)
+                          ? "How it was resolved (internal notes; no member email)"
+                          : "How it was resolved (included in member email when you set status to Resolved)"
+                      }
                       style={{
                         width: "100%",
                         minHeight: 72,
@@ -419,7 +501,11 @@ export default function AdminMemberIssuesPage() {
                       onChange={(e) =>
                         setDrafts((prev) => ({
                           ...prev,
-                          [r.id]: { ...prev[r.id], status: prev[r.id]?.status ?? r.status, resolutionNotes: e.target.value }
+                          [r.id]: {
+                            ...prev[r.id],
+                            status: prev[r.id]?.status ?? r.status,
+                            resolutionNotes: e.target.value
+                          }
                         }))
                       }
                     />
