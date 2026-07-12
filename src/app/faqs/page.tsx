@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   formatAffiliatePayoutThresholdPolicy
 } from "@/lib/affiliate-payout";
+import { useMemberLoggedIn } from "@/hooks/useMemberLoggedIn";
 import SiteFooter from "@/components/SiteFooter";
 
 type SectionKey = "who" | "what" | "where" | "why" | "help";
@@ -11,6 +12,7 @@ type SectionKey = "who" | "what" | "where" | "why" | "help";
 export default function FaqsPage() {
   const [openSection, setOpenSection] = useState<SectionKey>("who");
   const sectionRefs = useRef<Partial<Record<SectionKey, HTMLElement>>>({});
+  const isMember = useMemberLoggedIn();
 
   const handleSectionClick = (key: SectionKey) => {
     setOpenSection(key);
@@ -151,8 +153,16 @@ export default function FaqsPage() {
             <h3>Where do I start?</h3>
             <ol>
               <li>
-                Click on{" "}
-                <a href="/signup/step-1-subscription-selection">Start Your Journey</a>.
+                {isMember === true ? (
+                  <>
+                    Open your <a href="/play-options">Play Options</a> page.
+                  </>
+                ) : (
+                  <>
+                    Click on{" "}
+                    <a href="/signup/step-1-subscription-selection">Start Your Journey</a>.
+                  </>
+                )}
               </li>
               <li>Select up to 10 goals (in priority order).</li>
               <li>Tap Start Session on your Play Options page.</li>

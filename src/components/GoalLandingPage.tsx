@@ -5,6 +5,7 @@ import {
   LANDING_TRIAL_CTA_LABEL
 } from "@/components/LandingTrialCta";
 import RelatedAudioLandings from "@/components/RelatedAudioLandings";
+import { isMemberLoggedIn } from "@/lib/member-session";
 import type { AudioLandingCard } from "@/lib/audio-landing-relations";
 import {
   getRelatedGoalPages,
@@ -12,13 +13,14 @@ import {
   type GoalLandingContent
 } from "@/lib/goal-landing-pages";
 
-export default function GoalLandingPage({
+export default async function GoalLandingPage({
   content,
   relatedAudios = []
 }: {
   content: GoalLandingContent;
   relatedAudios?: AudioLandingCard[];
 }) {
+  const showSignupCta = !(await isMemberLoggedIn());
   const related = getRelatedGoalPages(content.relatedSlugs);
 
   return (
@@ -45,7 +47,7 @@ export default function GoalLandingPage({
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           />
         </div>
-        <LandingTrialCtaButtons signupHref={GOAL_SIGNUP_HREF} />
+        {showSignupCta && <LandingTrialCtaButtons signupHref={GOAL_SIGNUP_HREF} />}
       </section>
 
       <section className="section">
@@ -64,10 +66,12 @@ export default function GoalLandingPage({
         </div>
       </section>
 
-      <LandingTrialCtaBand
-        signupHref={GOAL_SIGNUP_HREF}
-        body={`Set ${content.label.toLowerCase()} among your goals and listen while you sleep — try Reach For The Stars free for 14 days.`}
-      />
+      {showSignupCta && (
+        <LandingTrialCtaBand
+          signupHref={GOAL_SIGNUP_HREF}
+          body={`Set ${content.label.toLowerCase()} among your goals and listen while you sleep — try Reach For The Stars free for 14 days.`}
+        />
+      )}
 
       <RelatedAudioLandings
         heading={`Related audios for ${content.label.toLowerCase()}`}
@@ -121,18 +125,20 @@ export default function GoalLandingPage({
         </section>
       )}
 
-      <section className="section">
-        <div className="card glow" style={{ textAlign: "center", padding: 28 }}>
-          <h2 style={{ marginTop: 0 }}>Ready to start?</h2>
-          <p style={{ color: "#64748b", marginBottom: 16 }}>
-            Set {content.label.toLowerCase()} among your goals tonight. Your personalized audios
-            begin the first night you press Start Session.
-          </p>
-          <a className="button" href={GOAL_SIGNUP_HREF}>
-            {LANDING_TRIAL_CTA_LABEL}
-          </a>
-        </div>
-      </section>
+      {showSignupCta && (
+        <section className="section">
+          <div className="card glow" style={{ textAlign: "center", padding: 28 }}>
+            <h2 style={{ marginTop: 0 }}>Ready to start?</h2>
+            <p style={{ color: "#64748b", marginBottom: 16 }}>
+              Set {content.label.toLowerCase()} among your goals tonight. Your personalized audios
+              begin the first night you press Start Session.
+            </p>
+            <a className="button" href={GOAL_SIGNUP_HREF}>
+              {LANDING_TRIAL_CTA_LABEL}
+            </a>
+          </div>
+        </section>
+      )}
 
       <SiteFooter showStartJourney={false} />
     </main>

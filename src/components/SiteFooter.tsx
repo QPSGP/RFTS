@@ -1,5 +1,8 @@
+"use client";
+
 import { GOAL_LANDING_PAGES } from "@/lib/goal-landing-pages";
 import { WELLNESS_BENEFIT_LINKS } from "@/lib/meditation-benefits";
+import { useMemberLoggedIn } from "@/hooks/useMemberLoggedIn";
 
 type SiteFooterProps = {
   showCta?: boolean;
@@ -7,12 +10,17 @@ type SiteFooterProps = {
 };
 
 export default function SiteFooter({ showCta = true, showStartJourney = true }: SiteFooterProps) {
+  const isMember = useMemberLoggedIn();
+  const hideGuestSignup = isMember === true;
+  const showFooterCta = showCta && !hideGuestSignup;
+  const showFooterStart = showStartJourney && !hideGuestSignup;
+
   return (
     <footer className="section" style={{ marginTop: 40 }}>
-      {showCta && (
+      {showFooterCta && (
         <div className="card glow" style={{ marginBottom: 24, textAlign: "center", padding: 24 }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
-            {showStartJourney && (
+            {showFooterStart && (
               <a className="button" href="/signup/step-1-subscription-selection">
                 Start Your Journey
               </a>

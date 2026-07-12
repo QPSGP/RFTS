@@ -5,9 +5,11 @@ import {
   LANDING_TRIAL_CTA_LABEL
 } from "@/components/LandingTrialCta";
 import { libraryItemCoverSrc } from "@/lib/library-display";
+import { isMemberLoggedIn } from "@/lib/member-session";
 import type { AudioLandingContent } from "@/lib/audio-landing";
 
-export default function AudioTrackLandingPage({ content }: { content: AudioLandingContent }) {
+export default async function AudioTrackLandingPage({ content }: { content: AudioLandingContent }) {
+  const showSignupCta = !(await isMemberLoggedIn());
   const coverSrc = libraryItemCoverSrc({ coverUrl: content.coverUrl });
 
   return (
@@ -59,24 +61,28 @@ export default function AudioTrackLandingPage({ content }: { content: AudioLandi
             &ldquo;{content.transcriptSnippet}&rdquo;
           </p>
         </div>
-        <LandingTrialCtaButtons signupHref={content.signupHref} />
+        {showSignupCta && <LandingTrialCtaButtons signupHref={content.signupHref} />}
       </section>
 
-      <LandingTrialCtaBand
-        signupHref={content.signupHref}
-        body="Set your goals tonight and hear guided audios like this in your nightly rotation — try Reach For The Stars free for 14 days."
-      />
+      {showSignupCta && (
+        <LandingTrialCtaBand
+          signupHref={content.signupHref}
+          body="Set your goals tonight and hear guided audios like this in your nightly rotation — try Reach For The Stars free for 14 days."
+        />
+      )}
 
-      <section className="section">
-        <div className="card glow" style={{ textAlign: "center", padding: 28 }}>
-          <h2 style={{ marginTop: 0 }}>Hear this in your nightly rotation</h2>
-          <p style={{ color: "#64748b", marginBottom: 16 }}>
-            Set your goals tonight and press Start Session on your first night. Reach For The Stars
-            schedules personalized audios while you fall asleep and during sleep.
-          </p>
-          <a className="button" href={content.signupHref}>{LANDING_TRIAL_CTA_LABEL}</a>
-        </div>
-      </section>
+      {showSignupCta && (
+        <section className="section">
+          <div className="card glow" style={{ textAlign: "center", padding: 28 }}>
+            <h2 style={{ marginTop: 0 }}>Hear this in your nightly rotation</h2>
+            <p style={{ color: "#64748b", marginBottom: 16 }}>
+              Set your goals tonight and press Start Session on your first night. Reach For The Stars
+              schedules personalized audios while you fall asleep and during sleep.
+            </p>
+            <a className="button" href={content.signupHref}>{LANDING_TRIAL_CTA_LABEL}</a>
+          </div>
+        </section>
+      )}
 
       <SiteFooter showStartJourney={false} />
     </main>

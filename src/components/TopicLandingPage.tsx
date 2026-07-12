@@ -6,6 +6,7 @@ import {
 } from "@/components/LandingTrialCta";
 import RelatedAudioLandings from "@/components/RelatedAudioLandings";
 import { getBlogPostsNewestFirst } from "@/lib/blog-posts";
+import { isMemberLoggedIn } from "@/lib/member-session";
 import type { AudioLandingCard } from "@/lib/audio-landing-relations";
 import {
   getRelatedTopicPages,
@@ -13,13 +14,14 @@ import {
   type TopicLandingContent
 } from "@/lib/topic-landing-pages";
 
-export default function TopicLandingPage({
+export default async function TopicLandingPage({
   content,
   relatedAudios = []
 }: {
   content: TopicLandingContent;
   relatedAudios?: AudioLandingCard[];
 }) {
+  const showSignupCta = !(await isMemberLoggedIn());
   const related = getRelatedTopicPages(content.relatedSlugs);
   const relatedArticles = getBlogPostsNewestFirst().filter(
     (post) => post.topicSlug === content.slug
@@ -31,7 +33,7 @@ export default function TopicLandingPage({
         <span className="pill">{content.pill}</span>
         <h1>{content.title}</h1>
         <p>{content.heroLead}</p>
-        <LandingTrialCtaButtons signupHref={TOPIC_SIGNUP_HREF} />
+        {showSignupCta && <LandingTrialCtaButtons signupHref={TOPIC_SIGNUP_HREF} />}
       </section>
 
       <section className="section">
@@ -50,10 +52,12 @@ export default function TopicLandingPage({
         </div>
       </section>
 
-      <LandingTrialCtaBand
-        signupHref={TOPIC_SIGNUP_HREF}
-        body={`${content.title} — personalized nightly audios while you sleep. Try Reach For The Stars free for 14 days.`}
-      />
+      {showSignupCta && (
+        <LandingTrialCtaBand
+          signupHref={TOPIC_SIGNUP_HREF}
+          body={`${content.title} — personalized nightly audios while you sleep. Try Reach For The Stars free for 14 days.`}
+        />
+      )}
 
       <RelatedAudioLandings
         heading={`Related audios for ${content.pill.toLowerCase()}`}
@@ -130,18 +134,20 @@ export default function TopicLandingPage({
         </section>
       )}
 
-      <section className="section">
-        <div className="card glow" style={{ textAlign: "center", padding: 28 }}>
-          <h2 style={{ marginTop: 0 }}>Ready to start?</h2>
-          <p style={{ color: "#64748b", marginBottom: 16 }}>
-            Set goals tonight. Your personalized audios begin the first night you press Start
-            Session.
-          </p>
-          <a className="button" href={TOPIC_SIGNUP_HREF}>
-            {LANDING_TRIAL_CTA_LABEL}
-          </a>
-        </div>
-      </section>
+      {showSignupCta && (
+        <section className="section">
+          <div className="card glow" style={{ textAlign: "center", padding: 28 }}>
+            <h2 style={{ marginTop: 0 }}>Ready to start?</h2>
+            <p style={{ color: "#64748b", marginBottom: 16 }}>
+              Set goals tonight. Your personalized audios begin the first night you press Start
+              Session.
+            </p>
+            <a className="button" href={TOPIC_SIGNUP_HREF}>
+              {LANDING_TRIAL_CTA_LABEL}
+            </a>
+          </div>
+        </section>
+      )}
 
       <SiteFooter showStartJourney={false} />
     </main>

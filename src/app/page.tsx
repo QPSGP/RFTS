@@ -1,9 +1,8 @@
 /* eslint-disable react/no-unescaped-entities */
 import SiteFooter from "@/components/SiteFooter";
+import { isMemberLoggedIn } from "@/lib/member-session";
 import { HOMEPAGE_GOAL_CARDS } from "@/lib/homepage-goals";
 import { MEDITATION_SOURCES, WELLNESS_BENEFIT_LINKS } from "@/lib/meditation-benefits";
-
-const SIGNUP_STEP1_HREF = "/signup/step-1-subscription-selection";
 
 function MeditationBenefitLink({
   label,
@@ -57,7 +56,9 @@ function GoalImageLink({ label, src, href }: { label: string; src: string; href:
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const showSignupCta = !(await isMemberLoggedIn());
+
   return (
     <main>
       <section className="hero section">
@@ -83,10 +84,12 @@ export default function HomePage() {
             Your browser does not support the video tag.
           </video>
           <div className="cta-row hero-cta" style={{ gap: 16, alignItems: "center", justifyContent: "center" }}>
-            <a className="button" href="/signup/step-1-subscription-selection">
-              Start Your Journey
-            </a>
-            <strong>14 Day Free Trial!</strong>
+            {showSignupCta && (
+              <a className="button" href="/signup/step-1-subscription-selection">
+                Start Your Journey
+              </a>
+            )}
+            {showSignupCta && <strong>14 Day Free Trial!</strong>}
           </div>
         </div>
       </section>
