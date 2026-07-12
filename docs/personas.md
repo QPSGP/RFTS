@@ -1,6 +1,6 @@
 # Reach For The Stars — Top 3 Marketing Personas
 
-Use these personas to steer blog topics, ad creative, short-form hooks, affiliate outreach, and landing-page copy. Each maps to segments in the RFTS marketing plan (burnout professionals, front-line caregivers, sleep-deprived parents).
+Use these personas to steer blog topics, ad creative, short-form hooks, affiliate outreach, and landing-page copy. Each maps to segments in `docs/marketing-plan.md`.
 
 ---
 
