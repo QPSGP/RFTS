@@ -23,6 +23,66 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "racing-thoughts-bedtime-guided-sleep-meditation",
+    title: "Racing thoughts at bedtime? How guided sleep meditation helps you fall asleep",
+    metaTitle: "Racing Thoughts at Bedtime — Guided Sleep Meditation | RFTS Blog",
+    metaDescription:
+      "Can't shut your mind off at night? How guided sleep meditation and nightly audios replace the scroll habit, calm racing thoughts, and support deeper rest.",
+    publishedAt: "2026-07-12",
+    readMinutes: 6,
+    excerpt:
+      "When your mind replays the day at 11 p.m., guided sleep meditation gives your brain something better to follow than worry — a fixed nightly flow that plays while you fall asleep and during sleep.",
+    topicSlug: "sleep-meditation",
+    sections: [
+      {
+        paragraphs: [
+          "You know the pattern: lights out, eyes closed, and suddenly every unfinished task, awkward conversation, and tomorrow's deadline queues up at once. Racing thoughts at bedtime are one of the most common reasons people search for guided sleep meditation, sleep hypnosis, or anything that might finally quiet the noise.",
+          "The trap is reaching for your phone — one more scroll, one more podcast, one more random track from a meditation app you forgot to open yesterday. Reach For The Stars replaces that decision fatigue with a personalized nightly schedule: intro relaxation music, your first goal recording as you drift off, and an optional second audio about 2.5 hours later while you are still in restorative sleep."
+        ]
+      },
+      {
+        heading: "Why bedtime is the hardest time to \"try to relax\"",
+        paragraphs: [
+          "During the day, distraction is everywhere. At night, there is nothing left to compete with your thoughts. Willpower is lowest when you are tired, which is why daytime meditation plans often fail for people whose main struggle is falling asleep.",
+          "Guided sleep meditation works differently: you press Start Session once, and the program handles timing. Your conscious mind follows a calm voice and structured imagery instead of rehearsing problems. That shift — from effort to receptivity — is what hypnotherapists have used for decades, and it maps cleanly onto the moments when your body is already winding down."
+        ]
+      },
+      {
+        heading: "From racing thoughts to a repeatable wind-down",
+        paragraphs: [
+          "A useful sleep practice has three parts: a consistent cue (same time, same first step), content matched to your goals (rest, calm, balance, stress relief), and repetition over weeks — not a single heroic night.",
+          "Members choose priorities and order them by importance. The rotation brings sleep-friendly themes back on a predictable cadence so you are not hunting for \"the right track\" when you are exhausted. Many people pair rest with stress relief or balanced life goals when worry is what keeps them awake."
+        ]
+      },
+      {
+        heading: "The second audio: reinforcement while you sleep",
+        paragraphs: [
+          "If you select two audios per night, the second plays during sleep — not as another thing to stay awake for. Research on sleep and learning suggests the brain remains receptive during parts of the night; gentle suggestion during that window can reinforce the same calm you started at bedtime.",
+          "You do not need to memorize steps or sit upright. The platform schedules everything. Over time, the cue itself — intro music, then your session — can become a signal that it is safe to let go of the day."
+        ]
+      },
+      {
+        heading: "Who benefits most",
+        paragraphs: [
+          "This approach fits busy professionals, parents running on empty, shift workers with irregular hours, and anyone whose mind speeds up the moment the house goes quiet. It also helps people who have tried single sleep tracks but could not build a habit.",
+          "Guided meditation supports rest and habit change; it is not a substitute for clinical care when insomnia is severe or tied to untreated anxiety, trauma, or sleep disorders. If you are unsure, talk with your doctor — and consider nightly guided audios as one supportive layer alongside professional guidance."
+        ]
+      },
+      {
+        heading: "Get started tonight",
+        paragraphs: [
+          "Choose goals that support rest — balance, calm, stress relief, or related priorities — and complete registration to activate your membership. Your personalized audios begin the first night you press Start Session.",
+          "Read more on our guided sleep meditation page for how nightly rotation works, or use Start your journey below to sign up tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Peaceful sleep and quiet mind (excerpt)",
+      quote:
+        "Thoughts slow down now… the day is complete and you release it… each breath carries you toward rest… your mind follows calm instead of worry… deep, restorative sleep welcomes you…"
+    }
+  },
+  {
     slug: "guided-meditation-inspiration-creativity-at-will",
     title: "Guided meditation for inspiration: creativity at will while you sleep",
     metaTitle: "Inspiration & Creativity — Guided Meditation at Night | RFTS Blog",
