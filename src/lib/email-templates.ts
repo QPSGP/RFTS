@@ -88,14 +88,14 @@ function memberDisplayName(firstName?: string | null, lastName?: string | null):
   return parts.join(" ").trim();
 }
 
-/** Platinum Managed payment paragraph in the welcome email (HTML + plain text). */
+/** Platinum Managed benefits paragraph in the welcome email (HTML + plain text). */
 export const WELCOME_EMAIL_PLATINUM_MANAGED_COPY =
-  "Platinum Managed includes curated guided meditations and assigned audios managed by your hypnotherapist, and a 15-minute Goal Changing & Progress Evaluation consultation every 90 days with a Success Center hypnotherapist or coach.";
+  'The package has a 30-day free trial period and includes: Unlimited Access to All Recordings in the Success Center Library. A 15-Minute Private Consultation every 90 days to discuss "Goal Changing & Progress Evaluation" with a Success Center Associate ($285 Value). 12-month commitment includes two free months and a free otherwise required Customized Goal Manifestation Recording ($200 value) which will play every 4th play. Call us for details.';
 
 export function welcomeEmailHasUpdatedPlatinumCopy(content: Pick<TemplateContent, "html" | "text">): boolean {
   return (
     content.text.includes(WELCOME_EMAIL_PLATINUM_MANAGED_COPY) &&
-    !content.text.includes("curated sessions and assigned audios")
+    content.text.includes("Customized Goal Manifestation Recording")
   );
 }
 
@@ -132,7 +132,7 @@ export function getWelcomeEmailContent(
 
   <h2 style="font-size: 1.05em; margin-top: 28px; margin-bottom: 8px;">Payment and Cancellation</h2>
   <p><strong>Gold Member membership:</strong> The Gold Member package has a <strong>14-day free trial</strong> period, after which <strong>$19.95 per month</strong> will be charged to the payment card you entered. Gold membership includes tailored recordings scheduled from your goals, access to the Success Center library, and a one-time 15-minute Goal Changing &amp; Progress Evaluation consultation after 90 days with a Success Center hypnotherapist or coach.</p>
-  <p><strong>Platinum Managed membership:</strong> The Platinum Managed package has a <strong>30-day free trial</strong> period, after which <strong>$39.95 per month</strong> will be charged to the payment card you entered. ${escapeHtml(WELCOME_EMAIL_PLATINUM_MANAGED_COPY)}</p>
+  <p><strong>Platinum Managed membership:</strong> The package has a <strong>30-day free trial</strong> period and includes: Unlimited Access to All Recordings in the Success Center Library. A 15-Minute Private Consultation every 90 days to discuss &quot;Goal Changing &amp; Progress Evaluation&quot; with a Success Center Associate ($285 Value). 12-month commitment includes two free months and a free otherwise required Customized Goal Manifestation Recording ($200 value) which will play every 4th play. Call us for details.</p>
   <p>To upgrade or cancel your membership, update your credit card or billing information, and see your payment history please go to your profile in your console.</p>
   <p>You can cancel at any time from your console, being responsible only for the current month you signed up for. Please see the ReachForTheStars.Today Terms and Conditions for details.</p>
 
@@ -173,7 +173,7 @@ We'd love to help. Call the Success Center, Inc. office at (800) GOAL NOW (462-5
 Payment and Cancellation
 Gold Member membership: The Gold Member package has a 14-day free trial period, after which $19.95 per month will be charged to the payment card you entered. Gold membership includes tailored recordings scheduled from your goals, access to the Success Center library, and a one-time 15-minute Goal Changing & Progress Evaluation consultation after 90 days with a Success Center hypnotherapist or coach.
 
-Platinum Managed membership: The Platinum Managed package has a 30-day free trial period, after which $39.95 per month will be charged to the payment card you entered. ${WELCOME_EMAIL_PLATINUM_MANAGED_COPY}
+Platinum Managed membership: ${WELCOME_EMAIL_PLATINUM_MANAGED_COPY}
 
 To upgrade or cancel your membership, update your credit card or billing information, and see your payment history please go to your profile in your console.
 
