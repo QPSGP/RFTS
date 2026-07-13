@@ -1,4 +1,6 @@
-export const LANDING_TRIAL_SIGNUP_HREF = "/signup/step-1-subscription-selection";
+import { buildMarketingSignupHref } from "@/lib/marketing-signup";
+
+export const LANDING_TRIAL_SIGNUP_HREF = buildMarketingSignupHref();
 export const LANDING_TRIAL_CTA_LABEL = "Start 14-day free trial";
 
 type LandingTrialCtaButtonsProps = {

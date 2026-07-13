@@ -1,6 +1,9 @@
 import { headers } from "next/headers";
 import { getSessionConsoleType } from "@/lib/auth";
 import { isMemberLoggedIn } from "@/lib/member-session";
+import { buildMarketingSignupHref } from "@/lib/marketing-signup";
+
+const MARKETING_SIGNUP_HREF = buildMarketingSignupHref();
 
 export const dynamic = "force-dynamic";
 
@@ -72,7 +75,7 @@ export default async function SiteHeader() {
           </nav>
           <div className="header-actions">
             {showGuestSignupActions && (
-              <a className="button header-cta header-start-btn" href="/signup/step-1-subscription-selection">
+              <a className="button header-cta header-start-btn" href={MARKETING_SIGNUP_HREF}>
                 <span className="header-btn-long">Start Your Journey</span>
                 <span className="header-btn-short">Start</span>
               </a>

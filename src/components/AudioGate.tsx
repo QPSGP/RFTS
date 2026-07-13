@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import AudioPlayer from "@/components/AudioPlayer";
+import { LANDING_TRIAL_SIGNUP_HREF } from "@/components/LandingTrialCta";
 import { libraryItemCoverSrc } from "@/lib/library-display";
 import type { LibraryItem } from "@/lib/types";
 
@@ -65,7 +66,7 @@ export default function AudioGate({ item }: AudioGateProps) {
         <p>
           This audio is available to active subscribers. Start your membership to continue.
         </p>
-        <a className="button" href="/signup/step-1-subscription-selection">
+        <a className="button" href={LANDING_TRIAL_SIGNUP_HREF}>
           Start Your Journey
         </a>
       </div>

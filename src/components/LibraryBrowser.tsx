@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { LANDING_TRIAL_SIGNUP_HREF } from "@/components/LandingTrialCta";
 import { libraryItemCoverSrc } from "@/lib/library-display";
 import { buildInterestNameMap, libraryItemMatchesSearch } from "@/lib/library-search";
 import type { Interest, LibraryItem } from "@/lib/types";
@@ -186,7 +187,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
         <div className="card">
           <h2>Subscription Required</h2>
           <p>Activate your subscription to unlock playback.</p>
-          <a className="button" href="/signup/step-1-subscription-selection">
+          <a className="button" href={LANDING_TRIAL_SIGNUP_HREF}>
             Start Your Journey
           </a>
         </div>

@@ -6,6 +6,7 @@ import {
 } from "@/lib/affiliate-payout";
 import { useMemberLoggedIn } from "@/hooks/useMemberLoggedIn";
 import SiteFooter from "@/components/SiteFooter";
+import { LANDING_TRIAL_SIGNUP_HREF } from "@/components/LandingTrialCta";
 
 type SectionKey = "who" | "what" | "where" | "why" | "help";
 
@@ -160,7 +161,7 @@ export default function FaqsPage() {
                 ) : (
                   <>
                     Click on{" "}
-                    <a href="/signup/step-1-subscription-selection">Start Your Journey</a>.
+                    <a href={LANDING_TRIAL_SIGNUP_HREF}>Start Your Journey</a>.
                   </>
                 )}
               </li>

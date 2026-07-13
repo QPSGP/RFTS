@@ -1,5 +1,6 @@
 "use client";
 
+import { LANDING_TRIAL_SIGNUP_HREF } from "@/components/LandingTrialCta";
 import { GOAL_LANDING_PAGES } from "@/lib/goal-landing-pages";
 import { WELLNESS_BENEFIT_LINKS } from "@/lib/meditation-benefits";
 import { useMemberLoggedIn } from "@/hooks/useMemberLoggedIn";
@@ -21,7 +22,7 @@ export default function SiteFooter({ showCta = true, showStartJourney = true }: 
         <div className="card glow" style={{ marginBottom: 24, textAlign: "center", padding: 24 }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
             {showFooterStart && (
-              <a className="button" href="/signup/step-1-subscription-selection">
+              <a className="button" href={LANDING_TRIAL_SIGNUP_HREF}>
                 Start Your Journey
               </a>
             )}

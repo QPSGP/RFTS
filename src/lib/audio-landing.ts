@@ -1,10 +1,11 @@
 import type { LibraryItem } from "@/lib/types";
 import { lookupRecordingDescription } from "@/lib/library-metadata";
 import { stripSkuHyphens } from "@/lib/sku-code";
+import { buildMarketingSignupHref } from "@/lib/marketing-signup";
 
 export const AUDIO_LANDING_PATH_PREFIX = "/audio";
 
-const SIGNUP = "/signup/step-1-subscription-selection";
+const SIGNUP = buildMarketingSignupHref();
 
 export type AudioLandingContent = {
   slug: string;

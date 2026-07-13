@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { getPublicSiteUrl } from "@/lib/site-url";
+import { SIGNUP_PATH } from "@/lib/marketing-signup";
 
 export const AFFILIATE_REF_PARAM = "ref";
 
@@ -20,7 +21,7 @@ export function buildMemberReferralUrl(
 ): string {
   const base = (baseUrl || getPublicSiteUrl()).replace(/\/$/, "");
   const code = normalizeAffiliateCode(affiliateCode);
-  const path = "/signup/step-1-subscription-selection";
+  const path = SIGNUP_PATH;
   if (!code) return `${base}${path}`;
   return `${base}${path}?${AFFILIATE_REF_PARAM}=${encodeURIComponent(code)}`;
 }

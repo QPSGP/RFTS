@@ -3,6 +3,7 @@ import {
   HOMEPAGE_GOAL_CARDS,
   type GoalLandingSlug
 } from "@/lib/homepage-goals";
+import { buildMarketingSignupHref } from "@/lib/marketing-signup";
 
 export type { GoalLandingSlug };
 
@@ -24,7 +25,7 @@ export type GoalLandingContent = {
   relatedSlugs: GoalLandingSlug[];
 };
 
-const SIGNUP = "/signup/step-1-subscription-selection";
+const SIGNUP = buildMarketingSignupHref();
 
 const GOAL_DETAILS: Record<
   GoalLandingSlug,

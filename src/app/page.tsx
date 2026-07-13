@@ -3,6 +3,9 @@ import SiteFooter from "@/components/SiteFooter";
 import { isMemberLoggedIn } from "@/lib/member-session";
 import { HOMEPAGE_GOAL_CARDS } from "@/lib/homepage-goals";
 import { MEDITATION_SOURCES, WELLNESS_BENEFIT_LINKS } from "@/lib/meditation-benefits";
+import { buildMarketingSignupHref } from "@/lib/marketing-signup";
+
+const MARKETING_SIGNUP_HREF = buildMarketingSignupHref();
 
 function MeditationBenefitLink({
   label,
@@ -85,7 +88,7 @@ export default async function HomePage() {
           </video>
           <div className="cta-row hero-cta" style={{ gap: 16, alignItems: "center", justifyContent: "center" }}>
             {showSignupCta && (
-              <a className="button" href="/signup/step-1-subscription-selection">
+              <a className="button" href={MARKETING_SIGNUP_HREF}>
                 Start Your Journey
               </a>
             )}

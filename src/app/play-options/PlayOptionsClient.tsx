@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import PlayOptionsAndroidTips from "@/components/PlayOptionsAndroidTips";
+import { LANDING_TRIAL_SIGNUP_HREF } from "@/components/LandingTrialCta";
 import SessionPlayer, { SessionPlayerHandle } from "@/components/SessionPlayer";
 import { getMemberTonightTrackItems } from "@/lib/schedule-progress";
 
@@ -145,7 +146,7 @@ export default function PlayOptionsClient({
             Your account is ready, but a subscription is required to start sessions.
           </p>
           <div className="cta-row" style={{ marginTop: 16 }}>
-            <a className="button" href="/signup/step-1-subscription-selection">
+            <a className="button" href={LANDING_TRIAL_SIGNUP_HREF}>
               Start Your Journey
             </a>
             <a className="button button-secondary" href="/member/login">

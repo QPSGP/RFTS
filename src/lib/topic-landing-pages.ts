@@ -1,3 +1,5 @@
+import { buildMarketingSignupHref } from "@/lib/marketing-signup";
+
 export type TopicLandingSlug =
   | "sleep-meditation"
   | "stress-relief"
@@ -26,7 +28,7 @@ export type TopicLandingContent = {
   relatedSlugs: TopicLandingSlug[];
 };
 
-const SIGNUP = "/signup/step-1-subscription-selection";
+const SIGNUP = buildMarketingSignupHref();
 
 export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
   {

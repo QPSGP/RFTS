@@ -29,6 +29,7 @@ Content and SEO
 - Publish weekly blog posts with transcript excerpts.
 - Create landing pages per audio track with summary, transcript snippet, CTA.
 - **Implemented:** `/audio/[slug]` per library track; indexable catalog tracks in sitemap with related links from goal, wellness, and blog pages.
+- **Marketing affiliate ref:** set `NEXT_PUBLIC_MARKETING_AFFILIATE_REF` in Vercel to your code (My Profile → Affiliate program). Blog, landing pages, header/footer, and guest signup CTAs then use `?ref=YOURCODE`. For manual emails, link to `https://reachforthestars.today/signup/step-1-subscription-selection?ref=YOURCODE`.
 
 Social and Short-Form
 - Post 3-5 clips per week on TikTok and Instagram Reels.

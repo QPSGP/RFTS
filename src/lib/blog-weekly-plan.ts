@@ -2,9 +2,10 @@ import { HOMEPAGE_GOAL_CARDS, type GoalLandingSlug } from "@/lib/homepage-goals"
 import { WELLNESS_BENEFIT_LINKS } from "@/lib/meditation-benefits";
 import { getBlogPostsNewestFirst, type BlogPost } from "@/lib/blog-posts";
 import type { TopicLandingSlug } from "@/lib/topic-landing-pages";
+import { buildMarketingSignupHref } from "@/lib/marketing-signup";
 
 /** Every article should drive signup — use in CTAs and new post checklists. */
-export const BLOG_SIGNUP_PATH = "/signup/step-1-subscription-selection";
+export const BLOG_SIGNUP_PATH = buildMarketingSignupHref();
 
 export const BLOG_SIGNUP_HREF = BLOG_SIGNUP_PATH;
 

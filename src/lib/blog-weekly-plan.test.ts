@@ -22,6 +22,6 @@ describe("blog-weekly-plan", () => {
       }
     ]);
     expect(status.due).toBe(true);
-    expect(status.signupPath).toBe("/signup/step-1-subscription-selection");
+    expect(status.signupPath.startsWith("/signup/step-1-subscription-selection")).toBe(true);
   });
 });

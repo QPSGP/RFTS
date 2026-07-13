@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LANDING_TRIAL_SIGNUP_HREF } from "@/components/LandingTrialCta";
 
 const inputStyle = {
   padding: 12,
@@ -204,7 +205,7 @@ export default function UserAuth({
           </button>
         </form>
         <p style={{ marginTop: 12, color: "#64748b", fontSize: 13 }}>
-          New to RFTS? <a href="/signup/step-1-subscription-selection">Sign up here</a>.
+          New to RFTS? <a href={LANDING_TRIAL_SIGNUP_HREF}>Sign up here</a>.
         </p>
       </div>
       {!loggedIn && status && (
