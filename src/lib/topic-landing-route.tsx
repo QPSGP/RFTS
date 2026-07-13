@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import TopicLandingPage from "@/components/TopicLandingPage";
 import { findRelatedAudioLandingsForTopic } from "@/lib/audio-landing-relations";
 import { listLibrary } from "@/lib/db";
-import { getTopicLandingPage, type TopicLandingSlug } from "@/lib/topic-landing-pages";
+import { getTopicLandingPage, TOPIC_SIGNUP_HREF, type TopicLandingSlug } from "@/lib/topic-landing-pages";
+import { buildMarketingSignupHref } from "@/lib/marketing-signup";
 
 export function buildTopicLandingPage(slug: TopicLandingSlug) {
   const content = getTopicLandingPage(slug);
@@ -20,10 +21,21 @@ export function buildTopicLandingPage(slug: TopicLandingSlug) {
     }
   };
 
-  async function Page() {
+  async function Page({
+    searchParams
+  }: {
+    searchParams?: { ref?: string };
+  }) {
     const library = await listLibrary();
     const relatedAudios = findRelatedAudioLandingsForTopic(slug, library);
-    return <TopicLandingPage content={pageContent} relatedAudios={relatedAudios} />;
+    const signupHref = buildMarketingSignupHref(searchParams?.ref) || TOPIC_SIGNUP_HREF;
+    return (
+      <TopicLandingPage
+        content={pageContent}
+        relatedAudios={relatedAudios}
+        signupHref={signupHref}
+      />
+    );
   }
 
   return { metadata, Page };

@@ -1,8 +1,8 @@
 import SiteFooter from "@/components/SiteFooter";
+import AffiliateSignupLink from "@/components/AffiliateSignupLink";
 import {
   LandingTrialCtaBand,
-  LandingTrialCtaButtons,
-  LANDING_TRIAL_CTA_LABEL
+  LandingTrialCtaButtons
 } from "@/components/LandingTrialCta";
 import RelatedAudioLandings from "@/components/RelatedAudioLandings";
 import { isMemberLoggedIn } from "@/lib/member-session";
@@ -15,10 +15,12 @@ import {
 
 export default async function GoalLandingPage({
   content,
-  relatedAudios = []
+  relatedAudios = [],
+  signupHref = GOAL_SIGNUP_HREF
 }: {
   content: GoalLandingContent;
   relatedAudios?: AudioLandingCard[];
+  signupHref?: string;
 }) {
   const showSignupCta = !(await isMemberLoggedIn());
   const related = getRelatedGoalPages(content.relatedSlugs);
@@ -47,7 +49,7 @@ export default async function GoalLandingPage({
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           />
         </div>
-        {showSignupCta && <LandingTrialCtaButtons signupHref={GOAL_SIGNUP_HREF} />}
+        {showSignupCta && <LandingTrialCtaButtons signupHref={signupHref} />}
       </section>
 
       <section className="section">
@@ -68,7 +70,7 @@ export default async function GoalLandingPage({
 
       {showSignupCta && (
         <LandingTrialCtaBand
-          signupHref={GOAL_SIGNUP_HREF}
+          signupHref={signupHref}
           body={`Set ${content.label.toLowerCase()} among your goals and listen while you sleep — try Reach For The Stars free for 14 days.`}
         />
       )}
@@ -133,9 +135,7 @@ export default async function GoalLandingPage({
               Set {content.label.toLowerCase()} among your goals tonight. Your personalized audios
               begin the first night you press Start Session.
             </p>
-            <a className="button" href={GOAL_SIGNUP_HREF}>
-              {LANDING_TRIAL_CTA_LABEL}
-            </a>
+            <AffiliateSignupLink fallbackHref={signupHref} />
           </div>
         </section>
       )}

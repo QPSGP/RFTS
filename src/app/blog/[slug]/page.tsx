@@ -4,8 +4,9 @@ import BlogPostView from "@/components/BlogPostView";
 import { findRelatedAudioLandingsForBlogPost } from "@/lib/audio-landing-relations";
 import { BLOG_POSTS, getBlogPost } from "@/lib/blog-posts";
 import { listLibrary } from "@/lib/db";
+import { buildMarketingSignupHref } from "@/lib/marketing-signup";
 
-type Props = { params: { slug: string } };
+type Props = { params: { slug: string }; searchParams?: { ref?: string } };
 
 export function generateStaticParams() {
   return BLOG_POSTS.map((post) => ({ slug: post.slug }));
@@ -26,7 +27,7 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-export default async function BlogPostPage({ params }: Props) {
+export default async function BlogPostPage({ params, searchParams }: Props) {
   const post = getBlogPost(params.slug);
   if (!post) notFound();
   const library = await listLibrary();
@@ -34,5 +35,6 @@ export default async function BlogPostPage({ params }: Props) {
     topicSlug: post.topicSlug,
     goalSlug: post.goalSlug
   });
-  return <BlogPostView post={post} relatedAudios={relatedAudios} />;
+  const signupHref = buildMarketingSignupHref(searchParams?.ref);
+  return <BlogPostView post={post} relatedAudios={relatedAudios} signupHref={signupHref} />;
 }

@@ -21,7 +21,24 @@ export function buildMemberReferralUrl(
 ): string {
   const base = (baseUrl || getPublicSiteUrl()).replace(/\/$/, "");
   const code = normalizeAffiliateCode(affiliateCode);
-  const path = SIGNUP_PATH;
-  if (!code) return `${base}${path}`;
-  return `${base}${path}?${AFFILIATE_REF_PARAM}=${encodeURIComponent(code)}`;
+  if (!code) return `${base}${SIGNUP_PATH}`;
+  return buildAffiliatePageUrl(SIGNUP_PATH, code, base);
+}
+
+/** Any site path with `?ref=` (or `&ref=`) for affiliate sharing. */
+export function buildAffiliatePageUrl(
+  path: string,
+  affiliateCode: string | null | undefined,
+  baseUrl?: string
+): string {
+  const code = normalizeAffiliateCode(affiliateCode);
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const base = (baseUrl || "").replace(/\/$/, "");
+  const pathAndQuery = normalizedPath;
+  if (!code) {
+    return base ? `${base}${pathAndQuery}` : pathAndQuery;
+  }
+  const joiner = pathAndQuery.includes("?") ? "&" : "?";
+  const withRef = `${pathAndQuery}${joiner}${AFFILIATE_REF_PARAM}=${encodeURIComponent(code)}`;
+  return base ? `${base}${withRef}` : withRef;
 }

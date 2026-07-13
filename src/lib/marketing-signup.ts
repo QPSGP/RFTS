@@ -4,6 +4,8 @@ import {
 } from "@/lib/affiliate-code";
 import { getPublicSiteUrl } from "@/lib/site-url";
 
+export const LANDING_TRIAL_CTA_LABEL = "Start 14-day free trial";
+
 /** Canonical signup path (step 1). */
 export const SIGNUP_PATH = "/signup/step-1-subscription-selection";
 

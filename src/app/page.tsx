@@ -1,11 +1,9 @@
 /* eslint-disable react/no-unescaped-entities */
 import SiteFooter from "@/components/SiteFooter";
+import AffiliateSignupLink from "@/components/AffiliateSignupLink";
 import { isMemberLoggedIn } from "@/lib/member-session";
 import { HOMEPAGE_GOAL_CARDS } from "@/lib/homepage-goals";
 import { MEDITATION_SOURCES, WELLNESS_BENEFIT_LINKS } from "@/lib/meditation-benefits";
-import { buildMarketingSignupHref } from "@/lib/marketing-signup";
-
-const MARKETING_SIGNUP_HREF = buildMarketingSignupHref();
 
 function MeditationBenefitLink({
   label,
@@ -87,11 +85,7 @@ export default async function HomePage() {
             Your browser does not support the video tag.
           </video>
           <div className="cta-row hero-cta" style={{ gap: 16, alignItems: "center", justifyContent: "center" }}>
-            {showSignupCta && (
-              <a className="button" href={MARKETING_SIGNUP_HREF}>
-                Start Your Journey
-              </a>
-            )}
+            {showSignupCta && <AffiliateSignupLink label="Start Your Journey" />}
             {showSignupCta && <strong>14 Day Free Trial!</strong>}
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import AffiliateShareLinks from "@/components/AffiliateShareLinks";
 import {
   AFFILIATE_PAYOUT_DETAIL_PLACEHOLDERS,
   AFFILIATE_PAYOUT_METHOD_LABELS,
@@ -173,6 +174,8 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
       {copyMessage && (
         <p style={{ margin: "12px 0 0", fontSize: 14, color: "#059669" }}>{copyMessage}</p>
       )}
+
+      <AffiliateShareLinks affiliateCode={affiliate.affiliateCode} />
 
       {(affiliate.pendingBalanceCents ?? 0) > 0 && (
         <p style={{ margin: "16px 0 0", fontSize: 14, color: "#4b5563" }}>

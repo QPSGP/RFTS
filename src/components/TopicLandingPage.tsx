@@ -1,8 +1,8 @@
 import SiteFooter from "@/components/SiteFooter";
+import AffiliateSignupLink from "@/components/AffiliateSignupLink";
 import {
   LandingTrialCtaBand,
-  LandingTrialCtaButtons,
-  LANDING_TRIAL_CTA_LABEL
+  LandingTrialCtaButtons
 } from "@/components/LandingTrialCta";
 import RelatedAudioLandings from "@/components/RelatedAudioLandings";
 import { getBlogPostsNewestFirst } from "@/lib/blog-posts";
@@ -16,10 +16,12 @@ import {
 
 export default async function TopicLandingPage({
   content,
-  relatedAudios = []
+  relatedAudios = [],
+  signupHref = TOPIC_SIGNUP_HREF
 }: {
   content: TopicLandingContent;
   relatedAudios?: AudioLandingCard[];
+  signupHref?: string;
 }) {
   const showSignupCta = !(await isMemberLoggedIn());
   const related = getRelatedTopicPages(content.relatedSlugs);
@@ -33,7 +35,7 @@ export default async function TopicLandingPage({
         <span className="pill">{content.pill}</span>
         <h1>{content.title}</h1>
         <p>{content.heroLead}</p>
-        {showSignupCta && <LandingTrialCtaButtons signupHref={TOPIC_SIGNUP_HREF} />}
+        {showSignupCta && <LandingTrialCtaButtons signupHref={signupHref} />}
       </section>
 
       <section className="section">
@@ -54,7 +56,7 @@ export default async function TopicLandingPage({
 
       {showSignupCta && (
         <LandingTrialCtaBand
-          signupHref={TOPIC_SIGNUP_HREF}
+          signupHref={signupHref}
           body={`${content.title} — personalized nightly audios while you sleep. Try Reach For The Stars free for 14 days.`}
         />
       )}
@@ -142,9 +144,7 @@ export default async function TopicLandingPage({
               Set goals tonight. Your personalized audios begin the first night you press Start
               Session.
             </p>
-            <a className="button" href={TOPIC_SIGNUP_HREF}>
-              {LANDING_TRIAL_CTA_LABEL}
-            </a>
+            <AffiliateSignupLink fallbackHref={signupHref} />
           </div>
         </section>
       )}

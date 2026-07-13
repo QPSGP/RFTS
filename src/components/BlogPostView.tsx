@@ -1,4 +1,5 @@
 import BlogExploreNav from "@/components/BlogExploreNav";
+import AffiliateSignupLink from "@/components/AffiliateSignupLink";
 import RelatedAudioLandings from "@/components/RelatedAudioLandings";
 import SiteFooter from "@/components/SiteFooter";
 import { GOAL_SIGNUP_HREF, getGoalLandingPage } from "@/lib/goal-landing-pages";
@@ -6,7 +7,6 @@ import { isMemberLoggedIn } from "@/lib/member-session";
 import { getTopicLandingPage } from "@/lib/topic-landing-pages";
 import type { AudioLandingCard } from "@/lib/audio-landing-relations";
 import type { BlogPost } from "@/lib/blog-posts";
-import { LANDING_TRIAL_CTA_LABEL } from "@/components/LandingTrialCta";
 
 function formatDate(iso: string): string {
   return new Date(`${iso}T12:00:00`).toLocaleDateString("en-US", {
@@ -18,10 +18,12 @@ function formatDate(iso: string): string {
 
 export default async function BlogPostView({
   post,
-  relatedAudios = []
+  relatedAudios = [],
+  signupHref = GOAL_SIGNUP_HREF
 }: {
   post: BlogPost;
   relatedAudios?: AudioLandingCard[];
+  signupHref?: string;
 }) {
   const showSignupCta = !(await isMemberLoggedIn());
   const topicPage = post.topicSlug ? getTopicLandingPage(post.topicSlug) : null;
@@ -110,9 +112,7 @@ export default async function BlogPostView({
                 Set your goals, press Start Session at bedtime, and let Reach For The Stars handle
                 the schedule.
               </p>
-              <a className="button" href={GOAL_SIGNUP_HREF}>
-                {LANDING_TRIAL_CTA_LABEL}
-              </a>
+              <AffiliateSignupLink fallbackHref={signupHref} />
             </div>
           )}
         </section>

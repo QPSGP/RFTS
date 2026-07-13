@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import GoalLandingPage from "@/components/GoalLandingPage";
 import { findRelatedAudioLandingsForGoal } from "@/lib/audio-landing-relations";
 import { listLibrary } from "@/lib/db";
-import { getGoalLandingPage, type GoalLandingSlug } from "@/lib/goal-landing-pages";
+import { getGoalLandingPage, GOAL_SIGNUP_HREF, type GoalLandingSlug } from "@/lib/goal-landing-pages";
+import { buildMarketingSignupHref } from "@/lib/marketing-signup";
 
 export function buildGoalLandingPage(slug: GoalLandingSlug) {
   const content = getGoalLandingPage(slug);
@@ -20,10 +21,21 @@ export function buildGoalLandingPage(slug: GoalLandingSlug) {
     }
   };
 
-  async function Page() {
+  async function Page({
+    searchParams
+  }: {
+    searchParams?: { ref?: string };
+  }) {
     const library = await listLibrary();
     const relatedAudios = findRelatedAudioLandingsForGoal(slug, library);
-    return <GoalLandingPage content={pageContent} relatedAudios={relatedAudios} />;
+    const signupHref = buildMarketingSignupHref(searchParams?.ref) || GOAL_SIGNUP_HREF;
+    return (
+      <GoalLandingPage
+        content={pageContent}
+        relatedAudios={relatedAudios}
+        signupHref={signupHref}
+      />
+    );
   }
 
   return { metadata, Page };
