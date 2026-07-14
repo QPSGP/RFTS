@@ -63,6 +63,7 @@ export default function SiteFooter({ showCta = true, showStartJourney = true }: 
               <a href="/creator-content-license">
                 Creator Content License
               </a>
+              <a href="/affiliates">Partner / affiliate program</a>
               <a href="https://www.acesuccess.com/" target="_blank" rel="noreferrer">
                 Success Center
               </a>

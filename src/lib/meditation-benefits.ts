@@ -33,6 +33,7 @@ export const WELLNESS_BENEFIT_LINKS: {
   sourceIndex: number;
 }[] = [
   { label: "Reduced Stress", path: "/stress-relief", sourceIndex: 1 },
+  { label: "Burnout Recovery", path: "/burnout-recovery", sourceIndex: 1 },
   { label: "Memory Enhancement", path: "/memory-improvement", sourceIndex: 5 },
   { label: "Blood Pressure Regulation", path: "/blood-pressure-regulation", sourceIndex: 3 },
   { label: "Better Pain Management", path: "/pain-relief", sourceIndex: 3 },

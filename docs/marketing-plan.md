@@ -69,9 +69,9 @@ Analytics and KPIs
 90-Day Plan
 Weeks 1-2
 - Define top 3 personas — **done:** `docs/personas.md`
-- Build 3 landing pages (sleep, stress, burnout).
+- Build 3 landing pages (sleep, stress, burnout) — **done:** `/sleep-meditation`, `/stress-relief`, `/burnout-recovery`
 - Set up analytics events and funnels.
-- Design affiliate program and materials.
+- Design affiliate program and materials — **done:** public `/affiliates` + My Profile share links; short-form scripts in `docs/short-form-clips.md`
 
 Weeks 3-6
 - Publish 15-20 short-form pieces.

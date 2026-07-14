@@ -54,6 +54,16 @@ const GOAL_AUDIO_KEYWORDS: Record<GoalLandingSlug, string[]> = {
 const TOPIC_AUDIO_KEYWORDS: Record<TopicLandingSlug, string[]> = {
   "sleep-meditation": ["sleep", "snor", "rest", "insomnia", "bedtime", "night"],
   "stress-relief": ["stress", "relax", "calm", "anxiety", "success", "immune", "tension"],
+  "burnout-recovery": [
+    "burnout",
+    "stress",
+    "relax",
+    "calm",
+    "recovery",
+    "balance",
+    "sleep",
+    "exhaust"
+  ],
   "pain-relief": ["pain", "comfort", "fibromyalgia", "natural pain", "relief", "heal"],
   "memory-improvement": ["memory", "focus", "recall", "mental", "learn", "attention", "brain"],
   "blood-pressure-regulation": [

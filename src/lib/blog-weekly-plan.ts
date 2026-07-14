@@ -26,6 +26,7 @@ export type BlogWeeklyTopic = {
 const WELLNESS_PATH_TO_TOPIC: Partial<Record<string, TopicLandingSlug>> = {
   "/sleep-meditation": "sleep-meditation",
   "/stress-relief": "stress-relief",
+  "/burnout-recovery": "burnout-recovery",
   "/pain-relief": "pain-relief",
   "/memory-improvement": "memory-improvement",
   "/blood-pressure-regulation": "blood-pressure-regulation",

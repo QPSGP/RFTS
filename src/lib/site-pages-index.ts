@@ -37,7 +37,7 @@ const MARKETING_LABELS: Record<string, string> = {
   "/science": "Science",
   "/faqs": "FAQs",
   "/facilitator": "Facilitators",
-  "/affiliates": "Affiliates",
+  "/affiliates": "Partners / Affiliates",
   "/privacy-policy": "Privacy policy",
   "/terms-and-conditions": "Terms and conditions",
   "/terms-and-condition": "Terms (legacy)",

@@ -3,6 +3,7 @@ import { buildMarketingSignupHref } from "@/lib/marketing-signup";
 export type TopicLandingSlug =
   | "sleep-meditation"
   | "stress-relief"
+  | "burnout-recovery"
   | "pain-relief"
   | "memory-improvement"
   | "blood-pressure-regulation"
@@ -123,7 +124,54 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
         body: "Members report using techniques from sessions to calm themselves during the day."
       }
     ],
-    relatedSlugs: ["sleep-meditation", "pain-relief", "memory-improvement"]
+    relatedSlugs: ["burnout-recovery", "sleep-meditation", "emotional-health"]
+  },
+  {
+    slug: "burnout-recovery",
+    path: "/burnout-recovery",
+    pill: "Burnout",
+    title: "Burnout recovery meditation and guided reset",
+    metaTitle: "Burnout Recovery Meditation & Guided Reset | Reach For The Stars",
+    metaDescription:
+      "Recover from burnout with guided meditation at night. Personalized audios for stress, sleep, and balance — no extra daytime willpower required.",
+    heroLead:
+      "If you search for burnout recovery meditation, burnout sleep reset, or how to recover without one more self-care chore, Reach For The Stars schedules personalized guided audios while you fall asleep and during sleep.",
+    eyebrow: "Recover while you rest",
+    sectionTitle: "Why burnout needs a low-friction practice",
+    sectionSubtitle:
+      "Burnout drains the energy required for daytime meditation. Nightly guided audios meet you when the day is already over.",
+    howItHelps: [
+      {
+        title: "No extra daytime load",
+        body:
+          "Press Start Session at bedtime. Intro relaxation music and your goal recordings run while you rest — so recovery is not competing with work or family."
+      },
+      {
+        title: "Stress, sleep, and balance together",
+        body:
+          "Burnout often shows up as racing thoughts, poor sleep, and emotional flatness. Rotate priorities like calm, rest, and balanced life so support stays practical for weeks."
+      },
+      {
+        title: "Repetition rebuilds the nervous system",
+        body:
+          "Optional second audios during sleep reinforce the same calm you started at bedtime — consistent exposure without requiring motivation at 6 a.m."
+      }
+    ],
+    nightlySteps: [
+      {
+        title: "Choose recovery-related goals",
+        body: "Prioritize stress relief, rest, emotional health, or balanced life — ordered by what you need most."
+      },
+      {
+        title: "Start Session at bedtime",
+        body: "Your personalized lineup plays automatically; no playlist hunting when you are depleted."
+      },
+      {
+        title: "Stay consistent for weeks",
+        body: "Burnout recovery is cumulative. Nightly habit beats occasional intensive self-care weekends."
+      }
+    ],
+    relatedSlugs: ["stress-relief", "sleep-meditation", "resilience-meditation"]
   },
   {
     slug: "pain-relief",

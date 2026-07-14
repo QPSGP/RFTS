@@ -440,7 +440,7 @@ export const BLOG_POSTS: BlogPost[] = [
     readMinutes: 5,
     excerpt:
       "Burnout recovery needs rest you can actually keep. Nightly guided audios fit caregivers and high-stress workers who cannot add another daytime wellness task.",
-    topicSlug: "stress-relief",
+    topicSlug: "burnout-recovery",
     sections: [
       {
         paragraphs: [
