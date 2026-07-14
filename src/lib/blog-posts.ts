@@ -23,6 +23,66 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "guided-meditation-spirituality-inner-connection-sleep",
+    title: "Guided meditation for spirituality: deepen your inner connection while you sleep",
+    metaTitle: "Spirituality & Inner Connection — Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "How nightly guided meditations support spirituality and inner connection — peace, presence, and a personal path without carving out daytime practice. Links to the Spirituality goal.",
+    publishedAt: "2026-07-14",
+    readMinutes: 6,
+    excerpt:
+      "Spiritual growth does not have to mean another hour on the cushion. When spirituality is among your goals, guided meditations reinforce peace, presence, and connection at bedtime and during sleep.",
+    goalSlug: "spirituality",
+    sections: [
+      {
+        paragraphs: [
+          "Many people want a greater connection with their spirituality — peace that lasts past a Sunday service, a morning meditation streak that keeps slipping, or a sense of meaning that work email rarely delivers. The barrier is rarely belief. It is time, and the exhaustion that makes daytime spiritual practice feel like one more obligation.",
+          "Reach For The Stars treats spirituality as one of the goals you can prioritize. When connection, peace, or inner alignment is in your rotation, guided audios play automatically as you fall asleep — and again during sleep if you choose two audios per night — so spiritual intention reaches your subconscious when daytime willpower is not required."
+        ]
+      },
+      {
+        heading: "What “inner connection” means in a nightly program",
+        paragraphs: [
+          "Spiritual practice looks different for everyone: prayer, meditation, gratitude, communion with nature, or simply wanting a quieter, more centered self. Guided meditation and hypnotherapy-style suggestion support that work by pairing deep relaxation with clear intention — presence, trust, compassion, and openness — without prescribing one theology or path.",
+          "You choose goals that match how you define spirituality. The schedule adapts when you reorder priorities, so the messages stay personal rather than generic background “calm” audio that never names what you actually care about."
+        ]
+      },
+      {
+        heading: "Why bedtime is a natural spiritual window",
+        paragraphs: [
+          "Across traditions, night has long been associated with reflection, prayer, and releasing the day. Scientifically, the transition into sleep is also when the mind is highly receptive. Instead of asking you to sit upright for twenty minutes after a hard day, Reach For The Stars uses that natural window: intro relaxation music, then your spirituality-related recording as you drift, then optional reinforcement about 2.5 hours later.",
+          "That structure turns bedtime into a sacred cue without stealing from family time or early mornings. Over weeks, the habit itself — Start Session, then rest — can become part of how you feel connected, not just another app you forgot to open."
+        ]
+      },
+      {
+        heading: "Pairing spirituality with other goals",
+        paragraphs: [
+          "Inner life rarely exists alone. Members often rotate spirituality with health, relationship, or inspiration goals — body, heart, and meaning reinforcing each other. The algorithm rotates priorities so spirit-focused themes return on a predictable cadence rather than disappearing after one play.",
+          "If stress or sleeplessness is what blocks your sense of connection, pairing spirituality with stress relief or balanced life goals keeps the nightly lineup practical as well as contemplative."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits people returning to faith or meditation after a long gap, seekers who want consistency without rigid routines, and anyone whose spiritual life has been crowded out by busyness. It also supports those who value hypnosis and guided imagery as mind-body tools for peace and presence.",
+          "Guided meditation supports wellness and habit change; it is not a substitute for pastoral care, therapy, or clinical treatment when you need them. Your beliefs remain yours — the platform schedules the practice; you bring the meaning."
+        ]
+      },
+      {
+        heading: "Get started tonight",
+        paragraphs: [
+          "Choose spirituality among your goals and complete registration to activate your membership. Order connection, peace, and related priorities by importance — your personalized audios begin the first night you press Start Session.",
+          "Explore our spirituality goal page for how nightly rotation works, or use Start your journey below to sign up tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Peace, presence, and spiritual connection (excerpt)",
+      quote:
+        "You feel connected to what matters most… a quiet peace settles through you… your spirit is open and present… trust deepens with each calm breath… you rest in alignment with your true self…"
+    }
+  },
+  {
     slug: "racing-thoughts-bedtime-guided-sleep-meditation",
     title: "Racing thoughts at bedtime? How guided sleep meditation helps you fall asleep",
     metaTitle: "Racing Thoughts at Bedtime — Guided Sleep Meditation | RFTS Blog",
