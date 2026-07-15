@@ -24,7 +24,7 @@ export default function MemberListenProgress() {
   const [report, setReport] = useState<ListenProgressReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
