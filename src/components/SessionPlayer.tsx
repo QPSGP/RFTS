@@ -82,6 +82,10 @@ type SessionPlayerProps = {
   scheduleNightNumber?: number;
   /** Fires after the member finishes listening for this schedule night (both tracks when 2/night, or the single track when 1/night). */
   onScheduleNightComplete?: (nightNumber: number) => void;
+  /**
+   * 1-per-night: play the next audio in rotation (parent advances schedule when needed).
+   */
+  onPlayNextAudio?: () => void;
 };
 
 export type SessionPlayerHandle = {
@@ -265,7 +269,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     autoStart = false,
     onSessionStart,
     scheduleNightNumber,
-    onScheduleNightComplete
+    onScheduleNightComplete,
+    onPlayNextAudio
   },
   ref
 ) {
@@ -1187,7 +1192,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       <h3>Tonight&apos;s Audio</h3>
       <p style={{ color: "#4b5563" }}>
         {playsPerNight === 1
-          ? "Plays short intro relaxation music, then your goal audio for tonight. Your next audio is scheduled for tomorrow."
+          ? "Plays short intro relaxation music, then your goal audio for tonight. Use Next Audio anytime to play the following recording in your rotation."
           : `Plays short intro relaxation music, then your first goal audio. The second audio is scheduled ${gapHours} hours later and also begins with intro relaxation music when you play it.`}
       </p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -1196,9 +1201,18 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
             ? "Start second audio now"
             : "Start Session"}
         </button>
-        {secondTrack && (
+        {playsPerNight === 2 && secondTrack && (
           <button className="button button-secondary" onClick={playSecond}>
             Play Second Audio
+          </button>
+        )}
+        {playsPerNight === 1 && onPlayNextAudio && (
+          <button
+            className="button button-secondary"
+            type="button"
+            onClick={() => onPlayNextAudio()}
+          >
+            Next Audio
           </button>
         )}
       </div>
@@ -1217,7 +1231,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         <div className="card" style={{ marginTop: 16, background: "#f0fdf4", borderColor: "#22c55e" }}>
           <p style={{ margin: 0, fontWeight: 600, color: "#166534" }}>Session complete.</p>
           <p style={{ margin: "8px 0 0", color: "#15803d" }}>
-            Your next audio is cued for tomorrow. Start Session when you&apos;re ready.
+            Your next audio is ready in rotation. Tap <strong>Next Audio</strong> or Start Session when you&apos;re ready.
           </p>
         </div>
       )}

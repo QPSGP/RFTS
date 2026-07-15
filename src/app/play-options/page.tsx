@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import PlayOptionsAndroidTips from "@/components/PlayOptionsAndroidTips";
 import SessionPlayer, { SessionPlayerHandle } from "@/components/SessionPlayer";
+import MemberListenProgress from "@/components/MemberListenProgress";
 import { getMemberTonightTrackItems } from "@/lib/schedule-progress";
 
 export default function PlayOptionsPage() {
@@ -35,6 +36,8 @@ export default function PlayOptionsPage() {
     { id: string; title: string }[]
   >([]);
   const [nextInCue, setNextInCue] = useState<{ id: string; title: string; skuCode?: string }[]>([]);
+  /** After a full listen advances the schedule, Next Audio should start without advancing again. */
+  const [nextAudioNeedsAdvance, setNextAudioNeedsAdvance] = useState(true);
   const sessionRef = useRef<SessionPlayerHandle | null>(null);
   const playSecondFromUrlRef = useRef(false);
 
@@ -63,6 +66,23 @@ export default function PlayOptionsPage() {
     setPrepAudio(data?.prepAudio || null);
     setGapHours(typeof data?.gapHours === "number" ? data.gapHours : 2.5);
   }, []);
+
+  const playNextInRotation = useCallback(async () => {
+    if (nextAudioNeedsAdvance) {
+      await fetch("/api/user/schedule-night-complete", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nightCompleted: currentNight })
+      }).catch(() => {});
+    }
+    await loadSchedule();
+    setNextAudioNeedsAdvance(true);
+    requestAnimationFrame(() => {
+      sessionRef.current?.startSession();
+      document.getElementById("meditation-session")?.scrollIntoView({ behavior: "smooth" });
+    });
+  }, [currentNight, loadSchedule, nextAudioNeedsAdvance]);
 
   const playsPerNightSetting = (profile?.playsPerNight ?? 2) === 1 ? 1 : 2;
   const currentPlaylist = nextInCue;
@@ -247,6 +267,9 @@ export default function PlayOptionsPage() {
     playsPerNightSetting === 2 &&
     tonightTracksWithUrls.length > 1;
 
+  const showNextAudioHero =
+    status === "active" && playsPerNightSetting === 1 && nextInCue.length > 1;
+
   return (
     <main className="play-options-main">
       <section className="hero section">
@@ -287,6 +310,18 @@ export default function PlayOptionsPage() {
               }}
             >
               Play Second Audio
+            </button>
+          )}
+          {showNextAudioHero && (
+            <button
+              className="button button-secondary"
+              type="button"
+              style={{ padding: "14px 22px", fontSize: 16 }}
+              onClick={() => {
+                void playNextInRotation();
+              }}
+            >
+              Next Audio
             </button>
           )}
           <a className="button button-secondary" href="/library">
@@ -356,6 +391,7 @@ export default function PlayOptionsPage() {
             </div>
           )}
         </div>
+        <MemberListenProgress />
         <div className="card" id="meditation-library">
           <h3>Meditation Library</h3>
           <p>Browse the full audio library and play any track on demand. This will not affect your guided audio set!</p>
@@ -429,6 +465,9 @@ export default function PlayOptionsPage() {
             gapHours={gapHours}
             playsPerNight={playsPerNightSetting}
             autoStart={autoStart}
+            onPlayNextAudio={
+              playsPerNightSetting === 1 ? () => void playNextInRotation() : undefined
+            }
             onSessionStart={() => {
               fetch("/api/user/session-used", { method: "POST", credentials: "include" }).catch(() => {});
             }}
@@ -441,7 +480,11 @@ export default function PlayOptionsPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ nightCompleted: night })
               })
-                .then((r) => (r.ok ? loadSchedule() : undefined))
+                .then((r) => {
+                  if (!r.ok) return undefined;
+                  setNextAudioNeedsAdvance(false);
+                  return loadSchedule();
+                })
                 .catch(() => {});
             }}
           />

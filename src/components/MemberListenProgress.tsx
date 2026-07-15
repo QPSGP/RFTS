@@ -24,7 +24,7 @@ export default function MemberListenProgress() {
   const [report, setReport] = useState<ListenProgressReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   const load = useCallback(async () => {
     setError(null);
@@ -126,6 +126,9 @@ export default function MemberListenProgress() {
 
           {open ? (
             <>
+              <p style={{ marginTop: 12, fontSize: 13, color: "#64748b" }}>
+                Full list of each audio below — counts update when an audio finishes playing.
+              </p>
               {report.tracks.length === 0 ? (
                 <p style={{ marginTop: 14, color: "#64748b" }}>
                   No listens recorded yet. Start a session or play from the library — when an audio
