@@ -53,6 +53,191 @@ const STATUS_OPTIONS: { value: Report["status"]; label: string }[] = [
   { value: "closed", label: "Closed" }
 ];
 
+type Draft = { status: string; resolutionNotes: string };
+
+function IssueAttachments({ report }: { report: Report }) {
+  const urls =
+    report.attachmentUrls?.length
+      ? report.attachmentUrls
+      : report.screenshotUrl
+        ? [report.screenshotUrl]
+        : [];
+  if (!urls.length) return null;
+  return (
+    <div style={{ marginTop: 10, maxWidth: "100%", display: "grid", gap: 12 }}>
+      {urls.map((url, index) => (
+        <div key={`${report.id}-attachment-${index}`}>
+          <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13 }}>
+            View attachment {index + 1}
+          </a>
+          {isLikelyImageUrl(url) ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={url}
+              alt={`Attachment ${index + 1}`}
+              style={{
+                display: "block",
+                marginTop: 8,
+                maxWidth: "100%",
+                maxHeight: 280,
+                borderRadius: 8,
+                border: "1px solid #e5e7eb"
+              }}
+            />
+          ) : isLikelyVideoUrl(url) ? (
+            <video
+              src={url}
+              controls
+              style={{
+                display: "block",
+                marginTop: 8,
+                maxWidth: "100%",
+                maxHeight: 280,
+                borderRadius: 8,
+                border: "1px solid #e5e7eb"
+              }}
+            />
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function IssueMessagePanel({
+  report,
+  expanded,
+  onToggle
+}: {
+  report: Report;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <>
+      <div style={{ marginTop: 6 }}>
+        <button
+          type="button"
+          className="button button-secondary"
+          style={{ fontSize: 12, padding: "4px 8px" }}
+          onClick={onToggle}
+        >
+          {expanded ? "Hide message" : "View message"}
+        </button>
+      </div>
+      {expanded ? (
+        <>
+          <pre
+            style={{
+              marginTop: 8,
+              padding: 10,
+              background: "#f9fafb",
+              borderRadius: 8,
+              fontSize: 13,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              maxWidth: "100%"
+            }}
+          >
+            {report.message}
+          </pre>
+          <IssueAttachments report={report} />
+        </>
+      ) : null}
+    </>
+  );
+}
+
+function IssueStatusEditor({
+  report,
+  draft,
+  saving,
+  onDraftChange,
+  onSave,
+  idSuffix = ""
+}: {
+  report: Report;
+  draft: Draft;
+  saving: boolean;
+  onDraftChange: (next: Draft) => void;
+  onSave: () => void;
+  idSuffix?: string;
+}) {
+  const fieldId = `res-${report.id}${idSuffix}`;
+  return (
+    <div className="admin-issue-actions">
+      <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+        <span style={{ fontWeight: 600, color: "#374151" }}>Status</span>
+        <select
+          style={{
+            padding: 8,
+            borderRadius: 6,
+            border: "1px solid #d1d5db",
+            fontSize: 13,
+            width: "100%",
+            maxWidth: 220
+          }}
+          value={draft.status}
+          onChange={(e) =>
+            onDraftChange({
+              ...draft,
+              status: e.target.value
+            })
+          }
+        >
+          {STATUS_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }} htmlFor={fieldId}>
+        <span style={{ fontWeight: 600, color: "#374151" }}>Resolution</span>
+        <textarea
+          id={fieldId}
+          placeholder={
+            isAdminFiled(report)
+              ? "How it was resolved (internal notes; no member email)"
+              : "How it was resolved (included in member email when you set status to Resolved)"
+          }
+          style={{
+            width: "100%",
+            minHeight: 72,
+            padding: 8,
+            borderRadius: 6,
+            border: "1px solid #d1d5db",
+            fontSize: 13,
+            resize: "vertical"
+          }}
+          value={draft.resolutionNotes}
+          onChange={(e) =>
+            onDraftChange({
+              ...draft,
+              resolutionNotes: e.target.value
+            })
+          }
+        />
+      </label>
+      {report.resolvedAt && (report.status === "resolved" || report.status === "closed") ? (
+        <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>
+          Last marked {report.status}: {formatWhen(report.resolvedAt)}
+          {report.resolvedBy ? ` · ${report.resolvedBy}` : ""}
+        </p>
+      ) : null}
+      <button
+        type="button"
+        className="button"
+        style={{ fontSize: 13, padding: "8px 12px", alignSelf: "flex-start" }}
+        disabled={saving}
+        onClick={onSave}
+      >
+        {saving ? "Saving…" : "Save"}
+      </button>
+    </div>
+  );
+}
+
 export default function AdminMemberIssuesPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [drafts, setDrafts] = useState<
@@ -175,7 +360,7 @@ export default function AdminMemberIssuesPage() {
 
   if (unauthorized) {
     return (
-      <main>
+      <main className="admin-page">
         <h1>Issue reports</h1>
         <p>Admin login required.</p>
         <Link href="/login" className="button">
@@ -186,7 +371,7 @@ export default function AdminMemberIssuesPage() {
   }
 
   return (
-    <main>
+    <main className="admin-page">
       <section
         style={{
           marginBottom: 24,
@@ -207,7 +392,7 @@ export default function AdminMemberIssuesPage() {
             member email).
           </p>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <div className="admin-toolbar">
           <button
             type="button"
             className="button"
@@ -260,7 +445,7 @@ export default function AdminMemberIssuesPage() {
         </section>
       ) : null}
 
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+      <div className="admin-filter-row">
         {(
           [
             ["all", "All"],
@@ -335,207 +520,114 @@ export default function AdminMemberIssuesPage() {
           </p>
         </div>
       ) : (
-        <div className="card" style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, minWidth: 720 }}>
-            <thead>
-              <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
-                <th style={{ padding: "10px 8px", fontWeight: 600 }}>When</th>
-                <th style={{ padding: "10px 8px", fontWeight: 600 }}>From</th>
-                <th style={{ padding: "10px 8px", fontWeight: 600 }}>Category</th>
-                <th style={{ padding: "10px 8px", fontWeight: 600 }}>Subject</th>
-                <th style={{ padding: "10px 8px", fontWeight: 600 }}>Status</th>
-                <th style={{ padding: "10px 8px", fontWeight: 600 }}>Resolution</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reports.map((r) => (
-                <tr key={r.id} style={{ borderBottom: "1px solid #e5e7eb", verticalAlign: "top" }}>
-                  <td style={{ padding: "10px 8px", color: "#4b5563", whiteSpace: "nowrap" }}>
-                    {formatWhen(r.createdAt)}
-                  </td>
-                  <td style={{ padding: "10px 8px" }}>
-                    {r.memberEmail}
-                    {isAdminFiled(r) ? (
-                      <div style={{ fontSize: 12, color: "#0f766e", marginTop: 4 }}>
-                        Admin (internal)
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>Member</div>
-                    )}
-                  </td>
-                  <td style={{ padding: "10px 8px", color: "#4b5563" }}>{r.category || "—"}</td>
-                  <td style={{ padding: "10px 8px" }}>
-                    <strong>{r.subject}</strong>
-                    <div style={{ marginTop: 6 }}>
-                      <button
-                        type="button"
-                        className="button button-secondary"
-                        style={{ fontSize: 12, padding: "4px 8px" }}
-                        onClick={() => setExpanded((prev) => ({ ...prev, [r.id]: !prev[r.id] }))}
-                      >
-                        {expanded[r.id] ? "Hide message" : "View message"}
-                      </button>
+        <>
+          <div className="admin-issues-mobile">
+            {reports.map((r) => {
+              const draft = drafts[r.id] ?? {
+                status: r.status,
+                resolutionNotes: r.resolutionNotes ?? ""
+              };
+              return (
+                <div key={`m-${r.id}`} className="card admin-issue-card">
+                  <div>
+                    <strong style={{ fontSize: 16 }}>{r.subject}</strong>
+                    <div className="admin-issue-meta" style={{ marginTop: 8 }}>
+                      <span>{formatWhen(r.createdAt)}</span>
+                      <span>
+                        {r.memberEmail}
+                        {isAdminFiled(r) ? " · Admin (internal)" : " · Member"}
+                      </span>
+                      <span>Category: {r.category || "—"}</span>
                     </div>
-                    {expanded[r.id] ? (
-                      <>
-                        <pre
-                          style={{
-                            marginTop: 8,
-                            padding: 10,
-                            background: "#f9fafb",
-                            borderRadius: 8,
-                            fontSize: 13,
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-word",
-                            maxWidth: 420
-                          }}
-                        >
-                          {r.message}
-                        </pre>
-                        {(r.attachmentUrls?.length
-                          ? r.attachmentUrls
-                          : r.screenshotUrl
-                            ? [r.screenshotUrl]
-                            : []
-                        ).length ? (
-                          <div style={{ marginTop: 10, maxWidth: 420, display: "grid", gap: 12 }}>
-                            {(r.attachmentUrls?.length
-                              ? r.attachmentUrls
-                              : r.screenshotUrl
-                                ? [r.screenshotUrl]
-                                : []
-                            ).map((url, index) => (
-                              <div key={`${r.id}-attachment-${index}`}>
-                                <a
-                                  href={url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{ fontSize: 13 }}
-                                >
-                                  View attachment {index + 1}
-                                </a>
-                                {isLikelyImageUrl(url) ? (
-                                  /* eslint-disable-next-line @next/next/no-img-element */
-                                  <img
-                                    src={url}
-                                    alt={`Attachment ${index + 1}`}
-                                    style={{
-                                      display: "block",
-                                      marginTop: 8,
-                                      maxWidth: "100%",
-                                      maxHeight: 280,
-                                      borderRadius: 8,
-                                      border: "1px solid #e5e7eb"
-                                    }}
-                                  />
-                                ) : isLikelyVideoUrl(url) ? (
-                                  <video
-                                    src={url}
-                                    controls
-                                    style={{
-                                      display: "block",
-                                      marginTop: 8,
-                                      maxWidth: "100%",
-                                      maxHeight: 280,
-                                      borderRadius: 8,
-                                      border: "1px solid #e5e7eb"
-                                    }}
-                                  />
-                                ) : null}
-                              </div>
-                            ))}
-                          </div>
-                        ) : null}
-                      </>
-                    ) : null}
-                  </td>
-                  <td style={{ padding: "10px 8px" }}>
-                    <select
-                      style={{
-                        padding: 6,
-                        borderRadius: 6,
-                        border: "1px solid #d1d5db",
-                        fontSize: 13,
-                        maxWidth: 140
-                      }}
-                      value={drafts[r.id]?.status ?? r.status}
-                      onChange={(e) =>
-                        setDrafts((prev) => ({
-                          ...prev,
-                          [r.id]: {
-                            ...prev[r.id],
-                            status: e.target.value,
-                            resolutionNotes: prev[r.id]?.resolutionNotes ?? ""
-                          }
-                        }))
-                      }
-                    >
-                      {STATUS_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td style={{ padding: "10px 8px", minWidth: 220 }}>
-                    <label className="sr-only" htmlFor={`res-${r.id}`}>
-                      Resolution notes for {r.subject}
-                    </label>
-                    <textarea
-                      id={`res-${r.id}`}
-                      placeholder={
-                        isAdminFiled(r)
-                          ? "How it was resolved (internal notes; no member email)"
-                          : "How it was resolved (included in member email when you set status to Resolved)"
-                      }
-                      style={{
-                        width: "100%",
-                        minHeight: 72,
-                        padding: 8,
-                        borderRadius: 6,
-                        border: "1px solid #d1d5db",
-                        fontSize: 13,
-                        resize: "vertical"
-                      }}
-                      value={drafts[r.id]?.resolutionNotes ?? ""}
-                      onChange={(e) =>
-                        setDrafts((prev) => ({
-                          ...prev,
-                          [r.id]: {
-                            ...prev[r.id],
-                            status: prev[r.id]?.status ?? r.status,
-                            resolutionNotes: e.target.value
-                          }
-                        }))
+                    <IssueMessagePanel
+                      report={r}
+                      expanded={Boolean(expanded[r.id])}
+                      onToggle={() =>
+                        setExpanded((prev) => ({ ...prev, [r.id]: !prev[r.id] }))
                       }
                     />
-                    {r.resolvedAt && (r.status === "resolved" || r.status === "closed") ? (
-                      <p style={{ fontSize: 12, color: "#6b7280", margin: "6px 0 0" }}>
-                        Last marked {r.status}: {formatWhen(r.resolvedAt)}
-                        {r.resolvedBy ? ` · ${r.resolvedBy}` : ""}
-                      </p>
-                    ) : null}
-                    <button
-                      type="button"
-                      className="button"
-                      style={{ marginTop: 8, fontSize: 13, padding: "6px 12px" }}
-                      disabled={savingId === r.id}
-                      onClick={() => void save(r.id)}
-                    >
-                      {savingId === r.id ? "Saving…" : "Save"}
-                    </button>
-                  </td>
+                  </div>
+                  <IssueStatusEditor
+                    report={r}
+                    draft={draft}
+                    saving={savingId === r.id}
+                    idSuffix="-mobile"
+                    onDraftChange={(next) =>
+                      setDrafts((prev) => ({ ...prev, [r.id]: next }))
+                    }
+                    onSave={() => void save(r.id)}
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="card table-scroll admin-issues-desktop">
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, minWidth: 720 }}>
+              <thead>
+                <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
+                  <th style={{ padding: "10px 8px", fontWeight: 600 }}>When</th>
+                  <th style={{ padding: "10px 8px", fontWeight: 600 }}>From</th>
+                  <th style={{ padding: "10px 8px", fontWeight: 600 }}>Category</th>
+                  <th style={{ padding: "10px 8px", fontWeight: 600 }}>Subject</th>
+                  <th style={{ padding: "10px 8px", fontWeight: 600 }}>Update</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {reports.map((r) => {
+                  const draft = drafts[r.id] ?? {
+                    status: r.status,
+                    resolutionNotes: r.resolutionNotes ?? ""
+                  };
+                  return (
+                    <tr key={r.id} style={{ borderBottom: "1px solid #e5e7eb", verticalAlign: "top" }}>
+                      <td style={{ padding: "10px 8px", color: "#4b5563", whiteSpace: "nowrap" }}>
+                        {formatWhen(r.createdAt)}
+                      </td>
+                      <td style={{ padding: "10px 8px" }}>
+                        {r.memberEmail}
+                        {isAdminFiled(r) ? (
+                          <div style={{ fontSize: 12, color: "#0f766e", marginTop: 4 }}>
+                            Admin (internal)
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>Member</div>
+                        )}
+                      </td>
+                      <td style={{ padding: "10px 8px", color: "#4b5563" }}>{r.category || "—"}</td>
+                      <td style={{ padding: "10px 8px" }}>
+                        <strong>{r.subject}</strong>
+                        <IssueMessagePanel
+                          report={r}
+                          expanded={Boolean(expanded[r.id])}
+                          onToggle={() =>
+                            setExpanded((prev) => ({ ...prev, [r.id]: !prev[r.id] }))
+                          }
+                        />
+                      </td>
+                      <td style={{ padding: "10px 8px", minWidth: 240 }}>
+                        <IssueStatusEditor
+                          report={r}
+                          draft={draft}
+                          saving={savingId === r.id}
+                          idSuffix="-desktop"
+                          onDraftChange={(next) =>
+                            setDrafts((prev) => ({ ...prev, [r.id]: next }))
+                          }
+                          onSave={() => void save(r.id)}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
           {totalPages > 1 ? (
             <div
+              className="admin-toolbar"
               style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 8,
-                alignItems: "center",
                 marginTop: 16,
                 paddingTop: 16,
                 borderTop: "1px solid #e5e7eb"
@@ -564,7 +656,7 @@ export default function AdminMemberIssuesPage() {
               </button>
             </div>
           ) : null}
-        </div>
+        </>
       )}
     </main>
   );

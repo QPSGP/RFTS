@@ -217,7 +217,7 @@ export default function AdminDashboardPage() {
 
   if (status === "loading") {
     return (
-      <main>
+      <main className="admin-page">
         <section style={{ marginBottom: 24 }}>
           <h1>Member Activity Dashboard</h1>
           <p>Loading…</p>
@@ -228,7 +228,7 @@ export default function AdminDashboardPage() {
 
   if (status === "unauthorized") {
     return (
-      <main>
+      <main className="admin-page">
         <section style={{ marginBottom: 24 }}>
           <h1>Member Activity Dashboard</h1>
           <p>Admin login required.</p>
@@ -241,7 +241,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <main>
+    <main className="admin-page">
       <section
         style={{
           marginBottom: 24,
@@ -256,7 +256,7 @@ export default function AdminDashboardPage() {
           <h1>Member Activity Dashboard</h1>
           <p>Overview of member signups, subscriptions, and usage.</p>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <div className="admin-toolbar">
           <Link href="/admin/member-issues" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
             Issue reports
           </Link>
@@ -343,18 +343,19 @@ export default function AdminDashboardPage() {
         <p style={{ color: "#4b5563", marginBottom: 12 }}>
           Signups, subscription status, goals, and session usage for all members.
         </p>
-        <div className="card" style={{ overflowX: "auto" }}>
+        <p className="admin-table-hint">Swipe sideways for more columns on a small screen.</p>
+        <div className="card table-scroll">
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 640, fontSize: 14 }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
                 <th style={thStyle}>Name</th>
                 <th style={thStyle}>Signed up</th>
-                <th style={thStyle}>Last goals update</th>
+                <th className="admin-col-optional" style={thStyle}>Last goals update</th>
                 <th style={thStyle}>Status</th>
-                <th style={thStyle}>Period end</th>
+                <th className="admin-col-optional" style={thStyle}>Period end</th>
                 <th style={thStyle}>Goals</th>
-                <th style={thStyle}>Plays/night</th>
-                <th style={thStyle}>Sessions today</th>
+                <th className="admin-col-optional" style={thStyle}>Plays/night</th>
+                <th className="admin-col-optional" style={thStyle}>Sessions today</th>
                 <th style={thStyle}>Total nightly sessions</th>
               </tr>
             </thead>
@@ -367,12 +368,12 @@ export default function AdminDashboardPage() {
                       : m.email}
                   </td>
                   <td style={tdMutedStyle}>{formatDate(m.createdAt)}</td>
-                  <td style={tdMutedStyle}>{formatDate(m.goalUpdatedAt)}</td>
+                  <td className="admin-col-optional" style={tdMutedStyle}>{formatDate(m.goalUpdatedAt)}</td>
                   <td style={tdStyle}>{m.subscriptionStatus ?? "—"}</td>
-                  <td style={tdMutedStyle}>{formatDate(m.currentPeriodEnd)}</td>
+                  <td className="admin-col-optional" style={tdMutedStyle}>{formatDate(m.currentPeriodEnd)}</td>
                   <td style={tdStyle}>{m.goalCount}</td>
-                  <td style={tdStyle}>{m.playsPerNight}</td>
-                  <td style={tdStyle}>{m.sessionsUsedToday ?? 0}</td>
+                  <td className="admin-col-optional" style={tdStyle}>{m.playsPerNight}</td>
+                  <td className="admin-col-optional" style={tdStyle}>{m.sessionsUsedToday ?? 0}</td>
                   <td style={tdStyle}>{m.sessionsTotal ?? 0}</td>
                 </tr>
               ))}
@@ -391,14 +392,15 @@ export default function AdminDashboardPage() {
         <p style={{ color: "#4b5563", marginBottom: 12 }}>
           Logins, console and library playback, and other actions. Details show the audio or page when relevant.
         </p>
-        <div className="card" style={{ overflowX: "auto" }}>
+        <p className="admin-table-hint">Swipe sideways if details are cut off.</p>
+        <div className="card table-scroll">
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 500, fontSize: 14 }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
                 <th style={thStyle}>When</th>
                 <th style={thStyle}>Member</th>
                 <th style={thStyle}>Action</th>
-                <th style={thStyle}>Details</th>
+                <th className="admin-col-optional" style={thStyle}>Details</th>
               </tr>
             </thead>
             <tbody>
@@ -414,7 +416,7 @@ export default function AdminDashboardPage() {
                     ) : null}
                   </td>
                   <td style={tdStyle}>{formatMemberActivityAction(entry.action)}</td>
-                  <td style={tdMutedStyle}>{entry.details ?? "—"}</td>
+                  <td className="admin-col-optional" style={tdMutedStyle}>{entry.details ?? "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -442,7 +444,8 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        <div className="card" style={{ marginBottom: 16, overflowX: "auto" }}>
+        <p className="admin-table-hint">Swipe sideways for email and last login.</p>
+        <div className="card table-scroll" style={{ marginBottom: 16 }}>
           <h3 style={{ marginTop: 0, fontSize: 16 }}>Staff roster</h3>
           <p style={{ color: "#4b5563", fontSize: 14, marginTop: 0, marginBottom: 12 }}>
             Admins and facilitators in one list, sorted by role then name.
@@ -452,9 +455,9 @@ export default function AdminDashboardPage() {
               <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
                 <th style={thStyle}>Role</th>
                 <th style={thStyle}>Name</th>
-                <th style={thStyle}>Email</th>
+                <th className="admin-col-optional" style={thStyle}>Email</th>
                 <th style={thStyle}>Status</th>
-                <th style={thStyle}>Last login</th>
+                <th className="admin-col-optional" style={thStyle}>Last login</th>
               </tr>
             </thead>
             <tbody>
@@ -476,9 +479,9 @@ export default function AdminDashboardPage() {
                     </span>
                   </td>
                   <td style={tdStyle}>{row.name}</td>
-                  <td style={tdStyle}>{row.email}</td>
+                  <td className="admin-col-optional" style={tdStyle}>{row.email}</td>
                   <td style={tdStyle}>{row.status}</td>
-                  <td style={tdMutedStyle}>{formatDateTime(row.lastLoginAt)}</td>
+                  <td className="admin-col-optional" style={tdMutedStyle}>{formatDateTime(row.lastLoginAt)}</td>
                 </tr>
               ))}
             </tbody>
@@ -488,7 +491,7 @@ export default function AdminDashboardPage() {
           )}
         </div>
 
-        <div className="card" style={{ overflowX: "auto" }}>
+        <div className="card table-scroll">
           <h3 style={{ marginTop: 0, fontSize: 16 }}>Recent staff actions</h3>
           <p style={{ color: "#4b5563", fontSize: 14, marginTop: 0, marginBottom: 12 }}>
             Logins and console actions from admins and facilitators.

@@ -61,7 +61,7 @@ export default function AffiliateAdmin() {
               </p>
               {affiliate.payoutAddress && <p>Payout details: {affiliate.payoutAddress}</p>}
               <p>Status: {affiliate.status}</p>
-              <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button
                   className="button"
                   onClick={() => updateStatus(affiliate.id, "approved")}

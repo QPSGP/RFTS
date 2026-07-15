@@ -2828,7 +2828,7 @@ export default function AdminUsers() {
                             </div>
                           )}
                           {displayedActivity.length > 0 ? (
-                            <div style={{ overflowX: "auto", marginBottom: 16 }}>
+                            <div className="table-scroll" style={{ marginBottom: 16 }}>
                               <table
                                 style={{
                                   width: "100%",

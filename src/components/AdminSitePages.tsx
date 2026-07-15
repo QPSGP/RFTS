@@ -77,23 +77,23 @@ export default function AdminSitePages() {
         <p style={{ color: "#0f766e", fontSize: 14, marginBottom: 16 }}>{data.audioLandingNote}</p>
       )}
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 200 }}>
+      <div className="admin-filter-row" style={{ marginBottom: 16 }}>
+        <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: "1 1 160px", minWidth: 0 }}>
           <span style={{ fontSize: 13, fontWeight: 600 }}>Search</span>
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Title, path, or category…"
-            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db" }}
+            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", width: "100%" }}
           />
         </label>
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 180 }}>
+        <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: "1 1 140px", minWidth: 0 }}>
           <span style={{ fontSize: 13, fontWeight: 600 }}>Category</span>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as SitePageCategory | "all")}
-            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db" }}
+            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", width: "100%" }}
           >
             <option value="all">All ({data.total})</option>
             {CATEGORY_ORDER.map((cat) => (
@@ -109,7 +109,9 @@ export default function AdminSitePages() {
         Showing {filtered.length} page{filtered.length === 1 ? "" : "s"}
       </p>
 
+      <p className="admin-table-hint">Swipe sideways to see path and open link.</p>
       <div
+        className="table-scroll"
         style={{
           maxHeight: 480,
           overflowY: "auto",
@@ -117,7 +119,7 @@ export default function AdminSitePages() {
           borderRadius: 8
         }}
       >
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, minWidth: 480 }}>
           <thead>
             <tr style={{ background: "#f8fafc", textAlign: "left" }}>
               <th style={{ padding: "10px 12px", borderBottom: "1px solid #e5e7eb" }}>Category</th>
@@ -135,7 +137,7 @@ export default function AdminSitePages() {
                 <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", verticalAlign: "top" }}>
                   {row.label}
                 </td>
-                <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", verticalAlign: "top" }}>
+                <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", verticalAlign: "top", wordBreak: "break-all" }}>
                   <code style={{ fontSize: 12 }}>{row.path}</code>
                 </td>
                 <td style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", verticalAlign: "top" }}>

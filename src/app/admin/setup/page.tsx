@@ -51,7 +51,7 @@ export default function AdminSetupPage() {
 
   if (!needsSetup) {
     return (
-      <main>
+      <main className="admin-page">
         <section className="card">
           <h1>Admin Setup</h1>
           <p>Setup is already complete. Please log in at /login.</p>
@@ -61,7 +61,7 @@ export default function AdminSetupPage() {
   }
 
   return (
-    <main>
+    <main className="admin-page">
       <section className="card">
         <h1>Create Admin Account</h1>
         <p>Set the first admin account for this deployment.</p>

@@ -191,8 +191,10 @@ export default function ScheduleAlgorithmTool({ onClose }: ScheduleAlgorithmTool
               ))}
             </ul>
           )}
+          <p className="admin-table-hint">Swipe sideways to see all nights in the schedule preview.</p>
           <div
-            style={{ overflowX: "auto", maxHeight: 480, overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: 8 }}
+            className="table-scroll"
+            style={{ maxHeight: 480, overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: 8 }}
           >
             <table style={{ borderCollapse: "collapse", fontSize: 11, width: "100%", minWidth: 700 }}>
               <thead>

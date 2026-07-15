@@ -65,13 +65,13 @@ export default function AdminContentPage() {
   };
 
   return (
-    <main>
+    <main className="admin-page">
       <section style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1>Admin Content Console</h1>
           <p>Manage goals, audio library items, and ordering.</p>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <div className="admin-toolbar">
           <Link href="/admin/dashboard" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
             Activity Dashboard
           </Link>

@@ -904,7 +904,7 @@ export default function AdminModerators() {
                         />
                       </>
                     )}
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       <button
                         className="button button-secondary"
                         type="button"
