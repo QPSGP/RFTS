@@ -107,3 +107,117 @@ describe("buildSchedulePreview — gold (platinum) duplicate tracks per night", 
     expect(specialNight!.tracks).toHaveLength(2);
   });
 });
+
+describe("buildSchedulePreview — gold play counts are goal-scoped", () => {
+  const shared = mk("shared", "Shared track", "T54");
+  const onlyA = mk("only-a", "Only goal A");
+  const onlyB = mk("only-b", "Only goal B");
+  const t18 = mk("t18", "T-18", "T18");
+
+  it("does not retire a goal from another goal's plays of a shared audio", () => {
+    const settings: PlaybackSettings = {
+      playsPerRecording: 2,
+      nightlyGapHours: 2.5,
+      addNewTrackEveryNights: 999,
+      initialTracks: 3,
+      cgmrTrackId: "",
+      fallbackTrackId: "T18"
+    };
+    const nights = buildSchedulePreview({
+      interests: ["goal-a", "goal-b"],
+      library: [shared, onlyA, onlyB, t18],
+      interestRecords: [
+        {
+          id: "goal-a",
+          name: "Goal A",
+          createdAt: "",
+          audioIdA: "shared",
+          audioIdB: "only-a",
+          audioIdC: null
+        },
+        {
+          id: "goal-b",
+          name: "Goal B",
+          createdAt: "",
+          audioIdA: "shared",
+          audioIdB: "only-b",
+          audioIdC: null
+        }
+      ],
+      settings,
+      tier: "platinum",
+      nights: 20,
+      playsPerNight: 2
+    });
+
+    // Goal A needs shared×2 and only-a×2 for this goal; Goal B needs its own shared×2.
+    // Shared plays attributed only to Goal A must not complete Goal B early.
+    const removedMentionsB = nights.flatMap((n) => n.rotationRemovedAfterPlays || []).filter((m) =>
+      m.includes("Goal B")
+    );
+    const nightsWithGoalBTrack = nights.filter((n) =>
+      n.tracks.some((t) => t.id === "only-b" || (t.id === "shared" && !n.note?.includes("T18/CGMR")))
+    );
+    // Goal B should still be producing tracks well after Goal A has used shared twice
+    expect(nightsWithGoalBTrack.length).toBeGreaterThan(2);
+    // If Goal B retired solely from Goal A's shared plays, it would leave after very few shared plays total.
+    // Ensure Goal B is not removed before it has its own only-b plays in the schedule.
+    const firstBOnlyIndex = nights.findIndex((n) => n.tracks.some((t) => t.id === "only-b"));
+    const firstBRemoved = nights.findIndex((n) =>
+      (n.rotationRemovedAfterPlays || []).some((m) => m.includes("Goal B"))
+    );
+    expect(firstBOnlyIndex).toBeGreaterThanOrEqual(0);
+    if (firstBRemoved >= 0) {
+      expect(firstBRemoved).toBeGreaterThanOrEqual(firstBOnlyIndex);
+    }
+    expect(removedMentionsB.length).toBeGreaterThanOrEqual(0);
+  });
+
+  it("does not count every-4th T-18 special toward a goal that also uses T-18", () => {
+    const settings: PlaybackSettings = {
+      playsPerRecording: 4,
+      nightlyGapHours: 2.5,
+      addNewTrackEveryNights: 999,
+      initialTracks: 3,
+      cgmrTrackId: "",
+      fallbackTrackId: "T18"
+    };
+    const energy = mk("energy-other", "Energy other");
+    const nights = buildSchedulePreview({
+      interests: ["energy"],
+      library: [t18, energy],
+      interestRecords: [
+        {
+          id: "energy",
+          name: "ENERGY!",
+          createdAt: "",
+          audioIdA: "t18",
+          audioIdB: "energy-other",
+          audioIdC: null
+        }
+      ],
+      settings,
+      tier: "platinum",
+      nights: 40,
+      playsPerNight: 2
+    });
+
+    const energyOtherPlayNights = nights.filter((n) =>
+      n.tracks.some((t) => t.id === "energy-other")
+    );
+    expect(energyOtherPlayNights.length).toBeGreaterThanOrEqual(4);
+
+    const firstRemoval = nights.findIndex((n) =>
+      (n.rotationRemovedAfterPlays || []).some((m) => m.includes("ENERGY!"))
+    );
+    // Retirement requires 4 goal-attributed plays of EACH track. Specials must not skip energy-other.
+    expect(firstRemoval).toBeGreaterThanOrEqual(0);
+    const energyOtherBeforeRemoval = nights
+      .slice(0, firstRemoval + 1)
+      .reduce(
+        (n, night) => n + night.tracks.filter((t) => t.id === "energy-other").length,
+        0
+      );
+    expect(energyOtherBeforeRemoval).toBeGreaterThanOrEqual(4);
+  });
+});

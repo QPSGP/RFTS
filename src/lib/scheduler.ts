@@ -137,7 +137,15 @@ export const buildSchedulePreview = ({
   // Both platinum and platinum_managed use the same special track logic
   const defaultSpecialTrack = (tier === "platinum" || tier === "platinum_managed") ? cgmr || fallback : fallback || cgmr;
   const specialTrack = userAssignedTrack ?? defaultSpecialTrack;
+  /**
+   * Play counts for the 21-play retirement rule.
+   * - Managed: keyed by library item id (one slot per assigned audio).
+   * - Gold: keyed by `goalId::trackId` so a shared recording (e.g. T54 on Stress and Health)
+   *   only counts toward the goal that selected it. T-18/CGMR specials do not count for any goal.
+   */
   const playCounts = new Map<string, number>();
+  const playCountKey = (goalId: string | null, trackId: string) =>
+    goalId ? `${goalId}::${trackId}` : trackId;
   
   // For managed members: use assigned audios; for regular members: use goals
   /**
@@ -187,10 +195,25 @@ export const buildSchedulePreview = ({
     return audio;
   };
 
-  const markPlayed = (item: LibraryItem | null) => {
-    if (!item) return;
-    const count = playCounts.get(item.id) || 0;
-    playCounts.set(item.id, count + 1);
+  type SlotPlay = {
+    item: LibraryItem | null;
+    /** Goal that owns this play for Gold retirement counts; null for managed / specials. */
+    goalId: string | null;
+    isSpecial: boolean;
+  };
+
+  const markPlayed = (play: SlotPlay) => {
+    if (!play.item) return;
+    // Specials (every-4th T-18/CGMR) must not count toward any goal's 21-play retirement.
+    if (play.isSpecial) return;
+    if (isManagedMember) {
+      const count = playCounts.get(play.item.id) || 0;
+      playCounts.set(play.item.id, count + 1);
+      return;
+    }
+    if (!play.goalId) return;
+    const key = playCountKey(play.goalId, play.item.id);
+    playCounts.set(key, (playCounts.get(key) || 0) + 1);
   };
 
   // Drop goals by main-play count so rotation matches 1 or 2 plays per night (1 per night doubles schedule nights)
@@ -281,20 +304,28 @@ export const buildSchedulePreview = ({
       activeGoalQueue.push(g);
     };
 
-    let first: LibraryItem | null = null;
-    let second: LibraryItem | null = null;
+    let firstPlay: SlotPlay = { item: null, goalId: null, isSpecial: false };
+    let secondPlay: SlotPlay = { item: null, goalId: null, isSpecial: false };
 
     if (playsPerNight === 1) {
       const skipTakeFirst =
         isSpecialSessionFirst && !!specialTrack;
       if (isManagedMember) {
-        first = skipTakeFirst ? null : takeNextAssignedAudio();
+        firstPlay = {
+          item: skipTakeFirst ? null : takeNextAssignedAudio(),
+          goalId: null,
+          isSpecial: false
+        };
       } else {
         if (skipTakeFirst) {
-          first = null;
+          firstPlay = { item: null, goalId: null, isSpecial: false };
         } else {
           const firstGoal = takeNextGoal();
-          first = firstGoal ? takeNextTrackForGoal(firstGoal) : null;
+          firstPlay = {
+            item: firstGoal ? takeNextTrackForGoal(firstGoal) : null,
+            goalId: firstGoal,
+            isSpecial: false
+          };
         }
       }
       /** One main play still consumes one rotation step when the whole night is CGMR/T-18 (same as 2-play fix). */
@@ -304,39 +335,52 @@ export const buildSchedulePreview = ({
         } else {
           advanceGoalSlotForSpecialSecond();
         }
+        firstPlay = { item: specialTrack, goalId: null, isSpecial: true };
       }
     } else {
-      first = isManagedMember
-        ? takeNextAssignedAudio()
-        : (() => {
-            const firstGoal = takeNextGoal();
-            return firstGoal ? takeNextTrackForGoal(firstGoal) : null;
-          })();
+      if (isManagedMember) {
+        firstPlay = {
+          item: takeNextAssignedAudio(),
+          goalId: null,
+          isSpecial: false
+        };
+      } else {
+        const firstGoal = takeNextGoal();
+        firstPlay = {
+          item: firstGoal ? takeNextTrackForGoal(firstGoal) : null,
+          goalId: firstGoal,
+          isSpecial: false
+        };
+      }
       if (isSpecialSessionSecond && specialTrack) {
-        second = specialTrack;
+        secondPlay = { item: specialTrack, goalId: null, isSpecial: true };
         if (!isManagedMember) {
           advanceGoalSlotForSpecialSecond();
         }
       } else if (isManagedMember) {
-        second = takeNextAssignedAudio();
+        secondPlay = {
+          item: takeNextAssignedAudio(),
+          goalId: null,
+          isSpecial: false
+        };
       } else {
         const secondGoal = takeNextGoal();
-        second = secondGoal ? takeNextTrackForGoal(secondGoal) : null;
+        secondPlay = {
+          item: secondGoal ? takeNextTrackForGoal(secondGoal) : null,
+          goalId: secondGoal,
+          isSpecial: false
+        };
       }
     }
 
-    const singleTrack =
-      playsPerNight === 1 && isSpecialSessionFirst && specialTrack
-        ? specialTrack
-        : first;
-    const selectedTracks = playsPerNight === 1 ? [singleTrack] : [first, second];
-    const filtered = selectedTracks.filter(
-      (item): item is LibraryItem => !!item
-    );
+    const selectedPlays: SlotPlay[] =
+      playsPerNight === 1 ? [firstPlay] : [firstPlay, secondPlay];
     // Keep both slots when the same recording appears twice in one night (e.g. goal + CGMR/T-18).
-    const tracks = filtered;
+    const tracks = selectedPlays
+      .map((p) => p.item)
+      .filter((item): item is LibraryItem => !!item);
 
-    tracks.forEach((item) => markPlayed(item));
+    selectedPlays.forEach((play) => markPlayed(play));
 
     const isSpecialThisNight = playsPerNight === 1 ? isSpecialSessionFirst : isSpecialSessionSecond;
     const noteSpecial = "T18/CGMR (every 4th main play)";
@@ -375,14 +419,18 @@ export const buildSchedulePreview = ({
       } else {
         [...activeGoalQueue].forEach((goalId) => {
           const tracksForGoal = goalTrackMap.get(goalId) || [];
-          const completed = tracksForGoal.every(
-            (track) => (playCounts.get(track.id) || 0) >= settings.playsPerRecording
-          );
+          const completed =
+            tracksForGoal.length > 0 &&
+            tracksForGoal.every(
+              (track) =>
+                (playCounts.get(playCountKey(goalId, track.id)) || 0) >=
+                settings.playsPerRecording
+            );
           if (completed) {
             const idx = activeGoalQueue.indexOf(goalId);
             if (idx !== -1) {
               removedAfter.push(
-                `${goalLabel(goalId)} — goal leaves rotation after this night (all its tracks hit ${settings.playsPerRecording} plays)`
+                `${goalLabel(goalId)} — goal leaves rotation after this night (all its tracks hit ${settings.playsPerRecording} plays for this goal)`
               );
               activeGoalQueue.splice(idx, 1);
             }
