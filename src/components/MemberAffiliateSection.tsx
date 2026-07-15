@@ -31,6 +31,7 @@ type Props = {
 
 export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Props) {
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const [referralCopied, setReferralCopied] = useState(false);
   const [payoutMethod, setPayoutMethod] = useState<AffiliatePayoutMethod>(
     affiliate?.payoutMethod ?? "crypto"
   );
@@ -90,8 +91,11 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
     try {
       await navigator.clipboard.writeText(affiliate.referralUrl);
       setCopyMessage("Referral link copied.");
+      setReferralCopied(true);
+      window.setTimeout(() => setReferralCopied(false), 2500);
     } catch {
       setCopyMessage("Could not copy — select and copy the link below.");
+      setReferralCopied(false);
     }
   }, [affiliate?.referralUrl]);
 
@@ -168,11 +172,26 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
       >
         {affiliate.referralUrl}
       </p>
-      <button type="button" className="button" onClick={copyLink}>
-        Copy referral link
+      <button
+        type="button"
+        className={`button${referralCopied ? " is-copied" : ""}`}
+        onClick={copyLink}
+        aria-live="polite"
+      >
+        {referralCopied ? "Copied!" : "Copy referral link"}
       </button>
       {copyMessage && (
-        <p style={{ margin: "12px 0 0", fontSize: 14, color: "#059669" }}>{copyMessage}</p>
+        <p
+          style={{
+            margin: "12px 0 0",
+            fontSize: 14,
+            fontWeight: 600,
+            color: copyMessage.includes("Could not") ? "#b45309" : "#059669"
+          }}
+          role="status"
+        >
+          {copyMessage}
+        </p>
       )}
 
       <AffiliateShareLinks affiliateCode={affiliate.affiliateCode} />
