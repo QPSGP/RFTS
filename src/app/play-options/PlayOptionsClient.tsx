@@ -5,6 +5,7 @@ import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import PlayOptionsAndroidTips from "@/components/PlayOptionsAndroidTips";
 import { LANDING_TRIAL_SIGNUP_HREF } from "@/components/LandingTrialCta";
 import SessionPlayer, { SessionPlayerHandle } from "@/components/SessionPlayer";
+import MemberListenProgress from "@/components/MemberListenProgress";
 import { getMemberTonightTrackItems } from "@/lib/schedule-progress";
 
 export type PlayOptionsProfile = {
@@ -232,6 +233,7 @@ export default function PlayOptionsClient({
             </div>
           )}
         </div>
+        <MemberListenProgress />
         <div className="card" id="meditation-library">
           <h3>Meditation Library</h3>
           <p>Browse the full audio library and play any track on demand. This will not affect your guided audio set!</p>

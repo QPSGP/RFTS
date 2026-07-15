@@ -6,6 +6,7 @@ import {
   logMemberPlayedAudio,
   MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER
 } from "@/lib/member-audio-activity";
+import { notifyMemberAudioCompleted } from "@/components/MemberListenProgress";
 
 /** Same pattern as SessionPlayer `displayNameForSessionTrack` (en dash); used in activity logs. */
 function libraryActivityLogLabel(skuCode: string | null | undefined, recordingTitle: string): string {
@@ -58,6 +59,7 @@ export default function AudioPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   /** Mobile fixed Pause/Play/Restart strip; hidden after Close until playback starts again. */
   const [showMobileLibraryBar, setShowMobileLibraryBar] = useState(true);
+  const [listenCompleteNotice, setListenCompleteNotice] = useState<string | null>(null);
   const pauseForResumeRef = useRef(false);
   const suppressResumeForRestartRef = useRef(false);
   const isPlayingPrepRef = useRef(!!prepAudioUrl);
@@ -222,6 +224,11 @@ export default function AudioPlayer({
       const label =
         prepAudioUrl && isPlayingPrepRef.current ? "Starting music" : libraryActivityLogLabel(skuCode, title);
       logMemberAudioOutcome(`Library — ${label} | completed full listen`);
+      if (!(prepAudioUrl && isPlayingPrepRef.current)) {
+        const display = libraryDisplayHeading(skuCode, title);
+        setListenCompleteNotice(`Finished playing: ${display}`);
+        notifyMemberAudioCompleted(display);
+      }
     };
     audio.addEventListener("ended", onEnded);
     return () => audio.removeEventListener("ended", onEnded);
@@ -386,6 +393,21 @@ export default function AudioPlayer({
             <p style={{ color: "#6b7280", fontSize: 13, marginTop: 4, marginBottom: 0 }}>
               Starting Music — your selected audio will play next.
             </p>
+          )}
+          {listenCompleteNotice && (
+            <div
+              role="status"
+              style={{
+                marginTop: 12,
+                padding: 12,
+                borderRadius: 10,
+                background: "#ecfdf5",
+                border: "1px solid #34d399"
+              }}
+            >
+              <p style={{ margin: 0, fontWeight: 600, color: "#166534" }}>Audio completed</p>
+              <p style={{ margin: "6px 0 0", color: "#15803d", fontSize: 14 }}>{listenCompleteNotice}</p>
+            </div>
           )}
           {wakeLockSupported ? (
             <p style={{ color: "#6b7280", fontSize: 13, marginTop: 8 }}>

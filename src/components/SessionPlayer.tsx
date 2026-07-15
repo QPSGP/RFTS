@@ -17,6 +17,7 @@ import {
   logMemberPlayedAudio,
   MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER
 } from "@/lib/member-audio-activity";
+import { notifyMemberAudioCompleted } from "@/components/MemberListenProgress";
 import {
   clearSessionMediaSession,
   registerSessionMediaSessionActionHandlers,
@@ -297,6 +298,9 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const [onePerNightComplete, setOnePerNightComplete] = useState(false);
   /** 2 per night: both main segments finished; distinct from 1/night `onePerNightComplete`. */
   const [fullNightSessionComplete, setFullNightSessionComplete] = useState(false);
+  /** Short notice when the current segment finishes (intro or goal audio). */
+  const [trackFinishedNotice, setTrackFinishedNotice] = useState<string | null>(null);
+  const trackFinishedClearRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const secondFromGapInFlightRef = useRef(false);
   /** One diag row per gap when overdue recovery happens with tab visible (explains Android lock-screen stalls). */
   const gapOverdueDiagLoggedRef = useRef(false);
@@ -564,6 +568,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     onSessionStart?.();
     setOnePerNightComplete(false);
     setFullNightSessionComplete(false);
+    setTrackFinishedNotice(null);
     secondFromGapInFlightRef.current = false;
     setPhase("first");
     const nextQueue = [prepAudio, firstTrack].filter(
@@ -878,6 +883,17 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         if (line) {
           logMemberAudioOutcome(`${line} | completed full listen`);
         }
+        const finishedName = displayNameForSessionTrack(c0);
+        const isIntro = Boolean(prep0 && c0.url === prep0.url);
+        const notice = isIntro
+          ? "Intro relaxation music finished playing. Your goal audio is next."
+          : `Finished playing: ${finishedName}`;
+        setTrackFinishedNotice(notice);
+        if (trackFinishedClearRef.current) clearTimeout(trackFinishedClearRef.current);
+        trackFinishedClearRef.current = setTimeout(() => setTrackFinishedNotice(null), 12000);
+        if (!isIntro) {
+          notifyMemberAudioCompleted(finishedName);
+        }
       }
     }
     const q = queueRef.current;
@@ -1187,6 +1203,16 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         )}
       </div>
       {message && <p style={{ marginTop: 12 }}>{message}</p>}
+      {trackFinishedNotice && (
+        <div
+          className="card"
+          role="status"
+          style={{ marginTop: 16, background: "#ecfdf5", borderColor: "#34d399" }}
+        >
+          <p style={{ margin: 0, fontWeight: 600, color: "#166534" }}>Audio completed</p>
+          <p style={{ margin: "8px 0 0", color: "#15803d" }}>{trackFinishedNotice}</p>
+        </div>
+      )}
       {onePerNightComplete && playsPerNight === 1 && (
         <div className="card" style={{ marginTop: 16, background: "#f0fdf4", borderColor: "#22c55e" }}>
           <p style={{ margin: 0, fontWeight: 600, color: "#166534" }}>Session complete.</p>

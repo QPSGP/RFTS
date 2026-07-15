@@ -1624,6 +1624,46 @@ export const getMemberActivityLogForUser = async (
   }
 };
 
+/** Audio start + outcome rows for member listen progress reports. */
+export const getMemberAudioActivityForListenProgress = async (
+  userId: string,
+  limit: number = 2500
+): Promise<MemberActivityLogEntry[]> => {
+  const capped = Math.max(1, Math.min(5000, Math.floor(limit)));
+  try {
+    const { rows } = await sql<{
+      id: string;
+      action: string;
+      details: string | null;
+      created_at: string;
+    }>`
+      SELECT id, action, details, created_at
+      FROM member_activity_log
+      WHERE user_id = ${userId}
+        AND action IN ('played_audio', 'audio_playback_outcome')
+      ORDER BY created_at DESC NULLS LAST, id DESC
+      LIMIT ${capped}
+    `;
+    return rows.map((r) => {
+      const ca = r.created_at as unknown;
+      const createdAt =
+        ca instanceof Date
+          ? ca.toISOString()
+          : typeof r.created_at === "string"
+            ? r.created_at
+            : String(r.created_at);
+      return {
+        id: r.id,
+        action: r.action,
+        details: r.details ?? null,
+        createdAt
+      };
+    });
+  } catch {
+    return [];
+  }
+};
+
 /** Get recent member activity for admin (with user name/email). */
 export const getMemberActivityLog = async (limit: number = 100): Promise<MemberActivityLogRow[]> => {
   try {
