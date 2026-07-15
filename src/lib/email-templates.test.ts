@@ -3,6 +3,9 @@ jest.mock("@/lib/email", () => ({
 }));
 
 import {
+  getForgotPasswordEmailContent,
+  getLgdInterestEmailContent,
+  getTherapistHealerCoachEmailContent,
   getWelcomeEmailContent,
   WELCOME_EMAIL_PLATINUM_MANAGED_COPY,
   welcomeEmailHasUpdatedPlatinumCopy
@@ -23,5 +26,23 @@ describe("welcome email templates", () => {
     expect(welcome.text).toContain(WELCOME_EMAIL_PLATINUM_MANAGED_COPY);
     expect(welcome.html).toContain("Customized Goal Manifestation Recording");
     expect(welcome.text).not.toContain("$39.95 per month");
+  });
+});
+
+describe("Gmail-safe email HTML", () => {
+  const samples = [
+    getWelcomeEmailContent("Smoke", "Test"),
+    getForgotPasswordEmailContent("https://reachforthestars.today/reset", 2),
+    getLgdInterestEmailContent("Smoke"),
+    getTherapistHealerCoachEmailContent("Smoke")
+  ];
+
+  it("uses table layout, Arial, and bgcolor CTA buttons", () => {
+    for (const sample of samples) {
+      expect(sample.html).toContain('role="presentation"');
+      expect(sample.html).toContain("Arial, Helvetica, sans-serif");
+      expect(sample.html).toContain('bgcolor="#0f766e"');
+      expect(sample.html).not.toContain("system-ui");
+    }
   });
 });
