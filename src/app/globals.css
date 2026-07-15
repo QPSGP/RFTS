@@ -98,6 +98,9 @@ main {
   border-bottom: 1px solid rgba(148, 163, 184, 0.2);
   background: linear-gradient(120deg, #f8fbff 0%, #eef9f7 60%, #e6fffa 100%);
   color: #0f172a;
+  position: sticky;
+  top: 0;
+  z-index: 40;
 }
 
 .site-header-inner {

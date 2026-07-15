@@ -1,4 +1,5 @@
 import SiteFooter from "@/components/SiteFooter";
+import { LandingTrialCtaButtons } from "@/components/LandingTrialCta";
 
 export default function HowItWorksPage() {
   return (
@@ -11,6 +12,7 @@ export default function HowItWorksPage() {
           reinforce new habits, focus, and confidence at the time your subconscious is
           most receptive.
         </p>
+        <LandingTrialCtaButtons />
       </section>
 
       <section className="section">

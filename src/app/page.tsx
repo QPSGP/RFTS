@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import SiteFooter from "@/components/SiteFooter";
-import AffiliateSignupLink from "@/components/AffiliateSignupLink";
+import { LandingTrialCtaBand, LandingTrialCtaButtons } from "@/components/LandingTrialCta";
 import { isMemberLoggedIn } from "@/lib/member-session";
 import { HOMEPAGE_GOAL_CARDS } from "@/lib/homepage-goals";
 import { MEDITATION_SOURCES, WELLNESS_BENEFIT_LINKS } from "@/lib/meditation-benefits";
@@ -63,32 +63,63 @@ export default async function HomePage() {
   return (
     <main>
       <section className="hero section">
-        <span className="pill">Conscious Growth Engine</span>
+        <span className="pill">Reach For The Stars</span>
         <h1>Imagine … The Best You</h1>
         <p>
-          Overcome present challenges and take your goals from dream to reality
-          all while falling asleep and during sleep.
+          Overcome present challenges and grow your goals while falling asleep and during sleep —
+          personalized guided meditations, nightly.
         </p>
-        <p>
-          Check out the video to learn more about our innovative algorithm which
-          uses your specified, prioritized goals to provide targeted meditations
-          each night you listen.
-        </p>
-        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-          <video
-            controls
-            playsInline
-            preload="metadata"
-            style={{ maxWidth: "100%", width: 640, borderRadius: 8 }}
+        {showSignupCta && (
+          <>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <LandingTrialCtaButtons />
+            </div>
+            <p
+              style={{
+                marginTop: 12,
+                marginBottom: 0,
+                fontSize: 14,
+                color: "#64748b",
+                textAlign: "center"
+              }}
+            >
+              50+ years of hypnotherapy experience · 5,000+ clients · 14-day free trial
+            </p>
+          </>
+        )}
+        <details
+          style={{
+            marginTop: 20,
+            maxWidth: 640,
+            width: "100%",
+            marginLeft: "auto",
+            marginRight: "auto",
+            textAlign: "left"
+          }}
+        >
+          <summary
+            style={{
+              cursor: "pointer",
+              fontWeight: 600,
+              color: "#0f766e",
+              fontSize: 15,
+              padding: "8px 0"
+            }}
           >
-            <source src="/Images/Terry-Sizzle-Reel-Website.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-          <div className="cta-row hero-cta" style={{ gap: 16, alignItems: "center", justifyContent: "center" }}>
-            {showSignupCta && <AffiliateSignupLink label="Start Your Journey" />}
-            {showSignupCta && <strong>14 Day Free Trial!</strong>}
+            Watch how it works (optional)
+          </summary>
+          <div style={{ marginTop: 12 }}>
+            <video
+              controls
+              playsInline
+              preload="none"
+              style={{ maxWidth: "100%", width: 640, borderRadius: 8, display: "block" }}
+            >
+              <source src="/Images/Terry-Sizzle-Reel-Website.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
           </div>
-        </div>
+        </details>
       </section>
 
       <section className="section">
@@ -126,6 +157,10 @@ export default async function HomePage() {
           current goals.
         </p>
       </section>
+
+      {showSignupCta && (
+        <LandingTrialCtaBand body="Ready when you are — start your 14-day free trial and build a nightly practice that works while you sleep." />
+      )}
 
       <section className="section">
         <div className="section-head">
