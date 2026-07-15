@@ -1847,9 +1847,9 @@ export default function AdminUsers() {
       <div className="facilitator-console-layout" style={{ marginTop: 16 }}>
         <section className="card facilitator-console-nav">
           <h3 style={{ marginTop: 0 }}>Members</h3>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 8, marginBottom: 8 }}>
-            <label style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 0 }}>
-              <span style={{ fontSize: 12, fontWeight: 600 }}>Member search</span>
+          <div className="admin-member-search-bar">
+            <label className="admin-member-search-field">
+              <span>Member search</span>
               <input
                 style={inputStyle}
                 type="search"
@@ -1857,36 +1857,39 @@ export default function AdminUsers() {
                 value={memberSearchTerm}
                 onChange={(event) => setMemberSearchTerm(event.target.value)}
                 aria-label="Member search"
+                autoComplete="off"
               />
             </label>
-            <button
-              type="button"
-              className="button button-secondary"
-              style={{ fontSize: 11, padding: "8px 10px", whiteSpace: "nowrap", flexShrink: 0 }}
-              onClick={() =>
-                setClientListSort((sort) => (sort === "alphabetical" ? "newest" : "alphabetical"))
-              }
-              aria-pressed={clientListSort === "newest"}
-              title={
-                clientListSort === "alphabetical"
-                  ? "Show most recently added members first"
-                  : "Show alphabetical order"
-              }
-            >
-              {clientListSort === "alphabetical" ? "Newest" : "A–Z"}
-            </button>
+            <div className="admin-member-search-actions">
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={() =>
+                  setClientListSort((sort) => (sort === "alphabetical" ? "newest" : "alphabetical"))
+                }
+                aria-pressed={clientListSort === "newest"}
+                title={
+                  clientListSort === "alphabetical"
+                    ? "Show most recently added members first"
+                    : "Show alphabetical order"
+                }
+              >
+                {clientListSort === "alphabetical" ? "Newest" : "A–Z"}
+              </button>
+              <select
+                style={inputStyle}
+                value={memberTierFilter}
+                onChange={(event) =>
+                  setMemberTierFilter(event.target.value as "all" | "platinum" | "platinum_managed")
+                }
+                aria-label="Filter by membership"
+              >
+                <option value="all">All memberships</option>
+                <option value="platinum">Gold Member</option>
+                <option value="platinum_managed">Platinum Managed Member</option>
+              </select>
+            </div>
           </div>
-          <select
-            style={{ ...inputStyle, marginBottom: 8 }}
-            value={memberTierFilter}
-            onChange={(event) =>
-              setMemberTierFilter(event.target.value as "all" | "platinum" | "platinum_managed")
-            }
-          >
-            <option value="all">All memberships</option>
-            <option value="platinum">Gold Member</option>
-            <option value="platinum_managed">Platinum Managed Member</option>
-          </select>
           <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 8px" }}>
             {clientListSort === "alphabetical"
               ? "Sorted by last name, first name."
