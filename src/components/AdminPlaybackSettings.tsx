@@ -46,11 +46,10 @@ export default function AdminPlaybackSettings() {
     <div className="card">
       <h2>Playback Schedule Settings</h2>
       <p style={{ fontSize: 14, color: "#4b5563", marginBottom: 12, lineHeight: 1.5 }}>
-        All fields use the same rule: a <strong>main play</strong> is one scheduled listening slot (first or second
-        recording on a schedule night when the member uses 2 per night, or the single recording when they use 1 per
-        night). Intro relaxation music does not count. A <strong>listening session</strong> is one full schedule night
-        (1 or 2 main plays, depending on their setting). CGMR or the default code fills every{" "}
-        <strong>4th main play</strong> in order; other numbers below count <strong>main plays</strong> only.
+        Playback builds a <strong>flat sequence</strong> of main plays (same order for 1 or 2 audios per night; only
+        packing into nights changes). Intro relaxation music does not count. Each goal or assigned audio stays in
+        rotation for its full rep list; CGMR or T-18 fills every <strong>4th sequence play</strong> without consuming a
+        rotation step. Consecutive duplicate SKUs are skipped (the rep still counts as used).
       </p>
       <div className="grid">
         <label>
@@ -64,8 +63,9 @@ export default function AdminPlaybackSettings() {
             onChange={(event) => update("playsPerRecording", Number(event.target.value))}
           />
           <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
-            After a library item has been heard this many times as a <strong>main play</strong>, it leaves the active
-            rotation (CGMR / default code is not removed this way).
+            Repetitions of each track inside a rotation entry (managed: track×N; goal-based: A×N then B×N then C×N).
+            When the entry&apos;s reps are exhausted it leaves the rotation. Specials (T-18 / CGMR) are not removed
+            this way.
           </span>
         </label>
         <label>
@@ -85,7 +85,7 @@ export default function AdminPlaybackSettings() {
           </span>
         </label>
         <label>
-          Add new track every {settings.addNewTrackEveryNights} main plays (fixed)
+          Add new track every {settings.addNewTrackEveryNights} sequence plays (fixed)
           <input
             type="number"
             style={{ ...inputStyle, background: "#f1f5f9", color: "#475569" }}
@@ -95,11 +95,11 @@ export default function AdminPlaybackSettings() {
             title="Product default; legacy databases update automatically on first read."
           />
           <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
-            Completed <strong>main plays</strong> before the next goal or assigned audio joins the bottom of the
-            rotation. With <strong>2</strong> main plays per night, <strong>{settings.addNewTrackEveryNights}</strong>{" "}
-            plays ≈ <strong>{Math.round(settings.addNewTrackEveryNights / 2)}</strong> full nights; with{" "}
-            <strong>1</strong> per night, it equals nights. This value is always stored as the product default; existing
-            installs are updated when settings load.
+            After this many plays in the generated sequence (including T-18/CGMR), the next goal or assigned audio is
+            appended to the end of the rotation. With <strong>2</strong> per night,{" "}
+            <strong>{settings.addNewTrackEveryNights}</strong> plays ≈{" "}
+            <strong>{Math.round(settings.addNewTrackEveryNights / 2)}</strong> nights. Product default; existing
+            installs update when settings load.
           </span>
         </label>
         <label>
@@ -113,10 +113,8 @@ export default function AdminPlaybackSettings() {
             onChange={(event) => update("initialTracks", Number(event.target.value))}
           />
           <span style={{ display: "block", fontSize: 12, color: "#64748b", marginTop: 4 }}>
-            Total width of the rotation including the CGMR / default slot: content slots = value − 1{" "}
-            <strong>main plays</strong> before the repeating special. Standard is <strong>4</strong> (three content
-            priorities + one special every 4th <strong>main play</strong>). If this is 3 you only get two content slots
-            plus T-18.
+            Total width including the special slot: content slots = value − 1 when value ≥ 4. Standard is{" "}
+            <strong>4</strong> (three content priorities start in rotation; T-18/CGMR every 4th sequence play).
           </span>
         </label>
         <label>
