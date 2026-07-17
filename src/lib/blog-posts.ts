@@ -310,7 +310,7 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-03-18",
     readMinutes: 5,
     excerpt:
-      "Guided sleep meditation works best when it is consistent, personalized, and timed for the moments your mind is most receptive — especially as you fall asleep.",
+      "Guided sleep meditation works best when it is consistent, personalized, and timed for the moments your mind is most receptive — especially as you fall asleep and during sleep.",
     topicSlug: "sleep-meditation",
     sections: [
       {

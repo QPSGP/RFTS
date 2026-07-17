@@ -300,7 +300,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
     ],
     nightlySteps: [
       { title: "Select calm and health goals", body: "Prioritize rest, balance, and cardiovascular wellness among your goals." },
-      { title: "Listen at bedtime", body: "Intro relaxation music and goal audios play as you fall asleep." },
+      { title: "Listen at bedtime", body: "Intro relaxation music and goal audios play as you fall asleep and during sleep." },
       { title: "Track with your doctor", body: "Use meditation alongside medical care and regular checkups." }
     ],
     relatedSlugs: ["stress-relief", "sleep-meditation", "resilience-meditation"]
@@ -404,7 +404,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       {
         title: "Pre-sleep priming",
         body:
-          "Hearing intention-focused audios as you fall asleep primes the subconscious for next-day choices."
+          "Hearing intention-focused audios as you fall asleep and during sleep primes the subconscious for next-day choices."
       },
       {
         title: "Structured rotation",

@@ -21,7 +21,7 @@ export default function SciencePage() {
           <div className="card">
             <h3>Priming before sleep</h3>
             <p>
-              The period as you fall asleep is a high-suggestibility window. Guided
+              The period as you fall asleep and during sleep is a high-suggestibility window. Guided
               prompts paired with relaxation help the brain encode new intentions.
             </p>
           </div>

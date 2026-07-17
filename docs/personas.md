@@ -29,7 +29,7 @@ Alex is competent and exhausted. Evenings are for recovery, but the brain will n
 - "meditation while sleeping"
 
 ### Messaging that resonates
-- **No extra daytime chore** — press Start at bedtime; audios run while you fall asleep
+- **No extra daytime chore** — press Start at bedtime; audios run while you fall asleep and during sleep
 - **Evidence-informed, not woo** — hypnotherapy lineage, Terry's 50+ years, testimonials
 - **Habit without willpower** — fixed nightly flow, personalized rotation
 

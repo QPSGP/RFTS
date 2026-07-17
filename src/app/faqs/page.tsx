@@ -128,7 +128,7 @@ export default function FaqsPage() {
             <h3>Do I need to stay awake while listening?</h3>
             <p>
               No. These sessions are designed for when your subconscious is most
-              susceptible to suggestions as you are falling asleep. About 2.5 hours
+              susceptible to suggestions as you are falling asleep and during sleep. About 2.5 hours
               later, the second recording comes on to reinforce your goals while you are
               sleeping.
             </p>

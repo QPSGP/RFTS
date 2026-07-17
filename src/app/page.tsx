@@ -136,7 +136,7 @@ export default async function HomePage() {
           recordings to your specific desires. With this application, recordings
           to help you with your most important goals will be played in rotation,
           ensuring you hear the messages on the subconscious level while falling
-          asleep. These quality recordings are scheduled based on your unique
+          asleep and during sleep. These quality recordings are scheduled based on your unique
           goals and desires, aiding you to reach your Highest Potential in areas
           physical, mental, emotional, spiritual, and financial.
         </p>

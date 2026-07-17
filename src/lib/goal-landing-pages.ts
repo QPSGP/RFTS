@@ -134,7 +134,7 @@ const GOAL_DETAILS: Record<
     ],
     nightlySteps: [
       { title: "Choose relationship goals", body: "Prioritize connection, love, and related themes." },
-      { title: "Press Start Session", body: "Your lineup plays while you fall asleep." },
+      { title: "Press Start Session", body: "Your lineup plays while you fall asleep and during sleep." },
       { title: "Notice daily shifts", body: "Consistent practice supports how you relate over time." }
     ],
     relatedSlugs: ["spirituality", "health", "inspiration"]
@@ -264,7 +264,7 @@ const GOAL_DETAILS: Record<
       {
         title: "Bedtime priming",
         body:
-          "Hearing supportive messages as you fall asleep helps prime next-day choices without adding another daytime task."
+          "Hearing supportive messages as you fall asleep and during sleep helps prime next-day choices without adding another daytime task."
       },
       {
         title: "Facilitator support",

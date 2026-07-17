@@ -16,7 +16,7 @@ Personas: `docs/personas.md`
 ### Clip 1 — Racing thoughts (10–15s)
 **Hook (text on screen):** Racing thoughts at 11 p.m.?  
 **Voice / VO:** “Lights out… and your brain opens the project folder. There’s a better habit than scrolling.”  
-**CTA:** “Press Start Session. Listen while you fall asleep.”  
+**CTA:** “Press Start Session. Listen while you fall asleep and during sleep.”  
 **Link:** `/sleep-meditation?ref=…` or racing-thoughts blog  
 
 ### Clip 2 — No daytime meditation (15–20s)
