@@ -257,6 +257,9 @@ export default function AdminDashboardPage() {
           <p>Overview of member signups, subscriptions, and usage.</p>
         </div>
         <div className="admin-toolbar">
+          <Link href="/admin/marketing" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
+            Marketing
+          </Link>
           <Link href="/admin/member-issues" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
             Issue reports
           </Link>

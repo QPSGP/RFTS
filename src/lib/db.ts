@@ -3612,3 +3612,199 @@ export const markAffiliateCommissionsPaid = async (
   `;
   return rows[0]?.count ?? 0;
 };
+
+// --- Marketing control panel ---
+
+export type MarketingKpis = {
+  totalMembers: number;
+  activeMemberships: number;
+  newThisMonth: number;
+  referredSignups: number;
+  referredThisMonth: number;
+};
+
+export const getMarketingKpis = async (): Promise<MarketingKpis> => {
+  const startOfMonth = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    1
+  ).toISOString();
+  const { rows } = await sql<{
+    totalMembers: number;
+    activeMemberships: number;
+    newThisMonth: number;
+    referredSignups: number;
+    referredThisMonth: number;
+  }>`
+    SELECT
+      COUNT(*)::int AS "totalMembers",
+      COUNT(*) FILTER (WHERE s.status = 'active')::int AS "activeMemberships",
+      COUNT(*) FILTER (WHERE u.created_at >= ${startOfMonth})::int AS "newThisMonth",
+      COUNT(*) FILTER (
+        WHERE u.referred_by_affiliate_code IS NOT NULL AND u.referred_by_affiliate_code <> ''
+      )::int AS "referredSignups",
+      COUNT(*) FILTER (
+        WHERE u.referred_by_affiliate_code IS NOT NULL
+          AND u.referred_by_affiliate_code <> ''
+          AND u.created_at >= ${startOfMonth}
+      )::int AS "referredThisMonth"
+    FROM users u
+    LEFT JOIN subscriptions s ON s.user_id = u.id
+  `;
+  return (
+    rows[0] || {
+      totalMembers: 0,
+      activeMemberships: 0,
+      newThisMonth: 0,
+      referredSignups: 0,
+      referredThisMonth: 0
+    }
+  );
+};
+
+export type MarketingReferrerRow = {
+  code: string;
+  signups: number;
+  active: number;
+};
+
+export const listTopReferrers = async (
+  limit = 20
+): Promise<MarketingReferrerRow[]> => {
+  const { rows } = await sql<MarketingReferrerRow>`
+    SELECT
+      u.referred_by_affiliate_code AS "code",
+      COUNT(*)::int AS "signups",
+      COUNT(*) FILTER (WHERE s.status = 'active')::int AS "active"
+    FROM users u
+    LEFT JOIN subscriptions s ON s.user_id = u.id
+    WHERE u.referred_by_affiliate_code IS NOT NULL AND u.referred_by_affiliate_code <> ''
+    GROUP BY u.referred_by_affiliate_code
+    ORDER BY COUNT(*) DESC
+    LIMIT ${limit}
+  `;
+  return rows;
+};
+
+export type OutreachTarget = {
+  id: string;
+  organization: string;
+  category: string | null;
+  persona: string | null;
+  entryPath: string | null;
+  contact: string | null;
+  refCode: string | null;
+  status: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+let marketingOutreachTableReady = false;
+const ensureMarketingOutreachTable = async () => {
+  if (marketingOutreachTableReady) return;
+  await sql`
+    CREATE TABLE IF NOT EXISTS marketing_outreach_targets (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      organization text NOT NULL,
+      category text,
+      persona text,
+      entry_path text,
+      contact text,
+      ref_code text,
+      status text NOT NULL DEFAULT 'prospect',
+      notes text,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    )
+  `;
+  marketingOutreachTableReady = true;
+};
+
+export const listOutreachTargets = async (): Promise<OutreachTarget[]> => {
+  await ensureMarketingOutreachTable();
+  const { rows } = await sql<OutreachTarget>`
+    SELECT
+      id, organization, category, persona,
+      entry_path AS "entryPath", contact, ref_code AS "refCode",
+      status, notes, created_at AS "createdAt", updated_at AS "updatedAt"
+    FROM marketing_outreach_targets
+    ORDER BY created_at DESC
+  `;
+  return rows;
+};
+
+export const createOutreachTarget = async (input: {
+  organization: string;
+  category?: string | null;
+  persona?: string | null;
+  entryPath?: string | null;
+  contact?: string | null;
+  refCode?: string | null;
+  status?: string | null;
+  notes?: string | null;
+}): Promise<OutreachTarget> => {
+  await ensureMarketingOutreachTable();
+  const { rows } = await sql<OutreachTarget>`
+    INSERT INTO marketing_outreach_targets
+      (organization, category, persona, entry_path, contact, ref_code, status, notes)
+    VALUES (
+      ${input.organization},
+      ${input.category ?? null},
+      ${input.persona ?? null},
+      ${input.entryPath ?? null},
+      ${input.contact ?? null},
+      ${input.refCode ?? null},
+      ${input.status ?? "prospect"},
+      ${input.notes ?? null}
+    )
+    RETURNING
+      id, organization, category, persona,
+      entry_path AS "entryPath", contact, ref_code AS "refCode",
+      status, notes, created_at AS "createdAt", updated_at AS "updatedAt"
+  `;
+  return rows[0];
+};
+
+export const updateOutreachTarget = async (
+  id: string,
+  input: {
+    organization: string;
+    category?: string | null;
+    persona?: string | null;
+    entryPath?: string | null;
+    contact?: string | null;
+    refCode?: string | null;
+    status?: string | null;
+    notes?: string | null;
+  }
+): Promise<OutreachTarget | null> => {
+  await ensureMarketingOutreachTable();
+  const { rows } = await sql<OutreachTarget>`
+    UPDATE marketing_outreach_targets
+    SET
+      organization = ${input.organization},
+      category = ${input.category ?? null},
+      persona = ${input.persona ?? null},
+      entry_path = ${input.entryPath ?? null},
+      contact = ${input.contact ?? null},
+      ref_code = ${input.refCode ?? null},
+      status = ${input.status ?? "prospect"},
+      notes = ${input.notes ?? null},
+      updated_at = now()
+    WHERE id = ${id}
+    RETURNING
+      id, organization, category, persona,
+      entry_path AS "entryPath", contact, ref_code AS "refCode",
+      status, notes, created_at AS "createdAt", updated_at AS "updatedAt"
+  `;
+  return rows[0] ?? null;
+};
+
+export const deleteOutreachTarget = async (id: string): Promise<boolean> => {
+  await ensureMarketingOutreachTable();
+  const { rowCount } = await sql`
+    DELETE FROM marketing_outreach_targets WHERE id = ${id}
+  `;
+  return (rowCount ?? 0) > 0;
+};

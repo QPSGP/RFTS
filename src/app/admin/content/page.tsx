@@ -75,6 +75,9 @@ export default function AdminContentPage() {
           <Link href="/admin/dashboard" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
             Activity Dashboard
           </Link>
+          <Link href="/admin/marketing" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
+            Marketing
+          </Link>
           <Link href="/admin/member-issues" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
             Issue reports
           </Link>

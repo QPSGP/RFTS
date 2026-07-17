@@ -420,3 +420,20 @@ ALTER TABLE library_items ADD COLUMN IF NOT EXISTS moderator_id uuid REFERENCES 
 ALTER TABLE library_items ADD COLUMN IF NOT EXISTS in_general_catalog boolean NOT NULL DEFAULT true;
 CREATE INDEX IF NOT EXISTS library_items_moderator_id_idx ON library_items (moderator_id)
   WHERE moderator_id IS NOT NULL;
+
+-- Marketing outreach tracker: prospective partner organizations and their status
+CREATE TABLE IF NOT EXISTS marketing_outreach_targets (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization text NOT NULL,
+  category text,
+  persona text,
+  entry_path text,
+  contact text,
+  ref_code text,
+  status text NOT NULL DEFAULT 'prospect',
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS marketing_outreach_targets_status_idx
+  ON marketing_outreach_targets (status);
