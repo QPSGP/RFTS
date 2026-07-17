@@ -871,9 +871,13 @@ export default function AdminUsers() {
       email,
       tier: update?.subscriptionTier ?? user.subscriptionTier ?? "platinum",
       status: update?.subscriptionStatus ?? user.subscriptionStatus ?? "inactive",
-      goalIds: update?.goalIds ?? user.goalIds,
-      playsPerNight: update?.playsPerNight ?? user.playsPerNight ?? 2
+      goalIds: update?.goalIds ?? user.goalIds
     };
+    // Only send playsPerNight when the admin explicitly changed it, so an
+    // unrelated save never clobbers the member's own audios-per-night choice.
+    if (update?.playsPerNight !== undefined) {
+      body.playsPerNight = update.playsPerNight;
+    }
     if (hasPasswordChange) {
       body.resetPassword = newPassword;
     }
