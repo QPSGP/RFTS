@@ -43,7 +43,11 @@ export default function PlayOptionsAndroidTips({
           <>
             <li>
               Your second audio is scheduled about <strong>{gapHours} hours</strong> after the first.
-              If it does not start on its own, unlock your phone and tap{" "}
+              On Android, the second half often starts the <strong>goal audio directly</strong> (skips a
+              second intro) so Chrome is less likely to stop after the lock screen.
+            </li>
+            <li>
+              If the second audio does not start on its own, unlock your phone, open this tab, and tap{" "}
               <strong>Start second audio now</strong>.
             </li>
             <li>
@@ -53,8 +57,8 @@ export default function PlayOptionsAndroidTips({
           </>
         )}
         <li>
-          If playback stops early, open this tab again and tap <strong>Play</strong> or{" "}
-          <strong>Start second audio now</strong>.
+          If you only hear intro music and not the goal audio, unlock and tap <strong>Play</strong> —
+          the goal track should continue.
         </li>
       </ul>
     </section>

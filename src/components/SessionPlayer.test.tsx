@@ -477,6 +477,50 @@ describe("SessionPlayer", () => {
     expect(screen.getByRole("button", { name: /^Pause$/i })).toBeInTheDocument();
   });
 
+  it("Android auto second-half after gap skips intro and plays goal audio", async () => {
+    const SECOND = { title: "Second Recording", url: "/api/stream/audio?id=second-456" };
+    const uaSpy = jest.spyOn(window.navigator, "userAgent", "get").mockReturnValue(
+      "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36"
+    );
+    render(
+      <SessionPlayer
+        prepAudio={PREP}
+        firstTrack={FIRST_TRACK}
+        secondTrack={SECOND}
+        gapHours={1 / 3600}
+        playsPerNight={2}
+        autoStart={true}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(PREP.title);
+    });
+    let audio = document.querySelector("audio");
+    await act(async () => {
+      audio?.dispatchEvent(new Event("ended"));
+    });
+    await waitFor(() => {
+      expect(screen.getByText(/Now Playing:/)).toHaveTextContent(FIRST_TRACK.title);
+    });
+    audio = document.querySelector("audio");
+    await act(async () => {
+      audio?.dispatchEvent(new Event("ended"));
+    });
+    await waitFor(() => {
+      expect(screen.getByText(/First session complete/i)).toBeInTheDocument();
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText(/Now Playing:/)).toHaveTextContent(SECOND.title);
+      },
+      { timeout: 5000 }
+    );
+    expect(screen.getByText(/Now Playing:/)).not.toHaveTextContent(PREP.title);
+    uaSpy.mockRestore();
+  });
+
   it("End session during gap cancels second recording", async () => {
     const SECOND = { title: "Second Recording", url: "/api/stream/audio?id=second-456" };
     render(

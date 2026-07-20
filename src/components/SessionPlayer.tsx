@@ -61,6 +61,22 @@ function coarseMobilePlatform(): string {
   return "desktop/other";
 }
 
+function isAndroidPlatform(): boolean {
+  return coarseMobilePlatform() === "Android";
+}
+
+/** Auto gap→second triggers (not a deliberate member tap). */
+function isAutomaticSecondHalfTrigger(trigger?: string): boolean {
+  if (!trigger) return true;
+  return (
+    trigger === "timeout" ||
+    trigger === "interval" ||
+    trigger === "timeupdate" ||
+    trigger === "visibility_visible" ||
+    trigger === "visibility_hidden"
+  );
+}
+
 /** Tells `ScreenWakeToggle` to release the wake lock when a listening session fully stops. */
 function dispatchRftsSessionEnd() {
   if (typeof window !== "undefined") {
@@ -309,6 +325,12 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const secondFromGapInFlightRef = useRef(false);
   /** One diag row per gap when overdue recovery happens with tab visible (explains Android lock-screen stalls). */
   const gapOverdueDiagLoggedRef = useRef(false);
+  /** Ignore a spurious `ended` right after we advance prep→main early (Android often drops or double-fires ended). */
+  const ignoreEndedUntilRef = useRef(0);
+  /** URL for which near-end prep→main advance already ran (avoid double advance). */
+  const nearEndAdvanceForUrlRef = useRef<string | null>(null);
+  /** Main track we must get playing after prep; used for Android lock-screen retries. */
+  const awaitingMainPlayRef = useRef<SessionTrack | null>(null);
   /** Android: legacy Sirius-style keep-awake while a session phase is active (complements Screen Wake Lock during the gap). */
   const noSleepRef = useRef<NoSleep | null>(null);
   const pauseForResumeRef = useRef(false);
@@ -711,22 +733,38 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("rfts-second-half-started"));
     }
-    if (trigger && typeof window !== "undefined") {
-      const vis = typeof document !== "undefined" ? document.visibilityState : "?";
+    const vis = typeof document !== "undefined" ? document.visibilityState : "?";
+    const platform = coarseMobilePlatform();
+    /**
+     * Android often plays second-half intro then suspends before the goal track starts.
+     * Auto-starts after the gap skip the second intro and go straight to the goal audio.
+     * Manual "Start second audio now" still includes intro when configured.
+     */
+    const skipSecondIntro =
+      isAndroidPlatform() && isAutomaticSecondHalfTrigger(trigger);
+    if (trigger) {
       logMemberActivity(
         "session_gap",
-        `Second half auto-start | trigger=${trigger} visibility=${vis} platform=${coarseMobilePlatform()}`
+        `Second half auto-start | trigger=${trigger} visibility=${vis} platform=${platform}${
+          skipSecondIntro ? " skip_second_intro=1" : ""
+        }`
       );
     }
     const prep = prepAudioRef.current;
-    const nextQueue = [prep, tr].filter(
+    const nextQueue = (skipSecondIntro ? [tr] : [prep, tr]).filter(
       (track): track is SessionTrack => !!track
     );
-    segmentPrepDoneRef.current = false;
+    segmentPrepDoneRef.current = skipSecondIntro;
+    nearEndAdvanceForUrlRef.current = null;
+    awaitingMainPlayRef.current = skipSecondIntro ? tr : null;
     setPhase("second");
     applyQueue(nextQueue);
     setCurrent(nextQueue[0] || null);
-    setMessage(null);
+    setMessage(
+      skipSecondIntro
+        ? "Starting your second goal audio (intro skipped on Android so playback can continue with the screen locked)."
+        : null
+    );
     setNeedsUserPlay(false);
     const audio = audioRef.current;
     if (nextQueue[0] && audio) {
@@ -875,8 +913,87 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     return cur;
   }, []);
 
+  /** Advance prep → main (or any multi-track queue). Shared by `ended` and near-end Android recovery. */
+  const advanceQueueToNextTrack = useCallback(
+    (reason: "ended" | "near_end") => {
+      const q = queueRef.current;
+      if (q.length <= 1) return false;
+      const epochAtAdvance = sessionEpochRef.current;
+      const [, ...rest] = q;
+      const nextTrack = rest[0] || null;
+      if (!nextTrack) return false;
+      const prep0 = prepAudioRef.current;
+      const finishedPrep = prep0 && currentRef.current?.url === prep0.url;
+      if (finishedPrep) segmentPrepDoneRef.current = true;
+      if (reason === "near_end") {
+        ignoreEndedUntilRef.current = Date.now() + 2500;
+        logMemberActivity(
+          "session_gap",
+          `Prep→main near-end advance | platform=${coarseMobilePlatform()} phase=${phaseRef.current}`
+        );
+      }
+      applyQueue(rest);
+      setCurrent(nextTrack);
+      pendingNextTrackRef.current = nextTrack;
+      awaitingMainPlayRef.current = nextTrack;
+      skipEffectPlayRef.current = true;
+      const audio = audioRef.current;
+      if (nextTrack && audio) {
+        try {
+          audio.pause();
+        } catch {
+          // ignore
+        }
+        audio.loop = false;
+        audio.muted = false;
+        audio.volume = 1;
+        prepareAudioForTrackStart(audio, nextTrack.url, { forceLoad: true });
+        const needTapMsg = () => {
+          setMessage(
+            phaseRef.current === "second"
+              ? "Tap play to start your second goal audio."
+              : "Tap play to start your goal audio."
+          );
+          setNeedsUserPlay(true);
+        };
+        const playWhenReady = () => {
+          if (epochAtAdvance !== sessionEpochRef.current) return;
+          clearTimeout(fallbackId);
+          pendingNextTrackRef.current = null;
+          startTrackFromBeginning(audio);
+          startPlaybackWithIOSAutoplayGuard(
+            audio,
+            () =>
+              epochAtAdvance === sessionEpochRef.current &&
+              currentRef.current?.url === nextTrack.url,
+            needTapMsg
+          );
+        };
+        const fallbackId = window.setTimeout(() => {
+          if (epochAtAdvance !== sessionEpochRef.current) return;
+          needTapMsg();
+        }, 3000);
+        audio.addEventListener("canplaythrough", playWhenReady, { once: true });
+        audio.addEventListener(
+          "error",
+          () => {
+            if (epochAtAdvance !== sessionEpochRef.current) return;
+            clearTimeout(fallbackId);
+            needTapMsg();
+          },
+          { once: true }
+        );
+        // Immediate attempt — Android often never fires canplaythrough while locked.
+        window.setTimeout(playWhenReady, 120);
+      }
+      return true;
+    },
+    [applyQueue]
+  );
+
   const handleEnded = useCallback(() => {
     if (handlingEndedRef.current) return;
+    if (Date.now() < ignoreEndedUntilRef.current) return;
     handlingEndedRef.current = true;
     try {
     {
@@ -898,62 +1015,13 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         trackFinishedClearRef.current = setTimeout(() => setTrackFinishedNotice(null), 12000);
         if (!isIntro) {
           notifyMemberAudioCompleted(finishedName);
+          awaitingMainPlayRef.current = null;
         }
       }
     }
     const q = queueRef.current;
     if (q.length > 1) {
-      const epochAtAdvance = sessionEpochRef.current;
-      const [, ...rest] = q;
-      const nextTrack = rest[0] || null;
-      const prep0 = prepAudioRef.current;
-      const finishedPrep = prep0 && currentRef.current?.url === prep0.url;
-      if (finishedPrep) segmentPrepDoneRef.current = true;
-      applyQueue(rest);
-      setCurrent(nextTrack);
-      pendingNextTrackRef.current = nextTrack;
-      skipEffectPlayRef.current = true;
-      const audio = audioRef.current;
-      if (nextTrack && audio) {
-        audio.loop = false;
-        audio.muted = false;
-        audio.volume = 1;
-        prepareAudioForTrackStart(audio, nextTrack.url, { forceLoad: true });
-        const playWhenReady = () => {
-          if (epochAtAdvance !== sessionEpochRef.current) return;
-          clearTimeout(fallbackId);
-          pendingNextTrackRef.current = null;
-          startTrackFromBeginning(audio);
-          startPlaybackWithIOSAutoplayGuard(
-            audio,
-            () => epochAtAdvance === sessionEpochRef.current,
-            () => {
-              setMessage(
-                phaseRef.current === "second"
-                  ? "Tap play to start the second half (intro relaxation music, then your second track)."
-                  : "Tap play to start the session."
-              );
-              setNeedsUserPlay(true);
-            }
-          );
-        };
-        const fallbackId = setTimeout(() => {
-          if (epochAtAdvance !== sessionEpochRef.current) return;
-          setNeedsUserPlay(true);
-          setMessage("Tap play to start the session.");
-        }, 3000);
-        audio.addEventListener("canplaythrough", playWhenReady, { once: true });
-        audio.addEventListener(
-          "error",
-          () => {
-            if (epochAtAdvance !== sessionEpochRef.current) return;
-            clearTimeout(fallbackId);
-            setMessage("Tap play to start playback.");
-            setNeedsUserPlay(true);
-          },
-          { once: true }
-        );
-      }
+      advanceQueueToNextTrack("ended");
       return;
     }
     // Last track in queue just ended — close and optionally queue second (only when 2 per night)
@@ -1044,8 +1112,91 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     scheduleNightNumber,
     onScheduleNightComplete,
     beginSecondAfterGap,
-    applyQueue
+    applyQueue,
+    advanceQueueToNextTrack
   ]);
+
+  /**
+   * Android often never delivers `ended` while the screen is locked. When intro is nearly done,
+   * advance to the goal track early so the handoff does not depend on `ended`.
+   */
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !sessionAudioMounted) return;
+    if (phase !== "first" && phase !== "second") return;
+    const onTimeUpdate = () => {
+      const prep = prepAudioRef.current;
+      const cur = currentRef.current;
+      if (!prep || !cur || cur.url !== prep.url) return;
+      if (queueRef.current.length <= 1) return;
+      if (nearEndAdvanceForUrlRef.current === cur.url) return;
+      const dur = audio.duration;
+      if (!Number.isFinite(dur) || dur < 8) return;
+      if (audio.currentTime / dur < 0.9) return;
+      nearEndAdvanceForUrlRef.current = cur.url;
+      const line = buildPlayOptionsLogLine(cur, phaseRef.current, prep);
+      if (line) {
+        logMemberAudioOutcome(`${line} | completed full listen`);
+      }
+      setTrackFinishedNotice(
+        "Intro relaxation music finished playing. Your goal audio is next."
+      );
+      if (trackFinishedClearRef.current) clearTimeout(trackFinishedClearRef.current);
+      trackFinishedClearRef.current = setTimeout(() => setTrackFinishedNotice(null), 12000);
+      advanceQueueToNextTrack("near_end");
+    };
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    return () => audio.removeEventListener("timeupdate", onTimeUpdate);
+  }, [sessionAudioMounted, phase, current?.url, advanceQueueToNextTrack]);
+
+  /**
+   * If prep→main (or Android skip-intro second half) left the element paused, keep retrying when the
+   * tab wakes — common after lock-screen suspension.
+   */
+  useEffect(() => {
+    if (phase !== "first" && phase !== "second") return;
+    const tryResumeMain = (source: string) => {
+      const wanted = awaitingMainPlayRef.current;
+      const audio = audioRef.current;
+      if (!wanted || !audio) return;
+      if (currentRef.current?.url !== wanted.url) return;
+      if (!audio.paused || audio.ended) {
+        if (!audio.paused) awaitingMainPlayRef.current = null;
+        return;
+      }
+      logMemberActivity(
+        "session_gap",
+        `Retry main after prep | source=${source} platform=${coarseMobilePlatform()} phase=${phaseRef.current}`
+      );
+      startPlaybackWithIOSAutoplayGuard(
+        audio,
+        () => currentRef.current?.url === wanted.url,
+        () => {
+          setNeedsUserPlay(true);
+          setMessage(
+            phaseRef.current === "second"
+              ? "Tap play to start your second goal audio."
+              : "Tap play to start your goal audio."
+          );
+        }
+      );
+    };
+    const onVis = () => {
+      if (document.visibilityState === "visible") tryResumeMain("visibility");
+    };
+    const onPageShow = () => tryResumeMain("pageshow");
+    const onFocus = () => tryResumeMain("focus");
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("pageshow", onPageShow);
+    window.addEventListener("focus", onFocus);
+    const poll = window.setInterval(() => tryResumeMain("poll"), 4000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("focus", onFocus);
+      window.clearInterval(poll);
+    };
+  }, [phase, current?.url]);
 
   const handlePause = () => {
     audioRef.current?.pause();
