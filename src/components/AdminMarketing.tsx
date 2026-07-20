@@ -30,6 +30,10 @@ type Kpis = {
   newThisMonth: number;
   referredSignups: number;
   referredThisMonth: number;
+  weeklyActiveListeners: number;
+  retentionD7Percent: number | null;
+  retentionD7Retained: number;
+  retentionD7Eligible: number;
 };
 
 type BlogCadence = {
@@ -371,6 +375,28 @@ export default function AdminMarketing() {
           )}
           {overview && overviewStatus === "ready" && (
             <div className="grid grid-2" style={{ gap: 12 }}>
+              <div className="card" style={{ borderColor: "#93c5fd", background: "#f8fbff" }}>
+                <strong>North Star — Weekly active listeners</strong>
+                <p style={{ fontSize: 24, margin: "4px 0 0", fontWeight: 600 }}>
+                  {overview.kpis.weeklyActiveListeners ?? 0}
+                </p>
+                <p style={{ margin: "4px 0 0", color: "#4b5563", fontSize: 13 }}>
+                  Distinct members with a listen or session in the last 7 days.
+                </p>
+              </div>
+              <div className="card" style={{ borderColor: "#93c5fd", background: "#f8fbff" }}>
+                <strong>North Star — 7-day retention</strong>
+                <p style={{ fontSize: 24, margin: "4px 0 0", fontWeight: 600 }}>
+                  {overview.kpis.retentionD7Percent != null
+                    ? `${overview.kpis.retentionD7Percent}%`
+                    : "—"}
+                </p>
+                <p style={{ margin: "4px 0 0", color: "#4b5563", fontSize: 13 }}>
+                  {overview.kpis.retentionD7Eligible > 0
+                    ? `${overview.kpis.retentionD7Retained} of ${overview.kpis.retentionD7Eligible} members who signed up 7–14 days ago listened around day 7.`
+                    : "No cohort yet (needs members who signed up 7–14 days ago)."}
+                </p>
+              </div>
               <div className="card">
                 <strong>Total members</strong>
                 <p style={{ fontSize: 24, margin: "4px 0 0", fontWeight: 600 }}>

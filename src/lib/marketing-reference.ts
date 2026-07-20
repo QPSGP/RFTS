@@ -170,7 +170,7 @@ export const REFERENCE_PERSONAS: ReferencePersona[] = [
 
 /** Marketing plan highlights (from docs/marketing-plan.md). */
 export const REFERENCE_PLAN_HIGHLIGHTS: string[] = [
-  "North Star: weekly active listeners and 7-day retention.",
+  "North Star: weekly active listeners and 7-day retention (shown on Marketing overview).",
   "Weekly blog cadence (required): one article every 7 days, each linking to a goal/wellness page and driving signup.",
   "Short-form: 3–5 clips/week on TikTok & Instagram Reels.",
   "Affiliate payouts: 25% ongoing of subscription revenue for as long as the referred member stays subscribed.",

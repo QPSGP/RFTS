@@ -3621,7 +3621,25 @@ export type MarketingKpis = {
   newThisMonth: number;
   referredSignups: number;
   referredThisMonth: number;
+  /** Distinct members with a listen/session in the last 7 days (North Star). */
+  weeklyActiveListeners: number;
+  /** D7 retention % for the cohort that signed up 7–14 days ago; null if no eligible members. */
+  retentionD7Percent: number | null;
+  retentionD7Retained: number;
+  retentionD7Eligible: number;
 };
+
+const emptyMarketingKpis = (): MarketingKpis => ({
+  totalMembers: 0,
+  activeMemberships: 0,
+  newThisMonth: 0,
+  referredSignups: 0,
+  referredThisMonth: 0,
+  weeklyActiveListeners: 0,
+  retentionD7Percent: null,
+  retentionD7Retained: 0,
+  retentionD7Eligible: 0
+});
 
 export const getMarketingKpis = async (): Promise<MarketingKpis> => {
   const startOfMonth = new Date(
@@ -3629,6 +3647,10 @@ export const getMarketingKpis = async (): Promise<MarketingKpis> => {
     new Date().getMonth(),
     1
   ).toISOString();
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000).toISOString();
+  const fourteenDaysAgo = new Date(now.getTime() - 14 * 86400000).toISOString();
+
   const { rows } = await sql<{
     totalMembers: number;
     activeMemberships: number;
@@ -3651,15 +3673,84 @@ export const getMarketingKpis = async (): Promise<MarketingKpis> => {
     FROM users u
     LEFT JOIN subscriptions s ON s.user_id = u.id
   `;
-  return (
-    rows[0] || {
-      totalMembers: 0,
-      activeMemberships: 0,
-      newThisMonth: 0,
-      referredSignups: 0,
-      referredThisMonth: 0
-    }
-  );
+
+  const base = {
+    ...emptyMarketingKpis(),
+    ...(rows[0] || {})
+  };
+
+  let weeklyActiveListeners = 0;
+  try {
+    const { rows: walRows } = await sql<{ count: number }>`
+      SELECT COUNT(*)::int AS count FROM (
+        SELECT user_id FROM member_session_usage
+        WHERE used_at >= ${sevenDaysAgo}
+        UNION
+        SELECT user_id FROM member_activity_log
+        WHERE created_at >= ${sevenDaysAgo}
+          AND action IN ('played_audio', 'audio_playback_outcome')
+      ) listeners
+    `;
+    weeklyActiveListeners = walRows[0]?.count ?? 0;
+  } catch {
+    weeklyActiveListeners = 0;
+  }
+
+  let retentionD7Eligible = 0;
+  let retentionD7Retained = 0;
+  try {
+    // Cohort: signed up 7–14 days ago (old enough to have reached day 7).
+    // Retained: listen/session activity on day 6–8 after signup.
+    const { rows: d7Rows } = await sql<{
+      eligible: number;
+      retained: number;
+    }>`
+      WITH cohort AS (
+        SELECT id, created_at
+        FROM users
+        WHERE created_at >= ${fourteenDaysAgo}
+          AND created_at < ${sevenDaysAgo}
+      ),
+      retained AS (
+        SELECT DISTINCT c.id
+        FROM cohort c
+        WHERE EXISTS (
+          SELECT 1 FROM member_session_usage s
+          WHERE s.user_id = c.id
+            AND s.used_at >= c.created_at + interval '6 days'
+            AND s.used_at < c.created_at + interval '8 days'
+        )
+        OR EXISTS (
+          SELECT 1 FROM member_activity_log m
+          WHERE m.user_id = c.id
+            AND m.action IN ('played_audio', 'audio_playback_outcome')
+            AND m.created_at >= c.created_at + interval '6 days'
+            AND m.created_at < c.created_at + interval '8 days'
+        )
+      )
+      SELECT
+        (SELECT COUNT(*)::int FROM cohort) AS eligible,
+        (SELECT COUNT(*)::int FROM retained) AS retained
+    `;
+    retentionD7Eligible = d7Rows[0]?.eligible ?? 0;
+    retentionD7Retained = d7Rows[0]?.retained ?? 0;
+  } catch {
+    retentionD7Eligible = 0;
+    retentionD7Retained = 0;
+  }
+
+  const retentionD7Percent =
+    retentionD7Eligible > 0
+      ? Math.round((retentionD7Retained / retentionD7Eligible) * 1000) / 10
+      : null;
+
+  return {
+    ...base,
+    weeklyActiveListeners,
+    retentionD7Percent,
+    retentionD7Retained,
+    retentionD7Eligible
+  };
 };
 
 export type MarketingReferrerRow = {
