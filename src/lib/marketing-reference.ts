@@ -173,7 +173,7 @@ export const REFERENCE_PLAN_HIGHLIGHTS: string[] = [
   "North Star: weekly active listeners and 7-day retention.",
   "Weekly blog cadence (required): one article every 7 days, each linking to a goal/wellness page and driving signup.",
   "Short-form: 3–5 clips/week on TikTok & Instagram Reels.",
-  "Affiliate payouts: 20–30% first month, 10–15% recurring; bonus for high-retention cohorts.",
+  "Affiliate payouts: 25% ongoing of subscription revenue for as long as the referred member stays subscribed.",
   "Affiliate/facilitator targets: therapists, wellness coaches, community leaders, nonprofits.",
   "Offer bundles: Sleep Pack, Burnout Pack, First Responders Pack; annual discount for retention."
 ];
