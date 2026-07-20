@@ -39,7 +39,7 @@ export default async function SiteHeader() {
                 <a href="/science">Science</a>
                 <a href="/faqs">FAQs</a>
                 <a href="/blog">Blog</a>
-                <a href="/affiliates">Partners</a>
+                <a href="/affiliates">Affiliates</a>
                 {consoleType === "admin" && <a href="/facilitator">Facilitators</a>}
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
                 {memberConsoleLink && <a href={memberConsoleLink.href}>{memberConsoleLink.label}</a>}
@@ -64,7 +64,7 @@ export default async function SiteHeader() {
             <a href="/science">Science</a>
             <a href="/faqs">FAQs</a>
             <a href="/blog">Blog</a>
-            <a href="/affiliates">Partners</a>
+            <a href="/affiliates">Affiliates</a>
             {consoleType === "admin" && <a href="/facilitator">Facilitators</a>}
             {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
             {memberConsoleLink && <a href={memberConsoleLink.href}>{memberConsoleLink.label}</a>}
