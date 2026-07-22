@@ -1,7 +1,15 @@
 import SiteFooter from "@/components/SiteFooter";
-import { MEDITATION_SOURCES } from "@/lib/meditation-benefits";
+import {
+  MeditationSourcesCard,
+  ScienceOutcomesGrid
+} from "@/components/MeditationBenefits";
+import { LandingTrialCtaButtons } from "@/components/LandingTrialCta";
+import WhyItWorksVideoButton from "@/components/WhyItWorksVideoButton";
+import { isMemberLoggedIn } from "@/lib/member-session";
 
-export default function SciencePage() {
+export default async function SciencePage() {
+  const showSignupCta = !(await isMemberLoggedIn());
+
   return (
     <main>
       <section className="hero section">
@@ -11,6 +19,9 @@ export default function SciencePage() {
           Reach For The Stars combines guided meditation, goal priming, and consistent
           repetition during sleep transitions to reinforce new patterns over time.
         </p>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          {showSignupCta ? <LandingTrialCtaButtons /> : <WhyItWorksVideoButton />}
+        </div>
       </section>
 
       <section className="section">
@@ -58,14 +69,7 @@ export default function SciencePage() {
             Guided meditation research supports improvements in these areas.
           </p>
         </div>
-        <div className="grid grid-3">
-          <div className="card">Reduced stress and anxiety</div>
-          <div className="card">Better sleep quality</div>
-          <div className="card">Improved focus and attention</div>
-          <div className="card">Emotional regulation</div>
-          <div className="card">Pain coping skills</div>
-          <div className="card">Greater self-awareness</div>
-        </div>
+        <ScienceOutcomesGrid />
       </section>
 
       <section className="section">
@@ -73,17 +77,7 @@ export default function SciencePage() {
           <span className="eyebrow">Sources</span>
           <h2 className="section-title">Research and reading</h2>
         </div>
-        <div className="card">
-          <ol>
-            {MEDITATION_SOURCES.map((source, index) => (
-              <li key={source.href} id={`science-source-${index + 1}`}>
-                <a href={source.href} target="_blank" rel="noopener noreferrer">
-                  {source.title}
-                </a>
-              </li>
-            ))}
-          </ol>
-        </div>
+        <MeditationSourcesCard idPrefix="science-source" />
       </section>
 
       <SiteFooter />

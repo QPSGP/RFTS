@@ -3,28 +3,10 @@ import SiteFooter from "@/components/SiteFooter";
 import { LandingTrialCtaBand, LandingTrialCtaButtons } from "@/components/LandingTrialCta";
 import { isMemberLoggedIn } from "@/lib/member-session";
 import { HOMEPAGE_GOAL_CARDS } from "@/lib/homepage-goals";
-import { MEDITATION_SOURCES, WELLNESS_BENEFIT_LINKS } from "@/lib/meditation-benefits";
-
-function MeditationBenefitLink({ label, path }: { label: string; path: string }) {
-  return (
-    <a
-      href={path}
-      className="card"
-      style={{
-        display: "block",
-        textDecoration: "none",
-        color: "inherit",
-        transition: "border-color 0.15s ease, box-shadow 0.15s ease"
-      }}
-      aria-label={`${label} — Learn How`}
-    >
-      {label}
-      <span style={{ display: "block", marginTop: 8, fontSize: 13, color: "#0f766e" }}>
-        Learn How
-      </span>
-    </a>
-  );
-}
+import {
+  HomeWellnessBenefitsGrid,
+  MeditationSourcesCard
+} from "@/components/MeditationBenefits";
 
 function GoalImageLink({ label, src, href }: { label: string; src: string; href: string }) {
   return (
@@ -97,7 +79,7 @@ export default async function HomePage() {
               padding: "8px 0"
             }}
           >
-            Watch how it works (optional)
+            Why it works! (optional video)
           </summary>
           <div style={{ marginTop: 12 }}>
             <video
@@ -181,23 +163,8 @@ export default async function HomePage() {
           <span className="eyebrow">Guided Meditations</span>
           <h2 className="section-title">10 Scientifically Proven Benefits</h2>
         </div>
-        <section className="grid grid-2" style={{ marginTop: 16 }}>
-          {WELLNESS_BENEFIT_LINKS.map((benefit) => (
-            <MeditationBenefitLink key={benefit.label} label={benefit.label} path={benefit.path} />
-          ))}
-        </section>
-        <div className="card" style={{ marginTop: 16 }}>
-          <h3>Sources</h3>
-          <ol>
-            {MEDITATION_SOURCES.map((source, index) => (
-              <li key={source.href} id={`meditation-source-${index + 1}`}>
-                <a href={source.href} target="_blank" rel="noopener noreferrer">
-                  {source.title}
-                </a>
-              </li>
-            ))}
-          </ol>
-        </div>
+        <HomeWellnessBenefitsGrid />
+        <MeditationSourcesCard idPrefix="meditation-source" style={{ marginTop: 16 }} />
       </section>
 
       <section className="section">

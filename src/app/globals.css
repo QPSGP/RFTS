@@ -179,7 +179,8 @@ main {
   z-index: 60;
 }
 
-.menu-panel a {
+.menu-panel a,
+.menu-panel .why-it-works-menu {
   padding: 8px 10px;
   border-radius: 8px;
   color: #0f172a;
@@ -189,7 +190,8 @@ main {
   letter-spacing: 0.03em;
 }
 
-.menu-panel a:hover {
+.menu-panel a:hover,
+.menu-panel .why-it-works-menu:hover {
   background: rgba(15, 118, 110, 0.12);
   color: #0f766e;
 }
@@ -231,7 +233,8 @@ main {
   display: flex;
 }
 
-.site-nav a {
+.site-nav a,
+.site-nav .why-it-works-nav {
   color: #0f172a;
   font-weight: 600;
   font-size: 13px;
@@ -239,8 +242,61 @@ main {
   letter-spacing: 0.03em;
 }
 
-.site-nav a:hover {
+.site-nav a:hover,
+.site-nav .why-it-works-nav:hover {
   color: #0f766e;
+}
+
+.site-nav .why-it-works-nav {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.menu-panel .why-it-works-menu {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  display: block;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+}
+
+.why-it-works-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.why-it-works-modal {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px;
+  max-width: 840px;
+  width: 100%;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.35);
+}
+
+.why-it-works-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .brand {
@@ -361,8 +417,34 @@ main {
 }
 
 .source-link,
-.card ol a,
-.card ul.list a {
+.card ol a.source-link,
+.card ul.list a.source-link {
+  color: #0f766e;
+  text-decoration: underline;
+  font-weight: 500;
+  overflow-wrap: break-word;
+}
+
+.source-link:hover,
+.card ol a.source-link:hover,
+.card ul.list a.source-link:hover {
+  color: #115e59;
+}
+
+.learn-how-link {
+  color: #0f766e;
+  text-decoration: underline;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+a:hover .learn-how-link {
+  color: #115e59;
+}
+
+/* Raw URL lists (legacy) still wrap aggressively */
+.card ol a:not(.source-link),
+.card ul.list a:not(.source-link) {
   word-break: break-all;
   overflow-wrap: break-word;
 }

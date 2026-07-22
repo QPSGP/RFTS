@@ -44,3 +44,13 @@ export const WELLNESS_BENEFIT_LINKS: {
   { label: "Enhanced Will Power", path: "/will-power", sourceIndex: 5 },
   { label: "Greater Self-Awareness", path: "/self-awareness", sourceIndex: 3 }
 ];
+
+/** Science page “Evidence-backed outcomes” — same Learn How pattern as Home benefits. */
+export const SCIENCE_OUTCOME_LINKS: { label: string; path: string }[] = [
+  { label: "Reduced stress and anxiety", path: "/stress-relief" },
+  { label: "Better sleep quality", path: "/sleep-meditation" },
+  { label: "Improved focus and attention", path: "/memory-improvement" },
+  { label: "Emotional regulation", path: "/emotional-health" },
+  { label: "Pain coping skills", path: "/pain-relief" },
+  { label: "Greater self-awareness", path: "/self-awareness" }
+];

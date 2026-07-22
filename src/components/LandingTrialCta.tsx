@@ -5,6 +5,7 @@ import {
   buildMarketingSignupHref,
   LANDING_TRIAL_CTA_LABEL
 } from "@/lib/marketing-signup";
+import WhyItWorksVideoButton from "@/components/WhyItWorksVideoButton";
 
 export const LANDING_TRIAL_SIGNUP_HREF = buildMarketingSignupHref();
 export { LANDING_TRIAL_CTA_LABEL };
@@ -23,9 +24,7 @@ export function LandingTrialCtaButtons({
       <a className="button" href={href}>
         {LANDING_TRIAL_CTA_LABEL}
       </a>
-      <a className="button button-secondary" href="/how-it-works">
-        How it works
-      </a>
+      <WhyItWorksVideoButton variant="button" />
     </div>
   );
 }
