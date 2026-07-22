@@ -10,28 +10,34 @@ type SiteFooterProps = {
   showStartJourney?: boolean;
 };
 
+function scrollToPageTop() {
+  const scrollingEl = document.scrollingElement || document.documentElement;
+  scrollingEl.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  if (window.location.hash) {
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+  }
+}
+
 export default function SiteFooter({ showCta = true, showStartJourney = true }: SiteFooterProps) {
   const isMember = useMemberLoggedIn();
   const hideGuestSignup = isMember === true;
-  const showFooterCta = showCta && !hideGuestSignup;
-  const showFooterStart = showStartJourney && !hideGuestSignup;
+  const showFooterStart = showCta && showStartJourney && !hideGuestSignup;
 
   return (
     <footer className="section" style={{ marginTop: 40 }}>
-      {showFooterCta && (
-        <div className="card glow" style={{ marginBottom: 24, textAlign: "center", padding: 24 }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
-            {showFooterStart && (
-              <a className="button" href={LANDING_TRIAL_SIGNUP_HREF}>
-                {LANDING_TRIAL_CTA_LABEL}
-              </a>
-            )}
-            <a className="button button-secondary" href="#page-top">
-              Go To Top
+      <div className="card glow" style={{ marginBottom: 24, textAlign: "center", padding: 24 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
+          {showFooterStart && (
+            <a className="button" href={LANDING_TRIAL_SIGNUP_HREF}>
+              {LANDING_TRIAL_CTA_LABEL}
             </a>
-          </div>
+          )}
+          <button type="button" className="button button-secondary" onClick={scrollToPageTop}>
+            Go To Top
+          </button>
         </div>
-      )}
+      </div>
       <div className="card">
         <div className="grid grid-3" style={{ gap: 16 }}>
           <div>

@@ -60,39 +60,6 @@ export default async function HomePage() {
             </p>
           </>
         )}
-        <details
-          style={{
-            marginTop: 20,
-            maxWidth: 640,
-            width: "100%",
-            marginLeft: "auto",
-            marginRight: "auto",
-            textAlign: "left"
-          }}
-        >
-          <summary
-            style={{
-              cursor: "pointer",
-              fontWeight: 600,
-              color: "#0f766e",
-              fontSize: 15,
-              padding: "8px 0"
-            }}
-          >
-            Why it works! (optional video)
-          </summary>
-          <div style={{ marginTop: 12 }}>
-            <video
-              controls
-              playsInline
-              preload="none"
-              style={{ maxWidth: "100%", width: 640, borderRadius: 8, display: "block" }}
-            >
-              <source src="/Images/Terry-Sizzle-Reel-Website.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          </div>
-        </details>
       </section>
 
       <section className="section">
