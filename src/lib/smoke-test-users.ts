@@ -35,6 +35,22 @@ export function isLikelySmokeTestProfile(
   return fn === "smoke" && ln === "test";
 }
 
+/** True when welcome / follow-up mail should not CC Terry and staff. */
+export function shouldSkipWelcomeStaffCc(context: {
+  memberEmail?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  referralSource?: string | null;
+}): boolean {
+  const email = context.memberEmail?.trim() || "";
+  if (email && isLikelySmokeTestEmail(email)) return true;
+  return isLikelySmokeTestProfile(
+    context.firstName,
+    context.lastName,
+    context.referralSource
+  );
+}
+
 function cutoffIso(minAgeDays: number): string {
   const ms = Math.max(0, minAgeDays) * 24 * 60 * 60 * 1000;
   return new Date(Date.now() - ms).toISOString();

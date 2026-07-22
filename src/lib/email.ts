@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { getPublicAppUrl } from "./site-url";
+import { shouldSkipWelcomeStaffCc } from "./smoke-test-users";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -18,6 +19,14 @@ export type SendEmailOptions = {
   skipStaffBcc?: boolean;
 };
 
+/** Optional member context — smoke-test signups do not CC Terry/staff. */
+export type WelcomeEmailCcContext = {
+  memberEmail?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  referralSource?: string | null;
+};
+
 /**
  * Comma- or semicolon-separated list (e.g. Terry and Richard) for BCC on automated member emails.
  * Addresses already in `to` are not duplicated on BCC.
@@ -33,8 +42,13 @@ export function parseStaffBccEmails(): string[] {
 /**
  * CC recipients for new-member welcome, Life Guidance follow-up, and therapist/healer/coach follow-up (same list).
  * Override with WELCOME_EMAIL_CC (comma-separated); defaults to Terry and Richard.
+ * Returns [] for smoke-test members so only real signups are copied to staff.
  */
-export function getWelcomeEmailCcRecipients(): string[] {
+export function getWelcomeEmailCcRecipients(context?: WelcomeEmailCcContext): string[] {
+  if (context && shouldSkipWelcomeStaffCc(context)) {
+    return [];
+  }
+
   const raw = process.env.WELCOME_EMAIL_CC?.trim();
   if (raw) {
     return raw

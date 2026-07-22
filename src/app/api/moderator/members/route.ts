@@ -145,7 +145,11 @@ export async function POST(request: Request) {
     subject: welcome.subject,
     html: welcome.html,
     text: welcome.text,
-    cc: getWelcomeEmailCcRecipients()
+    cc: getWelcomeEmailCcRecipients({
+      memberEmail: email,
+      firstName: parsed.data.firstName,
+      lastName: parsed.data.lastName
+    })
   });
   if (!emailResult.ok) {
     console.error("[moderator/members POST] Welcome email failed:", emailResult.error);

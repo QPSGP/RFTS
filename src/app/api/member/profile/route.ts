@@ -230,11 +230,18 @@ export async function PATCH(request: Request) {
   const firstName =
     parsed.data.firstName ?? existing?.firstName ?? null;
 
+  const welcomeCc = getWelcomeEmailCcRecipients({
+    memberEmail: email,
+    firstName,
+    lastName: parsed.data.lastName ?? existing?.lastName ?? null,
+    referralSource: parsed.data.referralSource ?? existing?.referralSource ?? null
+  });
+
   if (newHadLgd && !prevHadLgd) {
     const lgd = getLgdInterestEmailContent(firstName);
     const lgdResult = await sendEmail({
       to: email,
-      cc: getWelcomeEmailCcRecipients(),
+      cc: welcomeCc,
       subject: lgd.subject,
       html: lgd.html,
       text: lgd.text,
@@ -248,7 +255,7 @@ export async function PATCH(request: Request) {
     const thc = getTherapistHealerCoachEmailContent(firstName);
     const thcResult = await sendEmail({
       to: email,
-      cc: getWelcomeEmailCcRecipients(),
+      cc: welcomeCc,
       subject: thc.subject,
       html: thc.html,
       text: thc.text,
