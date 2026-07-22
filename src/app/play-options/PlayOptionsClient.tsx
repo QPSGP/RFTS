@@ -205,7 +205,6 @@ export default function PlayOptionsClient({
           </a>
         </section>
       )}
-      <ScreenWakeToggle />
       <PlayOptionsAndroidTips gapHours={gapHours} playsPerNight={playsPerNightSetting} />
       <section className="grid">
         <div className="card">
@@ -424,6 +423,7 @@ export default function PlayOptionsClient({
             </div>
           </div>
         )}
+        <ScreenWakeToggle />
       </section>
     </main>
   );
