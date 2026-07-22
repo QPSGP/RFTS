@@ -45,7 +45,7 @@ export default async function HomePage() {
         {showSignupCta && (
           <>
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <LandingTrialCtaButtons />
+              <LandingTrialCtaButtons whyItWorksOpensVideo />
             </div>
             <p
               style={{

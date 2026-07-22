@@ -4,14 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 
 export const TERRY_WHY_IT_WORKS_VIDEO_SRC = "/Images/Terry-Sizzle-Reel-Website.mp4";
 
-type WhyItWorksVideoButtonProps = {
-  /** `button` = secondary CTA; `nav` / `menu` = header link look. */
-  variant?: "button" | "nav" | "menu";
-};
-
-export default function WhyItWorksVideoButton({
-  variant = "button"
-}: WhyItWorksVideoButtonProps) {
+export default function WhyItWorksVideoButton() {
   const [open, setOpen] = useState(false);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
@@ -31,16 +24,9 @@ export default function WhyItWorksVideoButton({
     };
   }, [open]);
 
-  const triggerClass =
-    variant === "button"
-      ? "button button-secondary"
-      : variant === "nav"
-        ? "why-it-works-nav"
-        : "why-it-works-menu";
-
   return (
     <>
-      <button type="button" className={triggerClass} onClick={() => setOpen(true)}>
+      <button type="button" className="button button-secondary" onClick={() => setOpen(true)}>
         Why it works!
       </button>
       {open && (

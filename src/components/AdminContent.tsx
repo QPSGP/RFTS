@@ -75,8 +75,6 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   const [status, setStatus] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [populateFilenamesStatus, setPopulateFilenamesStatus] = useState<string | null>(null);
-  const [selectedGoalId, setSelectedGoalId] = useState<string>("");
-  const [goalSaveStatus, setGoalSaveStatus] = useState<string | null>(null);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [goalDraft, setGoalDraft] = useState<Interest | null>(null);
   const [librarySort, setLibrarySort] = useState<"title" | "sku">("title");
@@ -90,9 +88,6 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
   const [goalAudioA, setGoalAudioA] = useState<string>("");
   const [goalAudioB, setGoalAudioB] = useState<string>("");
   const [goalAudioC, setGoalAudioC] = useState<string>("");
-  const [assignAudioA, setAssignAudioA] = useState<string>("");
-  const [assignAudioB, setAssignAudioB] = useState<string>("");
-  const [assignAudioC, setAssignAudioC] = useState<string>("");
   const [uploadAudioStatus, setUploadAudioStatus] = useState<string | null>(null);
   const [uploadAudioLoading, setUploadAudioLoading] = useState(false);
   const [uploadCoverStatus, setUploadCoverStatus] = useState<string | null>(null);
@@ -152,16 +147,6 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     if (!ids.length) return null;
     return ids.map((id) => interestNameById.get(id) || id).join("; ");
   };
-
-  const goalCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    library.forEach((item) => {
-      item.interestIds.forEach((goalId) => {
-        counts.set(goalId, (counts.get(goalId) || 0) + 1);
-      });
-    });
-    return counts;
-  }, [library]);
 
   const filteredGoals = useMemo(() => {
     const term = goalSearch.trim().toLowerCase();
@@ -689,60 +674,6 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     }
   };
 
-  const handleGoalSelect = (goalId: string) => {
-    setSelectedGoalId(goalId);
-    if (!goalId) {
-      setAssignAudioA("");
-      setAssignAudioB("");
-      setAssignAudioC("");
-      return;
-    }
-    const goal = interests.find((i) => i.id === goalId);
-    if (goal?.audioIdA || goal?.audioIdB || goal?.audioIdC) {
-      setAssignAudioA(goal.audioIdA || "");
-      setAssignAudioB(goal.audioIdB || "");
-      setAssignAudioC(goal.audioIdC || "");
-    } else {
-      const attached = library
-        .filter((item) => item.interestIds.includes(goalId))
-        .sort((a, b) => a.title.localeCompare(b.title));
-      setAssignAudioA(attached[0]?.id || "");
-      setAssignAudioB(attached[1]?.id || "");
-      setAssignAudioC(attached[2]?.id || "");
-    }
-  };
-
-  const saveGoalAudioOrder = async () => {
-    if (!selectedGoalId) {
-      setGoalSaveStatus("Select a goal first.");
-      return;
-    }
-    const goal = interests.find((i) => i.id === selectedGoalId);
-    if (!goal) {
-      setGoalSaveStatus("Goal not found.");
-      return;
-    }
-    setGoalSaveStatus(null);
-    const response = await fetch("/api/interests", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: goal.id,
-        name: goal.name,
-        description: goal.description || "",
-        audioIdA: assignAudioA || null,
-        audioIdB: assignAudioB || null,
-        audioIdC: assignAudioC || null
-      })
-    });
-    if (response.ok) {
-      setGoalSaveStatus("Saved play order (A → B → C).");
-      await load();
-    } else {
-      setGoalSaveStatus("Failed to save.");
-    }
-  };
-
   return (
     <div className="grid" style={{ gap: 24 }}>
       {status && <p>{status}</p>}
@@ -1255,81 +1186,6 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
             {populateFilenamesStatus && <p style={{ marginTop: 8 }}>{populateFilenamesStatus}</p>}
           </>
         )}
-        <div className="card" style={{ marginTop: 16 }}>
-          <h3>Assign Audios by Goal (A → B → C play order)</h3>
-          <p style={{ color: "#4b5563" }}>
-            Pick a goal and assign audios in play order. First = A, second = B, third = C. Members&apos; playlists load in this order.
-          </p>
-          <select
-            style={inputStyle}
-            value={selectedGoalId}
-            onChange={(event) => handleGoalSelect(event.target.value)}
-          >
-            <option value="">Select a goal</option>
-            {interestOptions.map((interest) => (
-              <option key={interest.value} value={interest.value}>
-                {interest.label} ({goalCounts.get(interest.value) || 0})
-              </option>
-            ))}
-          </select>
-          {selectedGoalId && (
-            <div className="admin-goal-audio-slots" style={{ marginTop: 16 }}>
-              <div className="grid grid-3" style={{ gap: 12 }}>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600 }}>A (1st in play cycle)</label>
-                  <select
-                    value={assignAudioA}
-                    onChange={(e) => setAssignAudioA(e.target.value)}
-                    style={inputStyle}
-                  >
-                    <option value="">— None —</option>
-                    {sortedLibrary.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.skuCode || "—"} {item.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600 }}>B (2nd in play cycle)</label>
-                  <select
-                    value={assignAudioB}
-                    onChange={(e) => setAssignAudioB(e.target.value)}
-                    style={inputStyle}
-                  >
-                    <option value="">— None —</option>
-                    {sortedLibrary.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.skuCode || "—"} {item.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600 }}>C (3rd in play cycle)</label>
-                  <select
-                    value={assignAudioC}
-                    onChange={(e) => setAssignAudioC(e.target.value)}
-                    style={inputStyle}
-                  >
-                    <option value="">— None —</option>
-                    {sortedLibrary.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.skuCode || "—"} {item.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
-          <div style={{ marginTop: 12, display: "flex", gap: 12 }}>
-            <button className="button button-secondary" onClick={saveGoalAudioOrder}>
-              Save Play Order (A → B → C)
-            </button>
-            {goalSaveStatus && <span style={{ alignSelf: "center" }}>{goalSaveStatus}</span>}
-          </div>
-        </div>
         {library.length > 0 ? (
           <>
             <div className="card" style={{ marginTop: 0 }}>

@@ -3,13 +3,8 @@ import {
   MeditationSourcesCard,
   ScienceOutcomesGrid
 } from "@/components/MeditationBenefits";
-import { LandingTrialCtaButtons } from "@/components/LandingTrialCta";
-import WhyItWorksVideoButton from "@/components/WhyItWorksVideoButton";
-import { isMemberLoggedIn } from "@/lib/member-session";
 
-export default async function SciencePage() {
-  const showSignupCta = !(await isMemberLoggedIn());
-
+export default function SciencePage() {
   return (
     <main>
       <section className="hero section">
@@ -19,9 +14,6 @@ export default async function SciencePage() {
           Reach For The Stars combines guided meditation, goal priming, and consistent
           repetition during sleep transitions to reinforce new patterns over time.
         </p>
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          {showSignupCta ? <LandingTrialCtaButtons /> : <WhyItWorksVideoButton />}
-        </div>
       </section>
 
       <section className="section">

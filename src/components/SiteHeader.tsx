@@ -1,7 +1,6 @@
 import { headers } from "next/headers";
 import { getSessionConsoleType } from "@/lib/auth";
 import HeaderStartJourneyLink from "@/components/HeaderStartJourneyLink";
-import WhyItWorksVideoButton from "@/components/WhyItWorksVideoButton";
 import { isMemberLoggedIn } from "@/lib/member-session";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +35,7 @@ export default async function SiteHeader() {
               <summary className="button button-secondary header-cta">Menu</summary>
               <div className="menu-panel">
                 <a href="/">Home</a>
-                <WhyItWorksVideoButton variant="menu" />
+                <a href="/how-it-works">How It Works</a>
                 <a href="/science">Science</a>
                 <a href="/faqs">FAQs</a>
                 <a href="/blog">Blog</a>
@@ -61,7 +60,7 @@ export default async function SiteHeader() {
           </div>
           <nav className="nav site-nav desktop-only">
             <a href="/">Home</a>
-            <WhyItWorksVideoButton variant="nav" />
+            <a href="/how-it-works">How It Works</a>
             <a href="/science">Science</a>
             <a href="/faqs">FAQs</a>
             <a href="/blog">Blog</a>
