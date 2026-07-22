@@ -1,0 +1,41 @@
+---
+description: Wednesday morning tech meeting brief — weekly developed/fixed summary, missing public covers, agenda
+alwaysApply: true
+---
+
+# Wednesday morning tech brief
+
+When **today is Wednesday** (user's local timezone) and this is the **first substantive exchange** of the session (or the user asks for the Wednesday tech brief / tech meeting agenda / weekly summary), produce the **Wednesday Tech Meeting Brief** before other work.
+
+Also run it immediately when the user says any of: "Wednesday brief", "Thursday brief", "tech meeting agenda", "weekly summary", "wednesday tech meeting", "thursday tech meeting".
+
+## How to gather data
+
+From `rfts-platform/`:
+
+```bash
+npm run brief:wednesday
+```
+
+(or `node scripts/wednesday-tech-brief.mjs`). Uses commits since last Wednesday and live Postgres cover counts via `.env.local`.
+
+## Output format (use exactly these sections)
+
+### A. Developed & fixed since last Wednesday
+- Bullet list grouped lightly by theme (features / fixes / updates). Plain language for a tech meeting.
+- Call out anything that needs follow-up verification (e.g. Android playback, member settings).
+
+### B. Public library covers still missing
+- One line: **X missing / Y public titles** (exclude CGMR and private/custom).
+- Short list of SKUs if X > 0 (up to ~15); note if more remain.
+
+### C. Wednesday morning tech meeting agenda
+- 4–7 concrete agenda items derived from A and B (prioritize risk, member-facing bugs, then content ops, then marketing/admin).
+- End with open floor / blockers.
+
+## Rules
+
+1. Keep the whole brief scannable — aim for under ~1 screen of bullets unless the week was huge.
+2. Do not invent work; only summarize commits and live cover query results.
+3. Do **not** wait to be asked again on Wednesday once the session has started and the day is Wednesday — lead with the brief, then continue with whatever else they need.
+4. If the DB query fails, still produce sections A and C from `git log --since="<last-Wednesday>"` and note that cover counts need `.env.local` / network.

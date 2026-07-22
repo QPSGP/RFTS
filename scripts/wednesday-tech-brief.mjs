@@ -1,6 +1,6 @@
 /**
- * Thursday morning tech brief helpers.
- * Usage: node scripts/thursday-tech-brief.mjs [--covers-only] [--since=YYYY-MM-DD]
+ * Wednesday morning tech brief helpers.
+ * Usage: node scripts/wednesday-tech-brief.mjs [--covers-only] [--since=YYYY-MM-DD]
  *
  * Requires POSTGRES_URL (or DATABASE_URL) in .env.local / env.
  */
@@ -30,10 +30,12 @@ function loadEnvLocal() {
   }
 }
 
-function lastThursdayIso(from = new Date()) {
+/** Most recent prior Wednesday (on Wednesday morning, last week). */
+function lastWednesdayIso(from = new Date()) {
   const d = new Date(from);
-  const day = d.getDay(); // 0 Sun … 4 Thu
-  const diff = day >= 4 ? day - 4 : day + 3;
+  const day = d.getDay(); // 0 Sun … 3 Wed
+  let diff = (day + 7 - 3) % 7;
+  if (diff === 0) diff = 7;
   d.setDate(d.getDate() - diff);
   d.setHours(0, 0, 0, 0);
   return d.toISOString().slice(0, 10);
@@ -46,7 +48,7 @@ function parseArgs(argv) {
     if (a === "--covers-only") coversOnly = true;
     else if (a.startsWith("--since=")) since = a.slice("--since=".length);
   }
-  return { since: since || lastThursdayIso(), coversOnly };
+  return { since: since || lastWednesdayIso(), coversOnly };
 }
 
 async function queryMissingCovers() {

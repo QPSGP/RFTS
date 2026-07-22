@@ -32,7 +32,9 @@
     "vercel:set-cron-secret": "node scripts/set-vercel-cron-secret.js",
     "push-deploy": "node scripts/push-and-deploy.js",
     "covers:review": "node scripts/generate-covers-review.js",
-    "brief:thursday": "node scripts/thursday-tech-brief.mjs",
+    "brief:wednesday": "node scripts/wednesday-tech-brief.mjs",
+    "brief:thursday": "node scripts/wednesday-tech-brief.mjs",
+
     "schedule:spreadsheet": "tsx scripts/schedule-spreadsheet-export.ts",
     "blog:check-cadence": "tsx scripts/check-blog-cadence.ts"
   },
