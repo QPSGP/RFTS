@@ -5,16 +5,7 @@ import { isMemberLoggedIn } from "@/lib/member-session";
 import { HOMEPAGE_GOAL_CARDS } from "@/lib/homepage-goals";
 import { MEDITATION_SOURCES, WELLNESS_BENEFIT_LINKS } from "@/lib/meditation-benefits";
 
-function MeditationBenefitLink({
-  label,
-  path,
-  sourceIndex
-}: {
-  label: string;
-  path: string;
-  sourceIndex: number;
-}) {
-  const sourceNum = sourceIndex + 1;
+function MeditationBenefitLink({ label, path }: { label: string; path: string }) {
   return (
     <a
       href={path}
@@ -25,11 +16,11 @@ function MeditationBenefitLink({
         color: "inherit",
         transition: "border-color 0.15s ease, box-shadow 0.15s ease"
       }}
-      aria-label={`${label} — learn more with research source ${sourceNum}`}
+      aria-label={`${label} — Learn How`}
     >
       {label}
       <span style={{ display: "block", marginTop: 8, fontSize: 13, color: "#0f766e" }}>
-        Source [{sourceNum}]
+        Learn How
       </span>
     </a>
   );
@@ -192,12 +183,7 @@ export default async function HomePage() {
         </div>
         <section className="grid grid-2" style={{ marginTop: 16 }}>
           {WELLNESS_BENEFIT_LINKS.map((benefit) => (
-            <MeditationBenefitLink
-              key={benefit.label}
-              label={benefit.label}
-              path={benefit.path}
-              sourceIndex={benefit.sourceIndex}
-            />
+            <MeditationBenefitLink key={benefit.label} label={benefit.label} path={benefit.path} />
           ))}
         </section>
         <div className="card" style={{ marginTop: 16 }}>

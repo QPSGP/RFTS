@@ -21,5 +21,7 @@ npm run brief:wednesday -- --covers-only
 ## Brief contents
 
 1. **Developed & fixed** since last Wednesday (`git log`)
-2. **Public library covers still missing** (Postgres; excludes CGMR / private)
+2. **Still needs fix (library)**
+   - Public covers still missing (Postgres; excludes CGMR / private)
+   - Content / audio backlog from [`LIBRARY_CONTENT_FIXES.md`](./LIBRARY_CONTENT_FIXES.md)
 3. **Wednesday morning tech meeting agenda**

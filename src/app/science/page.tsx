@@ -1,4 +1,5 @@
 import SiteFooter from "@/components/SiteFooter";
+import { MEDITATION_SOURCES } from "@/lib/meditation-benefits";
 
 export default function SciencePage() {
   return (
@@ -73,38 +74,15 @@ export default function SciencePage() {
           <h2 className="section-title">Research and reading</h2>
         </div>
         <div className="card">
-          <ul className="list">
-            <li>
-              <a href="https://www.degruyter.com/document/doi/10.1515/hmbci-2013-0056/html" target="_blank" rel="noopener noreferrer">
-                https://www.degruyter.com/document/doi/10.1515/hmbci-2013-0056/html
-              </a>
-            </li>
-            <li>
-              <a href="https://www.health.harvard.edu/staying-healthy/what-meditation-can-do-for-your-mind-mood-and-health-" target="_blank" rel="noopener noreferrer">
-                https://www.health.harvard.edu/staying-healthy/what-meditation-can-do-for-your-mind-mood-and-health-
-              </a>
-            </li>
-            <li>
-              <a href="https://health.ucdavis.edu/health-news/newsroom/10-health-benefits-of-meditation/2019/07" target="_blank" rel="noopener noreferrer">
-                https://health.ucdavis.edu/health-news/newsroom/10-health-benefits-of-meditation/2019/07
-              </a>
-            </li>
-            <li>
-              <a href="https://www.mayoclinic.org/tests-procedures/meditation/about/pac-20385120" target="_blank" rel="noopener noreferrer">
-                https://www.mayoclinic.org/tests-procedures/meditation/about/pac-20385120
-              </a>
-            </li>
-            <li>
-              <a href="https://sps.columbia.edu/news/how-meditation-can-help-you-focus" target="_blank" rel="noopener noreferrer">
-                https://sps.columbia.edu/news/how-meditation-can-help-you-focus
-              </a>
-            </li>
-            <li>
-              <a href="https://news.harvard.edu/gazette/story/2011/01/eight-weeks-to-a-better-brain/" target="_blank" rel="noopener noreferrer">
-                https://news.harvard.edu/gazette/story/2011/01/eight-weeks-to-a-better-brain/
-              </a>
-            </li>
-          </ul>
+          <ol>
+            {MEDITATION_SOURCES.map((source, index) => (
+              <li key={source.href} id={`science-source-${index + 1}`}>
+                <a href={source.href} target="_blank" rel="noopener noreferrer">
+                  {source.title}
+                </a>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 

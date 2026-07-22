@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type JsonResponse = {
   header: string[];
@@ -20,15 +20,36 @@ type JsonResponse = {
 type ScheduleAlgorithmToolProps = {
   /** Collapse this section in the content console (e.g. parent toggles `scheduleAlgorithm` off). */
   onClose?: () => void;
+  /** Prefill member email (e.g. from Admin Members). */
+  initialEmail?: string;
+  /** Hide the email field and always use `initialEmail`. */
+  emailLocked?: boolean;
+  /** Nested layout: no outer card, smaller heading. */
+  embedded?: boolean;
+  /** Run preview once after mount when email is set. */
+  autoPreview?: boolean;
 };
 
-export default function ScheduleAlgorithmTool({ onClose }: ScheduleAlgorithmToolProps) {
-  const [email, setEmail] = useState("");
+export default function ScheduleAlgorithmTool({
+  onClose,
+  initialEmail = "",
+  emailLocked = false,
+  embedded = false,
+  autoPreview = false
+}: ScheduleAlgorithmToolProps) {
+  const [email, setEmail] = useState(initialEmail);
   const [nights, setNights] = useState(42);
   const [loading, setLoading] = useState(false);
   const [fileBusy, setFileBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<JsonResponse | null>(null);
+  const autoPreviewDone = useRef(false);
+
+  useEffect(() => {
+    if (initialEmail) setEmail(initialEmail);
+  }, [initialEmail]);
+
+  const effectiveEmail = emailLocked ? initialEmail.trim() : email.trim();
 
   const runJson = useCallback(async () => {
     setError(null);
@@ -41,7 +62,7 @@ export default function ScheduleAlgorithmTool({ onClose }: ScheduleAlgorithmTool
         credentials: "include",
         cache: "no-store",
         body: JSON.stringify({
-          email: email.trim(),
+          email: effectiveEmail,
           nights,
           format: "json"
         })
@@ -57,7 +78,13 @@ export default function ScheduleAlgorithmTool({ onClose }: ScheduleAlgorithmTool
     } finally {
       setLoading(false);
     }
-  }, [email, nights]);
+  }, [effectiveEmail, nights]);
+
+  useEffect(() => {
+    if (!autoPreview || autoPreviewDone.current || !effectiveEmail) return;
+    autoPreviewDone.current = true;
+    void runJson();
+  }, [autoPreview, effectiveEmail, runJson]);
 
   const download = useCallback(
     async (format: "csv" | "html") => {
@@ -70,7 +97,7 @@ export default function ScheduleAlgorithmTool({ onClose }: ScheduleAlgorithmTool
           credentials: "include",
           cache: "no-store",
           body: JSON.stringify({
-            email: email.trim(),
+            email: effectiveEmail,
             nights,
             format
           })
@@ -96,11 +123,13 @@ export default function ScheduleAlgorithmTool({ onClose }: ScheduleAlgorithmTool
         setFileBusy(false);
       }
     },
-    [email, nights]
+    [effectiveEmail, nights]
   );
 
+  const HeadingTag = embedded ? "h4" : "h3";
+
   return (
-    <div className="card" style={{ marginBottom: 20 }}>
+    <div className={embedded ? undefined : "card"} style={embedded ? undefined : { marginBottom: 20 }}>
       <div
         style={{
           display: "flex",
@@ -110,29 +139,37 @@ export default function ScheduleAlgorithmTool({ onClose }: ScheduleAlgorithmTool
           flexWrap: "wrap"
         }}
       >
-        <h3 style={{ margin: 0 }}>Schedule algorithm (one member)</h3>
+        <HeadingTag style={{ margin: 0 }}>
+          {embedded ? "Schedule algorithm for this member" : "Schedule algorithm (one member)"}
+        </HeadingTag>
         {onClose && (
           <button type="button" className="button button-secondary" onClick={onClose}>
             Close
           </button>
         )}
       </div>
-      <p style={{ color: "#4b5563", marginTop: 8 }}>
-        Build the same schedule as <strong>Tonight&apos;s Audio</strong> in the member app: <code>buildSchedulePreview</code>{" "}
-        with their goals (Gold) or admin-assigned audio order (Platinum Managed).
+      <p style={{ color: "#4b5563", marginTop: 8, fontSize: embedded ? 13 : undefined }}>
+        Same schedule as <strong>Tonight&apos;s Audio</strong> in the member app: goals (Gold) or assigned audio
+        order (Platinum Managed), including their plays-per-night setting.
       </p>
       <div style={{ display: "grid", gap: 12, maxWidth: 480, marginTop: 12 }}>
-        <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ fontSize: 14, fontWeight: 600 }}>Member email</span>
-          <input
-            className="input"
-            type="email"
-            autoComplete="off"
-            placeholder="member@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </label>
+        {emailLocked ? (
+          <p style={{ margin: 0, fontSize: 14 }}>
+            <strong>Member:</strong> {effectiveEmail || "—"}
+          </p>
+        ) : (
+          <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontSize: 14, fontWeight: 600 }}>Member email</span>
+            <input
+              className="input"
+              type="email"
+              autoComplete="off"
+              placeholder="member@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </label>
+        )}
         <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           <span style={{ fontSize: 14, fontWeight: 600 }}>Schedule nights to generate (1–366)</span>
           <input
@@ -149,7 +186,7 @@ export default function ScheduleAlgorithmTool({ onClose }: ScheduleAlgorithmTool
         <button
           type="button"
           className="button"
-          disabled={loading || fileBusy}
+          disabled={loading || fileBusy || !effectiveEmail}
           onClick={() => void runJson()}
         >
           {loading ? "Running…" : "Preview in admin"}
@@ -157,7 +194,7 @@ export default function ScheduleAlgorithmTool({ onClose }: ScheduleAlgorithmTool
         <button
           type="button"
           className="button button-secondary"
-          disabled={loading || fileBusy || !email.trim()}
+          disabled={loading || fileBusy || !effectiveEmail}
           onClick={() => void download("csv")}
         >
           {fileBusy ? "Preparing…" : "Download CSV"}
@@ -165,7 +202,7 @@ export default function ScheduleAlgorithmTool({ onClose }: ScheduleAlgorithmTool
         <button
           type="button"
           className="button button-secondary"
-          disabled={loading || fileBusy || !email.trim()}
+          disabled={loading || fileBusy || !effectiveEmail}
           onClick={() => void download("html")}
         >
           Download HTML
@@ -179,9 +216,9 @@ export default function ScheduleAlgorithmTool({ onClose }: ScheduleAlgorithmTool
       {preview && (
         <div style={{ marginTop: 20 }}>
           <p style={{ fontSize: 14, color: "#374151", marginBottom: 8 }}>
-            <strong>{preview.label}</strong> — tier: {preview.subscriptionTier ?? "—"} · {preview.playsPerNight} main
-            play(s) per night · {preview.maxN} nights · {preview.goalsCount} goal(s) · {preview.assignedAudioCount}{" "}
-            assigned track(s).{" "}
+            <strong>{preview.label}</strong> — tier: {preview.subscriptionTier ?? "—"} · {preview.playsPerNight}{" "}
+            main play(s) per night · {preview.maxN} nights · {preview.goalsCount} goal(s) ·{" "}
+            {preview.assignedAudioCount} assigned track(s).{" "}
             <span style={{ color: "#6b7280" }}>Yellow = rotation change that night.</span>
           </p>
           {preview.warnings.length > 0 && (

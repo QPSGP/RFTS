@@ -9,12 +9,14 @@ import { MANAGED_MAX_SLOTS_PER_AUDIO } from "@/lib/managed-rotation-limits";
 import type { LibraryItem } from "@/lib/types";
 import { stripSkuHyphens } from "@/lib/sku-code";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
+import ScheduleAlgorithmTool from "@/components/ScheduleAlgorithmTool";
 
 type MemberAdminSection =
   | "profile"
   | "notes"
   | "facilitator"
   | "activity"
+  | "scheduleAlgorithm"
   | "membership"
   | "addFile"
   | "scheduledAudios"
@@ -2935,6 +2937,29 @@ export default function AdminUsers() {
                                   : "No activity logged yet for this member (they need to sign in after this feature ships)."}
                             </p>
                           )}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        className={adminSectionToggleClass(
+                          memberSectionIsOpen(user.email, "scheduleAlgorithm"),
+                          true
+                        )}
+                        aria-expanded={memberSectionIsOpen(user.email, "scheduleAlgorithm")}
+                        onClick={() => toggleMemberSection(user.email, "scheduleAlgorithm")}
+                      >
+                        {memberSectionIsOpen(user.email, "scheduleAlgorithm") ? "▼" : "▶"} Schedule
+                        algorithm
+                      </button>
+                      {memberSectionIsOpen(user.email, "scheduleAlgorithm") && (
+                        <div className="card" style={{ marginTop: 8 }}>
+                          <ScheduleAlgorithmTool
+                            key={user.email}
+                            initialEmail={user.email}
+                            emailLocked
+                            embedded
+                            autoPreview
+                          />
                         </div>
                       )}
                       <button

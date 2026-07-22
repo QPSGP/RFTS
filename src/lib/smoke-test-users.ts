@@ -80,14 +80,48 @@ export async function listSmokeTestUsers(minAgeDays = 0): Promise<SmokeTestUserR
   return rows;
 }
 
+/** Drop given emails from every library item's allowed_user_emails (case-insensitive). */
+export async function stripEmailsFromLibraryAllowedLists(emails: string[]): Promise<number> {
+  const unique = [
+    ...new Set(emails.map((e) => e.trim().toLowerCase()).filter(Boolean))
+  ];
+  if (!unique.length) return 0;
+
+  let updated = 0;
+  for (const emailLower of unique) {
+    const result = await sql`
+      UPDATE library_items
+      SET allowed_user_emails = COALESCE(
+        (
+          SELECT array_agg(e)
+          FROM unnest(COALESCE(allowed_user_emails, ARRAY[]::text[])) AS e
+          WHERE LOWER(e) <> ${emailLower}
+        ),
+        ARRAY[]::text[]
+      )
+      WHERE EXISTS (
+        SELECT 1
+        FROM unnest(COALESCE(allowed_user_emails, ARRAY[]::text[])) AS e
+        WHERE LOWER(e) = ${emailLower}
+      )
+    `;
+    updated += result.rowCount ?? 0;
+  }
+  return updated;
+}
+
 export async function deleteSmokeTestUsersOlderThanDays(minAgeDays: number): Promise<{
   deletedCount: number;
   emails: string[];
+  allowedListItemsUpdated: number;
 }> {
   const matches = await listSmokeTestUsers(minAgeDays);
   if (!matches.length) {
-    return { deletedCount: 0, emails: [] };
+    return { deletedCount: 0, emails: [], allowedListItemsUpdated: 0 };
   }
+
+  const emails = matches.map((row) => row.email);
+  const allowedListItemsUpdated = await stripEmailsFromLibraryAllowedLists(emails);
 
   const ids = matches.map((row) => row.id);
   const del = await sql`
@@ -96,6 +130,7 @@ export async function deleteSmokeTestUsersOlderThanDays(minAgeDays: number): Pro
 
   return {
     deletedCount: del.rowCount ?? 0,
-    emails: matches.map((row) => row.email)
+    emails,
+    allowedListItemsUpdated
   };
 }

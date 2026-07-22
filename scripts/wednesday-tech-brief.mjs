@@ -126,6 +126,22 @@ function categorize(subject) {
   return "Other";
 }
 
+/** Rows from docs/LIBRARY_CONTENT_FIXES.md (open backlog only). */
+function loadContentFixes() {
+  const path = join(root, "docs", "LIBRARY_CONTENT_FIXES.md");
+  if (!existsSync(path)) return [];
+  const items = [];
+  for (const line of readFileSync(path, "utf8").split(/\r?\n/)) {
+    const m = line.match(/^\|\s*([A-Za-z0-9]+)\s*\|\s*(.+?)\s*\|$/);
+    if (!m) continue;
+    const sku = m[1];
+    const issue = m[2].trim();
+    if (sku === "SKU" || /^-+$/.test(sku) || !issue) continue;
+    items.push({ sku, issue });
+  }
+  return items;
+}
+
 async function main() {
   loadEnvLocal();
   const { since, coversOnly } = parseArgs(process.argv.slice(2));
@@ -142,6 +158,8 @@ async function main() {
     byCat[categorize(c.subject)].push(c);
   }
 
+  const contentFixes = loadContentFixes();
+
   const report = {
     generatedAt: new Date().toISOString(),
     since,
@@ -153,7 +171,8 @@ async function main() {
       withCover: covers.stats.public_with_cover,
       missingCover: covers.stats.public_missing_cover,
       samples: covers.samples
-    }
+    },
+    libraryContentFixes: contentFixes
   };
   console.log(JSON.stringify(report, null, 2));
 }

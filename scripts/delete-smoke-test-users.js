@@ -76,9 +76,36 @@ const SELECT_SQL = `
     return;
   }
 
+  const emails = rows.map((r) => String(r.email || "").trim().toLowerCase()).filter(Boolean);
+  let allowedTouched = 0;
+  for (const emailLower of emails) {
+    const upd = await pool.query(
+      `
+      UPDATE library_items
+      SET allowed_user_emails = COALESCE(
+        (
+          SELECT array_agg(e)
+          FROM unnest(COALESCE(allowed_user_emails, ARRAY[]::text[])) AS e
+          WHERE LOWER(e) <> $1
+        ),
+        ARRAY[]::text[]
+      )
+      WHERE EXISTS (
+        SELECT 1
+        FROM unnest(COALESCE(allowed_user_emails, ARRAY[]::text[])) AS e
+        WHERE LOWER(e) = $1
+      )
+      `,
+      [emailLower]
+    );
+    allowedTouched += upd.rowCount || 0;
+  }
+
   const ids = rows.map((r) => r.id);
   const del = await pool.query("DELETE FROM users WHERE id = ANY($1::uuid[])", [ids]);
-  console.log(`\nDeleted ${del.rowCount} user(s).`);
+  console.log(
+    `\nDeleted ${del.rowCount} user(s). Stripped from ${allowedTouched} library allowed-list update(s).`
+  );
   await pool.end();
 })().catch((e) => {
   console.error(e);

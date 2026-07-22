@@ -9,8 +9,8 @@ export const MEDITATION_SOURCES = [
     href: "https://www.health.harvard.edu/staying-healthy/what-meditation-can-do-for-your-mind-mood-and-health-"
   },
   {
-    title: "NIH NCCIH — meditation and mindfulness: what you need to know",
-    href: "https://www.nccih.nih.gov/health/meditation-and-mindfulness-what-you-need-to-know"
+    title: "UC Davis Health — 10 health benefits of meditation",
+    href: "https://health.ucdavis.edu/health-news/newsroom/10-health-benefits-of-meditation/2019/07"
   },
   {
     title: "Mayo Clinic — meditation overview and health benefits",

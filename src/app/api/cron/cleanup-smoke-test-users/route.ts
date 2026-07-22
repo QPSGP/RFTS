@@ -15,16 +15,16 @@ export async function GET(request: Request) {
   }
 
   const startedAt = new Date().toISOString();
-  const { deletedCount, emails } = await deleteSmokeTestUsersOlderThanDays(
-    SMOKE_TEST_USER_MIN_AGE_DAYS
-  );
+  const { deletedCount, emails, allowedListItemsUpdated } =
+    await deleteSmokeTestUsersOlderThanDays(SMOKE_TEST_USER_MIN_AGE_DAYS);
 
   console.info(
     "[cron cleanup-smoke-test-users]",
     JSON.stringify({
       minAgeDays: SMOKE_TEST_USER_MIN_AGE_DAYS,
       deletedCount,
-      emails
+      emails,
+      allowedListItemsUpdated
     })
   );
 
@@ -34,6 +34,7 @@ export async function GET(request: Request) {
     finishedAt: new Date().toISOString(),
     minAgeDays: SMOKE_TEST_USER_MIN_AGE_DAYS,
     deletedCount,
-    emails
+    emails,
+    allowedListItemsUpdated
   });
 }
