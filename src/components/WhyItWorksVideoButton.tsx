@@ -27,7 +27,7 @@ export default function WhyItWorksVideoButton() {
   return (
     <>
       <button type="button" className="button button-secondary" onClick={() => setOpen(true)}>
-        Why it works!
+        Why it works
       </button>
       {open && (
         <div
@@ -44,7 +44,7 @@ export default function WhyItWorksVideoButton() {
           >
             <div className="why-it-works-modal-header">
               <h2 id={titleId} style={{ margin: 0, fontSize: 18 }}>
-                Why it works!
+                Why it works
               </h2>
               <button
                 ref={closeBtnRef}

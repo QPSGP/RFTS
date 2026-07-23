@@ -12,7 +12,7 @@ export default function HowItWorksPage() {
           reinforce new habits, focus, and confidence at the time your subconscious is
           most receptive.
         </p>
-        <LandingTrialCtaButtons whyItWorksOpensVideo />
+        <LandingTrialCtaButtons />
       </section>
 
       <section className="section">

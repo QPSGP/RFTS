@@ -12,13 +12,10 @@ export { LANDING_TRIAL_CTA_LABEL };
 
 type LandingTrialCtaButtonsProps = {
   signupHref?: string;
-  /** Home / How it works: open Terry’s video. Elsewhere: link to /how-it-works. */
-  whyItWorksOpensVideo?: boolean;
 };
 
 export function LandingTrialCtaButtons({
-  signupHref = LANDING_TRIAL_SIGNUP_HREF,
-  whyItWorksOpensVideo = false
+  signupHref = LANDING_TRIAL_SIGNUP_HREF
 }: LandingTrialCtaButtonsProps) {
   const href = useAffiliateSignupHref(signupHref);
 
@@ -27,13 +24,7 @@ export function LandingTrialCtaButtons({
       <a className="button" href={href}>
         {LANDING_TRIAL_CTA_LABEL}
       </a>
-      {whyItWorksOpensVideo ? (
-        <WhyItWorksVideoButton />
-      ) : (
-        <a className="button button-secondary" href="/how-it-works">
-          How it works
-        </a>
-      )}
+      <WhyItWorksVideoButton />
     </div>
   );
 }
