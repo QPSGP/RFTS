@@ -30,7 +30,7 @@ export async function GET(request: Request) {
   if (status.due) {
     const recipients = [
       ...new Set([
-        ...getWelcomeEmailCcRecipients(),
+        ...(await getWelcomeEmailCcRecipients()),
         "customerservice@reachforthestars.today"
       ])
     ];

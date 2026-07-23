@@ -74,6 +74,16 @@ type OutreachTarget = {
   updatedAt: string;
 };
 
+type OutreachEmailTemplate = {
+  id: string;
+  name: string;
+  subject: string;
+  bodyText: string;
+  purpose: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 const thStyle = { padding: "10px 12px", fontWeight: 600 } as const;
 const tdStyle = { padding: "10px 12px", verticalAlign: "top" } as const;
 const tdMutedStyle = { padding: "10px 12px", color: "#4b5563", verticalAlign: "top" } as const;
@@ -87,6 +97,13 @@ const emptyForm = {
   refCode: "",
   status: "prospect",
   notes: ""
+};
+
+const emptyTemplateForm = {
+  name: "",
+  subject: "",
+  bodyText: "",
+  purpose: ""
 };
 
 function formatDate(iso: string | null): string {
@@ -116,6 +133,13 @@ export default function AdminMarketing() {
   const [outreachStatus, setOutreachStatus] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [saving, setSaving] = useState(false);
+
+  const [templates, setTemplates] = useState<OutreachEmailTemplate[]>([]);
+  const [templatesLoaded, setTemplatesLoaded] = useState(false);
+  const [templateForm, setTemplateForm] = useState({ ...emptyTemplateForm });
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  const [templateStatus, setTemplateStatus] = useState<string | null>(null);
+  const [savingTemplate, setSavingTemplate] = useState(false);
 
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -147,11 +171,26 @@ export default function AdminMarketing() {
     setTargetsLoaded(true);
   }, []);
 
+  const loadTemplates = useCallback(async () => {
+    const res = await fetch("/api/admin/marketing/outreach-templates", {
+      credentials: "include",
+      cache: "no-store"
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setTemplates(Array.isArray(data.templates) ? data.templates : []);
+    }
+    setTemplatesLoaded(true);
+  }, []);
+
   useEffect(() => {
     if (openSections.outreach && !targetsLoaded) {
       loadTargets();
     }
-  }, [openSections.outreach, targetsLoaded, loadTargets]);
+    if (openSections.outreach && !templatesLoaded) {
+      loadTemplates();
+    }
+  }, [openSections.outreach, targetsLoaded, templatesLoaded, loadTargets, loadTemplates]);
 
   const toggleSection = (key: MarketingSection, id: string) => {
     setOpenSections((prev) => {
@@ -292,7 +331,96 @@ export default function AdminMarketing() {
     if (res.ok) {
       const data = await res.json();
       setTargets(Array.isArray(data.targets) ? data.targets : []);
-      setOutreachStatus(`Added ${data.added ?? 0} starter target(s).`);
+      setOutreachStatus(
+        data.added
+          ? `Added ${data.added} starter target(s).`
+          : "No new starter targets (all already in the tracker)."
+      );
+    }
+  };
+
+  const resetTemplateForm = () => {
+    setTemplateForm({ ...emptyTemplateForm });
+    setEditingTemplateId(null);
+  };
+
+  const submitTemplateForm = async () => {
+    if (!templateForm.name.trim() || !templateForm.subject.trim() || !templateForm.bodyText.trim()) {
+      setTemplateStatus("Name, subject, and body are required.");
+      return;
+    }
+    setSavingTemplate(true);
+    setTemplateStatus(null);
+    const payload = {
+      name: templateForm.name.trim(),
+      subject: templateForm.subject.trim(),
+      bodyText: templateForm.bodyText.trim(),
+      purpose: templateForm.purpose.trim() || null
+    };
+    const res = await fetch("/api/admin/marketing/outreach-templates", {
+      method: editingTemplateId ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(
+        editingTemplateId ? { id: editingTemplateId, ...payload } : payload
+      )
+    });
+    setSavingTemplate(false);
+    if (res.ok) {
+      setTemplateStatus(editingTemplateId ? "Template updated." : "Template added.");
+      resetTemplateForm();
+      await loadTemplates();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setTemplateStatus(data?.error || "Save failed.");
+    }
+  };
+
+  const startEditTemplate = (t: OutreachEmailTemplate) => {
+    setEditingTemplateId(t.id);
+    setTemplateForm({
+      name: t.name,
+      subject: t.subject,
+      bodyText: t.bodyText,
+      purpose: t.purpose ?? ""
+    });
+    requestAnimationFrame(() => {
+      document.getElementById("outreach-email-templates")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    });
+  };
+
+  const removeTemplate = async (t: OutreachEmailTemplate) => {
+    if (!window.confirm(`Delete email template "${t.name}"?`)) return;
+    const res = await fetch(
+      `/api/admin/marketing/outreach-templates?id=${encodeURIComponent(t.id)}`,
+      { method: "DELETE", credentials: "include" }
+    );
+    if (res.ok) {
+      setTemplates((prev) => prev.filter((row) => row.id !== t.id));
+      if (editingTemplateId === t.id) resetTemplateForm();
+    }
+  };
+
+  const seedTemplates = async () => {
+    setSavingTemplate(true);
+    const res = await fetch("/api/admin/marketing/outreach-templates", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ seed: true })
+    });
+    setSavingTemplate(false);
+    if (res.ok) {
+      const data = await res.json();
+      setTemplates(Array.isArray(data.templates) ? data.templates : []);
+      setTemplateStatus(
+        data.added
+          ? `Added ${data.added} starter template(s).`
+          : "No new starter templates (all already saved)."
+      );
     }
   };
 
@@ -544,7 +672,8 @@ export default function AdminMarketing() {
         <section id="marketing-outreach" style={{ marginBottom: 24 }}>
           <h2 style={{ marginBottom: 12, fontSize: 18 }}>Outreach tracker</h2>
           <p style={{ color: "#4b5563", marginBottom: 12 }}>
-            Track prospective partner organizations and their status. Saved to the database.
+            Track partner organizations, contact emails, and outbound message templates. Everything
+            here is saved to the database.
           </p>
 
           <div className="card" style={{ marginBottom: 16 }}>
@@ -603,11 +732,11 @@ export default function AdminMarketing() {
                 </select>
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
-                Contact
+                Contact emails
                 <input
                   value={form.contact}
                   onChange={(e) => setForm((f) => ({ ...f, contact: e.target.value }))}
-                  placeholder="Name / email / phone"
+                  placeholder="name@org.org, wellness@org.org"
                 />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
@@ -660,21 +789,189 @@ export default function AdminMarketing() {
                   Cancel
                 </button>
               )}
-              {targets.length === 0 && (
-                <button
-                  type="button"
-                  className="button button-secondary"
-                  style={{ width: "auto" }}
-                  disabled={saving}
-                  onClick={seedStarters}
-                >
-                  Add starter targets
-                </button>
-              )}
+              <button
+                type="button"
+                className="button button-secondary"
+                style={{ width: "auto" }}
+                disabled={saving}
+                onClick={seedStarters}
+              >
+                Add missing starter targets
+              </button>
             </div>
             {outreachStatus && (
               <p style={{ margin: "10px 0 0", color: "#374151", fontSize: 13 }}>{outreachStatus}</p>
             )}
+          </div>
+
+          <div id="outreach-email-templates" className="card" style={{ marginBottom: 16 }}>
+            <h3 style={{ marginTop: 0, fontSize: 16 }}>Outreach email templates</h3>
+            <p style={{ color: "#4b5563", marginTop: 0, marginBottom: 12, fontSize: 13 }}>
+              Member- and partner-facing copy you edit here (welcome-style, partner intros, etc.).
+              Copy subject/body into your mail client when contacting a target. Placeholders:{" "}
+              <code>{"{{name}}"}</code>, <code>{"{{contactName}}"}</code>,{" "}
+              <code>{"{{organization}}"}</code>, <code>{"{{siteUrl}}"}</code>.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+                Template name *
+                <input
+                  value={templateForm.name}
+                  onChange={(e) =>
+                    setTemplateForm((f) => ({ ...f, name: e.target.value }))
+                  }
+                  placeholder="e.g. Partner / affiliate intro"
+                />
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+                Purpose (optional tag)
+                <input
+                  value={templateForm.purpose}
+                  onChange={(e) =>
+                    setTemplateForm((f) => ({ ...f, purpose: e.target.value }))
+                  }
+                  placeholder="partner_intro, new_member, …"
+                />
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+                Subject *
+                <input
+                  value={templateForm.subject}
+                  onChange={(e) =>
+                    setTemplateForm((f) => ({ ...f, subject: e.target.value }))
+                  }
+                />
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+                Body *
+                <textarea
+                  value={templateForm.bodyText}
+                  onChange={(e) =>
+                    setTemplateForm((f) => ({ ...f, bodyText: e.target.value }))
+                  }
+                  rows={10}
+                  style={{ fontFamily: "inherit", resize: "vertical" }}
+                />
+              </label>
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="button"
+                style={{ width: "auto" }}
+                disabled={savingTemplate}
+                onClick={submitTemplateForm}
+              >
+                {editingTemplateId ? "Save template" : "Add template"}
+              </button>
+              {editingTemplateId && (
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  style={{ width: "auto" }}
+                  onClick={resetTemplateForm}
+                >
+                  Cancel
+                </button>
+              )}
+              <button
+                type="button"
+                className="button button-secondary"
+                style={{ width: "auto" }}
+                disabled={savingTemplate}
+                onClick={seedTemplates}
+              >
+                Add missing starter templates
+              </button>
+            </div>
+            {templateStatus && (
+              <p style={{ margin: "10px 0 0", color: "#374151", fontSize: 13 }}>{templateStatus}</p>
+            )}
+            {!templatesLoaded && (
+              <p style={{ margin: "12px 0 0", color: "#6b7280", fontSize: 13 }}>Loading templates…</p>
+            )}
+            {templatesLoaded && templates.length === 0 && (
+              <p style={{ margin: "12px 0 0", color: "#6b7280", fontSize: 13 }}>
+                No templates yet. Add one above or load starters.
+              </p>
+            )}
+            {templates.map((t) => (
+              <div
+                key={t.id}
+                style={{
+                  marginTop: 14,
+                  paddingTop: 14,
+                  borderTop: "1px solid #e5e7eb"
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    flexWrap: "wrap",
+                    alignItems: "baseline"
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600 }}>{t.name}</div>
+                    {t.purpose && (
+                      <div style={{ fontSize: 12, color: "#6b7280" }}>{t.purpose}</div>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      style={{ width: "auto", padding: "6px 10px", fontSize: 13 }}
+                      onClick={() => copy(`subj-${t.id}`, t.subject)}
+                    >
+                      {copied === `subj-${t.id}` ? "Copied" : "Copy subject"}
+                    </button>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      style={{ width: "auto", padding: "6px 10px", fontSize: 13 }}
+                      onClick={() => copy(`body-${t.id}`, t.bodyText)}
+                    >
+                      {copied === `body-${t.id}` ? "Copied" : "Copy body"}
+                    </button>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      style={{ width: "auto", padding: "6px 10px", fontSize: 13 }}
+                      onClick={() => startEditTemplate(t)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      style={{ width: "auto", padding: "6px 10px", fontSize: 13 }}
+                      onClick={() => removeTemplate(t)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+                <div style={{ fontSize: 13, marginTop: 6, color: "#374151" }}>
+                  <strong>Subject:</strong> {t.subject}
+                </div>
+                <pre
+                  style={{
+                    margin: "8px 0 0",
+                    whiteSpace: "pre-wrap",
+                    fontSize: 12,
+                    color: "#4b5563",
+                    fontFamily: "inherit",
+                    maxHeight: 160,
+                    overflow: "auto"
+                  }}
+                >
+                  {t.bodyText}
+                </pre>
+              </div>
+            ))}
           </div>
 
           <div
@@ -717,7 +1014,7 @@ export default function AdminMarketing() {
                   <th className="admin-col-optional" style={thStyle}>Category</th>
                   <th className="admin-col-optional" style={thStyle}>Persona</th>
                   <th className="admin-col-optional" style={thStyle}>Entry path</th>
-                  <th className="admin-col-optional" style={thStyle}>Contact</th>
+                  <th className="admin-col-optional" style={thStyle}>Contact emails</th>
                   <th style={thStyle}>Status</th>
                   <th style={thStyle}>Actions</th>
                 </tr>
@@ -780,7 +1077,7 @@ export default function AdminMarketing() {
             {targetsLoaded && filteredTargets.length === 0 && (
               <p style={{ padding: 16, color: "#6b7280", margin: 0 }}>
                 {targets.length === 0
-                  ? "No targets yet. Add one above or use “Add starter targets”."
+                  ? "No targets yet. Add one above or use “Add missing starter targets”."
                   : "No targets with this status."}
               </p>
             )}

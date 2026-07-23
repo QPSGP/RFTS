@@ -437,3 +437,23 @@ CREATE TABLE IF NOT EXISTS marketing_outreach_targets (
 );
 CREATE INDEX IF NOT EXISTS marketing_outreach_targets_status_idx
   ON marketing_outreach_targets (status);
+
+-- Admin-editable staff / transactional email recipient lists
+CREATE TABLE IF NOT EXISTS email_staff_lists (
+  list_key text PRIMARY KEY,
+  emails text[] NOT NULL DEFAULT ARRAY[]::text[],
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Outreach email templates (member/partner messages admins edit for campaigns)
+CREATE TABLE IF NOT EXISTS outreach_email_templates (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  subject text NOT NULL,
+  body_text text NOT NULL,
+  purpose text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS outreach_email_templates_purpose_idx
+  ON outreach_email_templates (purpose);

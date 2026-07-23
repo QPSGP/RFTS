@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionEmail, isAdminSession } from "@/lib/auth";
-import { getIssueResolvedStaffMonitorBcc, sendEmail } from "@/lib/email";
+import {
+  getIssueResolvedStaffMonitorBcc,
+  getReportIssueToEmails,
+  sendEmail
+} from "@/lib/email";
 import { getIssueResolvedEmailContent } from "@/lib/email-templates";
 import { rateLimit } from "@/lib/rate-limit";
 import {
@@ -123,7 +127,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid input. Please provide a subject and message." }, { status: 400 });
   }
 
-  const to = process.env.REPORT_ISSUE_EMAIL || "Richard@richardleeweatherman.com";
+  const to = await getReportIssueToEmails();
   const categoryLabel = parsed.data.category?.trim()
     ? `Internal · ${parsed.data.category.trim()}`
     : "Internal";
@@ -260,7 +264,7 @@ export async function PATCH(request: Request) {
       resolutionNotes: effectiveResolutionNotes,
       outcome: parsed.data.status === "closed" ? "closed" : "resolved"
     });
-    const monitorBcc = getIssueResolvedStaffMonitorBcc(previous.memberEmail);
+    const monitorBcc = await getIssueResolvedStaffMonitorBcc(previous.memberEmail);
     const sendResult = await sendEmail({
       to: previous.memberEmail,
       subject: content.subject,

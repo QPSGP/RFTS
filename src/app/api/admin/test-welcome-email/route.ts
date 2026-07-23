@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const welcomeCc = getWelcomeEmailCcRecipients();
+  const welcomeCc = await getWelcomeEmailCcRecipients();
 
   const result = await sendEmail({
     to,

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getEmailStaffList } from "@/lib/db";
 
 export const AFFILIATE_PAYOUT_METHODS = [
   "crypto",
@@ -84,16 +85,9 @@ export function formatUsdFromCents(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
-/** CC on affiliate threshold + payout emails (override with AFFILIATE_EMAIL_CC). */
-export function getAffiliateNotificationCcRecipients(): string[] {
-  const raw = process.env.AFFILIATE_EMAIL_CC?.trim();
-  if (raw) {
-    return raw
-      .split(/[,;]/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-  }
-  return ["Richard@richardleeweatherman.com"];
+/** CC on affiliate threshold + payout emails (admin-editable list). */
+export async function getAffiliateNotificationCcRecipients(): Promise<string[]> {
+  return getEmailStaffList("affiliate_cc");
 }
 
 export function didCrossPayoutThreshold(

@@ -76,63 +76,332 @@ export const MARKETING_LANDING_LINKS: MarketingLandingLink[] = (() => {
   return [...CORE_MARKETING_PAGES, ...goals, ...wellness];
 })();
 
-/** One-click starter list for the outreach tracker (top-priority checklist). */
-export const STARTER_OUTREACH_TARGETS: {
+type StarterTarget = {
   organization: string;
   category: string;
   persona: string;
   entryPath: string;
-}[] = [
+};
+
+const JORDAN = "Jordan — Front-Line Caregiver";
+const ALEX = "Alex — Burned-Out Professional";
+const SAM = "Sam — Sleep-Deprived Parent / Caregiver";
+
+/** Seed list for the outreach tracker (from docs/target-organizations.md). */
+export const STARTER_OUTREACH_TARGETS: StarterTarget[] = [
+  // Top-priority checklist
   {
     organization: "First-responder wellness / peer-support programs",
     category: "First responders & public safety",
-    persona: "Jordan — Front-Line Caregiver",
+    persona: JORDAN,
     entryPath: "Facilitator / Managed"
   },
   {
     organization: "Hospital nurse-resilience & employee-wellness programs",
     category: "Healthcare & front-line medical",
-    persona: "Jordan — Front-Line Caregiver",
+    persona: JORDAN,
     entryPath: "Facilitator / Managed"
   },
   {
     organization: "Therapists & hypnotherapists (private practice)",
     category: "Mental & behavioral health providers",
-    persona: "Alex — Burned-Out Professional",
+    persona: ALEX,
     entryPath: "Affiliate"
   },
   {
     organization: "Corporate HR / benefits teams",
     category: "Corporate & high-stress professions",
-    persona: "Alex — Burned-Out Professional",
+    persona: ALEX,
     entryPath: "Direct"
   },
   {
     organization: "EAP vendors & provider networks",
     category: "Mental & behavioral health providers",
-    persona: "Alex — Burned-Out Professional",
+    persona: ALEX,
     entryPath: "Affiliate"
   },
   {
     organization: "Veteran service orgs & PTSD nonprofits",
     category: "Veterans & military",
-    persona: "Jordan — Front-Line Caregiver",
+    persona: JORDAN,
     entryPath: "Facilitator / Managed"
   },
   {
     organization: "Caregiver support organizations (Alzheimer's, postpartum)",
     category: "Parents & caregivers",
-    persona: "Sam — Sleep-Deprived Parent / Caregiver",
+    persona: SAM,
     entryPath: "Affiliate"
   },
   {
     organization: "Wellness coaches & studios",
     category: "Coaches, studios & practitioners",
-    persona: "Alex — Burned-Out Professional",
+    persona: ALEX,
     entryPath: "Facilitator / Managed"
+  },
+  // First responders
+  {
+    organization: "Police / sheriff peer-support & wellness units",
+    category: "First responders & public safety",
+    persona: JORDAN,
+    entryPath: "Facilitator / Managed"
+  },
+  {
+    organization: "Fire departments & IAFF locals",
+    category: "First responders & public safety",
+    persona: JORDAN,
+    entryPath: "Facilitator / Managed"
+  },
+  {
+    organization: "EMS / paramedic agencies",
+    category: "First responders & public safety",
+    persona: JORDAN,
+    entryPath: "Facilitator / Managed"
+  },
+  {
+    organization: "911 dispatch / emergency communications centers",
+    category: "First responders & public safety",
+    persona: JORDAN,
+    entryPath: "Facilitator / Managed"
+  },
+  // Healthcare
+  {
+    organization: "Nursing associations & unions",
+    category: "Healthcare & front-line medical",
+    persona: JORDAN,
+    entryPath: "Affiliate"
+  },
+  {
+    organization: "Traveling nurse agencies",
+    category: "Healthcare & front-line medical",
+    persona: JORDAN,
+    entryPath: "Affiliate"
+  },
+  {
+    organization: "Long-term care / hospice / home-health staff programs",
+    category: "Healthcare & front-line medical",
+    persona: JORDAN,
+    entryPath: "Facilitator / Managed"
+  },
+  {
+    organization: "Medical residency & GME wellness programs",
+    category: "Healthcare & front-line medical",
+    persona: JORDAN,
+    entryPath: "Facilitator / Managed"
+  },
+  // Mental health
+  {
+    organization: "Group therapy practices & community mental health centers",
+    category: "Mental & behavioral health providers",
+    persona: ALEX,
+    entryPath: "Affiliate"
+  },
+  {
+    organization: "Trauma-informed care clinics & PTSD programs",
+    category: "Mental & behavioral health providers",
+    persona: JORDAN,
+    entryPath: "Affiliate"
+  },
+  {
+    organization: "Clinical hypnosis associations",
+    category: "Mental & behavioral health providers",
+    persona: ALEX,
+    entryPath: "Affiliate"
+  },
+  // Corporate
+  {
+    organization: "Tech companies (engineering / on-call teams)",
+    category: "Corporate & high-stress professions",
+    persona: ALEX,
+    entryPath: "Direct"
+  },
+  {
+    organization: "Finance, consulting, and law firm wellness programs",
+    category: "Corporate & high-stress professions",
+    persona: ALEX,
+    entryPath: "Direct"
+  },
+  {
+    organization: "Startup / entrepreneur communities & accelerators",
+    category: "Corporate & high-stress professions",
+    persona: ALEX,
+    entryPath: "Affiliate"
+  },
+  {
+    organization: "Sales organizations (quota stress / recovery)",
+    category: "Corporate & high-stress professions",
+    persona: ALEX,
+    entryPath: "Affiliate"
+  },
+  // Veterans
+  {
+    organization: "VA medical centers & Vet Centers",
+    category: "Veterans & military",
+    persona: JORDAN,
+    entryPath: "Facilitator / Managed"
+  },
+  {
+    organization: "Military family support & spouse groups",
+    category: "Veterans & military",
+    persona: SAM,
+    entryPath: "Affiliate"
+  },
+  // Parents
+  {
+    organization: "New-parent / postpartum support & lactation networks",
+    category: "Parents & caregivers",
+    persona: SAM,
+    entryPath: "Affiliate"
+  },
+  {
+    organization: "Special-needs parent networks",
+    category: "Parents & caregivers",
+    persona: SAM,
+    entryPath: "Affiliate"
+  },
+  {
+    organization: "Pediatric & family-practice clinic partners",
+    category: "Parents & caregivers",
+    persona: SAM,
+    entryPath: "Affiliate"
+  },
+  // Education
+  {
+    organization: "K-12 teachers & staff wellness / unions",
+    category: "Education",
+    persona: ALEX,
+    entryPath: "Direct"
+  },
+  {
+    organization: "University counseling & student wellness offices",
+    category: "Education",
+    persona: SAM,
+    entryPath: "Facilitator / Managed"
+  },
+  // Recovery
+  {
+    organization: "Addiction recovery centers & sober-living programs",
+    category: "Recovery & support communities",
+    persona: JORDAN,
+    entryPath: "Facilitator / Managed"
+  },
+  {
+    organization: "Grief / bereavement support groups",
+    category: "Recovery & support communities",
+    persona: SAM,
+    entryPath: "Affiliate"
+  },
+  {
+    organization: "Chronic illness & pain support communities",
+    category: "Recovery & support communities",
+    persona: JORDAN,
+    entryPath: "Affiliate"
+  },
+  // Faith & community
+  {
+    organization: "Faith communities with wellness / care ministries",
+    category: "Faith & community organizations",
+    persona: SAM,
+    entryPath: "Affiliate"
+  },
+  {
+    organization: "YMCA / community & senior centers",
+    category: "Faith & community organizations",
+    persona: SAM,
+    entryPath: "Facilitator / Managed"
+  },
+  // Seniors
+  {
+    organization: "Retirement & assisted-living activity programs",
+    category: "Seniors & aging",
+    persona: SAM,
+    entryPath: "Facilitator / Managed"
+  },
+  // Practitioners
+  {
+    organization: "Life / health / executive coaches",
+    category: "Coaches, studios & practitioners",
+    persona: ALEX,
+    entryPath: "Affiliate"
+  },
+  {
+    organization: "Yoga, meditation & breathwork studios",
+    category: "Coaches, studios & practitioners",
+    persona: ALEX,
+    entryPath: "Affiliate"
+  },
+  {
+    organization: "Massage, acupuncture & holistic wellness centers",
+    category: "Coaches, studios & practitioners",
+    persona: ALEX,
+    entryPath: "Affiliate"
   }
 ];
 
+/** Seeded outreach email templates (plain-text bodies admins can edit). */
+export const STARTER_OUTREACH_EMAIL_TEMPLATES: {
+  name: string;
+  subject: string;
+  bodyText: string;
+  purpose: string;
+}[] = [
+  {
+    name: "New member welcome (member-facing)",
+    purpose: "new_member",
+    subject: "Welcome New Member",
+    bodyText: `Dear {{name}},
+
+By becoming a member of ReachForTheStars.Today, you have made a valuable investment in your personal development. We would like to acknowledge and congratulate you for making that commitment to yourself!
+
+We welcome you here and want to support you on your commitment to grow! Our ReachForTheStars.Today system is specifically designed to maximize the effectiveness of changing your subconscious programming in alignment with your chosen goals. The "Key" to your success is repetition so stick to the program.
+
+When you log in it opens you to your member Console. Everything is accessible and explained from within the console.
+
+Recommendations but not required:
+- Two audios per night (repetition)
+- Comfortable headset with mask (when listening while sleeping)
+
+Have any questions? Call (800) GOAL NOW (462-5669) or email customerservice@reachforthestars.today
+
+Open your console: {{siteUrl}}/play-options`
+  },
+  {
+    name: "Partner / affiliate intro",
+    purpose: "partner_intro",
+    subject: "Partnership idea: Reach For The Stars for your community",
+    bodyText: `Hello {{contactName}},
+
+I'm reaching out about Reach For The Stars (ReachForTheStars.Today) — guided meditations that play while people fall asleep and during sleep, so goal work happens without another daytime chore.
+
+Many {{organization}} members juggle stress, irregular sleep, and burnout. We partner with organizations through:
+- Affiliate referrals (25% ongoing), or
+- Facilitator / managed enrollment for cohorts
+
+Happy to share a short overview, a free-trial path for your community, and sample messaging for {{persona}}.
+
+Would a brief call this week work?
+
+Warmly,
+{{yourName}}
+(800) GOAL NOW (462-5669)
+{{siteUrl}}`
+  },
+  {
+    name: "Facilitator / managed enrollment intro",
+    purpose: "facilitator_intro",
+    subject: "Managed wellness enrollment for your team",
+    bodyText: `Hello {{contactName}},
+
+Reach For The Stars offers facilitator-managed memberships so your organization can enroll people in a nightly audio program without asking them to build another daytime habit.
+
+Members press Start at bedtime; recordings reinforce goals while falling asleep and during sleep. We can tailor onboarding and support for {{organization}}.
+
+If useful, I can send a one-page overview and trial options.
+
+Thank you,
+{{yourName}}
+{{siteUrl}}`
+  }
+];
 export type ReferencePersona = {
   name: string;
   role: string;

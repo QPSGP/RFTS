@@ -230,7 +230,7 @@ export async function PATCH(request: Request) {
   const firstName =
     parsed.data.firstName ?? existing?.firstName ?? null;
 
-  const welcomeCc = getWelcomeEmailCcRecipients({
+  const welcomeCc = await getWelcomeEmailCcRecipients({
     memberEmail: email,
     firstName,
     lastName: parsed.data.lastName ?? existing?.lastName ?? null,

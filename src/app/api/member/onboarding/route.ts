@@ -170,7 +170,7 @@ export async function POST(request: Request) {
   const lastName = parsed.data.profile.lastName || null;
   const emailTo = user.email;
   const welcome = getWelcomeEmailContent(firstName, lastName);
-  const welcomeCc = getWelcomeEmailCcRecipients({
+  const welcomeCc = await getWelcomeEmailCcRecipients({
     memberEmail: emailTo,
     firstName,
     lastName,

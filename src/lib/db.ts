@@ -20,6 +20,12 @@ import {
 import { generateAffiliateCode, normalizeAffiliateCode } from "@/lib/affiliate-code";
 import { resolveReportIssueAttachmentUrls } from "@/lib/report-issue-attachments";
 import { stripSkuHyphens } from "@/lib/sku-code";
+import type { EmailStaffListKey } from "@/lib/email-staff-lists";
+import {
+  EMAIL_STAFF_LIST_KEYS,
+  defaultEmailsForList,
+  normalizeEmailList
+} from "@/lib/email-staff-lists";
 
 function isUniqueViolation(error: unknown): boolean {
   return (error as { code?: string })?.code === "23505";
@@ -3898,4 +3904,222 @@ export const deleteOutreachTarget = async (id: string): Promise<boolean> => {
     DELETE FROM marketing_outreach_targets WHERE id = ${id}
   `;
   return (rowCount ?? 0) > 0;
+};
+
+let emailStaffListsTableReady = false;
+
+const ensureEmailStaffListsTable = async () => {
+  if (emailStaffListsTableReady) return;
+  await sql`
+    CREATE TABLE IF NOT EXISTS email_staff_lists (
+      list_key text PRIMARY KEY,
+      emails text[] NOT NULL DEFAULT ARRAY[]::text[],
+      updated_at timestamptz NOT NULL DEFAULT now()
+    )
+  `;
+  emailStaffListsTableReady = true;
+};
+
+export type EmailStaffListRow = {
+  key: EmailStaffListKey;
+  emails: string[];
+  updatedAt: string | null;
+  seededFromDefaults: boolean;
+};
+
+/** Ensure each list key exists; seed missing rows from env/hardcoded defaults. */
+export const ensureEmailStaffListsSeeded = async (): Promise<void> => {
+  await ensureEmailStaffListsTable();
+  for (const key of EMAIL_STAFF_LIST_KEYS) {
+    const { rows } = await sql<{ list_key: string }>`
+      SELECT list_key FROM email_staff_lists WHERE list_key = ${key} LIMIT 1
+    `;
+    if (rows.length) continue;
+    const emails = defaultEmailsForList(key);
+    await sql`
+      INSERT INTO email_staff_lists (list_key, emails, updated_at)
+      VALUES (${key}, ${toPgArray(emails)}::text[], now())
+      ON CONFLICT (list_key) DO NOTHING
+    `;
+  }
+};
+
+export const getEmailStaffList = async (key: EmailStaffListKey): Promise<string[]> => {
+  await ensureEmailStaffListsSeeded();
+  const { rows } = await sql<{ emails: string[] | null }>`
+    SELECT COALESCE(emails, ARRAY[]::text[]) AS emails
+    FROM email_staff_lists
+    WHERE list_key = ${key}
+    LIMIT 1
+  `;
+  if (!rows[0]) return defaultEmailsForList(key);
+  return normalizeEmailList(rows[0].emails || []);
+};
+
+export const listEmailStaffLists = async (): Promise<EmailStaffListRow[]> => {
+  await ensureEmailStaffListsSeeded();
+  const { rows } = await sql<{
+    list_key: string;
+    emails: string[] | null;
+    updated_at: string;
+  }>`
+    SELECT list_key, COALESCE(emails, ARRAY[]::text[]) AS emails, updated_at
+    FROM email_staff_lists
+    ORDER BY list_key
+  `;
+  const byKey = new Map(rows.map((r) => [r.list_key, r]));
+  return EMAIL_STAFF_LIST_KEYS.map((key) => {
+    const row = byKey.get(key);
+    return {
+      key,
+      emails: normalizeEmailList(row?.emails || defaultEmailsForList(key)),
+      updatedAt: row?.updated_at ?? null,
+      seededFromDefaults: !row
+    };
+  });
+};
+
+export const saveEmailStaffList = async (
+  key: EmailStaffListKey,
+  emails: string[]
+): Promise<string[]> => {
+  await ensureEmailStaffListsTable();
+  const normalized = normalizeEmailList(emails);
+  await sql`
+    INSERT INTO email_staff_lists (list_key, emails, updated_at)
+    VALUES (${key}, ${toPgArray(normalized)}::text[], now())
+    ON CONFLICT (list_key) DO UPDATE
+    SET emails = EXCLUDED.emails, updated_at = now()
+  `;
+  return normalized;
+};
+
+export const saveAllEmailStaffLists = async (
+  lists: Partial<Record<EmailStaffListKey, string[]>>
+): Promise<EmailStaffListRow[]> => {
+  for (const key of EMAIL_STAFF_LIST_KEYS) {
+    if (lists[key] !== undefined) {
+      await saveEmailStaffList(key, lists[key] || []);
+    }
+  }
+  return listEmailStaffLists();
+};
+
+export type OutreachEmailTemplate = {
+  id: string;
+  name: string;
+  subject: string;
+  bodyText: string;
+  purpose: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+let outreachEmailTemplatesReady = false;
+
+const ensureOutreachEmailTemplatesTable = async () => {
+  if (outreachEmailTemplatesReady) return;
+  await sql`
+    CREATE TABLE IF NOT EXISTS outreach_email_templates (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      name text NOT NULL,
+      subject text NOT NULL,
+      body_text text NOT NULL,
+      purpose text,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    )
+  `;
+  outreachEmailTemplatesReady = true;
+};
+
+export const listOutreachEmailTemplates = async (): Promise<OutreachEmailTemplate[]> => {
+  await ensureOutreachEmailTemplatesTable();
+  const { rows } = await sql<OutreachEmailTemplate>`
+    SELECT
+      id, name, subject,
+      body_text AS "bodyText",
+      purpose,
+      created_at AS "createdAt",
+      updated_at AS "updatedAt"
+    FROM outreach_email_templates
+    ORDER BY name ASC
+  `;
+  return rows;
+};
+
+export const createOutreachEmailTemplate = async (input: {
+  name: string;
+  subject: string;
+  bodyText: string;
+  purpose?: string | null;
+}): Promise<OutreachEmailTemplate> => {
+  await ensureOutreachEmailTemplatesTable();
+  const { rows } = await sql<OutreachEmailTemplate>`
+    INSERT INTO outreach_email_templates (name, subject, body_text, purpose)
+    VALUES (
+      ${input.name},
+      ${input.subject},
+      ${input.bodyText},
+      ${input.purpose ?? null}
+    )
+    RETURNING
+      id, name, subject,
+      body_text AS "bodyText",
+      purpose,
+      created_at AS "createdAt",
+      updated_at AS "updatedAt"
+  `;
+  return rows[0];
+};
+
+export const updateOutreachEmailTemplate = async (
+  id: string,
+  input: {
+    name: string;
+    subject: string;
+    bodyText: string;
+    purpose?: string | null;
+  }
+): Promise<OutreachEmailTemplate | null> => {
+  await ensureOutreachEmailTemplatesTable();
+  const { rows } = await sql<OutreachEmailTemplate>`
+    UPDATE outreach_email_templates
+    SET
+      name = ${input.name},
+      subject = ${input.subject},
+      body_text = ${input.bodyText},
+      purpose = ${input.purpose ?? null},
+      updated_at = now()
+    WHERE id = ${id}
+    RETURNING
+      id, name, subject,
+      body_text AS "bodyText",
+      purpose,
+      created_at AS "createdAt",
+      updated_at AS "updatedAt"
+  `;
+  return rows[0] ?? null;
+};
+
+export const deleteOutreachEmailTemplate = async (id: string): Promise<boolean> => {
+  await ensureOutreachEmailTemplatesTable();
+  const { rowCount } = await sql`
+    DELETE FROM outreach_email_templates WHERE id = ${id}
+  `;
+  return (rowCount ?? 0) > 0;
+};
+
+export const seedOutreachEmailTemplates = async (): Promise<number> => {
+  const { STARTER_OUTREACH_EMAIL_TEMPLATES } = await import("@/lib/marketing-reference");
+  await ensureOutreachEmailTemplatesTable();
+  const existing = await listOutreachEmailTemplates();
+  const names = new Set(existing.map((t) => t.name.trim().toLowerCase()));
+  let added = 0;
+  for (const starter of STARTER_OUTREACH_EMAIL_TEMPLATES) {
+    if (names.has(starter.name.trim().toLowerCase())) continue;
+    await createOutreachEmailTemplate(starter);
+    added += 1;
+  }
+  return added;
 };

@@ -37,7 +37,7 @@ export async function trySendAffiliateThresholdReachedEmail(params: {
 
   const { ok, error } = await sendEmail({
     to: email,
-    cc: getAffiliateNotificationCcRecipients(),
+    cc: await getAffiliateNotificationCcRecipients(),
     subject: tpl.subject,
     html: tpl.html,
     text: tpl.text
@@ -67,7 +67,7 @@ export async function trySendAffiliatePayoutSentEmail(params: {
 
   const { ok, error } = await sendEmail({
     to: email,
-    cc: getAffiliateNotificationCcRecipients(),
+    cc: await getAffiliateNotificationCcRecipients(),
     subject: tpl.subject,
     html: tpl.html,
     text: tpl.text

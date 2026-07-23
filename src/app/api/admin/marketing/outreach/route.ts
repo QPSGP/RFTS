@@ -14,7 +14,7 @@ const targetSchema = z.object({
   category: z.string().trim().max(120).nullish(),
   persona: z.string().trim().max(120).nullish(),
   entryPath: z.string().trim().max(60).nullish(),
-  contact: z.string().trim().max(200).nullish(),
+  contact: z.string().trim().max(500).nullish(),
   refCode: z.string().trim().max(40).nullish(),
   status: z.string().trim().max(40).nullish(),
   notes: z.string().trim().max(2000).nullish()

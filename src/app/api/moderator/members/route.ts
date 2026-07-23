@@ -145,7 +145,7 @@ export async function POST(request: Request) {
     subject: welcome.subject,
     html: welcome.html,
     text: welcome.text,
-    cc: getWelcomeEmailCcRecipients({
+    cc: await getWelcomeEmailCcRecipients({
       memberEmail: email,
       firstName: parsed.data.firstName,
       lastName: parsed.data.lastName

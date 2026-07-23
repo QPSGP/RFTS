@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { apiError } from "@/lib/api-utils";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { sendEmail } from "@/lib/email";
+import { getReportIssueToEmails, sendEmail } from "@/lib/email";
 import { getReportIssueConfirmationContent } from "@/lib/email-templates";
 import { rateLimit } from "@/lib/rate-limit";
 import {
@@ -58,9 +58,7 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return apiError("Invalid input. Please provide a subject and message.", 400);
   }
-  const to =
-    process.env.REPORT_ISSUE_EMAIL ||
-    "Richard@richardleeweatherman.com";
+  const to = await getReportIssueToEmails();
   const categoryLabel = parsed.data.category || "General";
   const attachmentUrls = mergeReportIssueAttachmentUrls(
     parsed.data.attachmentUrls,
