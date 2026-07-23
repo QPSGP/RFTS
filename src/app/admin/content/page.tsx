@@ -13,6 +13,7 @@ import AffiliateAdmin from "@/components/AffiliateAdmin";
 import AffiliatePayoutAdmin from "@/components/AffiliatePayoutAdmin";
 import ScheduleAlgorithmTool from "@/components/ScheduleAlgorithmTool";
 import AdminSitePages from "@/components/AdminSitePages";
+import AdminClarityLink from "@/components/AdminClarityLink";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 
 const contentConsoleSections = {
@@ -78,6 +79,7 @@ export default function AdminContentPage() {
           <Link href="/admin/marketing" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
             Marketing
           </Link>
+          <AdminClarityLink />
           <Link href="/admin/member-issues" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
             Issue reports
           </Link>

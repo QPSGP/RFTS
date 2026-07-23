@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import AdminLogoutButton from "@/components/AdminLogoutButton";
+import AdminClarityLink from "@/components/AdminClarityLink";
 import AdminMarketing from "@/components/AdminMarketing";
 
 export default function AdminMarketingPage() {
@@ -61,11 +62,19 @@ export default function AdminMarketingPage() {
           >
             Content Console
           </Link>
+          <AdminClarityLink />
           <AdminLogoutButton />
         </div>
       </section>
 
-      {status === "loading" ? <p>Loading…</p> : <AdminMarketing />}
+      {status === "loading" ? (
+        <p>Loading…</p>
+      ) : (
+        <>
+          <AdminClarityLink variant="card" />
+          <AdminMarketing />
+        </>
+      )}
     </main>
   );
 }
