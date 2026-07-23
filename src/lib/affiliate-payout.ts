@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { getEmailStaffList } from "@/lib/db";
 
 export const AFFILIATE_PAYOUT_METHODS = [
   "crypto",
@@ -83,11 +82,6 @@ export function calculateAffiliateCommissionCents(grossAmountCents: number): num
 
 export function formatUsdFromCents(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
-}
-
-/** CC on affiliate threshold + payout emails (admin-editable list). */
-export async function getAffiliateNotificationCcRecipients(): Promise<string[]> {
-  return getEmailStaffList("affiliate_cc");
 }
 
 export function didCrossPayoutThreshold(

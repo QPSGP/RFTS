@@ -28,7 +28,7 @@ async function main() {
   const lastName = process.env.SIGNUP_EMAIL_TEST_LAST_NAME?.trim() || "Member";
   const sendAll =
     process.env.SIGNUP_EMAIL_TEST_ALL === "1" || process.env.SIGNUP_EMAIL_TEST_ALL === "true";
-  const welcomeCc = getWelcomeEmailCcRecipients();
+  const welcomeCc = await getWelcomeEmailCcRecipients();
 
   console.log("Signup email test");
   console.log("  to:", to);

@@ -1,14 +1,18 @@
 import {
   formatUsdFromCents,
-  getAffiliateNotificationCcRecipients,
   getCurrentAffiliatePayoutThresholdUsd
 } from "@/lib/affiliate-payout";
-import { getMemberProfileByUserId } from "@/lib/db";
+import { getEmailStaffList, getMemberProfileByUserId } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import {
   getAffiliatePayoutSentEmailContent,
   getAffiliateThresholdReachedEmailContent
 } from "@/lib/email-templates";
+
+/** CC on affiliate threshold + payout emails (admin-editable list). */
+async function getAffiliateNotificationCcRecipients(): Promise<string[]> {
+  return getEmailStaffList("affiliate_cc");
+}
 
 async function resolveAffiliateFirstName(affiliateUserId: string | null): Promise<string | null> {
   if (!affiliateUserId) return null;
