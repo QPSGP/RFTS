@@ -23,6 +23,12 @@ import {
   registerSessionMediaSessionActionHandlers,
   syncSessionMediaSession
 } from "@/lib/session-player-media-session";
+import {
+  clearPendingSecondHalfSession,
+  isPendingSecondHalfDue,
+  readPendingSecondHalfSession,
+  savePendingSecondHalfSession
+} from "@/lib/pending-second-half";
 
 import {
   INTRO_RELAXATION_MUSIC_LABEL
@@ -337,14 +343,25 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const suppressResumeForRestartRef = useRef(false);
   /** Last known `currentTime` for detecting forward seeks (admin activity). */
   const lastPlaybackPositionForSeekRef = useRef(0);
-  secondTrackRef.current = secondTrack ?? null;
+  /**
+   * When recovering a killed Android gap, keep the second (and prep) that were scheduled that night
+   * even if tonight’s lineup props have already advanced.
+   */
+  const pendingSecondOverrideRef = useRef<SessionTrack | null>(null);
+  const pendingPrepOverrideRef = useRef<SessionTrack | null>(null);
+  const pendingScheduleNightRef = useRef<number | undefined>(undefined);
+  const didRestorePendingRef = useRef(false);
+  const [recoveredPendingSecond, setRecoveredPendingSecond] = useState(false);
+  secondTrackRef.current = pendingSecondOverrideRef.current ?? secondTrack ?? null;
 
   const currentRef = useRef(current);
   const phaseRef = useRef(phase);
   const prepAudioRef = useRef(prepAudio ?? null);
   currentRef.current = current;
   phaseRef.current = phase;
-  prepAudioRef.current = prepAudio ?? null;
+  prepAudioRef.current = pendingPrepOverrideRef.current ?? prepAudio ?? null;
+  const scheduleNightForComplete =
+    pendingScheduleNightRef.current ?? scheduleNightNumber;
 
   const applyQueue = useCallback((nextQueue: SessionTrack[]) => {
     queueRef.current = nextQueue;
@@ -549,12 +566,22 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     );
   };
 
+  const clearPendingSecondHalf = useCallback(() => {
+    clearPendingSecondHalfSession();
+    pendingSecondOverrideRef.current = null;
+    pendingPrepOverrideRef.current = null;
+    pendingScheduleNightRef.current = undefined;
+    setRecoveredPendingSecond(false);
+  }, []);
+
   const playSecond = useCallback(() => {
-    if (!secondTrack) {
+    const second = secondTrackRef.current;
+    if (!second) {
       setMessage("No second recording scheduled tonight.");
       return;
     }
     clearWaitTimers();
+    clearPendingSecondHalf();
     pendingNextTrackRef.current = null;
     segmentPrepDoneRef.current = false;
     secondFromGapInFlightRef.current = false;
@@ -563,7 +590,8 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       window.dispatchEvent(new Event("rfts-second-half-started"));
     }
     setPhase("second");
-    const nextQueue = [prepAudio, secondTrack].filter(
+    const prep = prepAudioRef.current;
+    const nextQueue = [prep, second].filter(
       (track): track is SessionTrack => !!track
     );
     skipEffectPlayRef.current = Boolean(audioRef.current);
@@ -572,7 +600,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     setMessage(null);
     setNeedsUserPlay(false);
     attemptPlay(nextQueue[0]);
-  }, [secondTrack, prepAudio, applyQueue, clearWaitTimers]);
+  }, [applyQueue, clearWaitTimers, clearPendingSecondHalf]);
 
   const startSession = useCallback(() => {
     if (!firstTrack) {
@@ -723,6 +751,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     clearWaitTimers();
     if (!tr) {
       secondFromGapInFlightRef.current = false;
+      clearPendingSecondHalf();
       setMessage(
         "No second recording was scheduled. Reload Play Options or check your lineup has two tracks for tonight."
       );
@@ -730,6 +759,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       dispatchRftsSessionEnd();
       return;
     }
+    clearPendingSecondHalf();
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("rfts-second-half-started"));
     }
@@ -775,7 +805,29 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       attemptPlay(nextQueue[0]);
     }
     secondFromGapInFlightRef.current = false;
-  }, [clearWaitTimers, applyQueue]);
+  }, [clearWaitTimers, applyQueue, clearPendingSecondHalf]);
+
+  const armInterHalfGapTimers = useCallback(
+    (epochAtGapStart: number) => {
+      clearWaitTimers();
+      gapOverdueDiagLoggedRef.current = false;
+      const tick = () => {
+        const left = Math.max(0, Math.round((secondStartAtRef.current - Date.now()) / 1000));
+        setRemainingSeconds(left);
+        if (phaseRef.current === "waiting" && Date.now() >= secondStartAtRef.current) {
+          beginSecondAfterGap("interval");
+        }
+      };
+      tick();
+      countdownIntervalRef.current = setInterval(tick, 1000);
+      const delayMs = Math.max(0, secondStartAtRef.current - Date.now());
+      waitTimeoutRef.current = setTimeout(() => {
+        if (epochAtGapStart !== sessionEpochRef.current) return;
+        beginSecondAfterGap("timeout");
+      }, delayMs);
+    },
+    [clearWaitTimers, beginSecondAfterGap]
+  );
 
   /**
    * Android often freezes long `setTimeout` / `setInterval` while the screen is locked; the second half then
@@ -876,6 +928,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     sessionEpochRef.current += 1;
     secondFromGapInFlightRef.current = false;
     clearWaitTimers();
+    clearPendingSecondHalf();
     if (audio) {
       audio.pause();
       audio.removeAttribute("src");
@@ -893,7 +946,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     setMessage("Session ended. You can start again when you’re ready.");
     clearSessionMediaSession();
     dispatchRftsSessionEnd();
-  }, [clearWaitTimers, applyQueue]);
+  }, [clearWaitTimers, applyQueue, clearPendingSecondHalf]);
 
   const resolvePlayTarget = useCallback((): SessionTrack | null => {
     if (pendingNextTrackRef.current) return pendingNextTrackRef.current;
@@ -1050,36 +1103,51 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       }
       const gapMs = gapHours * 60 * 60 * 1000;
       secondStartAtRef.current = Date.now() + gapMs;
-      gapOverdueDiagLoggedRef.current = false;
+      const first = firstTrack;
+      const second = secondTrackRef.current;
+      const prep = prepAudioRef.current;
+      if (first && second) {
+        pendingScheduleNightRef.current =
+          typeof scheduleNightNumber === "number" ? scheduleNightNumber : undefined;
+        savePendingSecondHalfSession({
+          secondStartAt: secondStartAtRef.current,
+          gapHours,
+          firstTrack: {
+            title: first.title,
+            url: first.url,
+            skuCode: first.skuCode
+          },
+          secondTrack: {
+            title: second.title,
+            url: second.url,
+            skuCode: second.skuCode
+          },
+          prepAudio: prep
+            ? { title: prep.title, url: prep.url, skuCode: prep.skuCode }
+            : null,
+          scheduleNightNumber: pendingScheduleNightRef.current
+        });
+      }
       logMemberActivity(
         "session_gap",
-        `Inter-half gap started | gap_hours=${gapHours} second_scheduled_utc=${new Date(secondStartAtRef.current).toISOString()} platform=${coarseMobilePlatform()}`
+        `Inter-half gap started | gap_hours=${gapHours} second_scheduled_utc=${new Date(secondStartAtRef.current).toISOString()} platform=${coarseMobilePlatform()} pending_persisted=1`
       );
-      setRemainingSeconds(Math.round(gapMs / 1000));
-      countdownIntervalRef.current = setInterval(() => {
-        const left = Math.max(0, Math.round((secondStartAtRef.current - Date.now()) / 1000));
-        setRemainingSeconds(left);
-        /** Backup if long `setTimeout` was throttled or dropped (mobile background). */
-        if (phaseRef.current === "waiting" && Date.now() >= secondStartAtRef.current) {
-          beginSecondAfterGap("interval");
-        }
-      }, 1000);
-      waitTimeoutRef.current = setTimeout(() => {
-        if (epochAtGapStart !== sessionEpochRef.current) return;
-        beginSecondAfterGap("timeout");
-      }, gapMs);
+      armInterHalfGapTimers(epochAtGapStart);
     } else {
       const nightFullyListened =
         playsPerNight === 1 ||
         ph === "second" ||
         (ph === "first" && !hasSecond);
+      if (nightFullyListened) {
+        clearPendingSecondHalf();
+      }
       if (
         nightFullyListened &&
-        typeof scheduleNightNumber === "number" &&
-        scheduleNightNumber >= 1 &&
+        typeof scheduleNightForComplete === "number" &&
+        scheduleNightForComplete >= 1 &&
         onScheduleNightComplete
       ) {
-        onScheduleNightComplete(scheduleNightNumber);
+        onScheduleNightComplete(scheduleNightForComplete);
       }
       if (nightFullyListened && playsPerNight === 2) {
         setFullNightSessionComplete(true);
@@ -1109,12 +1177,81 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     gapHours,
     playsPerNight,
     clearWaitTimers,
-    scheduleNightNumber,
+    scheduleNightForComplete,
     onScheduleNightComplete,
-    beginSecondAfterGap,
+    armInterHalfGapTimers,
+    clearPendingSecondHalf,
+    firstTrack,
     applyQueue,
     advanceQueueToNextTrack
   ]);
+
+  /** Reload / killed-tab recovery: restore waiting UI and the scheduled second track from localStorage. */
+  useEffect(() => {
+    if (didRestorePendingRef.current) return;
+    if (playsPerNight !== 2) return;
+    if (phaseRef.current !== "idle") return;
+    const pending = readPendingSecondHalfSession();
+    if (!pending) {
+      didRestorePendingRef.current = true;
+      return;
+    }
+    didRestorePendingRef.current = true;
+    pendingSecondOverrideRef.current = {
+      title: pending.secondTrack.title,
+      url: pending.secondTrack.url,
+      skuCode: pending.secondTrack.skuCode
+    };
+    pendingPrepOverrideRef.current = pending.prepAudio
+      ? {
+          title: pending.prepAudio.title,
+          url: pending.prepAudio.url,
+          skuCode: pending.prepAudio.skuCode
+        }
+      : null;
+    pendingScheduleNightRef.current = pending.scheduleNightNumber;
+    secondTrackRef.current = pendingSecondOverrideRef.current;
+    prepAudioRef.current = pendingPrepOverrideRef.current;
+    secondStartAtRef.current = pending.secondStartAt;
+    const epoch = sessionEpochRef.current;
+    setPhase("waiting");
+    setIsPlaying(false);
+    setNeedsUserPlay(false);
+    applyQueue([]);
+    setCurrent(null);
+    setRecoveredPendingSecond(true);
+    const due = isPendingSecondHalfDue(pending);
+    setRemainingSeconds(
+      due ? 0 : Math.max(0, Math.round((pending.secondStartAt - Date.now()) / 1000))
+    );
+    setMessage(
+      due
+        ? "Your second audio was due but may not have played (common when Android suspends Chrome overnight). Tap Start second audio now to finish tonight’s session."
+        : "Recovered your in-progress night. The second audio is still scheduled — leave this tab open, or tap Start second audio now when you are ready."
+    );
+    logMemberActivity(
+      "session_gap",
+      `Pending second half restored | due=${due ? 1 : 0} second_scheduled_utc=${new Date(pending.secondStartAt).toISOString()} platform=${coarseMobilePlatform()}`
+    );
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("rfts-inter-half-gap"));
+    }
+    // When already due after a reload, wait for a tap — Android blocks autoplay without a gesture.
+    if (!due) {
+      armInterHalfGapTimers(epoch);
+    }
+  }, [playsPerNight, applyQueue, armInterHalfGapTimers]);
+
+  /** Warn before closing the tab during the inter-half gap (helps members keep Chrome alive). */
+  useEffect(() => {
+    if (phase !== "waiting" || playsPerNight !== 2) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [phase, playsPerNight]);
 
   /**
    * Android often never delivers `ended` while the screen is locked. When intro is nearly done,
@@ -1352,7 +1489,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
             ? "Start second audio now"
             : "Start Session"}
         </button>
-        {playsPerNight === 2 && secondTrack && (
+        {playsPerNight === 2 && (secondTrack || recoveredPendingSecond) && (
           <button className="button button-secondary" onClick={playSecond}>
             Play Second Audio
           </button>
@@ -1395,25 +1532,60 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         </div>
       )}
       {phase === "waiting" && (
-        <div className="card" style={{ marginTop: 16, background: "#f0fdf4", borderColor: "#22c55e" }}>
-          <p style={{ margin: 0, fontWeight: 600, color: "#166534" }}>First session complete.</p>
-          <p style={{ margin: "8px 0 0", color: "#15803d" }}>
-            Second recording will start in{" "}
-            {remainingSeconds >= 3600
-              ? `${Math.floor(remainingSeconds / 3600)}h ${Math.floor((remainingSeconds % 3600) / 60)}m`
-              : remainingSeconds >= 60
-                ? `${Math.floor(remainingSeconds / 60)}m ${remainingSeconds % 60}s`
-                : `${remainingSeconds}s`}
-            . It will begin and close automatically.
+        <div
+          className="card"
+          style={{
+            marginTop: 16,
+            background: recoveredPendingSecond && remainingSeconds <= 0 ? "#fffbeb" : "#f0fdf4",
+            borderColor: recoveredPendingSecond && remainingSeconds <= 0 ? "#fcd34d" : "#22c55e"
+          }}
+        >
+          <p
+            style={{
+              margin: 0,
+              fontWeight: 600,
+              color: recoveredPendingSecond && remainingSeconds <= 0 ? "#92400e" : "#166534"
+            }}
+          >
+            {recoveredPendingSecond && remainingSeconds <= 0
+              ? "Second audio ready to finish"
+              : "First session complete."}
           </p>
-          {isMobile && (
+          <p
+            style={{
+              margin: "8px 0 0",
+              color: recoveredPendingSecond && remainingSeconds <= 0 ? "#78350f" : "#15803d"
+            }}
+          >
+            {remainingSeconds <= 0 ? (
+              <>
+                Your second recording is due now. Tap <strong>Start second audio now</strong> above
+                {recoveredPendingSecond
+                  ? " — we restored this unfinished night after Chrome was suspended or the page was reloaded."
+                  : ". It can also start automatically if this tab stays active."}
+              </>
+            ) : (
+              <>
+                Second recording will start in{" "}
+                {remainingSeconds >= 3600
+                  ? `${Math.floor(remainingSeconds / 3600)}h ${Math.floor((remainingSeconds % 3600) / 60)}m`
+                  : remainingSeconds >= 60
+                    ? `${Math.floor(remainingSeconds / 60)}m ${remainingSeconds % 60}s`
+                    : `${remainingSeconds}s`}
+                . It will begin and close automatically.
+              </>
+            )}
+          </p>
+          {isMobile && remainingSeconds > 0 && (
             <p style={{ margin: "10px 0 0", color: "#15803d" }}>
               On a phone, tap &ldquo;Start second audio now&rdquo; above if the second half does not begin when the wait ends.
             </p>
           )}
           {coarseMobilePlatform() === "Android" && (
             <p style={{ margin: "10px 0 0", color: "#92400e", fontSize: 13 }}>
-              We try to keep screen wake on during this session. If the second recording is late, unlock your phone and tap Play—some browsers pause timers while the screen is locked.
+              We try to keep screen wake on during this session. If the second recording is late, unlock your phone,
+              open this tab, and tap Start second audio now—some browsers pause timers while the screen is locked.
+              Closing or refreshing this page no longer loses the unfinished night; we will offer to finish it when you return.
             </p>
           )}
           <button

@@ -51,8 +51,18 @@ export default function PlayOptionsAndroidTips({
               <strong>Start second audio now</strong>.
             </li>
             <li>
+              If you reopen Play Options in the morning and the second audio never played, look for{" "}
+              <strong>Second audio ready to finish</strong> and tap <strong>Start second audio now</strong>
+              — we save that unfinished night so a killed Chrome tab does not lose it.
+            </li>
+            <li>
               Turn off <strong>battery saver</strong> for Chrome, or keep your phone plugged in while
               you sleep.
+            </li>
+            <li>
+              Optional: install this site to your Home screen (Chrome menu → <strong>Install app</strong>{" "}
+              or Add to Home screen). A dedicated icon sometimes keeps overnight sessions more reliable
+              than a regular browser tab.
             </li>
           </>
         )}

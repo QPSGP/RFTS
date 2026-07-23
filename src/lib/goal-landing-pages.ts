@@ -283,21 +283,22 @@ const GOAL_DETAILS: Record<
     relatedSlugs: ["health", "inspiration", "balanced-life"]
   },
   "balanced-life": {
-    title: "Guided meditation for a balanced life free of bad habits",
-    metaTitle: "Balanced Life — Freedom from Bad Habits | Reach For The Stars",
+    title:
+      "Guided meditation to reach your highest potential — physical, mental, emotional, spiritual, and financial",
+    metaTitle: "Balanced Life — Reach Your Highest Potential | Reach For The Stars",
     metaDescription:
-      "Build a balanced life free of smoking, overeating, and other bad habits with personalized guided meditations each night while you sleep.",
+      "Reach your highest potential in areas physical, mental, emotional and spiritual as well as financial — with personalized guided meditations each night while you sleep.",
     heroLead:
-      "A balanced life free of smoking, overeating, and other bad habits starts with consistent nightly reinforcement. Reach For The Stars rotates balanced-living goals so your subconscious hears supportive messages while you fall asleep and during sleep.",
+      "Reach your highest potential in areas physical, mental, emotional and spiritual as well as financial! Reach For The Stars rotates balanced-life goals so your subconscious hears supportive messages while you fall asleep and during sleep.",
     eyebrow: "Balanced living",
     sectionTitle: "Nightly audios for balanced life goals",
     sectionSubtitle:
-      "Replace unwanted habits with chosen priorities — calm, control, health, and balance — on a schedule that runs each night.",
+      "Grow across body, mind, emotions, spirit, and finances — on a schedule that runs each night without another daytime chore.",
     howItHelps: [
       {
-        title: "Whole-life balance",
+        title: "Whole-life potential",
         body:
-          "Balanced Life goals address smoking, overeating, stress, and other patterns that pull you off center — not just one habit at a time."
+          "Balanced Life goals support your highest potential across physical, mental, emotional, spiritual, and financial areas — not just one habit or one part of life at a time."
       },
       {
         title: "Nightly reinforcement",
@@ -313,7 +314,8 @@ const GOAL_DETAILS: Record<
     nightlySteps: [
       {
         title: "Select balanced-life goals",
-        body: "Include freedom from bad habits, calm, health, and related priorities among your top ten."
+        body:
+          "Include priorities across physical, mental, emotional, spiritual, and financial growth among your top ten."
       },
       { title: "Start Session at bedtime", body: "Your personalized schedule plays each night." },
       { title: "Stay consistent", body: "Members report steadier choices when nightly audios become routine." }

@@ -13,6 +13,7 @@ import "@testing-library/jest-dom";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import SessionPlayer from "./SessionPlayer";
+import { savePendingSecondHalfSession } from "@/lib/pending-second-half";
 
 const PREP = { title: "Intro relaxation music", url: "/api/stream/audio?prep=1" };
 const FIRST_TRACK = { title: "First Goal Recording", url: "/api/stream/audio?id=first-123" };
@@ -42,6 +43,7 @@ describe("SessionPlayer", () => {
   let mockAudio: ReturnType<typeof mockAudioElement>;
 
   beforeEach(() => {
+    window.localStorage.clear();
     mockAudio = mockAudioElement();
     jest.spyOn(window.HTMLMediaElement.prototype, "play").mockImplementation(function (this: HTMLAudioElement) {
       return (mockAudio.play as jest.Mock)();
@@ -603,5 +605,32 @@ describe("SessionPlayer", () => {
     await userEvent.click(startButton);
 
     expect(screen.getByText(/Select goals to build your session lineup/i)).toBeInTheDocument();
+  });
+
+  it("restores an overdue pending second half after reload", async () => {
+    const SECOND = { title: "Second Recording", url: "/api/stream/audio?id=second-456" };
+    savePendingSecondHalfSession({
+      secondStartAt: Date.now() - 60_000,
+      gapHours: 2.5,
+      firstTrack: FIRST_TRACK,
+      secondTrack: SECOND,
+      prepAudio: PREP
+    });
+
+    render(
+      <SessionPlayer
+        prepAudio={PREP}
+        firstTrack={FIRST_TRACK}
+        secondTrack={SECOND}
+        gapHours={2.5}
+        playsPerNight={2}
+        autoStart={false}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Second audio ready to finish/i)).toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: /Start second audio now/i })).toBeInTheDocument();
   });
 });

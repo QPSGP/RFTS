@@ -54,7 +54,8 @@ export const HOMEPAGE_GOAL_CARDS = [
     label: "Balanced Life",
     path: "/balanced-life",
     imageSrc: "/Images/BalancedLife.jpg",
-    tagline: "A life free of smoking, overeating, and other bad habits"
+    tagline:
+      "Reach your highest potential in areas physical, mental, emotional and spiritual as well as financial!"
   }
 ] as const;
 
