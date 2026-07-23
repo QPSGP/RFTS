@@ -23,6 +23,66 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "better-sleep-guided-meditation-nightly-audios",
+    title: "Better sleep: how guided meditation at night improves rest without daytime effort",
+    metaTitle: "Better Sleep with Guided Meditation at Night | Reach For The Stars Blog",
+    metaDescription:
+      "Better sleep from guided meditation and personalized nightly audios — bedtime wind-down plus optional reinforcement during sleep. Link to our sleep meditation page and free trial.",
+    publishedAt: "2026-07-22",
+    readMinutes: 6,
+    excerpt:
+      "Better sleep rarely comes from one perfect night. It comes from a repeatable wind-down, content matched to your goals, and gentle reinforcement while you rest — without another daytime habit to maintain.",
+    topicSlug: "sleep-meditation",
+    sections: [
+      {
+        paragraphs: [
+          "People hunting for better sleep usually try the same loop: earlier bedtime, less caffeine, a white-noise app, maybe a random guided track when they remember. Some nights it helps. Most weeks the habit frays because sleep improvement asks for consistency at the exact moment willpower is lowest.",
+          "Guided sleep meditation works when it removes that decision. Reach For The Stars schedules personalized audios while you fall asleep and, if you choose two audios per night, again during sleep — so better sleep support becomes part of bedtime, not another chore on your to-do list."
+        ]
+      },
+      {
+        heading: "What “better sleep” actually means in practice",
+        paragraphs: [
+          "Better sleep is more than falling asleep faster. It includes quieter mind at lights-out, fewer middle-of-the-night spirals, and waking with enough rest to face the day. Meditation research and clinical overviews often list sleep improvement among the benefits of regular practice — alongside stress reduction and mood support — when people stick with it.",
+          "A nightly program aimed at better sleep should feel simple: one clear Start Session step, intro relaxation music, then goal-aligned messaging about rest, calm, or balance. Explore our guided sleep meditation page for how that flow is built for people who want better sleep without juggling apps."
+        ]
+      },
+      {
+        heading: "Bedtime wind-down that replaces the scroll",
+        paragraphs: [
+          "Phone light and endless track-picking keep the brain in problem-solving mode. A fixed wind-down does the opposite: same cue, same first audio, same permission to stop deciding. Intro relaxation music settles the body; your first goal recording gives the mind a calm path to follow instead of replaying the day.",
+          "That structure is especially useful for burned-out professionals, caregivers, and parents whose only quiet window is late night — when anxiety often spikes. Better sleep starts when bedtime stops competing with your phone."
+        ]
+      },
+      {
+        heading: "Reinforcement during sleep — without staying awake for it",
+        paragraphs: [
+          "Optional second audios play about 2.5 hours later, while you are still in restorative sleep. You are not meant to listen attentively. The point is gentle repetition of the same sleep-friendly intentions you began at bedtime — calm, safety, readiness to rest — so the message is not a one-and-done track you forget by morning.",
+          "Members often pair rest-focused goals with stress relief or balanced life priorities when worry or overthinking is what breaks sleep. The schedule rotates those themes so better sleep support stays relevant week after week."
+        ]
+      },
+      {
+        heading: "Give better sleep a few weeks of consistency",
+        paragraphs: [
+          "One calm night feels good. Lasting better sleep usually shows up after several weeks of the same nightly cue. Suggestion and habit both respond to repetition; skipping three nights and restarting with a new random recording resets the clock.",
+          "Guided meditation supports wellness and healthier sleep habits. It is not a substitute for medical care when insomnia, apnea, pain, or mood disorders need clinical attention. Use nightly audios alongside the care you already trust."
+        ]
+      },
+      {
+        heading: "Get started tonight",
+        paragraphs: [
+          "Choose rest, calm, or related goals and complete registration to activate your membership. Order priorities by importance — your personalized audios begin the first night you press Start Session.",
+          "Read more on our better sleep / guided sleep meditation page, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Restful sleep and overnight calm (excerpt)",
+      quote:
+        "Your body knows how to rest… with each breath, the day softens… you are safe to sleep deeply now… calm settles through every muscle… restorative sleep comes easily and naturally…"
+    }
+  },
+  {
     slug: "guided-meditation-spirituality-inner-connection-sleep",
     title: "Guided meditation for spirituality: deepen your inner connection while you sleep",
     metaTitle: "Spirituality & Inner Connection — Guided Meditation at Night | RFTS Blog",
