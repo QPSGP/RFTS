@@ -284,7 +284,7 @@ const GOAL_DETAILS: Record<
   },
   "balanced-life": {
     title:
-      "Guided meditation to reach your highest potential — physical, mental, emotional, spiritual, and financial",
+      "Guided meditation to reach your highest potential in areas: physical, mental, emotional, spiritual, as well as financial."
     metaTitle: "Balanced Life — Reach Your Highest Potential | Reach For The Stars",
     metaDescription:
       "Reach your highest potential in areas physical, mental, emotional and spiritual as well as financial — with personalized guided meditations each night while you sleep.",
