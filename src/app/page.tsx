@@ -8,7 +8,17 @@ import {
   MeditationSourcesCard
 } from "@/components/MeditationBenefits";
 
-function GoalImageLink({ label, src, href }: { label: string; src: string; href: string }) {
+function GoalImageLink({
+  label,
+  src,
+  href,
+  objectFit = "cover"
+}: {
+  label: string;
+  src: string;
+  href: string;
+  objectFit?: "cover" | "contain";
+}) {
   return (
     <a
       href={href}
@@ -25,7 +35,11 @@ function GoalImageLink({ label, src, href }: { label: string; src: string; href:
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+      <img
+        src={src}
+        alt=""
+        style={{ width: "100%", height: "100%", objectFit, display: "block" }}
+      />
     </a>
   );
 }
@@ -113,7 +127,12 @@ export default async function HomePage() {
         <section className="grid grid-3" style={{ marginTop: 16 }}>
           {HOMEPAGE_GOAL_CARDS.map((goal) => (
             <div key={goal.slug} className="card glow">
-              <GoalImageLink label={goal.label} src={goal.imageSrc} href={goal.path} />
+              <GoalImageLink
+                label={goal.label}
+                src={goal.imageSrc}
+                href={goal.path}
+                objectFit={"imageFit" in goal ? goal.imageFit : "cover"}
+              />
               <h3>
                 <a href={goal.path} style={{ color: "inherit", textDecoration: "none" }}>
                   {goal.label}

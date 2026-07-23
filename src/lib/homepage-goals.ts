@@ -53,7 +53,9 @@ export const HOMEPAGE_GOAL_CARDS = [
     slug: "balanced-life",
     label: "Balanced Life",
     path: "/balanced-life",
-    imageSrc: "/Images/BalancedLife.jpg",
+    imageSrc: "/Images/BalancedLife.png",
+    /** Framed dual portrait — contain keeps the full artwork in the same 16:10 card as other goals. */
+    imageFit: "contain" as const,
     tagline:
       "Reach your highest potential in areas physical, mental, emotional and spiritual as well as financial!"
   }

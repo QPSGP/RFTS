@@ -13,6 +13,7 @@ export type GoalLandingContent = {
   label: string;
   tagline: string;
   imageSrc: string;
+  imageFit?: "cover" | "contain";
   title: string;
   metaTitle: string;
   metaDescription: string;
@@ -330,6 +331,7 @@ export const GOAL_LANDING_PAGES: GoalLandingContent[] = HOMEPAGE_GOAL_CARDS.map(
   label: card.label,
   tagline: card.tagline,
   imageSrc: card.imageSrc,
+  ...("imageFit" in card ? { imageFit: card.imageFit } : {}),
   ...GOAL_DETAILS[card.slug]
 }));
 

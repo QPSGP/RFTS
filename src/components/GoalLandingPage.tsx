@@ -46,7 +46,12 @@ export default async function GoalLandingPage({
           <img
             src={content.imageSrc}
             alt=""
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: content.imageFit ?? "cover",
+              display: "block"
+            }}
           />
         </div>
         {showSignupCta && <LandingTrialCtaButtons signupHref={signupHref} />}
