@@ -225,6 +225,7 @@ export default function FacilitatorMembers() {
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [consolePanel, setConsolePanel] = useState<ConsolePanel>("client");
+  const [lgdToolsAvailable, setLgdToolsAvailable] = useState(false);
   const [clientSearch, setClientSearch] = useState("");
   type ClientListSort = "alphabetical" | "newest";
   const [clientListSort, setClientListSort] = useState<ClientListSort>("alphabetical");
@@ -410,6 +411,12 @@ export default function FacilitatorMembers() {
   useEffect(() => {
     if (consolePanel === "member-audios" || consolePanel === "add-audio") void loadFacilitatorAudios();
   }, [consolePanel, loadFacilitatorAudios]);
+
+  useEffect(() => {
+    fetch("/api/moderator/lgd-settings", { credentials: "include" })
+      .then((res) => setLgdToolsAvailable(res.ok))
+      .catch(() => setLgdToolsAvailable(false));
+  }, []);
 
   useEffect(() => {
     if (members.length === 0) return;
@@ -1342,18 +1349,20 @@ export default function FacilitatorMembers() {
             >
               Add new audio
             </button>
-            <button
-              type="button"
-              className={adminSectionToggleClass(consolePanel === "lgd", true)}
-              onClick={() => openConsolePanel("lgd")}
-            >
-              Life Guidance Discovery
-            </button>
+            {lgdToolsAvailable ? (
+              <button
+                type="button"
+                className={adminSectionToggleClass(consolePanel === "lgd", true)}
+                onClick={() => openConsolePanel("lgd")}
+              >
+                Life Guidance Discovery
+              </button>
+            ) : null}
           </div>
         </section>
 
         <section className="card facilitator-console-main">
-          {consolePanel === "lgd" && <FacilitatorLgdPanel />}
+          {consolePanel === "lgd" && lgdToolsAvailable && <FacilitatorLgdPanel />}
           {consolePanel === "add-member" && (
             <>
               <h2 style={{ marginTop: 0 }}>Add new member</h2>

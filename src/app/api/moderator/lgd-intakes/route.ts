@@ -12,7 +12,8 @@ import {
   normalizeLgdIntakeAnswers,
   resolveFrequencyBedId
 } from "@/lib/lgd-intake";
-import { getLgdFlagsForModeratorId } from "@/lib/lgd-access";
+import { getLgdFlagsForModeratorId, isLgdAdminOnlyMode } from "@/lib/lgd-access";
+import { isAdminSession } from "@/lib/auth";
 
 const STATUSES = [
   "submitted",
@@ -25,6 +26,12 @@ const STATUSES = [
 ] as const;
 
 export async function GET() {
+  if (isLgdAdminOnlyMode() && !(await isAdminSession())) {
+    return NextResponse.json(
+      { error: "LGD tools are in admin-only preview.", adminOnly: true },
+      { status: 403 }
+    );
+  }
   const moderator = await requireActiveModerator();
   if ("error" in moderator) {
     return NextResponse.json({ error: moderator.error }, { status: moderator.status });
@@ -64,6 +71,12 @@ const patchSchema = z.object({
 });
 
 export async function PATCH(request: Request) {
+  if (isLgdAdminOnlyMode() && !(await isAdminSession())) {
+    return NextResponse.json(
+      { error: "LGD tools are in admin-only preview.", adminOnly: true },
+      { status: 403 }
+    );
+  }
   const moderator = await requireActiveModerator();
   if ("error" in moderator) {
     return NextResponse.json({ error: moderator.error }, { status: moderator.status });
@@ -104,7 +117,7 @@ export async function PATCH(request: Request) {
       existing.status === "in_production" ||
       existing.status === "complete" ||
       !!existing.approvedAt;
-    if (!alreadyApproved && nextStatus !== "approved") {
+    if (!alreadyApproved) {
       return NextResponse.json(
         {
           error:

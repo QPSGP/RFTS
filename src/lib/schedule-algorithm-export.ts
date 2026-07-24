@@ -12,6 +12,7 @@ import {
   listInterests,
   listLibrary
 } from "@/lib/db";
+import { SCHEDULE_MAX_NIGHTS } from "@/lib/schedule-limits";
 
 function hasCategory(item: { categories?: string[] }, cat: string): boolean {
   return (item.categories || []).some((c) => c.toLowerCase() === cat.toLowerCase());
@@ -129,7 +130,7 @@ export async function buildScheduleAlgorithmForMember(
   emailIn: string,
   nightsIn: number
 ): Promise<ScheduleAlgorithmMemberResult> {
-  const nights = Math.min(366, Math.max(1, nightsIn));
+  const nights = Math.min(SCHEDULE_MAX_NIGHTS, Math.max(1, nightsIn));
   const [library, settings, interestRecords] = await Promise.all([
     listLibrary(),
     getPlaybackSettings(),

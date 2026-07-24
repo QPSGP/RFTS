@@ -19,9 +19,28 @@ import {
   normalizeLgdIntakeAnswers,
   resolveFrequencyBedId
 } from "@/lib/lgd-intake";
-import { getLgdFlagsForMemberEmail, getLgdPriceDisplay } from "@/lib/lgd-access";
+import {
+  getLgdFlagsForMemberEmail,
+  getLgdPriceDisplay,
+  isLgdAdminOnlyMode
+} from "@/lib/lgd-access";
+import { isAdminSession } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 import { getLgdIntakeSubmittedFacilitatorEmailContent } from "@/lib/email-templates";
+
+async function rejectIfAdminOnlyPreview(): Promise<NextResponse | null> {
+  if (isLgdAdminOnlyMode() && !(await isAdminSession())) {
+    return NextResponse.json(
+      {
+        error:
+          "Life Guidance Discovery is in admin-only preview. It will open to members when ready.",
+        adminOnly: true
+      },
+      { status: 403 }
+    );
+  }
+  return null;
+}
 
 const patchSchema = z.object({
   answers: z.record(z.string(), z.unknown())
@@ -45,6 +64,8 @@ function serializeIntake(row: NonNullable<Awaited<ReturnType<typeof getLatestLgd
 }
 
 export async function GET() {
+  const blocked = await rejectIfAdminOnlyPreview();
+  if (blocked) return blocked;
   const email = await getUserSessionEmail();
   if (!email) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
@@ -79,6 +100,8 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
+  const blocked = await rejectIfAdminOnlyPreview();
+  if (blocked) return blocked;
   const email = await getUserSessionEmail();
   if (!email) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
@@ -145,6 +168,8 @@ export async function PATCH(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const blocked = await rejectIfAdminOnlyPreview();
+  if (blocked) return blocked;
   const email = await getUserSessionEmail();
   if (!email) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });

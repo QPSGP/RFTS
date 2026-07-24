@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
 import { adminSetMemberCompletedScheduleNights, getUserByEmail, recordMemberActivity } from "@/lib/db";
+import { SCHEDULE_MAX_NIGHTS } from "@/lib/schedule-limits";
 
 const bodySchema = z.object({
   email: z.string().email(),
-  completedScheduleNights: z.number().int().min(0).max(366)
+  completedScheduleNights: z.number().int().min(0).max(SCHEDULE_MAX_NIGHTS)
 });
 
 export async function POST(request: Request) {
@@ -39,6 +40,6 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     completedScheduleNights: result.completedScheduleNights,
-    currentNight: Math.min(366, Math.max(1, result.completedScheduleNights + 1))
+    currentNight: Math.min(SCHEDULE_MAX_NIGHTS, Math.max(1, result.completedScheduleNights + 1))
   });
 }

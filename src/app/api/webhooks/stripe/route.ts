@@ -7,8 +7,10 @@ import {
   ensureSubscription,
   getMemberProfileByUserId,
   getUserById,
+  markLgdIntakePaid,
   setSubscriptionStripeIdsForUser
 } from "@/lib/db";
+import { LGD_DEFAULT_PRICE_CENTS } from "@/lib/lgd-access";
 import { sendEmail } from "@/lib/email";
 import { getSubscriptionActiveEmailContent } from "@/lib/email-templates";
 
@@ -110,6 +112,23 @@ export async function POST(request: Request) {
         }
       } catch (e) {
         console.error("[stripe webhook] Subscription active email:", e);
+      }
+    }
+
+    if (session.metadata?.purpose === "lgd_goal_manifestation" && session.metadata?.intakeId) {
+      try {
+        const priceCents = parseInt(session.metadata.priceCents || "", 10);
+        await markLgdIntakePaid({
+          id: session.metadata.intakeId,
+          stripeCheckoutSessionId: session.id,
+          priceCents:
+            Number.isFinite(priceCents) && priceCents > 0
+              ? priceCents
+              : LGD_DEFAULT_PRICE_CENTS
+        });
+        console.info("[stripe webhook] LGD intake marked paid", session.metadata.intakeId);
+      } catch (e) {
+        console.error("[stripe webhook] LGD payment mark failed:", e);
       }
     }
 

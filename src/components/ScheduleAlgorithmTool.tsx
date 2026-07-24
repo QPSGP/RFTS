@@ -171,14 +171,14 @@ export default function ScheduleAlgorithmTool({
           </label>
         )}
         <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ fontSize: 14, fontWeight: 600 }}>Schedule nights to generate (1–366)</span>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>Schedule nights to generate (1–732)</span>
           <input
             className="input"
             type="number"
             min={1}
-            max={366}
+            max={732}
             value={nights}
-            onChange={(e) => setNights(Math.min(366, Math.max(1, parseInt(e.target.value, 10) || 1)))}
+            onChange={(e) => setNights(Math.min(732, Math.max(1, parseInt(e.target.value, 10) || 1)))}
           />
         </label>
       </div>

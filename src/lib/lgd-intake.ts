@@ -46,13 +46,49 @@ export const LGD_PROFESSIONAL_VOICES = [
 export type LgdProfessionalVoiceId = (typeof LGD_PROFESSIONAL_VOICES)[number]["id"];
 
 export const LGD_FREQUENCY_BEDS = [
-  { id: "calm_delta", label: "Calm / sleep deepen", intent: "Restorative overnight listening" },
-  { id: "heart_coherence", label: "Heart / emotional openness", intent: "Soft rhythmic support" },
-  { id: "focus_clarity", label: "Focus / clarity", intent: "Mental clarity under voice" },
-  { id: "abundance_warm", label: "Abundance / confidence", intent: "Warm harmonic bed" },
-  { id: "neutral_music", label: "Classic Success Center music", intent: "Familiar CGMR bed" },
-  { id: "choose_for_me", label: "Choose for me", intent: "Matched from primary life area" }
+  {
+    id: "calm_delta",
+    label: "Calm / sleep deepen",
+    intent: "Restorative overnight listening",
+    /** Place file at public/audio/beds/calm_delta.mp3 (ducked under voice in production). */
+    audioPath: "/audio/beds/calm_delta.mp3"
+  },
+  {
+    id: "heart_coherence",
+    label: "Heart / emotional openness",
+    intent: "Soft rhythmic support",
+    audioPath: "/audio/beds/heart_coherence.mp3"
+  },
+  {
+    id: "focus_clarity",
+    label: "Focus / clarity",
+    intent: "Mental clarity under voice",
+    audioPath: "/audio/beds/focus_clarity.mp3"
+  },
+  {
+    id: "abundance_warm",
+    label: "Abundance / confidence",
+    intent: "Warm harmonic bed",
+    audioPath: "/audio/beds/abundance_warm.mp3"
+  },
+  {
+    id: "neutral_music",
+    label: "Classic Success Center music",
+    intent: "Familiar CGMR bed",
+    audioPath: "/audio/beds/neutral_music.mp3"
+  },
+  {
+    id: "choose_for_me",
+    label: "Choose for me",
+    intent: "Matched from primary life area",
+    audioPath: ""
+  }
 ] as const;
+
+export function frequencyBedAudioPath(bedId: string | null | undefined): string | null {
+  const bed = LGD_FREQUENCY_BEDS.find((b) => b.id === bedId);
+  return bed?.audioPath || null;
+}
 
 export type LgdFrequencyBedId = (typeof LGD_FREQUENCY_BEDS)[number]["id"];
 
@@ -275,7 +311,7 @@ export function resolveFrequencyBedId(
   answers: LgdIntakeAnswers
 ): Exclude<LgdFrequencyBedId, "choose_for_me"> {
   const selected = answers.frequencyBedId;
-  if (selected && selected !== "choose_for_me" && selected !== "") {
+  if (selected && selected !== "choose_for_me") {
     return selected;
   }
   if (answers.listenContext === "sleep") return "calm_delta";
@@ -574,6 +610,11 @@ export function buildLgdProductionPacket(input: {
     LGD_PROFESSIONAL_VOICES.find((v) => v.id === input.answers.voiceId)?.label ||
     input.answers.voiceId ||
     "unset";
+  const bedPath = frequencyBedAudioPath(bed);
+  const voiceMode =
+    input.answers.voiceId === "member_own"
+      ? "member_own (device recording)"
+      : "ai_internal preferred; studio_external (Paul Griffin) fallback";
   return [
     "RFTS — Goal Manifestation Production Packet",
     "============================================",
@@ -581,7 +622,10 @@ export function buildLgdProductionPacket(input: {
     `Email: ${input.memberEmail}`,
     `Intake status: ${input.status}`,
     `Voice: ${voice}`,
+    `Voice production mode: ${voiceMode}`,
     `Frequency / sound bed: ${bed}`,
+    bedPath ? `Bed audio file (under voice): ${bedPath}` : "",
+    "Mix note: duck bed under voice; never replace suggestions.",
     `Listen context: ${input.answers.listenContext || "unset"}`,
     `Permission to edit draft: ${input.answers.permissionToEditDraft !== false ? "yes" : "no"}`,
     `Own-voice consent: ${input.answers.ownVoiceConsent ? "yes" : "no"}`,

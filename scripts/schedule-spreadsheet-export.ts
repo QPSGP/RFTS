@@ -23,7 +23,7 @@ async function main() {
   }
   const nightsRaw = process.env.SCHEDULE_NIGHTS?.trim();
   const nights = Math.min(
-    366,
+    732,
     Math.max(1, nightsRaw ? parseInt(nightsRaw, 10) || 42 : 42)
   );
 

@@ -13,6 +13,7 @@ import {
   type LgdIntakeAnswers,
   type LgdLifeAreaId
 } from "@/lib/lgd-intake";
+import LgdOwnVoiceRecorder from "@/components/LgdOwnVoiceRecorder";
 
 type Props = {
   interests: Interest[];
@@ -582,27 +583,35 @@ export default function LgdIntakeForm({ interests }: Props) {
                       </span>
                     </label>
                     {answers.voiceId === "member_own" ? (
-                      <label
-                        style={{
-                          display: "flex",
-                          gap: 10,
-                          alignItems: "flex-start",
-                          cursor: "pointer",
-                          marginLeft: 8
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          disabled={!editable}
-                          checked={!!answers.ownVoiceConsent}
-                          onChange={(e) => patchAnswers({ ownVoiceConsent: e.target.checked })}
-                          style={{ marginTop: 3 }}
+                      <>
+                        <label
+                          style={{
+                            display: "flex",
+                            gap: 10,
+                            alignItems: "flex-start",
+                            cursor: "pointer",
+                            marginLeft: 8
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            disabled={!editable}
+                            checked={!!answers.ownVoiceConsent}
+                            onChange={(e) => patchAnswers({ ownVoiceConsent: e.target.checked })}
+                            style={{ marginTop: 3 }}
+                          />
+                          <span style={{ fontSize: 14 }}>
+                            I agree to the{" "}
+                            <a href="/voice-recording-agreement" target="_blank" rel="noreferrer">
+                              Voice Recording Agreement
+                            </a>{" "}
+                            (record, store, and export for my Goal Manifestation audio).
+                          </span>
+                        </label>
+                        <LgdOwnVoiceRecorder
+                          enabled={!!answers.ownVoiceConsent}
                         />
-                        <span style={{ fontSize: 14 }}>
-                          I consent to record phrases and, if offered, a voice model for my Goal
-                          Manifestation audio. My facilitator will guide the next recording steps.
-                        </span>
-                      </label>
+                      </>
                     ) : null}
                   </>
                 ) : (
@@ -734,6 +743,30 @@ export default function LgdIntakeForm({ interests }: Props) {
           >
             {scriptDraftText}
           </pre>
+          {priceLabel && intakeStatus !== "draft" ? (
+            <button
+              type="button"
+              className="button"
+              style={{ marginTop: 16 }}
+              onClick={() => {
+                void fetch("/api/member/lgd-checkout", {
+                  method: "POST",
+                  credentials: "include"
+                })
+                  .then(async (res) => {
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                      setMessage(data?.error || "Checkout unavailable.");
+                      return;
+                    }
+                    if (data.url) window.location.href = data.url;
+                  })
+                  .catch(() => setMessage("Checkout failed."));
+              }}
+            >
+              Pay {priceLabel} for Goal Manifestation packaging
+            </button>
+          ) : null}
         </div>
       ) : null}
     </div>

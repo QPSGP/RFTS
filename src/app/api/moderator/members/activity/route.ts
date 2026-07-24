@@ -47,7 +47,7 @@ export async function GET(request: Request) {
   }
   const activityLog = await getMemberActivityLogForUser(user.id, perUserLimit);
   const mp = await getMemberProfileByUserId(user.id);
-  const completed = Math.max(0, Math.min(366, mp?.completedScheduleNights ?? 0));
+  const completed = Math.max(0, Math.min(732, mp?.completedScheduleNights ?? 0));
   const profile = await getUserProfile(access.memberEmail);
   const lastLogin = activityLog.find((row) => row.action === "login");
   const lastPlay = activityLog.find(
@@ -58,7 +58,7 @@ export async function GET(request: Request) {
     scheduleProgress: {
       completedScheduleNights: completed,
       scheduleStartedAt: mp?.scheduleStartedAt ?? null,
-      currentNight: Math.min(366, Math.max(1, completed + 1))
+      currentNight: Math.min(732, Math.max(1, completed + 1))
     },
     summary: {
       goalCount: profile?.goalIds?.length ?? 0,

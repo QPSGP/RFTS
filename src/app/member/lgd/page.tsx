@@ -1,9 +1,17 @@
 import { redirect } from "next/navigation";
 import { getMemberProfileByUserId, getUserProfile, listInterests } from "@/lib/db";
 import { getUserSessionEmail } from "@/lib/user-auth";
+import { isAdminSession } from "@/lib/auth";
+import { isLgdAdminOnlyMode } from "@/lib/lgd-access";
 import LgdIntakeForm from "@/components/LgdIntakeForm";
 
 export default async function MemberLgdPage() {
+  if (isLgdAdminOnlyMode()) {
+    if (await isAdminSession()) {
+      redirect("/admin/lgd");
+    }
+    redirect("/play-options");
+  }
   const email = await getUserSessionEmail();
   if (!email) {
     redirect("/member/login?next=/member/lgd");

@@ -193,10 +193,13 @@ facilitator_lgd_settings (
 9. **Paid Stripe checkout** — needs price decision (`NEXT_PUBLIC_LGD_PRICE_DISPLAY` / `LGD_PRICE_CENTS` display ready; one-time Checkout not wired)  
 10. **Feature flag enforcement** ✅ public / console / intake / approval gate / script draft  
 
-### Waiting on you
-- Final dollar amount(s) + Stripe Price ID for one-time LGD/CGMR checkout  
-- Actual voice talent audio banks / who records associates  
-- Legal go-ahead for voice-clone production (own-voice Phase B beyond consent)  
+### Ops notes (current)
+- **Admin-only preview:** `LGD_ADMIN_ONLY=true` (default) — review at `/admin/lgd`; members/facilitators/public hidden. Set `false` to open.  
+- **Stripe:** product `prod_I7hhOenF6qstnH` at **$397** one-time Checkout (`/api/member/lgd-checkout`). Optional `STRIPE_LGD_PRICE_ID`.  
+- **Voice production:** prefer AI/internal (`LGD_VOICE_PRODUCTION=ai_internal`); studio files (Paul Griffin) as fallback.  
+- **Own voice:** `/voice-recording-agreement` + device recorder upload.  
+- **Beds:** place MP3s under `public/audio/beds/` (paths in production packet).  
+- **Schedule cap:** `SCHEDULE_MAX_NIGHTS = 732`.  
 
 ---
 

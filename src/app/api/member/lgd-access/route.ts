@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { getUserSessionEmail } from "@/lib/user-auth";
 import { getMemberProfileByUserId, getUserProfile } from "@/lib/db";
-import { getLgdFlagsForMemberEmail, getLgdPriceDisplay } from "@/lib/lgd-access";
+import {
+  getLgdFlagsForMemberEmail,
+  getLgdPriceDisplay,
+  isLgdAdminOnlyMode
+} from "@/lib/lgd-access";
 
 /** Lightweight flags/price for console CTAs (does not create an intake draft). */
 export async function GET() {
@@ -12,6 +16,16 @@ export async function GET() {
   const user = await getUserProfile(email);
   if (!user) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
+  }
+  if (isLgdAdminOnlyMode()) {
+    return NextResponse.json({
+      hadLgdSession: false,
+      adminOnly: true,
+      electronicIntakeEnabled: false,
+      consoleOffer: false,
+      priceLabel: getLgdPriceDisplay().label,
+      priceCents: getLgdPriceDisplay().priceCents
+    });
   }
   const memberProfile = await getMemberProfileByUserId(user.id);
   const { flags } = await getLgdFlagsForMemberEmail(email);

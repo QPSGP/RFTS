@@ -8,6 +8,18 @@ import {
   type LgdFacilitatorFeatureFlags,
   type LgdFacilitatorFeatureKey
 } from "@/lib/lgd-intake";
+import { isLgdAdminOnlyMode } from "@/lib/lgd-access";
+import { isAdminSession } from "@/lib/auth";
+
+async function rejectAdminOnly(): Promise<NextResponse | null> {
+  if (isLgdAdminOnlyMode() && !(await isAdminSession())) {
+    return NextResponse.json(
+      { error: "LGD tools are in admin-only preview.", adminOnly: true },
+      { status: 403 }
+    );
+  }
+  return null;
+}
 
 function mergeFlags(stored: Record<string, boolean>): LgdFacilitatorFeatureFlags {
   const defaults = defaultLgdFacilitatorFeatureFlags();
@@ -21,6 +33,8 @@ function mergeFlags(stored: Record<string, boolean>): LgdFacilitatorFeatureFlags
 }
 
 export async function GET() {
+  const blocked = await rejectAdminOnly();
+  if (blocked) return blocked;
   const moderator = await requireActiveModerator();
   if ("error" in moderator) {
     return NextResponse.json({ error: moderator.error }, { status: moderator.status });
@@ -37,6 +51,8 @@ const patchSchema = z.object({
 });
 
 export async function PATCH(request: Request) {
+  const blocked = await rejectAdminOnly();
+  if (blocked) return blocked;
   const moderator = await requireActiveModerator();
   if ("error" in moderator) {
     return NextResponse.json({ error: moderator.error }, { status: moderator.status });

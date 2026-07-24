@@ -1134,7 +1134,7 @@ export default function AdminUsers() {
   };
 
   const saveMemberScheduleProgress = async (email: string, completedScheduleNights: number) => {
-    const clamped = Math.max(0, Math.min(366, Math.floor(completedScheduleNights)));
+    const clamped = Math.max(0, Math.min(732, Math.floor(completedScheduleNights)));
     setMemberScheduleSaving((prev) => ({ ...prev, [email]: true }));
     setStatus(null);
     try {
@@ -1150,7 +1150,7 @@ export default function AdminUsers() {
         return;
       }
       {
-        const nextStep = Math.min(366, Math.max(1, clamped + 1));
+        const nextStep = Math.min(732, Math.max(1, clamped + 1));
         setStatus(
           `Schedule updated for ${email}: ${clamped} step(s) complete · next step #${nextStep}.`
         );
@@ -2778,11 +2778,11 @@ export default function AdminUsers() {
                                   +1 step
                                 </button>
                                 <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
-                                  Set completed steps (0–366)
+                                  Set completed steps (0–732)
                                   <input
                                     type="number"
                                     min={0}
-                                    max={366}
+                                    max={732}
                                     style={{ width: 72, padding: 6, borderRadius: 6, border: "1px solid #cbd5e1" }}
                                     value={memberScheduleDraft[user.email] ?? ""}
                                     onChange={(e) =>
@@ -2802,7 +2802,7 @@ export default function AdminUsers() {
                                     const raw = memberScheduleDraft[user.email] ?? "0";
                                     const n = parseInt(raw, 10);
                                     if (Number.isNaN(n)) {
-                                      setStatus("Enter a number between 0 and 366 for completed steps.");
+                                      setStatus("Enter a number between 0 and 732 for completed steps.");
                                       return;
                                     }
                                     void saveMemberScheduleProgress(user.email, n);

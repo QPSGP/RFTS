@@ -6,13 +6,14 @@ import {
   buildMemberExportHtmlString,
   buildScheduleAlgorithmForMember
 } from "@/lib/schedule-algorithm-export";
+import { SCHEDULE_MAX_NIGHTS } from "@/lib/schedule-limits";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const bodySchema = z.object({
   email: z.string().min(3).max(320),
-  nights: z.number().int().min(1).max(366).optional().default(42),
+  nights: z.number().int().min(1).max(SCHEDULE_MAX_NIGHTS).optional().default(42),
   format: z.enum(["csv", "html", "json"]).default("json")
 });
 

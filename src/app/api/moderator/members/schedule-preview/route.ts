@@ -117,7 +117,7 @@ export async function GET(request: Request) {
 
   const previewLength = nights;
   let buildNights = Math.min(
-    366,
+    732,
     Math.max(previewLength, minScheduleNightsForCue(completedNights, 2, previewLength * 2))
   );
 
@@ -134,15 +134,15 @@ export async function GET(request: Request) {
 
   let scheduleBuilt = buildSchedulePreview({ ...scheduleInput, nights: buildNights });
   let startScheduleNight = Math.min(
-    366,
+    732,
     Math.max(1, resolveCurrentScheduleNight(scheduleBuilt, completedNights, playsPerNight))
   );
 
-  while (startScheduleNight + previewLength - 1 > buildNights && buildNights < 366) {
-    buildNights = Math.min(366, startScheduleNight + previewLength);
+  while (startScheduleNight + previewLength - 1 > buildNights && buildNights < 732) {
+    buildNights = Math.min(732, startScheduleNight + previewLength);
     scheduleBuilt = buildSchedulePreview({ ...scheduleInput, nights: buildNights });
     startScheduleNight = Math.min(
-      366,
+      732,
       Math.max(1, resolveCurrentScheduleNight(scheduleBuilt, completedNights, playsPerNight))
     );
   }

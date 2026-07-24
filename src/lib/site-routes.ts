@@ -8,6 +8,7 @@ export const PUBLIC_MARKETING_PATHS = [
   "/how-it-works",
   "/life-guidance-discovery",
   "/lgd",
+  "/voice-recording-agreement",
   "/science",
   "/faqs",
   "/facilitator",

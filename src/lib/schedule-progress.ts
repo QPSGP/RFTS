@@ -1,4 +1,5 @@
 import type { PlaysPerNightSetting } from "@/lib/session-progress-format";
+import { SCHEDULE_MAX_MAIN_AUDIOS } from "@/lib/schedule-limits";
 
 export type ScheduleNightForCue = {
   night: number;
@@ -26,7 +27,7 @@ export function legacyStoredProgressToMainAudios(
   const n = Math.max(0, Math.floor(storedCompleted));
   if (n === 0) return 0;
   if (playsPerNight === 1) return n;
-  return Math.min(366 * 2, n * 2);
+  return Math.min(SCHEDULE_MAX_MAIN_AUDIOS, n * 2);
 }
 
 /** @deprecated Use completedMainAudiosPlayed — kept for callers passing playsPerNight (ignored). */

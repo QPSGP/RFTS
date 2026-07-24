@@ -41,11 +41,11 @@ export async function GET(request: Request) {
     }
     const activityLog = await getMemberActivityLogForUser(user.id, perUserLimit);
     const mp = await getMemberProfileByUserId(user.id);
-    const completed = Math.max(0, Math.min(366, mp?.completedScheduleNights ?? 0));
+    const completed = Math.max(0, Math.min(732, mp?.completedScheduleNights ?? 0));
     const scheduleProgress = {
       completedScheduleNights: completed,
       scheduleStartedAt: mp?.scheduleStartedAt ?? null,
-      currentNight: Math.min(366, Math.max(1, completed + 1))
+      currentNight: Math.min(732, Math.max(1, completed + 1))
     };
     const newestActivityAt = activityLog[0]?.createdAt ?? null;
     return noStoreJson({

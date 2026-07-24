@@ -634,7 +634,7 @@ export const getSessionCountSinceScheduleStart = async (
 
 /**
  * If the member has never stored play-based progress (0), seed completed nights from historical
- * session starts since schedule_started_at (capped at 366). One-time alignment for existing members.
+ * session starts since schedule_started_at (capped at SCHEDULE_MAX_NIGHTS). One-time alignment for existing members.
  */
 export const trySeedCompletedNightsFromLegacySessions = async (
   userId: string,
@@ -651,7 +651,7 @@ export const trySeedCompletedNightsFromLegacySessions = async (
       `;
       return parseInt(cur[0]?.c || "0", 10) || 0;
     }
-    const seeded = Math.min(366, sessionCount);
+    const seeded = Math.min(732, sessionCount);
     const { rows } = await sql<{ c: string | null }>`
       UPDATE member_profiles
       SET completed_schedule_nights = ${seeded},
@@ -750,7 +750,7 @@ export const recordScheduleNightCompleted = async (
   playsPerNight: 1 | 2
 ): Promise<RecordScheduleNightResult> => {
   const ppn = playsPerNight === 1 ? 1 : 2;
-  const maxMain = 366 * 2;
+  const maxMain = 732 * 2;
   try {
     const { rows: existing } = await sql<{ c: string | null }>`
       SELECT COALESCE(completed_schedule_nights, 0)::text AS c
@@ -4177,6 +4177,9 @@ export type LgdIntakeRecord = {
   voiceId: string | null;
   frequencyBedId: string | null;
   priceCents: number | null;
+  paidAt?: string | null;
+  stripeCheckoutSessionId?: string | null;
+  ownVoiceAudioUrl?: string | null;
   createdAt: string;
   updatedAt: string;
   submittedAt: string | null;
@@ -4205,6 +4208,9 @@ const ensureLgdIntakesTable = async () => {
       approved_at timestamptz
     )
   `;
+  await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS paid_at timestamptz`;
+  await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS stripe_checkout_session_id text`;
+  await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS own_voice_audio_url text`;
   await sql`CREATE INDEX IF NOT EXISTS lgd_intakes_user_id_idx ON lgd_intakes (user_id)`;
   await sql`CREATE INDEX IF NOT EXISTS lgd_intakes_status_idx ON lgd_intakes (status)`;
   lgdIntakesReady = true;
@@ -4506,4 +4512,88 @@ export const upsertFacilitatorLgdSettings = async (
     RETURNING flags
   `;
   return rows[0]?.flags ?? flags;
+};
+
+export const listAllLgdIntakes = async (): Promise<LgdIntakeListItem[]> => {
+  await ensureLgdIntakesTable();
+  const { rows } = await sql<LgdIntakeListItem>`
+    SELECT
+      i.id,
+      i.user_id AS "userId",
+      i.facilitator_id AS "facilitatorId",
+      i.status,
+      i.answers,
+      i.script_draft AS "scriptDraft",
+      i.script_draft_text AS "scriptDraftText",
+      i.voice_id AS "voiceId",
+      i.frequency_bed_id AS "frequencyBedId",
+      i.price_cents AS "priceCents",
+      i.paid_at AS "paidAt",
+      i.stripe_checkout_session_id AS "stripeCheckoutSessionId",
+      i.own_voice_audio_url AS "ownVoiceAudioUrl",
+      i.created_at AS "createdAt",
+      i.updated_at AS "updatedAt",
+      i.submitted_at AS "submittedAt",
+      i.approved_at AS "approvedAt",
+      u.email AS "memberEmail",
+      mp.first_name AS "firstName",
+      mp.last_name AS "lastName"
+    FROM lgd_intakes i
+    JOIN users u ON u.id = i.user_id
+    LEFT JOIN member_profiles mp ON mp.user_id = u.id
+    WHERE i.status <> 'draft'
+    ORDER BY COALESCE(i.submitted_at, i.updated_at) DESC
+    LIMIT 200
+  `;
+  return rows;
+};
+
+export const markLgdIntakePaid = async (input: {
+  id: string;
+  stripeCheckoutSessionId: string;
+  priceCents: number;
+}): Promise<LgdIntakeRecord | null> => {
+  await ensureLgdIntakesTable();
+  const { rows } = await sql<LgdIntakeRecord>`
+    UPDATE lgd_intakes
+    SET
+      paid_at = now(),
+      stripe_checkout_session_id = ${input.stripeCheckoutSessionId},
+      price_cents = ${input.priceCents},
+      updated_at = now()
+    WHERE id = ${input.id}
+    RETURNING
+      id,
+      user_id AS "userId",
+      facilitator_id AS "facilitatorId",
+      status,
+      answers,
+      script_draft AS "scriptDraft",
+      script_draft_text AS "scriptDraftText",
+      voice_id AS "voiceId",
+      frequency_bed_id AS "frequencyBedId",
+      price_cents AS "priceCents",
+      paid_at AS "paidAt",
+      stripe_checkout_session_id AS "stripeCheckoutSessionId",
+      own_voice_audio_url AS "ownVoiceAudioUrl",
+      created_at AS "createdAt",
+      updated_at AS "updatedAt",
+      submitted_at AS "submittedAt",
+      approved_at AS "approvedAt"
+  `;
+  return rows[0] ?? null;
+};
+
+export const setLgdIntakeOwnVoiceAudioUrl = async (
+  id: string,
+  userId: string,
+  url: string
+): Promise<boolean> => {
+  await ensureLgdIntakesTable();
+  const { rowCount } = await sql`
+    UPDATE lgd_intakes
+    SET own_voice_audio_url = ${url}, updated_at = now()
+    WHERE id = ${id} AND user_id = ${userId}
+  `;
+  return (rowCount ?? 0) > 0;
 };

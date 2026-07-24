@@ -22,10 +22,11 @@ import {
 } from "@/lib/schedule-progress";
 import { INTRO_RELAXATION_MUSIC_LABEL } from "@/lib/intro-relaxation-music";
 import { stripSkuHyphens } from "@/lib/sku-code";
+import { SCHEDULE_MAX_NIGHTS } from "@/lib/schedule-limits";
 
 const schema = z.object({
   /** Preview length; server extends this when the member has passed more nights than requested (see currentNight). */
-  nights: z.number().int().min(1).max(366).optional()
+  nights: z.number().int().min(1).max(SCHEDULE_MAX_NIGHTS).optional()
 });
 
 const dataDir = path.join(process.cwd(), "data");
@@ -133,7 +134,7 @@ export async function GET(request: Request) {
       completedNights = await trySeedCompletedNightsFromLegacySessions(profile.id, dateStr);
     }
   }
-  const maxBuildNights = 366;
+  const maxBuildNights = SCHEDULE_MAX_NIGHTS;
   const cueLength = 10;
   const currentAudioNumber = Math.min(maxBuildNights * 2, Math.max(1, completedNights + 1));
   const nights = Math.min(

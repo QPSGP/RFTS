@@ -7,7 +7,7 @@ Exports the **same** schedule the app uses for “Tonight’s Audio” (`buildSc
 ## Option A — Admin (recommended)
 
 1. Open **Content Console** → [Schedule algorithm (member)](/admin/content#admin-schedule-algorithm).
-2. Enter the **member email**, set **nights (1–366)**, then **Preview in admin** and/or **Download CSV** / **Download HTML**.
+2. Enter the **member email**, set **nights (1–732)**, then **Preview in admin** and/or **Download CSV** / **Download HTML**.
 
 Uses the **production** database when you are on the live site.
 

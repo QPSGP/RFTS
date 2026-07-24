@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserSessionEmail } from "@/lib/user-auth";
 import { getUserProfile, recordScheduleNightCompleted } from "@/lib/db";
+import { SCHEDULE_MAX_NIGHTS } from "@/lib/schedule-limits";
 
 const bodySchema = z.object({
-  nightCompleted: z.number().int().min(1).max(366)
+  nightCompleted: z.number().int().min(1).max(SCHEDULE_MAX_NIGHTS)
 });
 
 export async function POST(request: Request) {
