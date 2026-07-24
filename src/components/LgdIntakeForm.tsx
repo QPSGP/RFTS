@@ -123,6 +123,24 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
     });
   };
 
+  const moveGoal = (fromIndex: number, toIndex: number) => {
+    setAnswers((prev) => {
+      if (toIndex < 0 || toIndex >= prev.goalIds.length) return prev;
+      const next = [...prev.goalIds];
+      const [item] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, item);
+      return { ...prev, goalIds: next };
+    });
+  };
+
+  const orderedSelectedGoals = useMemo(
+    () =>
+      answers.goalIds
+        .map((id) => interests.find((g) => g.id === id))
+        .filter((g): g is Interest => !!g),
+    [answers.goalIds, interests]
+  );
+
   const saveDraft = async () => {
     setSaving(true);
     setMessage(null);
@@ -385,8 +403,47 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
             </label>
             <div>
               <p style={{ marginBottom: 8 }}>
-                Align with RFTS goals (up to 10). Selected: {answers.goalIds.length}
+                Align with RFTS goals (up to 10). Order matters — #1 is highest priority.
               </p>
+              {orderedSelectedGoals.length > 0 ? (
+                <div style={{ marginBottom: 16 }}>
+                  <p style={{ margin: "0 0 8px", fontWeight: 600 }}>
+                    Selected goals ({orderedSelectedGoals.length}) — priority order
+                  </p>
+                  <div className="goal-stack" style={{ display: "grid", gap: 8 }}>
+                    {orderedSelectedGoals.map((goal, index) => (
+                      <div
+                        key={goal.id}
+                        className="goal-item"
+                        style={{ display: "flex", alignItems: "center", gap: 10 }}
+                      >
+                        <strong style={{ minWidth: 24 }}>{index + 1}.</strong>
+                        <span style={{ flex: 1 }}>{goal.name}</span>
+                        <button
+                          className="button button-secondary"
+                          type="button"
+                          onClick={() => moveGoal(index, index - 1)}
+                          disabled={!editable || index === 0}
+                          style={{ padding: "6px 10px", fontSize: 12 }}
+                        >
+                          Up
+                        </button>
+                        <button
+                          className="button button-secondary"
+                          type="button"
+                          onClick={() => moveGoal(index, index + 1)}
+                          disabled={!editable || index === orderedSelectedGoals.length - 1}
+                          style={{ padding: "6px 10px", fontSize: 12 }}
+                        >
+                          Down
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p style={{ color: "#6b7280", marginBottom: 12 }}>No goals selected yet.</p>
+              )}
               <input
                 placeholder="Search goals…"
                 style={{ ...inputStyle, marginBottom: 8 }}
@@ -397,6 +454,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
               <div className="goal-list" style={{ maxHeight: 220, overflow: "auto" }}>
                 {filteredGoals.map((goal) => {
                   const selected = answers.goalIds.includes(goal.id);
+                  const rank = selected ? answers.goalIds.indexOf(goal.id) + 1 : null;
                   return (
                     <label
                       key={goal.id}
@@ -414,7 +472,10 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
                         checked={selected}
                         onChange={() => toggleGoal(goal.id)}
                       />
-                      <span>{goal.name}</span>
+                      <span>
+                        {rank ? `${rank}. ` : ""}
+                        {goal.name}
+                      </span>
                     </label>
                   );
                 })}
