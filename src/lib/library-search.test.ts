@@ -21,7 +21,7 @@ const baseItem: LibraryItem = {
 
 describe("libraryItemMatchesSearch", () => {
   const interestNameById = buildInterestNameMap([
-    { id: "goal-health", name: "Health", buildPractice: false, order: 1 }
+    { id: "goal-health", name: "Health", createdAt: "2026-01-01" }
   ]);
 
   it("matches title and SKU tokens", () => {
