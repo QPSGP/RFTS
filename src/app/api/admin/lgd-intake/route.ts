@@ -24,7 +24,8 @@ import { defaultLgdFacilitatorFeatureFlags } from "@/lib/lgd-intake";
 
 const bodySchema = z.object({
   memberEmail: z.string().email(),
-  answers: z.record(z.string(), z.unknown()).optional()
+  answers: z.record(z.string(), z.unknown()).optional(),
+  action: z.literal("startNew").optional()
 });
 
 function serializeIntake(row: NonNullable<Awaited<ReturnType<typeof getLatestLgdIntakeForUser>>>) {
@@ -36,20 +37,25 @@ function serializeIntake(row: NonNullable<Awaited<ReturnType<typeof getLatestLgd
     scriptDraftText: row.scriptDraftText,
     voiceId: row.voiceId || answers.voiceId || null,
     frequencyBedId: row.frequencyBedId || answers.frequencyBedId || null,
+    paidAt: row.paidAt ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     submittedAt: row.submittedAt,
     approvedAt: row.approvedAt,
-    editable: row.status === "draft"
+    editable: row.status === "draft",
+    needsPayment: false,
+    canStartNew: row.status !== "draft"
   };
 }
 
-/** Admin runs / previews electronic LGD intake on behalf of a member. */
+/** Admin runs / previews electronic LGD intake on behalf of a member (no payment required). */
 export async function GET(request: Request) {
   if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-  const memberEmail = new URL(request.url).searchParams.get("memberEmail")?.trim().toLowerCase();
+  const url = new URL(request.url);
+  const memberEmail = url.searchParams.get("memberEmail")?.trim().toLowerCase();
+  const forceNew = url.searchParams.get("new") === "1";
   if (!memberEmail) {
     return NextResponse.json({ error: "memberEmail is required." }, { status: 400 });
   }
@@ -59,7 +65,7 @@ export async function GET(request: Request) {
   }
   const memberProfile = await getMemberProfileByUserId(user.id);
   let intake = await getLatestLgdIntakeForUser(user.id);
-  if (!intake) {
+  if (!intake || forceNew) {
     intake = await createLgdIntakeDraft(user.id, emptyLgdIntakeAnswers());
   }
   return NextResponse.json({
@@ -68,7 +74,8 @@ export async function GET(request: Request) {
     hadLgdSession: memberProfile?.hadLgdSession ?? false,
     flags: defaultLgdFacilitatorFeatureFlags(),
     priceLabel: getLgdPriceDisplay().label,
-    memberEmail
+    memberEmail,
+    adminBypassPayment: true
   });
 }
 
@@ -92,7 +99,10 @@ export async function PATCH(request: Request) {
     intake = await createLgdIntakeDraft(user.id, answers);
   } else if (intake.status !== "draft") {
     return NextResponse.json(
-      { error: "This intake was already submitted and can no longer be edited." },
+      {
+        error:
+          "This intake was already submitted. Use Start new intake to create another draft."
+      },
       { status: 409 }
     );
   } else {
@@ -117,7 +127,21 @@ export async function POST(request: Request) {
   }
   const body = await request.json().catch(() => null);
   const parsed = bodySchema.safeParse(body);
-  if (!parsed.success || !parsed.data.answers) {
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
+  }
+
+  if (parsed.data.action === "startNew") {
+    const email = parsed.data.memberEmail.trim().toLowerCase();
+    const user = await getUserProfile(email);
+    if (!user) {
+      return NextResponse.json({ error: "Member not found." }, { status: 404 });
+    }
+    const intake = await createLgdIntakeDraft(user.id, emptyLgdIntakeAnswers());
+    return NextResponse.json({ intake: serializeIntake(intake) });
+  }
+
+  if (!parsed.data.answers) {
     return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
   }
   const email = parsed.data.memberEmail.trim().toLowerCase();

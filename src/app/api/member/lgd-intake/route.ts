@@ -46,8 +46,13 @@ const patchSchema = z.object({
   answers: z.record(z.string(), z.unknown())
 });
 
+const startNewSchema = z.object({
+  action: z.literal("startNew")
+});
+
 function serializeIntake(row: NonNullable<Awaited<ReturnType<typeof getLatestLgdIntakeForUser>>>) {
   const answers = normalizeLgdIntakeAnswers(row.answers);
+  const paid = !!row.paidAt;
   return {
     id: row.id,
     status: row.status,
@@ -55,11 +60,15 @@ function serializeIntake(row: NonNullable<Awaited<ReturnType<typeof getLatestLgd
     scriptDraftText: row.scriptDraftText,
     voiceId: row.voiceId || answers.voiceId || null,
     frequencyBedId: row.frequencyBedId || answers.frequencyBedId || null,
+    paidAt: row.paidAt ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     submittedAt: row.submittedAt,
     approvedAt: row.approvedAt,
-    editable: row.status === "draft"
+    editable: row.status === "draft",
+    /** Member must pay before submit (pay-first packaging). */
+    needsPayment: row.status === "draft" && !paid,
+    canStartNew: row.status !== "draft"
   };
 }
 
@@ -86,16 +95,16 @@ export async function GET() {
   }
   const memberProfile = await getMemberProfileByUserId(user.id);
   let intake = await getLatestLgdIntakeForUser(user.id);
-  if (!intake) {
-    intake = await createLgdIntakeDraft(user.id, emptyLgdIntakeAnswers());
-  }
+  // Do not auto-create unpaid drafts — member pays first (or opens after payment webhook).
   const price = getLgdPriceDisplay();
   return NextResponse.json({
-    intake: serializeIntake(intake),
+    intake: intake ? serializeIntake(intake) : null,
     firstName: memberProfile?.firstName ?? null,
     hadLgdSession: memberProfile?.hadLgdSession ?? false,
     flags,
-    priceLabel: price.label
+    priceLabel: price.label,
+    /** No intake yet — pay to create a paid draft, then fill. */
+    needsCheckoutToStart: !intake
   });
 }
 
@@ -135,13 +144,30 @@ export async function PATCH(request: Request) {
 
   let intake = await getLatestLgdIntakeForUser(user.id);
   if (!intake) {
-    intake = await createLgdIntakeDraft(user.id, answers);
-  } else if (intake.status !== "draft") {
+    return NextResponse.json(
+      {
+        error:
+          "Pay for Life Guidance Discovery packaging first, then fill out your intake."
+      },
+      { status: 402 }
+    );
+  }
+  if (intake.status !== "draft") {
     return NextResponse.json(
       { error: "This intake was already submitted and can no longer be edited." },
       { status: 409 }
     );
-  } else {
+  }
+  if (!intake.paidAt) {
+    return NextResponse.json(
+      {
+        error:
+          "Complete payment for this Life Guidance Discovery before saving your answers."
+      },
+      { status: 402 }
+    );
+  }
+  {
     const updated = await updateLgdIntakeDraft({
       id: intake.id,
       userId: user.id,
@@ -186,6 +212,31 @@ export async function POST(request: Request) {
     );
   }
   const body = await request.json().catch(() => null);
+
+  // Start another intake after a prior submit (member then pays for the new draft).
+  const startNew = startNewSchema.safeParse(body);
+  if (startNew.success) {
+    const latest = await getLatestLgdIntakeForUser(user.id);
+    if (latest?.status === "draft" && !latest.paidAt) {
+      return NextResponse.json({
+        intake: serializeIntake(latest),
+        message: "You already have an unpaid draft — complete payment to continue."
+      });
+    }
+    if (latest?.status === "draft" && latest.paidAt) {
+      return NextResponse.json({
+        intake: serializeIntake(latest),
+        message: "Finish or submit your current paid draft before starting another."
+      });
+    }
+    const intake = await createLgdIntakeDraft(user.id, emptyLgdIntakeAnswers());
+    return NextResponse.json({
+      intake: serializeIntake(intake),
+      needsCheckout: true,
+      priceLabel: getLgdPriceDisplay().label
+    });
+  }
+
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
@@ -255,11 +306,27 @@ export async function POST(request: Request) {
 
   let intake = await getLatestLgdIntakeForUser(user.id);
   if (!intake) {
-    intake = await createLgdIntakeDraft(user.id, answers);
-  } else if (intake.status !== "draft") {
     return NextResponse.json(
-      { error: "This intake was already submitted." },
+      {
+        error:
+          "Pay for Life Guidance Discovery packaging first, then complete and submit your intake."
+      },
+      { status: 402 }
+    );
+  }
+  if (intake.status !== "draft") {
+    return NextResponse.json(
+      { error: "This intake was already submitted. Start a new intake to continue." },
       { status: 409 }
+    );
+  }
+  if (!intake.paidAt) {
+    return NextResponse.json(
+      {
+        error:
+          "Complete payment for this Life Guidance Discovery before submitting your intake."
+      },
+      { status: 402 }
     );
   }
 

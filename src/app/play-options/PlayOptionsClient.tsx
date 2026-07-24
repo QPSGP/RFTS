@@ -247,8 +247,7 @@ export default function PlayOptionsClient({
                 )}
               </div>
           )}
-        </div>
-        {schedule.length > 0 && tonightTracksWithUrls.length > 0 && (
+          {schedule.length > 0 && tonightTracksWithUrls.length > 0 && (
             <SessionPlayer
               ref={sessionRef}
               prepAudio={prepAudio}
@@ -289,7 +288,8 @@ export default function PlayOptionsClient({
                   .catch(() => {});
               }}
             />
-        )}
+          )}
+        </div>
         <div className="card">
           <h3>Your Goals</h3>
           <p>Manage the goals that drive your session lineup.</p>

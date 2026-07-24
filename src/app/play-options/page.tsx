@@ -423,56 +423,56 @@ export default function PlayOptionsPage() {
               )}
             </div>
           )}
-        </div>
-        {schedule.length > 0 && tonightTracksWithUrls.length > 0 && (
-          <SessionPlayer
-            ref={sessionRef}
-            prepAudio={prepAudio}
-            firstTrack={
-              tonightTracksWithUrls[0]
-                ? {
-                    title: tonightTracksWithUrls[0].title,
-                    url: tonightTracksWithUrls[0].audioUrl,
-                    skuCode: tonightTracksWithUrls[0].skuCode
-                  }
-                : null
-            }
-            secondTrack={
-              tonightTracksWithUrls[1]
-                ? {
-                    title: tonightTracksWithUrls[1].title,
-                    url: tonightTracksWithUrls[1].audioUrl,
-                    skuCode: tonightTracksWithUrls[1].skuCode
-                  }
-                : null
-            }
-            gapHours={gapHours}
-            playsPerNight={playsPerNightSetting}
-            autoStart={autoStart}
-            onPlayNextAudio={
-              playsPerNightSetting === 1 ? () => void playNextInRotation() : undefined
-            }
-            onSessionStart={() => {
-              fetch("/api/user/session-used", { method: "POST", credentials: "include" }).catch(() => {});
-            }}
-            scheduleNightNumber={currentNight}
-            onScheduleNightComplete={(night) => {
-              /* Only after a full night is listened (both main audios when 2/night, or the single when 1/night). */
-              fetch("/api/user/schedule-night-complete", {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nightCompleted: night })
-              })
-                .then((r) => {
-                  if (!r.ok) return undefined;
-                  setNextAudioNeedsAdvance(false);
-                  return loadSchedule();
+          {schedule.length > 0 && tonightTracksWithUrls.length > 0 && (
+            <SessionPlayer
+              ref={sessionRef}
+              prepAudio={prepAudio}
+              firstTrack={
+                tonightTracksWithUrls[0]
+                  ? {
+                      title: tonightTracksWithUrls[0].title,
+                      url: tonightTracksWithUrls[0].audioUrl,
+                      skuCode: tonightTracksWithUrls[0].skuCode
+                    }
+                  : null
+              }
+              secondTrack={
+                tonightTracksWithUrls[1]
+                  ? {
+                      title: tonightTracksWithUrls[1].title,
+                      url: tonightTracksWithUrls[1].audioUrl,
+                      skuCode: tonightTracksWithUrls[1].skuCode
+                    }
+                  : null
+              }
+              gapHours={gapHours}
+              playsPerNight={playsPerNightSetting}
+              autoStart={autoStart}
+              onPlayNextAudio={
+                playsPerNightSetting === 1 ? () => void playNextInRotation() : undefined
+              }
+              onSessionStart={() => {
+                fetch("/api/user/session-used", { method: "POST", credentials: "include" }).catch(() => {});
+              }}
+              scheduleNightNumber={currentNight}
+              onScheduleNightComplete={(night) => {
+                /* Only after a full night is listened (both main audios when 2/night, or the single when 1/night). */
+                fetch("/api/user/schedule-night-complete", {
+                  method: "POST",
+                  credentials: "include",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ nightCompleted: night })
                 })
-                .catch(() => {});
-            }}
-          />
-        )}
+                  .then((r) => {
+                    if (!r.ok) return undefined;
+                    setNextAudioNeedsAdvance(false);
+                    return loadSchedule();
+                  })
+                  .catch(() => {});
+              }}
+            />
+          )}
+        </div>
         {!profile?.isManaged && (
           <div className="card">
             <h3>Your Goals</h3>

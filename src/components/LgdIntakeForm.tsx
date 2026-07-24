@@ -70,6 +70,12 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
     defaultLgdFacilitatorFeatureFlags()
   );
   const [priceLabel, setPriceLabel] = useState<string | null>(null);
+  const [paidAt, setPaidAt] = useState<string | null>(null);
+  const [needsPayment, setNeedsPayment] = useState(false);
+  const [needsCheckoutToStart, setNeedsCheckoutToStart] = useState(false);
+  const [canStartNew, setCanStartNew] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [checkingOut, setCheckingOut] = useState(false);
 
   const section = LGD_INTAKE_SECTIONS[sectionIndex];
   const adminEmail = adminMemberEmail?.trim().toLowerCase() || "";
@@ -99,19 +105,101 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
           return;
         }
         if (!res.ok) throw new Error(data?.error || "Unauthorized");
-        if (data.intake?.answers) setAnswers(data.intake.answers);
         if (data.flags) setFlags(data.flags);
         if (data.priceLabel) setPriceLabel(data.priceLabel);
-        setEditable(data.intake?.editable !== false);
-        setIntakeStatus(data.intake?.status || "draft");
-        setScriptDraftText(data.intake?.scriptDraftText || null);
+        setNeedsCheckoutToStart(!!data.needsCheckoutToStart);
+        if (data.intake?.answers) {
+          const unpaidMember =
+            !isAdminMode && data.intake.status === "draft" && !data.intake.paidAt;
+          setAnswers(data.intake.answers);
+          setEditable(data.intake.editable !== false && !unpaidMember);
+          setIntakeStatus(data.intake.status || "draft");
+          setScriptDraftText(data.intake.scriptDraftText || null);
+          setPaidAt(data.intake.paidAt || null);
+          setNeedsPayment(unpaidMember);
+          setCanStartNew(!!data.intake.canStartNew);
+        } else {
+          setAnswers(emptyLgdIntakeAnswers());
+          setEditable(false);
+          setIntakeStatus("none");
+          setScriptDraftText(null);
+          setPaidAt(null);
+          setNeedsPayment(false);
+          setCanStartNew(false);
+        }
         setStatus("ready");
       })
       .catch((err) => {
         setStatus("error");
         setMessage(err instanceof Error ? err.message : "Could not load intake.");
       });
-  }, [adminEmail, isAdminMode]);
+  }, [adminEmail, isAdminMode, reloadKey]);
+
+  const startCheckout = async () => {
+    setCheckingOut(true);
+    setMessage(null);
+    setMessageIsError(false);
+    try {
+      const res = await fetch("/api/member/lgd-checkout", {
+        method: "POST",
+        credentials: "include"
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage(data?.error || "Checkout unavailable.");
+        setMessageIsError(true);
+        return;
+      }
+      if (data.url) window.location.href = data.url;
+    } catch {
+      setMessage("Checkout failed.");
+      setMessageIsError(true);
+    } finally {
+      setCheckingOut(false);
+    }
+  };
+
+  const startNewIntake = async () => {
+    setMessage(null);
+    setMessageIsError(false);
+    if (isAdminMode) {
+      const res = await fetch("/api/admin/lgd-intake", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberEmail: adminEmail, action: "startNew" })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage(data?.error || "Could not start new intake.");
+        setMessageIsError(true);
+        return;
+      }
+      setMessage("New blank intake started.");
+      setReloadKey((k) => k + 1);
+      setSectionIndex(0);
+      return;
+    }
+    const res = await fetch("/api/member/lgd-intake", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "startNew" })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setMessage(data?.error || "Could not start new intake.");
+      setMessageIsError(true);
+      return;
+    }
+    setMessage(
+      data.needsCheckout
+        ? "New intake created — complete payment to fill it out."
+        : data.message || "Intake ready."
+    );
+    setReloadKey((k) => k + 1);
+    setSectionIndex(0);
+  };
 
   const patchAnswers = (partial: Partial<LgdIntakeAnswers>) => {
     setAnswers((prev) => ({ ...prev, ...partial }));
@@ -159,6 +247,9 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
 
   const submitBlockers = useMemo(() => {
     const blockers: string[] = [];
+    if (!isAdminMode && needsPayment) {
+      blockers.push(`Pay ${priceLabel || "for LGD packaging"} before saving or submitting.`);
+    }
     if (!answers.consentStored) {
       blockers.push("Section A: check consent to store answers.");
     }
@@ -182,7 +273,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
       blockers.push("Section E: confirm Voice Recording Agreement for own voice.");
     }
     return blockers;
-  }, [answers]);
+  }, [answers, isAdminMode, needsPayment, priceLabel]);
 
   const toggleProgram = (id: LgdSubconsciousProgramId) => {
     setAnswers((prev) => {
@@ -382,6 +473,30 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
     );
   }
 
+  if (!isAdminMode && needsCheckoutToStart) {
+    return (
+      <div className="card">
+        <h2 style={{ marginTop: 0 }}>Life Guidance Discovery</h2>
+        <p>
+          Pay for Goal Manifestation packaging first
+          {priceLabel ? ` (${priceLabel})` : ""}. After payment you can complete the electronic
+          intake and we&apos;ll draft your customized script.
+        </p>
+        {message ? (
+          <p style={{ color: messageIsError ? "#991b1b" : "#065f46" }}>{message}</p>
+        ) : null}
+        <button
+          type="button"
+          className="button"
+          disabled={checkingOut}
+          onClick={() => void startCheckout()}
+        >
+          {checkingOut ? "Opening checkout…" : `Pay ${priceLabel || "now"} & start intake`}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div>
       {isAdminMode ? (
@@ -394,9 +509,53 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
             color: "#155e75"
           }}
         >
-          Admin intake for <strong>{adminEmail}</strong> (sections A–F). Members do not see this
-          while LGD is admin-only.
+          Admin intake for <strong>{adminEmail}</strong> (sections A–F). No payment required for
+          admin. Use <strong>Start new intake</strong> anytime to add another.
         </p>
+      ) : null}
+      {!isAdminMode && needsPayment ? (
+        <div
+          style={{
+            padding: 12,
+            borderRadius: 8,
+            background: "#fffbeb",
+            border: "1px solid #fcd34d",
+            color: "#92400e",
+            marginBottom: 16
+          }}
+        >
+          <p style={{ marginTop: 0 }}>
+            Payment is required before you can fill and submit this intake
+            {priceLabel ? ` (${priceLabel})` : ""}.
+          </p>
+          <button
+            type="button"
+            className="button"
+            disabled={checkingOut}
+            onClick={() => void startCheckout()}
+          >
+            {checkingOut ? "Opening checkout…" : `Pay ${priceLabel || "now"}`}
+          </button>
+        </div>
+      ) : null}
+      {canStartNew || isAdminMode ? (
+        <div style={{ marginBottom: 12 }}>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => void startNewIntake()}
+          >
+            Start new intake
+          </button>
+          {!isAdminMode ? (
+            <span style={{ marginLeft: 10, fontSize: 13, color: "#64748b" }}>
+              After you pay again, you can fill out a new one.
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+      {paidAt && intakeStatus === "draft" && !isAdminMode ? (
+        <p style={{ fontSize: 13, color: "#065f46" }}>Payment received — complete sections A–F and submit.</p>
       ) : null}
       <div className="stepper" style={{ marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
         {LGD_INTAKE_SECTIONS.map((s, i) => (
@@ -1206,28 +1365,14 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
           >
             {scriptDraftText}
           </pre>
-          {priceLabel && intakeStatus !== "draft" && !isAdminMode ? (
+          {canStartNew && !isAdminMode ? (
             <button
               type="button"
               className="button"
               style={{ marginTop: 16 }}
-              onClick={() => {
-                void fetch("/api/member/lgd-checkout", {
-                  method: "POST",
-                  credentials: "include"
-                })
-                  .then(async (res) => {
-                    const data = await res.json().catch(() => ({}));
-                    if (!res.ok) {
-                      setMessage(data?.error || "Checkout unavailable.");
-                      return;
-                    }
-                    if (data.url) window.location.href = data.url;
-                  })
-                  .catch(() => setMessage("Checkout failed."));
-              }}
+              onClick={() => void startNewIntake()}
             >
-              Pay {priceLabel} for Goal Manifestation packaging
+              Start another intake
             </button>
           ) : null}
         </div>

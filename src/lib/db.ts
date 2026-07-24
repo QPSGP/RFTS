@@ -4232,6 +4232,9 @@ export const getLatestLgdIntakeForUser = async (
       voice_id AS "voiceId",
       frequency_bed_id AS "frequencyBedId",
       price_cents AS "priceCents",
+      paid_at AS "paidAt",
+      stripe_checkout_session_id AS "stripeCheckoutSessionId",
+      own_voice_audio_url AS "ownVoiceAudioUrl",
       created_at AS "createdAt",
       updated_at AS "updatedAt",
       submitted_at AS "submittedAt",
@@ -4244,6 +4247,18 @@ export const getLatestLgdIntakeForUser = async (
   return rows[0] ?? null;
 };
 
+/** Remove all LGD intakes for a user (admin cleanup). */
+export const deleteLgdIntakesForUser = async (userId: string): Promise<number> => {
+  await ensureLgdIntakesTable();
+  const { rows } = await sql<{ id: string }>`
+    DELETE FROM lgd_intakes
+    WHERE user_id = ${userId}
+    RETURNING id
+  `;
+  return rows.length;
+};
+
+/** Always create a fresh draft so admin/member can start another intake. */
 export const createLgdIntakeDraft = async (
   userId: string,
   answers: unknown
@@ -4264,6 +4279,9 @@ export const createLgdIntakeDraft = async (
       voice_id AS "voiceId",
       frequency_bed_id AS "frequencyBedId",
       price_cents AS "priceCents",
+      paid_at AS "paidAt",
+      stripe_checkout_session_id AS "stripeCheckoutSessionId",
+      own_voice_audio_url AS "ownVoiceAudioUrl",
       created_at AS "createdAt",
       updated_at AS "updatedAt",
       submitted_at AS "submittedAt",
@@ -4302,6 +4320,9 @@ export const updateLgdIntakeDraft = async (input: {
       voice_id AS "voiceId",
       frequency_bed_id AS "frequencyBedId",
       price_cents AS "priceCents",
+      paid_at AS "paidAt",
+      stripe_checkout_session_id AS "stripeCheckoutSessionId",
+      own_voice_audio_url AS "ownVoiceAudioUrl",
       created_at AS "createdAt",
       updated_at AS "updatedAt",
       submitted_at AS "submittedAt",
@@ -4351,6 +4372,9 @@ export const submitLgdIntake = async (input: {
       voice_id AS "voiceId",
       frequency_bed_id AS "frequencyBedId",
       price_cents AS "priceCents",
+      paid_at AS "paidAt",
+      stripe_checkout_session_id AS "stripeCheckoutSessionId",
+      own_voice_audio_url AS "ownVoiceAudioUrl",
       created_at AS "createdAt",
       updated_at AS "updatedAt",
       submitted_at AS "submittedAt",

@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getLatestLgdIntakeForUser, getUserProfile } from "@/lib/db";
+import {
+  createLgdIntakeDraft,
+  getLatestLgdIntakeForUser,
+  getUserProfile
+} from "@/lib/db";
 import { canAccessLgdSurfaces, isLgdAdminOnlyMode } from "@/lib/lgd-access";
 import { createLgdCheckoutSession } from "@/lib/lgd-stripe";
 import { getPublicSiteUrl } from "@/lib/site-url";
 import { isAdminSession } from "@/lib/auth";
+import { emptyLgdIntakeAnswers } from "@/lib/lgd-intake";
 
+/**
+ * Pay-first LGD packaging: creates an unpaid draft if needed, then Stripe Checkout.
+ * After payment the member fills and submits that draft.
+ */
 export async function POST() {
   if (isLgdAdminOnlyMode() && !(await isAdminSession())) {
     return NextResponse.json(
@@ -24,15 +33,10 @@ export async function POST() {
   if (!user) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
-  const intake = await getLatestLgdIntakeForUser(user.id);
-  if (!intake || intake.status === "draft") {
-    return NextResponse.json(
-      { error: "Submit your Life Guidance Discovery intake before checkout." },
-      { status: 400 }
-    );
-  }
-  if (intake.paidAt) {
-    return NextResponse.json({ error: "This intake is already marked paid." }, { status: 409 });
+  let intake = await getLatestLgdIntakeForUser(user.id);
+  // Reuse unpaid draft; otherwise start a new draft for this purchase.
+  if (!intake || intake.status !== "draft" || intake.paidAt) {
+    intake = await createLgdIntakeDraft(user.id, emptyLgdIntakeAnswers());
   }
   try {
     const session = await createLgdCheckoutSession({
@@ -41,7 +45,7 @@ export async function POST() {
       intakeId: intake.id,
       baseUrl: getPublicSiteUrl()
     });
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: session.url, intakeId: intake.id });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Checkout failed.";
     console.error("[POST /api/member/lgd-checkout]", message);
