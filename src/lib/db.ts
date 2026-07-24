@@ -4541,8 +4541,9 @@ export const listAllLgdIntakes = async (): Promise<LgdIntakeListItem[]> => {
     FROM lgd_intakes i
     JOIN users u ON u.id = i.user_id
     LEFT JOIN member_profiles mp ON mp.user_id = u.id
-    WHERE i.status <> 'draft'
-    ORDER BY COALESCE(i.submitted_at, i.updated_at) DESC
+    ORDER BY
+      CASE WHEN i.status = 'draft' THEN 1 ELSE 0 END,
+      COALESCE(i.submitted_at, i.updated_at) DESC
     LIMIT 200
   `;
   return rows;

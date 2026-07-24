@@ -52,6 +52,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
   const [intakeStatus, setIntakeStatus] = useState("draft");
   const [scriptDraftText, setScriptDraftText] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageIsError, setMessageIsError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [goalSearch, setGoalSearch] = useState("");
@@ -141,9 +142,33 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
     [answers.goalIds, interests]
   );
 
-  const saveDraft = async () => {
+  const showMessage = (text: string, isError = false) => {
+    setMessage(text);
+    setMessageIsError(isError);
+  };
+
+  const submitBlockers = useMemo(() => {
+    const blockers: string[] = [];
+    if (!answers.consentStored) {
+      blockers.push("Section A: check consent to store answers.");
+    }
+    if (answers.crisisFlag) {
+      blockers.push("Section A: crisis flag is checked — clear it or handle with a human facilitator.");
+    }
+    if (!answers.identityStatements.length && !answers.topOutcomes.length) {
+      blockers.push(
+        "Section C: add at least one top outcome or identity statement (one per line)."
+      );
+    }
+    if (answers.voiceId === "member_own" && !answers.ownVoiceConsent) {
+      blockers.push("Section E: confirm Voice Recording Agreement for own voice.");
+    }
+    return blockers;
+  }, [answers]);
+
+  const saveDraft = async (quiet = false) => {
     setSaving(true);
-    setMessage(null);
+    if (!quiet) setMessage(null);
     const res = await fetch(isAdminMode ? "/api/admin/lgd-intake" : "/api/member/lgd-intake", {
       method: "PATCH",
       credentials: "include",
@@ -155,14 +180,28 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
     setSaving(false);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setMessage(data?.error || "Could not save draft.");
+      showMessage(data?.error || "Could not save draft.", true);
       return false;
     }
-    setMessage("Draft saved.");
+    if (!quiet) showMessage("Draft saved.");
     return true;
   };
 
+  const goNext = async () => {
+    if (!editable) {
+      setSectionIndex((i) => Math.min(LGD_INTAKE_SECTIONS.length - 1, i + 1));
+      return;
+    }
+    const ok = await saveDraft(true);
+    if (!ok) return;
+    setSectionIndex((i) => Math.min(LGD_INTAKE_SECTIONS.length - 1, i + 1));
+  };
+
   const submit = async () => {
+    if (submitBlockers.length) {
+      showMessage(`Cannot submit yet:\n• ${submitBlockers.join("\n• ")}`, true);
+      return;
+    }
     setSubmitting(true);
     setMessage(null);
     const res = await fetch(isAdminMode ? "/api/admin/lgd-intake" : "/api/member/lgd-intake", {
@@ -176,15 +215,15 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
     const data = await res.json().catch(() => ({}));
     setSubmitting(false);
     if (!res.ok) {
-      setMessage(data?.error || "Could not submit.");
+      showMessage(data?.error || "Could not submit.", true);
       return;
     }
     setEditable(false);
     setIntakeStatus(data.intake?.status || "submitted");
     setScriptDraftText(data.scriptDraftText || data.intake?.scriptDraftText || null);
-    setMessage(
+    showMessage(
       isAdminMode
-        ? "Submitted. Open the review queue below (or refresh) to see the brief and script."
+        ? "Submitted. Refresh the review queue below to see the brief and script."
         : "Submitted. Your facilitator can review the brief and Goal Manifestation draft."
     );
   };
@@ -255,9 +294,10 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
           style={{
             padding: 12,
             borderRadius: 8,
-            background: "#ecfdf5",
-            border: "1px solid #a7f3d0",
-            color: "#065f46"
+            background: messageIsError ? "#fef2f2" : "#ecfdf5",
+            border: messageIsError ? "1px solid #fecaca" : "1px solid #a7f3d0",
+            color: messageIsError ? "#991b1b" : "#065f46",
+            whiteSpace: "pre-wrap"
           }}
         >
           {message}
@@ -780,8 +820,31 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
               {flags.lgdScriptDraft
                 ? ", we generate a Goal Manifestation script draft for facilitator review"
                 : ", your facilitator will write the script from this brief"}{" "}
-              before production. You can save a draft anytime and return later.
+              before production. Progress auto-saves when you click Next; you must click{" "}
+              <strong>Submit intake</strong> on this last section for it to appear in review.
             </p>
+            {editable && submitBlockers.length > 0 ? (
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 8,
+                  background: "#fffbeb",
+                  border: "1px solid #fcd34d",
+                  color: "#92400e"
+                }}
+              >
+                <strong>Still needed before submit:</strong>
+                <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>
+                  {submitBlockers.map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : editable ? (
+              <p style={{ color: "#065f46", marginBottom: 0 }}>
+                Ready to submit — click <strong>Submit intake</strong> below.
+              </p>
+            ) : null}
           </div>
         )}
       </div>
@@ -799,11 +862,10 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
           <button
             type="button"
             className="button"
-            onClick={() =>
-              setSectionIndex((i) => Math.min(LGD_INTAKE_SECTIONS.length - 1, i + 1))
-            }
+            disabled={saving}
+            onClick={() => void goNext()}
           >
-            Next
+            {saving ? "Saving…" : "Next"}
           </button>
         ) : null}
         {editable ? (
@@ -820,8 +882,13 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
               <button
                 type="button"
                 className="button"
-                disabled={submitting}
+                disabled={submitting || submitBlockers.length > 0}
                 onClick={() => void submit()}
+                title={
+                  submitBlockers.length
+                    ? submitBlockers.join(" ")
+                    : "Submit for facilitator / admin review"
+                }
               >
                 {submitting ? "Submitting…" : "Submit intake"}
               </button>

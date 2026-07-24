@@ -140,8 +140,12 @@ export default function AdminLgdPanel() {
       <div className="grid" style={{ gap: 16, gridTemplateColumns: "minmax(220px, 300px) 1fr" }}>
         <div className="card">
           <h3 style={{ marginTop: 0 }}>All intakes ({intakes.length})</h3>
+          <p style={{ fontSize: 13, color: "#64748b" }}>
+            Drafts are incomplete until <strong>Submit intake</strong> on section F. Only submitted
+            rows are ready for script review.
+          </p>
           {intakes.length === 0 ? (
-            <p style={{ color: "#64748b", fontSize: 14 }}>No submitted intakes yet.</p>
+            <p style={{ color: "#64748b", fontSize: 14 }}>No intakes yet.</p>
           ) : (
             <div className="stack" style={{ gap: 8 }}>
               {intakes.map((row) => (
@@ -151,17 +155,20 @@ export default function AdminLgdPanel() {
                   className="button button-secondary"
                   style={{
                     textAlign: "left",
-                    borderColor: selectedId === row.id ? "#0f766e" : undefined
+                    borderColor: selectedId === row.id ? "#0f766e" : undefined,
+                    opacity: row.status === "draft" ? 0.85 : 1
                   }}
                   onClick={() => setSelectedId(row.id)}
                 >
                   <strong style={{ display: "block" }}>{memberLabel(row)}</strong>
                   <span style={{ fontSize: 12, color: "#64748b" }}>
-                    {row.status}
+                    {row.status === "draft" ? "draft (not submitted)" : row.status}
                     {row.paidAt ? " · paid" : ""}
                     {row.submittedAt
                       ? ` · ${new Date(row.submittedAt).toLocaleDateString()}`
-                      : ""}
+                      : row.status === "draft"
+                        ? " · open form above to finish"
+                        : ""}
                   </span>
                 </button>
               ))}
