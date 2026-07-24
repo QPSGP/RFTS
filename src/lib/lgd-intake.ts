@@ -130,6 +130,12 @@ export type LgdIntakeAnswers = {
   version: typeof LGD_INTAKE_VERSION;
   consentStored: boolean;
   crisisFlag?: boolean;
+  /** Member already completed a live LGD (not only electronic). */
+  alreadyHadLiveLgd?: boolean;
+  /** Permission for facilitator to edit the auto script draft. */
+  permissionToEditDraft?: boolean;
+  /** Consent for Phase B own-voice recording / clone when offered. */
+  ownVoiceConsent?: boolean;
   lifeAreaScores: Partial<Record<LgdLifeAreaId, number>>;
   occupyingBeliefs: string[];
   gratitude: string[];
@@ -159,6 +165,9 @@ export function emptyLgdIntakeAnswers(): LgdIntakeAnswers {
   return {
     version: LGD_INTAKE_VERSION,
     consentStored: false,
+    alreadyHadLiveLgd: false,
+    permissionToEditDraft: true,
+    ownVoiceConsent: false,
     lifeAreaScores: {},
     occupyingBeliefs: [],
     gratitude: [],
@@ -205,6 +214,9 @@ export function normalizeLgdIntakeAnswers(raw: unknown): LgdIntakeAnswers {
     version: LGD_INTAKE_VERSION,
     consentStored: !!o.consentStored,
     crisisFlag: !!o.crisisFlag,
+    alreadyHadLiveLgd: !!o.alreadyHadLiveLgd,
+    permissionToEditDraft: o.permissionToEditDraft !== false,
+    ownVoiceConsent: !!o.ownVoiceConsent,
     lifeAreaScores: scores,
     occupyingBeliefs: asStringArray(o.occupyingBeliefs, 5),
     gratitude: asStringArray(o.gratitude, 5),
@@ -258,6 +270,232 @@ export const LGD_INTAKE_SECTIONS = [
   { id: "F", title: "Facilitator handoff" }
 ] as const;
 
+/** Pick a concrete frequency bed when member chose “choose for me”. */
+export function resolveFrequencyBedId(
+  answers: LgdIntakeAnswers
+): Exclude<LgdFrequencyBedId, "choose_for_me"> {
+  const selected = answers.frequencyBedId;
+  if (selected && selected !== "choose_for_me" && selected !== "") {
+    return selected;
+  }
+  if (answers.listenContext === "sleep") return "calm_delta";
+  let lowest: { id: LgdLifeAreaId; score: number } | null = null;
+  for (const area of LGD_LIFE_AREAS) {
+    const score = answers.lifeAreaScores[area.id];
+    if (typeof score !== "number") continue;
+    if (!lowest || score < lowest.score) lowest = { id: area.id, score };
+  }
+  if (!lowest) return "neutral_music";
+  switch (lowest.id) {
+    case "sleep_energy":
+    case "physical":
+      return "calm_delta";
+    case "emotional":
+    case "relationship":
+      return "heart_coherence";
+    case "mental":
+    case "work_mission":
+      return "focus_clarity";
+    case "financial":
+      return "abundance_warm";
+    case "spiritual":
+      return "heart_coherence";
+    default:
+      return "neutral_music";
+  }
+}
+
+export function findLgdContradictionNotes(answers: LgdIntakeAnswers): string[] {
+  const notes: string[] = [];
+  if (
+    answers.spiritualLanguage === "none" &&
+    (answers.incomeDesiredBand?.trim() || (answers.lifeAreaScores.financial ?? 0) <= 4)
+  ) {
+    notes.push(
+      "Spiritual language set to none while financial growth is in focus — keep mission framing practical, avoid faith metaphors."
+    );
+  }
+  if (answers.crisisFlag) {
+    notes.push("Crisis flag set — do not produce automated script; escalate to human care.");
+  }
+  if (
+    answers.voiceId === "member_own" &&
+    !answers.ownVoiceConsent
+  ) {
+    notes.push("Member selected own voice without consent checkbox — confirm before clone/recording.");
+  }
+  if ((answers.willToLearn ?? 5) <= 2 || (answers.beliefCanLearn ?? 5) <= 2) {
+    notes.push("Low will-to-learn or belief-can-learn scores — add reassurance and small-step suggestions.");
+  }
+  if (answers.wordsAvoid.some((w) =>
+    answers.identityStatements.some((id) => id.toLowerCase().includes(w.toLowerCase()))
+  )) {
+    notes.push("An identity statement may contain a word marked to avoid — edit before production.");
+  }
+  return notes;
+}
+
+export type LgdScriptDraftBlocks = Record<LgdScriptBlockId, string[]>;
+
+export function buildLgdScriptDraftBlocks(input: {
+  firstName: string;
+  answers: LgdIntakeAnswers;
+  goalNames?: string[];
+  resolvedBedId?: string;
+}): LgdScriptDraftBlocks {
+  const name = (input.firstName || "friend").trim() || "friend";
+  const a = input.answers;
+  const identities = a.identityStatements.map((s) => s.trim()).filter(Boolean);
+  const outcomes = a.topOutcomes.map((s) => s.trim()).filter(Boolean);
+  const beliefs = a.occupyingBeliefs.map((s) => s.trim()).filter(Boolean);
+  const strengths = a.strengths.map((s) => s.trim()).filter(Boolean);
+  const gratitude = a.gratitude.map((s) => s.trim()).filter(Boolean);
+  const metaphors = a.metaphors.map((s) => s.trim()).filter(Boolean);
+  const wordsLove = a.wordsLove.map((s) => s.trim()).filter(Boolean);
+  const wordsAvoid = a.wordsAvoid.map((s) => s.trim()).filter(Boolean);
+  const goals =
+    input.goalNames && input.goalNames.length ? input.goalNames : a.goalIds;
+  const bed = input.resolvedBedId || resolveFrequencyBedId(a);
+
+  const metaphorLine = metaphors.length
+    ? `Images that feel true for you — ${metaphors.join(", ")} — support this deepening.`
+    : "Allow images that feel natural for you to support this deepening.";
+
+  const deepener =
+    a.listenContext === "sleep"
+      ? [
+          "Deeper with each breath as sleep arrives… ten… nine… drifting… eight… seven… the body heavy and safe… six… five… four… three… two… one… deeply receptive while you rest."
+        ]
+      : [
+          "Deeper with each count… ten… nine… drifting… eight… seven… deeper still… six… five… four… three… two… one… deeply receptive.",
+          metaphorLine
+        ];
+
+  const spiritualTone =
+    a.spiritualLanguage === "yes"
+      ? "You honor spirit and practical action together."
+      : a.spiritualLanguage === "minimal"
+        ? "You honor quiet meaning without needing special language."
+        : "You stay with clear, practical language that fits you.";
+
+  const induction = [
+    `Allow yourself to settle, ${name}. With each breath, the body softens. You are safe to rest and receive.`,
+    metaphorLine
+  ];
+
+  const presentBridge: string[] = [];
+  if (a.primaryStruggle.trim()) {
+    presentBridge.push(
+      `You acknowledge where you have been: ${a.primaryStruggle.trim()} — and you choose to move forward with clarity.`
+    );
+  } else {
+    presentBridge.push(
+      "You acknowledge where you have been, and you choose to move forward with clarity and calm."
+    );
+  }
+  if (beliefs.length) {
+    presentBridge.push(
+      "Old phrases that no longer define you can soften and release as you make room for new truth:"
+    );
+    for (const b of beliefs) presentBridge.push(`Releasing: “${b}”`);
+  }
+  if (gratitude.length) {
+    presentBridge.push(`You also remember what already works: ${gratitude.join("; ")}.`);
+  }
+
+  const identitySuggestions: string[] = [];
+  if (identities.length) {
+    for (const phrase of identities) {
+      identitySuggestions.push(`You are becoming — and more and more you are — “${phrase}”`);
+    }
+  } else {
+    identitySuggestions.push(
+      "You grow into the highest expression of yourself physically, mentally, emotionally, spiritually, and financially — in your own time, with steady repetition."
+    );
+  }
+  if (outcomes.length) {
+    identitySuggestions.push("Your clear outcomes take root:");
+    for (const o of outcomes) identitySuggestions.push(o);
+  }
+  if (goals.length) {
+    identitySuggestions.push(`Your prioritized goals include: ${goals.join("; ")}.`);
+  }
+  if (wordsLove.length) {
+    identitySuggestions.push(`Words that land for you: ${wordsLove.join(", ")}.`);
+  }
+  if (wordsAvoid.length) {
+    identitySuggestions.push(
+      `(Production note: avoid these words in the read — ${wordsAvoid.join(", ")}.)`
+    );
+  }
+
+  const supportSuggestions: string[] = [];
+  if (strengths.length) {
+    supportSuggestions.push(`You draw on what already works: ${strengths.join("; ")}.`);
+  }
+  if (a.blocks.length) {
+    supportSuggestions.push(
+      `As old blocks soften — ${a.blocks.join("; ")} — you choose the next right step.`
+    );
+  }
+  if (a.pastAttempts.trim()) {
+    supportSuggestions.push(
+      `Past attempts taught you what to refine: ${a.pastAttempts.trim()}. You use that wisdom now.`
+    );
+  }
+  const will = a.willToLearn ?? 3;
+  const belief = a.beliefCanLearn ?? 3;
+  supportSuggestions.push(
+    `Your will to learn (${will}/5) and belief that you can learn (${belief}/5) grow steadier with each listening.`
+  );
+  supportSuggestions.push(spiritualTone);
+
+  const missionFinancial: string[] = [];
+  if (a.incomeDesiredBand?.trim() || a.lifeAreaScores.financial != null) {
+    missionFinancial.push(
+      "Success is allowed. You show up as a beacon — meaning and practical results together. Right action and right income can grow side by side."
+    );
+    if (a.incomeDesiredBand?.trim()) {
+      missionFinancial.push(`You move steadily toward: ${a.incomeDesiredBand.trim()}.`);
+    }
+  }
+
+  const futurePacing = [
+    "In the days ahead you notice small proofs — calmer evenings, clearer choices, aligned action — and each proof deepens trust in this path."
+  ];
+  if (a.timeline === "90_days") {
+    futurePacing.push("Over the next ninety days, progress feels tangible and repeatable.");
+  } else if (a.timeline === "12_months") {
+    futurePacing.push("Across this year, the new pattern becomes natural.");
+  }
+
+  const postHypnotic =
+    a.listenContext === "sleep_and_day"
+      ? [
+          "As you sleep or rest, these suggestions continue to settle. By day you notice yourself choosing aligned action more easily."
+        ]
+      : [
+          "As you sleep, these suggestions continue to settle. You wake when it is time, refreshed, or you sleep through the night as your body prefers."
+        ];
+
+  const close = [
+    "Rest now. You are supported. These words work with you while you sleep.",
+    `Voice preference: ${a.voiceId || "unset"} · Sound bed: ${bed}`
+  ];
+
+  return {
+    induction,
+    deepener,
+    present_bridge: presentBridge,
+    identity_suggestions: identitySuggestions,
+    support_suggestions: supportSuggestions,
+    mission_financial: missionFinancial,
+    future_pacing: futurePacing,
+    post_hypnotic_sleep: postHypnotic,
+    close
+  };
+}
+
 /**
  * Build a reviewable Markdown Goal Manifestation script draft from intake answers.
  * Preserves member phrasing; facilitator may edit before production.
@@ -266,108 +504,96 @@ export function buildGoalManifestationScriptDraft(input: {
   firstName: string;
   answers: LgdIntakeAnswers;
   goalNames?: string[];
+  resolvedBedId?: string;
 }): string {
   const name = (input.firstName || "friend").trim() || "friend";
-  const identities = input.answers.identityStatements.map((s) => s.trim()).filter(Boolean);
-  const outcomes = input.answers.topOutcomes.map((s) => s.trim()).filter(Boolean);
-  const beliefs = input.answers.occupyingBeliefs.map((s) => s.trim()).filter(Boolean);
-  const strengths = input.answers.strengths.map((s) => s.trim()).filter(Boolean);
-  const goals =
-    input.goalNames && input.goalNames.length
-      ? input.goalNames
-      : input.answers.goalIds;
-
-  const lines: string[] = [];
-  lines.push(`# Goal Manifestation Script Draft — ${name}`);
-  lines.push("");
-  lines.push("_Generated from Electronic Life Guidance Discovery. Review before production._");
-  lines.push("");
-  lines.push("## 1. Induction");
-  lines.push(
-    `Allow yourself to settle, ${name}. With each breath, the body softens. You are safe to rest and receive.`
-  );
-  lines.push("");
-  lines.push("## 2. Deepener");
-  lines.push(
-    "Deeper with each count… ten… nine… drifting… eight… seven… deeper still… six… five… four… three… two… one… deeply receptive."
-  );
-  lines.push("");
-  lines.push("## 3. Present → future bridge");
-  if (input.answers.primaryStruggle.trim()) {
-    lines.push(
-      `You acknowledge where you have been: ${input.answers.primaryStruggle.trim()} — and you choose to move forward with clarity.`
-    );
-  } else {
-    lines.push(
-      "You acknowledge where you have been, and you choose to move forward with clarity and calm."
-    );
-  }
-  if (beliefs.length) {
-    lines.push(
-      "Old phrases that no longer define you can soften and release as you make room for new truth:"
-    );
-    for (const b of beliefs) lines.push(`- Releasing: “${b}”`);
-  }
-  lines.push("");
-  lines.push("## 4. Identity & goal suggestions (member words)");
-  if (identities.length) {
-    for (const phrase of identities) {
-      lines.push(`You are becoming — and more and more you are — “${phrase}”`);
-    }
-  } else {
-    lines.push(
-      "You grow into the highest expression of yourself physically, mentally, emotionally, spiritually, and financially — in your own time, with steady repetition."
-    );
-  }
-  if (outcomes.length) {
-    lines.push("Your clear outcomes take root:");
-    for (const o of outcomes) lines.push(`- ${o}`);
-  }
-  if (goals.length) {
-    lines.push(`Your prioritized goals include: ${goals.join("; ")}.`);
-  }
-  lines.push("");
-  lines.push("## 5. Supports & strengths");
-  if (strengths.length) {
-    lines.push(`You draw on what already works: ${strengths.join("; ")}.`);
-  }
-  lines.push(
-    "You have the will to learn and the belief that you can learn what you need to create the reality you choose."
-  );
-  lines.push("");
-  if (
-    input.answers.incomeDesiredBand?.trim() ||
-    input.answers.lifeAreaScores.financial != null
-  ) {
-    lines.push("## 6. Mission & financial alignment");
-    lines.push(
-      "Success is allowed. You show up as a beacon — spirit and practical results together. Right action and right income can grow side by side."
-    );
-    if (input.answers.incomeDesiredBand?.trim()) {
-      lines.push(
-        `You move steadily toward: ${input.answers.incomeDesiredBand.trim()}.`
-      );
+  const blocks = buildLgdScriptDraftBlocks(input);
+  const titles: Record<LgdScriptBlockId, string> = {
+    induction: "1. Induction",
+    deepener: "2. Deepener",
+    present_bridge: "3. Present → future bridge",
+    identity_suggestions: "4. Identity & goal suggestions (member words)",
+    support_suggestions: "5. Supports & strengths",
+    mission_financial: "6. Mission & financial alignment",
+    future_pacing: "7. Future pacing",
+    post_hypnotic_sleep: "8. Post-hypnotic / sleep",
+    close: "9. Close"
+  };
+  const lines: string[] = [
+    `# Goal Manifestation Script Draft — ${name}`,
+    "",
+    "_Generated from Electronic Life Guidance Discovery. Review before production._",
+    ""
+  ];
+  for (const id of LGD_SCRIPT_BLOCKS) {
+    const parts = blocks[id];
+    if (!parts.length) continue;
+    lines.push(`## ${titles[id]}`);
+    for (const p of parts) {
+      if (p.startsWith("Releasing:") || (!p.includes(".") && parts.indexOf(p) > 0 && id === "identity_suggestions")) {
+        lines.push(`- ${p}`);
+      } else if (outcomesLine(p, input.answers)) {
+        lines.push(`- ${p}`);
+      } else {
+        lines.push(p);
+      }
     }
     lines.push("");
   }
-  lines.push("## 7. Future pacing");
-  lines.push(
-    "In the days ahead you notice small proofs — calmer evenings, clearer choices, aligned action — and each proof deepens trust in this path."
-  );
-  lines.push("");
-  lines.push("## 8. Post-hypnotic / sleep");
-  lines.push(
-    "As you sleep, these suggestions continue to settle. You wake when it is time, refreshed, or you sleep through the night as your body prefers."
-  );
-  lines.push("");
-  lines.push("## 9. Close");
-  lines.push(
-    "Rest now. You are supported. These words work with you while you sleep."
-  );
-  lines.push("");
-  lines.push("---");
-  lines.push(
-    `Voice preference: ${input.answers.voiceId || "unset"} · Bed: ${input.answers.frequencyBedId || "unset"}`
-  );
+  const notes = findLgdContradictionNotes(input.answers);
+  if (notes.length) {
+    lines.push("---");
+    lines.push("### Facilitator review flags");
+    for (const n of notes) lines.push(`- ${n}`);
+    lines.push("");
+  }
   return lines.join("\n");
+}
+
+function outcomesLine(p: string, answers: LgdIntakeAnswers): boolean {
+  return answers.topOutcomes.some((o) => o.trim() === p.trim());
+}
+
+/** Plain-text production packet for studio / engineer handoff. */
+export function buildLgdProductionPacket(input: {
+  memberEmail: string;
+  firstName: string | null;
+  lastName: string | null;
+  answers: LgdIntakeAnswers;
+  scriptDraftText: string;
+  status: string;
+  resolvedBedId?: string;
+  voiceLabel?: string;
+}): string {
+  const name =
+    [input.firstName, input.lastName].filter(Boolean).join(" ").trim() || input.memberEmail;
+  const bed = input.resolvedBedId || resolveFrequencyBedId(input.answers);
+  const notes = findLgdContradictionNotes(input.answers);
+  const voice =
+    input.voiceLabel ||
+    LGD_PROFESSIONAL_VOICES.find((v) => v.id === input.answers.voiceId)?.label ||
+    input.answers.voiceId ||
+    "unset";
+  return [
+    "RFTS — Goal Manifestation Production Packet",
+    "============================================",
+    `Member: ${name}`,
+    `Email: ${input.memberEmail}`,
+    `Intake status: ${input.status}`,
+    `Voice: ${voice}`,
+    `Frequency / sound bed: ${bed}`,
+    `Listen context: ${input.answers.listenContext || "unset"}`,
+    `Permission to edit draft: ${input.answers.permissionToEditDraft !== false ? "yes" : "no"}`,
+    `Own-voice consent: ${input.answers.ownVoiceConsent ? "yes" : "no"}`,
+    "",
+    "Schedule placement (Success Center rules):",
+    "- 2 plays/night → CGMR as 2nd play every other night",
+    "- 1 play/night → every 4th play",
+    "",
+    notes.length ? `Review flags:\n${notes.map((n) => `- ${n}`).join("\n")}\n` : "",
+    "----- SCRIPT -----",
+    input.scriptDraftText
+  ]
+    .filter(Boolean)
+    .join("\n");
 }

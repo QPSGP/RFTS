@@ -7,7 +7,9 @@ import {
   LGD_INTAKE_SECTIONS,
   LGD_LIFE_AREAS,
   LGD_PROFESSIONAL_VOICES,
+  defaultLgdFacilitatorFeatureFlags,
   emptyLgdIntakeAnswers,
+  type LgdFacilitatorFeatureFlags,
   type LgdIntakeAnswers,
   type LgdLifeAreaId
 } from "@/lib/lgd-intake";
@@ -39,7 +41,7 @@ function listToLines(list: string[]): string {
 export default function LgdIntakeForm({ interests }: Props) {
   const [sectionIndex, setSectionIndex] = useState(0);
   const [answers, setAnswers] = useState<LgdIntakeAnswers>(emptyLgdIntakeAnswers());
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "ready" | "error" | "disabled">("loading");
   const [editable, setEditable] = useState(true);
   const [intakeStatus, setIntakeStatus] = useState("draft");
   const [scriptDraftText, setScriptDraftText] = useState<string | null>(null);
@@ -47,6 +49,10 @@ export default function LgdIntakeForm({ interests }: Props) {
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [goalSearch, setGoalSearch] = useState("");
+  const [flags, setFlags] = useState<LgdFacilitatorFeatureFlags>(
+    defaultLgdFacilitatorFeatureFlags()
+  );
+  const [priceLabel, setPriceLabel] = useState<string | null>(null);
 
   const section = LGD_INTAKE_SECTIONS[sectionIndex];
 
@@ -62,12 +68,17 @@ export default function LgdIntakeForm({ interests }: Props) {
 
   useEffect(() => {
     fetch("/api/member/lgd-intake", { credentials: "include" })
-      .then((res) => {
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 403) {
+          setStatus("disabled");
+          setMessage(data?.error || "Electronic LGD is not currently offered.");
+          return;
+        }
         if (!res.ok) throw new Error("Unauthorized");
-        return res.json();
-      })
-      .then((data) => {
         if (data.intake?.answers) setAnswers(data.intake.answers);
+        if (data.flags) setFlags(data.flags);
+        if (data.priceLabel) setPriceLabel(data.priceLabel);
         setEditable(data.intake?.editable !== false);
         setIntakeStatus(data.intake?.status || "draft");
         setScriptDraftText(data.intake?.scriptDraftText || null);
@@ -139,6 +150,17 @@ export default function LgdIntakeForm({ interests }: Props) {
 
   if (status === "loading") {
     return <p>Loading your Life Guidance Discovery intake…</p>;
+  }
+  if (status === "disabled") {
+    return (
+      <div className="card">
+        <p style={{ marginTop: 0 }}>{message || "Electronic Life Guidance Discovery is not available right now."}</p>
+        <p style={{ color: "#64748b" }}>
+          Call <strong>800-GOAL-NOW (800-462-5669)</strong> for a live session, or return to your{" "}
+          <a href="/play-options">member console</a>.
+        </p>
+      </div>
+    );
   }
   if (status === "error") {
     return (
@@ -221,6 +243,22 @@ export default function LgdIntakeForm({ interests }: Props) {
                 contact a person / emergency services).
               </span>
             </label>
+            <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                disabled={!editable}
+                checked={!!answers.alreadyHadLiveLgd}
+                onChange={(e) => patchAnswers({ alreadyHadLiveLgd: e.target.checked })}
+                style={{ marginTop: 3 }}
+              />
+              <span>I have already completed a live Life Guidance Discovery Session.</span>
+            </label>
+            {priceLabel ? (
+              <p style={{ fontSize: 13, color: "#64748b", marginBottom: 0 }}>
+                Goal Manifestation packaging reference: {priceLabel} (your facilitator confirms final
+                pricing).
+              </p>
+            ) : null}
             <p style={{ fontSize: 13, color: "#64748b", marginBottom: 0 }}>
               This is educational wellness support, not medical or psychiatric care.
             </p>
@@ -504,48 +542,101 @@ export default function LgdIntakeForm({ interests }: Props) {
                 <option value="sleep_and_day">Sleep and daytime</option>
               </select>
             </label>
-            <fieldset style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
-              <legend>Professional hypnotic voice</legend>
-              {LGD_PROFESSIONAL_VOICES.map((voice) => (
-                <label
-                  key={voice.id}
-                  style={{ display: "flex", gap: 8, marginBottom: 8, cursor: "pointer" }}
-                >
-                  <input
-                    type="radio"
-                    name="voice"
-                    disabled={!editable}
-                    checked={answers.voiceId === voice.id}
-                    onChange={() => patchAnswers({ voiceId: voice.id })}
-                  />
-                  <span>
-                    <strong>{voice.label}</strong> — {voice.description}
-                  </span>
-                </label>
-              ))}
-              <p style={{ fontSize: 13, color: "#64748b", marginBottom: 0 }}>
-                “My own voice” will be offered later as a separate option.
+            {flags.lgdProfessionalVoices || flags.lgdMemberOwnVoice ? (
+              <fieldset style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
+                <legend>Voice preference</legend>
+                {flags.lgdProfessionalVoices
+                  ? LGD_PROFESSIONAL_VOICES.map((voice) => (
+                      <label
+                        key={voice.id}
+                        style={{ display: "flex", gap: 8, marginBottom: 8, cursor: "pointer" }}
+                      >
+                        <input
+                          type="radio"
+                          name="voice"
+                          disabled={!editable}
+                          checked={answers.voiceId === voice.id}
+                          onChange={() => patchAnswers({ voiceId: voice.id, ownVoiceConsent: false })}
+                        />
+                        <span>
+                          <strong>{voice.label}</strong> — {voice.description}
+                        </span>
+                      </label>
+                    ))
+                  : null}
+                {flags.lgdMemberOwnVoice ? (
+                  <>
+                    <label
+                      style={{ display: "flex", gap: 8, marginBottom: 8, cursor: "pointer" }}
+                    >
+                      <input
+                        type="radio"
+                        name="voice"
+                        disabled={!editable}
+                        checked={answers.voiceId === "member_own"}
+                        onChange={() => patchAnswers({ voiceId: "member_own" })}
+                      />
+                      <span>
+                        <strong>My own voice</strong> — affirmations in your voice (recording /
+                        clone process with your facilitator)
+                      </span>
+                    </label>
+                    {answers.voiceId === "member_own" ? (
+                      <label
+                        style={{
+                          display: "flex",
+                          gap: 10,
+                          alignItems: "flex-start",
+                          cursor: "pointer",
+                          marginLeft: 8
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          disabled={!editable}
+                          checked={!!answers.ownVoiceConsent}
+                          onChange={(e) => patchAnswers({ ownVoiceConsent: e.target.checked })}
+                          style={{ marginTop: 3 }}
+                        />
+                        <span style={{ fontSize: 14 }}>
+                          I consent to record phrases and, if offered, a voice model for my Goal
+                          Manifestation audio. My facilitator will guide the next recording steps.
+                        </span>
+                      </label>
+                    ) : null}
+                  </>
+                ) : (
+                  <p style={{ fontSize: 13, color: "#64748b", marginBottom: 0 }}>
+                    “My own voice” is not enabled for your facilitator yet.
+                  </p>
+                )}
+              </fieldset>
+            ) : (
+              <p style={{ fontSize: 14, color: "#64748b" }}>
+                Voice selection is managed by your facilitator for this practice.
               </p>
-            </fieldset>
-            <label style={{ display: "grid", gap: 6 }}>
-              Frequency / sound bed
-              <select
-                disabled={!editable}
-                style={inputStyle}
-                value={answers.frequencyBedId}
-                onChange={(e) =>
-                  patchAnswers({
-                    frequencyBedId: e.target.value as LgdIntakeAnswers["frequencyBedId"]
-                  })
-                }
-              >
-                {LGD_FREQUENCY_BEDS.map((bed) => (
-                  <option key={bed.id} value={bed.id}>
-                    {bed.label} — {bed.intent}
-                  </option>
-                ))}
-              </select>
-            </label>
+            )}
+            {flags.lgdFrequencyBeds ? (
+              <label style={{ display: "grid", gap: 6 }}>
+                Frequency / sound bed
+                <select
+                  disabled={!editable}
+                  style={inputStyle}
+                  value={answers.frequencyBedId}
+                  onChange={(e) =>
+                    patchAnswers({
+                      frequencyBedId: e.target.value as LgdIntakeAnswers["frequencyBedId"]
+                    })
+                  }
+                >
+                  {LGD_FREQUENCY_BEDS.map((bed) => (
+                    <option key={bed.id} value={bed.id}>
+                      {bed.label} — {bed.intent}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
           </div>
         )}
 
@@ -561,8 +652,24 @@ export default function LgdIntakeForm({ interests }: Props) {
                 onChange={(e) => patchAnswers({ questionsForFacilitator: e.target.value })}
               />
             </label>
+            <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                disabled={!editable}
+                checked={answers.permissionToEditDraft !== false}
+                onChange={(e) => patchAnswers({ permissionToEditDraft: e.target.checked })}
+                style={{ marginTop: 3 }}
+              />
+              <span>
+                I allow my facilitator to edit the Goal Manifestation script draft before
+                production.
+              </span>
+            </label>
             <p style={{ fontSize: 14, color: "#475569", marginBottom: 0 }}>
-              When you submit, we generate a Goal Manifestation script draft for facilitator review
+              When you submit
+              {flags.lgdScriptDraft
+                ? ", we generate a Goal Manifestation script draft for facilitator review"
+                : ", your facilitator will write the script from this brief"}{" "}
               before production. You can save a draft anytime and return later.
             </p>
           </div>

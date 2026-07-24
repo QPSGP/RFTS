@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import SiteFooter from "@/components/SiteFooter";
 import { LandingTrialCtaButtons } from "@/components/LandingTrialCta";
+import { getLgdPriceDisplay, getPublicLgdOfferEnabled } from "@/lib/lgd-access";
 
 export const metadata = {
   title: "Life Guidance Discovery | Reach For The Stars",
@@ -7,7 +9,13 @@ export const metadata = {
     "Discover where you are, where you want to go, and how to get there — then receive a customized Goal Manifestation audio designed for you."
 };
 
-export default function LifeGuidanceDiscoveryPage() {
+export default async function LifeGuidanceDiscoveryPage() {
+  const enabled = await getPublicLgdOfferEnabled();
+  if (!enabled) {
+    redirect("/");
+  }
+  const price = getLgdPriceDisplay();
+
   return (
     <main>
       <section className="hero section">
@@ -25,6 +33,12 @@ export default function LifeGuidanceDiscoveryPage() {
             Join Reach For The Stars
           </a>
         </div>
+        {price.label ? (
+          <p style={{ marginTop: 12, color: "#64748b", fontSize: 14 }}>
+            Customized Goal Manifestation packaging from {price.label} (live session pricing may
+            differ — see follow-up email or call 800-GOAL-NOW).
+          </p>
+        ) : null}
       </section>
 
       <section className="section">

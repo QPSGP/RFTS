@@ -14,9 +14,14 @@ import {
 } from "@/lib/db";
 import {
   buildGoalManifestationScriptDraft,
+  buildLgdScriptDraftBlocks,
   emptyLgdIntakeAnswers,
-  normalizeLgdIntakeAnswers
+  normalizeLgdIntakeAnswers,
+  resolveFrequencyBedId
 } from "@/lib/lgd-intake";
+import { getLgdFlagsForMemberEmail, getLgdPriceDisplay } from "@/lib/lgd-access";
+import { sendEmail } from "@/lib/email";
+import { getLgdIntakeSubmittedFacilitatorEmailContent } from "@/lib/email-templates";
 
 const patchSchema = z.object({
   answers: z.record(z.string(), z.unknown())
@@ -48,15 +53,28 @@ export async function GET() {
   if (!user) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
+  const { flags } = await getLgdFlagsForMemberEmail(email);
+  if (!flags.lgdElectronicIntake) {
+    return NextResponse.json(
+      {
+        error: "Electronic Life Guidance Discovery is not currently offered for your account.",
+        flags
+      },
+      { status: 403 }
+    );
+  }
   const memberProfile = await getMemberProfileByUserId(user.id);
   let intake = await getLatestLgdIntakeForUser(user.id);
   if (!intake) {
     intake = await createLgdIntakeDraft(user.id, emptyLgdIntakeAnswers());
   }
+  const price = getLgdPriceDisplay();
   return NextResponse.json({
     intake: serializeIntake(intake),
     firstName: memberProfile?.firstName ?? null,
-    hadLgdSession: memberProfile?.hadLgdSession ?? false
+    hadLgdSession: memberProfile?.hadLgdSession ?? false,
+    flags,
+    priceLabel: price.label
   });
 }
 
@@ -69,12 +87,29 @@ export async function PATCH(request: Request) {
   if (!user) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
+  const { flags } = await getLgdFlagsForMemberEmail(email);
+  if (!flags.lgdElectronicIntake) {
+    return NextResponse.json(
+      { error: "Electronic Life Guidance Discovery is not currently offered for your account." },
+      { status: 403 }
+    );
+  }
   const body = await request.json().catch(() => null);
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
   }
-  const answers = normalizeLgdIntakeAnswers(parsed.data.answers);
+  let answers = normalizeLgdIntakeAnswers(parsed.data.answers);
+  if (!flags.lgdProfessionalVoices && answers.voiceId && answers.voiceId !== "member_own") {
+    answers = { ...answers, voiceId: "" };
+  }
+  if (!flags.lgdMemberOwnVoice && answers.voiceId === "member_own") {
+    answers = { ...answers, voiceId: "", ownVoiceConsent: false };
+  }
+  if (!flags.lgdFrequencyBeds) {
+    answers = { ...answers, frequencyBedId: "choose_for_me" };
+  }
+
   let intake = await getLatestLgdIntakeForUser(user.id);
   if (!intake) {
     intake = await createLgdIntakeDraft(user.id, answers);
@@ -96,7 +131,17 @@ export async function PATCH(request: Request) {
     }
     intake = updated;
   }
-  return NextResponse.json({ intake: serializeIntake(intake) });
+
+  const memberProfile = await getMemberProfileByUserId(user.id);
+  if (answers.alreadyHadLiveLgd && memberProfile && !memberProfile.hadLgdSession) {
+    await upsertMemberProfile({
+      ...memberProfile,
+      userId: user.id,
+      hadLgdSession: true
+    });
+  }
+
+  return NextResponse.json({ intake: serializeIntake(intake), flags });
 }
 
 export async function POST(request: Request) {
@@ -108,12 +153,19 @@ export async function POST(request: Request) {
   if (!user) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
+  const { flags, primaryFacilitatorId } = await getLgdFlagsForMemberEmail(email);
+  if (!flags.lgdElectronicIntake) {
+    return NextResponse.json(
+      { error: "Electronic Life Guidance Discovery is not currently offered for your account." },
+      { status: 403 }
+    );
+  }
   const body = await request.json().catch(() => null);
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
   }
-  const answers = normalizeLgdIntakeAnswers(parsed.data.answers);
+  let answers = normalizeLgdIntakeAnswers(parsed.data.answers);
   if (!answers.consentStored) {
     return NextResponse.json(
       { error: "Please confirm consent to store your answers before submitting." },
@@ -138,6 +190,18 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+  if (answers.voiceId === "member_own" && !flags.lgdMemberOwnVoice) {
+    return NextResponse.json(
+      { error: "Member’s own voice is not enabled yet. Choose a professional voice." },
+      { status: 400 }
+    );
+  }
+  if (answers.voiceId === "member_own" && !answers.ownVoiceConsent) {
+    return NextResponse.json(
+      { error: "Please confirm consent to use your own voice before submitting." },
+      { status: 400 }
+    );
+  }
 
   let intake = await getLatestLgdIntakeForUser(user.id);
   if (!intake) {
@@ -155,43 +219,77 @@ export async function POST(request: Request) {
     .filter((n): n is string => !!n);
 
   const memberProfile = await getMemberProfileByUserId(user.id);
-  const scriptDraftText = buildGoalManifestationScriptDraft({
-    firstName: memberProfile?.firstName || "friend",
-    answers,
-    goalNames
-  });
+  const resolvedBedId = resolveFrequencyBedId(answers);
+  answers = { ...answers, frequencyBedId: resolvedBedId };
+
+  let scriptDraftText = "";
+  let scriptDraft: unknown = null;
+  if (flags.lgdScriptDraft) {
+    scriptDraft = buildLgdScriptDraftBlocks({
+      firstName: memberProfile?.firstName || "friend",
+      answers,
+      goalNames,
+      resolvedBedId
+    });
+    scriptDraftText = buildGoalManifestationScriptDraft({
+      firstName: memberProfile?.firstName || "friend",
+      answers,
+      goalNames,
+      resolvedBedId
+    });
+  } else {
+    scriptDraftText =
+      "Script draft generation is disabled for this practice. Facilitator will write the Goal Manifestation script from the intake brief.";
+  }
 
   const facilitators = await getFacilitatorsForMemberEmail(email);
-  const facilitatorId = facilitators[0]?.id ?? null;
+  const facilitatorId = primaryFacilitatorId || facilitators[0]?.id || null;
+  const price = getLgdPriceDisplay();
 
   const submitted = await submitLgdIntake({
     id: intake.id,
     userId: user.id,
     answers,
     scriptDraftText,
+    scriptDraft,
     voiceId: answers.voiceId || null,
-    frequencyBedId: answers.frequencyBedId || null,
-    facilitatorId
+    frequencyBedId: resolvedBedId,
+    facilitatorId,
+    priceCents: price.priceCents
   });
   if (!submitted) {
     return NextResponse.json({ error: "Could not submit intake." }, { status: 500 });
   }
 
-  if (memberProfile) {
-    await upsertMemberProfile({
-      ...memberProfile,
-      userId: user.id,
-      hadLgdSession: true
+  await upsertMemberProfile({
+    ...(memberProfile || { userId: user.id }),
+    userId: user.id,
+    hadLgdSession: true
+  });
+
+  for (const fac of facilitators) {
+    if (!fac.email) continue;
+    const content = getLgdIntakeSubmittedFacilitatorEmailContent({
+      facilitatorName: fac.name,
+      memberEmail: email,
+      memberFirstName: memberProfile?.firstName,
+      memberLastName: memberProfile?.lastName
     });
-  } else {
-    await upsertMemberProfile({
-      userId: user.id,
-      hadLgdSession: true
+    const result = await sendEmail({
+      to: fac.email,
+      subject: content.subject,
+      html: content.html,
+      text: content.text,
+      skipStaffBcc: true
     });
+    if (!result.ok) {
+      console.error("[POST /api/member/lgd-intake] facilitator notify failed:", result.error);
+    }
   }
 
   return NextResponse.json({
     intake: serializeIntake(submitted),
-    scriptDraftText
+    scriptDraftText,
+    flags
   });
 }

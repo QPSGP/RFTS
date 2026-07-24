@@ -6,7 +6,13 @@ import {
   listLgdIntakesForMemberEmails,
   updateLgdIntakeByFacilitator
 } from "@/lib/db";
-import { normalizeLgdIntakeAnswers } from "@/lib/lgd-intake";
+import {
+  buildLgdProductionPacket,
+  findLgdContradictionNotes,
+  normalizeLgdIntakeAnswers,
+  resolveFrequencyBedId
+} from "@/lib/lgd-intake";
+import { getLgdFlagsForModeratorId } from "@/lib/lgd-access";
 
 const STATUSES = [
   "submitted",
@@ -25,23 +31,29 @@ export async function GET() {
   }
   const emails = moderator.assignedUserEmails || [];
   const intakes = await listLgdIntakesForMemberEmails(emails);
+  const flags = await getLgdFlagsForModeratorId(moderator.id);
   return NextResponse.json({
-    intakes: intakes.map((row) => ({
-      id: row.id,
-      userId: row.userId,
-      memberEmail: row.memberEmail,
-      firstName: row.firstName,
-      lastName: row.lastName,
-      status: row.status,
-      answers: normalizeLgdIntakeAnswers(row.answers),
-      scriptDraftText: row.scriptDraftText,
-      voiceId: row.voiceId,
-      frequencyBedId: row.frequencyBedId,
-      submittedAt: row.submittedAt,
-      updatedAt: row.updatedAt,
-      approvedAt: row.approvedAt,
-      facilitatorId: row.facilitatorId
-    }))
+    flags,
+    intakes: intakes.map((row) => {
+      const answers = normalizeLgdIntakeAnswers(row.answers);
+      return {
+        id: row.id,
+        userId: row.userId,
+        memberEmail: row.memberEmail,
+        firstName: row.firstName,
+        lastName: row.lastName,
+        status: row.status,
+        answers,
+        scriptDraftText: row.scriptDraftText,
+        voiceId: row.voiceId,
+        frequencyBedId: row.frequencyBedId || resolveFrequencyBedId(answers),
+        reviewFlags: findLgdContradictionNotes(answers),
+        submittedAt: row.submittedAt,
+        updatedAt: row.updatedAt,
+        approvedAt: row.approvedAt,
+        facilitatorId: row.facilitatorId
+      };
+    })
   });
 }
 
@@ -80,6 +92,29 @@ export async function PATCH(request: Request) {
     );
   }
 
+  const flags = await getLgdFlagsForModeratorId(moderator.id);
+  const nextStatus = parsed.data.status;
+  if (
+    flags.lgdRequireFacilitatorApproval &&
+    nextStatus &&
+    (nextStatus === "in_production" || nextStatus === "complete")
+  ) {
+    const alreadyApproved =
+      existing.status === "approved" ||
+      existing.status === "in_production" ||
+      existing.status === "complete" ||
+      !!existing.approvedAt;
+    if (!alreadyApproved && nextStatus !== "approved") {
+      return NextResponse.json(
+        {
+          error:
+            "Approval is required before production or complete. Set status to approved first (or turn off Require facilitator approval)."
+        },
+        { status: 400 }
+      );
+    }
+  }
+
   const updated = await updateLgdIntakeByFacilitator({
     id: parsed.data.id,
     status: parsed.data.status,
@@ -89,6 +124,17 @@ export async function PATCH(request: Request) {
   if (!updated) {
     return NextResponse.json({ error: "Could not update intake." }, { status: 500 });
   }
+
+  const answers = normalizeLgdIntakeAnswers(updated.answers);
+  const productionPacket = buildLgdProductionPacket({
+    memberEmail: owned.memberEmail,
+    firstName: owned.firstName,
+    lastName: owned.lastName,
+    answers,
+    scriptDraftText: updated.scriptDraftText || "",
+    status: updated.status,
+    resolvedBedId: updated.frequencyBedId || resolveFrequencyBedId(answers)
+  });
 
   return NextResponse.json({
     intake: {
@@ -100,9 +146,11 @@ export async function PATCH(request: Request) {
       memberEmail: owned.memberEmail,
       firstName: owned.firstName,
       lastName: owned.lastName,
-      answers: normalizeLgdIntakeAnswers(updated.answers),
+      answers,
       voiceId: updated.voiceId,
-      frequencyBedId: updated.frequencyBedId
+      frequencyBedId: updated.frequencyBedId,
+      reviewFlags: findLgdContradictionNotes(answers),
+      productionPacket
     }
   });
 }

@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { getSessionConsoleType } from "@/lib/auth";
 import HeaderStartJourneyLink from "@/components/HeaderStartJourneyLink";
 import { isMemberLoggedIn } from "@/lib/member-session";
+import { getPublicLgdOfferEnabled } from "@/lib/lgd-access";
 
 export const dynamic = "force-dynamic";
 
@@ -9,9 +10,10 @@ export default async function SiteHeader() {
   const pathname = (await headers()).get("x-rfts-pathname") ?? "";
   const onMemberLoginPage = pathname === "/member/login";
 
-  const [consoleType, memberLoggedIn] = await Promise.all([
+  const [consoleType, memberLoggedIn, showLifeGuidance] = await Promise.all([
     getSessionConsoleType(),
-    isMemberLoggedIn()
+    isMemberLoggedIn(),
+    getPublicLgdOfferEnabled()
   ]);
   const consoleLink =
     consoleType === "admin"
@@ -36,7 +38,7 @@ export default async function SiteHeader() {
               <div className="menu-panel">
                 <a href="/">Home</a>
                 <a href="/how-it-works">How It Works</a>
-                <a href="/life-guidance-discovery">Life Guidance</a>
+                {showLifeGuidance && <a href="/life-guidance-discovery">Life Guidance</a>}
                 <a href="/science">Science</a>
                 <a href="/faqs">FAQs</a>
                 <a href="/blog">Blog</a>
@@ -62,7 +64,7 @@ export default async function SiteHeader() {
           <nav className="nav site-nav desktop-only">
             <a href="/">Home</a>
             <a href="/how-it-works">How It Works</a>
-            <a href="/life-guidance-discovery">Life Guidance</a>
+            {showLifeGuidance && <a href="/life-guidance-discovery">Life Guidance</a>}
             <a href="/science">Science</a>
             <a href="/faqs">FAQs</a>
             <a href="/blog">Blog</a>

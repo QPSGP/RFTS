@@ -8,6 +8,7 @@ import { getBaseUrl } from "./email";
  * - getReportIssueConfirmationContent — member report / tech support acknowledgment
  * - getIssueResolvedEmailContent — admin marked report resolved; notify member
  * - getLgdInterestEmailContent — Life Guidance Discovery Session interest (onboarding or profile)
+ * - getLgdIntakeSubmittedFacilitatorEmailContent — member submitted electronic LGD intake
  * - getTherapistHealerCoachEmailContent — therapist / healer / coach (Build Practice) interest
  * - getAffiliateThresholdReachedEmailContent — affiliate pending balance reached payout minimum
  * - getAffiliatePayoutSentEmailContent — Stripe Connect affiliate commission payout sent
@@ -414,6 +415,40 @@ Back to your console: ${baseUrl}/play-options
 Reach For The Stars
 `.trim();
 
+  return { subject, html, text };
+}
+
+/** Notify assigned facilitator when a member submits electronic LGD intake. */
+export function getLgdIntakeSubmittedFacilitatorEmailContent(input: {
+  facilitatorName?: string | null;
+  memberEmail: string;
+  memberFirstName?: string | null;
+  memberLastName?: string | null;
+}): TemplateContent {
+  const baseUrl = getBaseUrl();
+  const memberName =
+    [input.memberFirstName, input.memberLastName].filter(Boolean).join(" ").trim() ||
+    input.memberEmail;
+  const subject = `Electronic LGD submitted — ${memberName}`;
+  const fac = input.facilitatorName?.trim() || "Facilitator";
+  const consoleUrl = `${baseUrl}/moderator/console`;
+  const html = emailWrapper(`
+  ${p(`Hi ${escapeHtml(fac)},`)}
+  ${p(`<strong>${escapeHtml(memberName)}</strong> (${escapeHtml(input.memberEmail)}) submitted an electronic <strong>Life Guidance Discovery</strong> intake.`)}
+  ${p("Open the Facilitators Console → Life Guidance Discovery to review the session brief and Goal Manifestation script draft.")}
+  ${emailCtaButton(consoleUrl, "Open Facilitators Console")}
+`);
+  const text = `
+Hi ${fac},
+
+${memberName} (${input.memberEmail}) submitted an electronic Life Guidance Discovery intake.
+
+Open the Facilitators Console → Life Guidance Discovery to review the session brief and Goal Manifestation script draft.
+
+${consoleUrl}
+
+Reach For The Stars
+`.trim();
   return { subject, html, text };
 }
 

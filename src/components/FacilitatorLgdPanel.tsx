@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   LGD_FACILITATOR_FEATURE_FLAGS,
   LGD_LIFE_AREAS,
+  buildLgdProductionPacket,
   type LgdFacilitatorFeatureFlags,
   type LgdIntakeAnswers,
   defaultLgdFacilitatorFeatureFlags
@@ -19,6 +20,7 @@ type IntakeRow = {
   scriptDraftText: string | null;
   voiceId: string | null;
   frequencyBedId: string | null;
+  reviewFlags?: string[];
   submittedAt: string | null;
   updatedAt: string;
   approvedAt: string | null;
@@ -150,7 +152,8 @@ export default function FacilitatorLgdPanel() {
               status: data.intake.status,
               scriptDraftText: data.intake.scriptDraftText,
               approvedAt: data.intake.approvedAt,
-              updatedAt: data.intake.updatedAt
+              updatedAt: data.intake.updatedAt,
+              reviewFlags: data.intake.reviewFlags ?? row.reviewFlags
             }
           : row
       )
@@ -280,10 +283,34 @@ export default function FacilitatorLgdPanel() {
                     ))}
                   </select>
                 </label>
+                {flags.lgdRequireFacilitatorApproval ? (
+                  <p style={{ fontSize: 13, color: "#92400e", margin: "0 0 8px" }}>
+                    Approval required before in_production or complete.
+                  </p>
+                ) : null}
                 <p style={{ fontSize: 13, margin: "0 0 8px" }}>
                   Voice: <strong>{selected.voiceId || "unset"}</strong> · Bed:{" "}
                   <strong>{selected.frequencyBedId || "unset"}</strong>
                 </p>
+                {(selected.reviewFlags || []).length > 0 ? (
+                  <div
+                    style={{
+                      marginBottom: 12,
+                      padding: 10,
+                      borderRadius: 8,
+                      background: "#fffbeb",
+                      border: "1px solid #fcd34d",
+                      fontSize: 13
+                    }}
+                  >
+                    <strong>Review flags</strong>
+                    <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                      {selected.reviewFlags!.map((n) => (
+                        <li key={n}>{n}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </div>
 
               <details open style={{ marginBottom: 16 }}>
@@ -334,15 +361,37 @@ export default function FacilitatorLgdPanel() {
                 />
               </label>
 
-              <button
-                type="button"
-                className="button"
-                style={{ marginTop: 12 }}
-                disabled={savingIntake}
-                onClick={() => void saveIntake()}
-              >
-                {savingIntake ? "Saving…" : "Save review"}
-              </button>
+              <div className="cta-row" style={{ marginTop: 12, flexWrap: "wrap", gap: 8 }}>
+                <button
+                  type="button"
+                  className="button"
+                  disabled={savingIntake}
+                  onClick={() => void saveIntake()}
+                >
+                  {savingIntake ? "Saving…" : "Save review"}
+                </button>
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={() => {
+                    const packet = buildLgdProductionPacket({
+                      memberEmail: selected.memberEmail,
+                      firstName: selected.firstName,
+                      lastName: selected.lastName,
+                      answers: selected.answers,
+                      scriptDraftText: scriptText || selected.scriptDraftText || "",
+                      status: statusValue,
+                      resolvedBedId: selected.frequencyBedId || undefined
+                    });
+                    void navigator.clipboard.writeText(packet).then(
+                      () => setMessage("Production packet copied to clipboard."),
+                      () => setMessage("Could not copy packet — select script text manually.")
+                    );
+                  }}
+                >
+                  Copy production packet
+                </button>
+              </div>
             </>
           )}
         </div>

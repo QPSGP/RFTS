@@ -4309,20 +4309,25 @@ export const submitLgdIntake = async (input: {
   userId: string;
   answers: unknown;
   scriptDraftText: string;
+  scriptDraft?: unknown;
   voiceId?: string | null;
   frequencyBedId?: string | null;
   facilitatorId?: string | null;
+  priceCents?: number | null;
 }): Promise<LgdIntakeRecord | null> => {
   await ensureLgdIntakesTable();
   const answersJson = JSON.stringify(input.answers);
+  const scriptDraftJson = JSON.stringify(input.scriptDraft ?? null);
   const { rows } = await sql<LgdIntakeRecord>`
     UPDATE lgd_intakes
     SET
       answers = CAST(${answersJson} AS jsonb),
+      script_draft = CAST(${scriptDraftJson} AS jsonb),
       script_draft_text = ${input.scriptDraftText},
       voice_id = ${input.voiceId ?? null},
       frequency_bed_id = ${input.frequencyBedId ?? null},
       facilitator_id = ${input.facilitatorId ?? null},
+      price_cents = ${input.priceCents ?? null},
       status = 'submitted',
       submitted_at = now(),
       updated_at = now()

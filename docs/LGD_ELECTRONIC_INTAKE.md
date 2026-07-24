@@ -187,10 +187,16 @@ facilitator_lgd_settings (
 3. **Facilitator review** — brief + script draft + approve/edit ✅ (Facilitators Console → Life Guidance Discovery)  
 4. **Public LGD page + console offer** ✅ (`/life-guidance-discovery`, `/lgd`; console CTA when no prior LGD)  
 5. **Facilitator feature toggles** ✅ (same console panel)  
-6. **Professional voice catalog + production handoff** (next)  
-7. **Frequency beds production** (next)  
-8. **Member own-voice** (consent + QA)  
-9. **Paid console offer / Stripe price** (optional packaging)  
+6. **Professional voice catalog + production handoff** ✅ (catalog + production packet copy; studio audio files TBD)  
+7. **Frequency beds** ✅ (selection + choose-for-me resolution; audio beds TBD)  
+8. **Member own-voice** ✅ gated + consent (recording/clone pipeline TBD)  
+9. **Paid Stripe checkout** — needs price decision (`NEXT_PUBLIC_LGD_PRICE_DISPLAY` / `LGD_PRICE_CENTS` display ready; one-time Checkout not wired)  
+10. **Feature flag enforcement** ✅ public / console / intake / approval gate / script draft  
+
+### Waiting on you
+- Final dollar amount(s) + Stripe Price ID for one-time LGD/CGMR checkout  
+- Actual voice talent audio banks / who records associates  
+- Legal go-ahead for voice-clone production (own-voice Phase B beyond consent)  
 
 ---
 

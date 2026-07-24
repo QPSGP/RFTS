@@ -22,6 +22,9 @@ export default function PlayOptionsPage() {
     isManaged?: boolean;
     hadLgdSession?: boolean;
   } | null>(null);
+  const [lgdConsoleOffer, setLgdConsoleOffer] = useState(true);
+  const [lgdIntakeEnabled, setLgdIntakeEnabled] = useState(true);
+  const [lgdPriceLabel, setLgdPriceLabel] = useState<string | null>(null);
   const [schedule, setSchedule] = useState<
     { night: number; tracks: { id: string; title: string; skuCode?: string; audioUrl: string }[]; note?: string }[]
   >([]);
@@ -125,6 +128,16 @@ export default function PlayOptionsPage() {
       if (params.get("autoplay") === "1") setAutoStart(true);
       if (params.get("autoplay") === "0") setAutoStart(false);
     }
+    fetch("/api/member/lgd-access", { credentials: "include", cache: "no-store" })
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        setLgdConsoleOffer(data.consoleOffer !== false);
+        setLgdIntakeEnabled(data.electronicIntakeEnabled !== false);
+        if (data.priceLabel) setLgdPriceLabel(data.priceLabel);
+      })
+      .catch(() => {});
+
     fetch("/api/user/me", { credentials: "include", cache: "no-store" })
       .then((res) => {
         if (!res.ok) {
@@ -347,12 +360,13 @@ export default function PlayOptionsPage() {
           </a>
         </section>
       )}
-      {profile && !profile.hadLgdSession && (
+      {profile && !profile.hadLgdSession && lgdConsoleOffer && (
         <section className="card" style={{ marginBottom: 16 }}>
           <h3>Life Guidance Discovery</h3>
           <p>
             Complete an electronic Life Guidance Discovery to prepare your facilitator and draft a
             customized Goal Manifestation script specific to you.
+            {lgdPriceLabel ? ` Reference packaging: ${lgdPriceLabel}.` : ""}
           </p>
           <a className="button" href="/member/lgd">
             Start Life Guidance Discovery
@@ -385,15 +399,17 @@ export default function PlayOptionsPage() {
             </a>
           </div>
         )}
-        <div className="card">
-          <h3>Life Guidance Discovery</h3>
-          <p>
-            Structured intake for your Goal Manifestation audio — session brief and script draft.
-          </p>
-          <a className="button button-secondary" href="/member/lgd">
-            Open LGD intake
-          </a>
-        </div>
+        {lgdIntakeEnabled ? (
+          <div className="card">
+            <h3>Life Guidance Discovery</h3>
+            <p>
+              Structured intake for your Goal Manifestation audio — session brief and script draft.
+            </p>
+            <a className="button button-secondary" href="/member/lgd">
+              Open LGD intake
+            </a>
+          </div>
+        ) : null}
         <div className="card">
           <h3>Current audios play list</h3>
           <p>
