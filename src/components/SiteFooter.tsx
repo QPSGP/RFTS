@@ -60,6 +60,7 @@ export default function SiteFooter({ showCta = true, showStartJourney = true }: 
           <div>
             <h3 style={{ marginTop: 0 }}>Legal</h3>
             <div className="stack">
+              <a href="/life-guidance-discovery">Life Guidance Discovery</a>
               <a href="https://www.reachforthestars.today/privacy-policy#">
                 Privacy Policy
               </a>

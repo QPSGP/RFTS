@@ -4311,6 +4311,7 @@ export const submitLgdIntake = async (input: {
   scriptDraftText: string;
   voiceId?: string | null;
   frequencyBedId?: string | null;
+  facilitatorId?: string | null;
 }): Promise<LgdIntakeRecord | null> => {
   await ensureLgdIntakesTable();
   const answersJson = JSON.stringify(input.answers);
@@ -4321,6 +4322,7 @@ export const submitLgdIntake = async (input: {
       script_draft_text = ${input.scriptDraftText},
       voice_id = ${input.voiceId ?? null},
       frequency_bed_id = ${input.frequencyBedId ?? null},
+      facilitator_id = ${input.facilitatorId ?? null},
       status = 'submitted',
       submitted_at = now(),
       updated_at = now()
@@ -4344,4 +4346,159 @@ export const submitLgdIntake = async (input: {
       approved_at AS "approvedAt"
   `;
   return rows[0] ?? null;
+};
+
+export type LgdIntakeListItem = LgdIntakeRecord & {
+  memberEmail: string;
+  firstName: string | null;
+  lastName: string | null;
+};
+
+export const listLgdIntakesForMemberEmails = async (
+  emails: string[]
+): Promise<LgdIntakeListItem[]> => {
+  await ensureLgdIntakesTable();
+  const unique = [
+    ...new Set(emails.map((e) => e.trim().toLowerCase()).filter(Boolean))
+  ];
+  if (!unique.length) return [];
+  const { rows } = await sql<LgdIntakeListItem>`
+    SELECT
+      i.id,
+      i.user_id AS "userId",
+      i.facilitator_id AS "facilitatorId",
+      i.status,
+      i.answers,
+      i.script_draft AS "scriptDraft",
+      i.script_draft_text AS "scriptDraftText",
+      i.voice_id AS "voiceId",
+      i.frequency_bed_id AS "frequencyBedId",
+      i.price_cents AS "priceCents",
+      i.created_at AS "createdAt",
+      i.updated_at AS "updatedAt",
+      i.submitted_at AS "submittedAt",
+      i.approved_at AS "approvedAt",
+      u.email AS "memberEmail",
+      mp.first_name AS "firstName",
+      mp.last_name AS "lastName"
+    FROM lgd_intakes i
+    JOIN users u ON u.id = i.user_id
+    LEFT JOIN member_profiles mp ON mp.user_id = u.id
+    WHERE LOWER(u.email) = ANY(${toPgArray(unique)}::text[])
+      AND i.status <> 'draft'
+    ORDER BY COALESCE(i.submitted_at, i.updated_at) DESC
+  `;
+  return rows;
+};
+
+export const getLgdIntakeById = async (id: string): Promise<LgdIntakeRecord | null> => {
+  await ensureLgdIntakesTable();
+  const { rows } = await sql<LgdIntakeRecord>`
+    SELECT
+      id,
+      user_id AS "userId",
+      facilitator_id AS "facilitatorId",
+      status,
+      answers,
+      script_draft AS "scriptDraft",
+      script_draft_text AS "scriptDraftText",
+      voice_id AS "voiceId",
+      frequency_bed_id AS "frequencyBedId",
+      price_cents AS "priceCents",
+      created_at AS "createdAt",
+      updated_at AS "updatedAt",
+      submitted_at AS "submittedAt",
+      approved_at AS "approvedAt"
+    FROM lgd_intakes
+    WHERE id = ${id}
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+};
+
+export const updateLgdIntakeByFacilitator = async (input: {
+  id: string;
+  status?: string;
+  scriptDraftText?: string | null;
+  facilitatorId?: string | null;
+}): Promise<LgdIntakeRecord | null> => {
+  await ensureLgdIntakesTable();
+  const existing = await getLgdIntakeById(input.id);
+  if (!existing) return null;
+  const nextStatus = input.status ?? existing.status;
+  const nextScript =
+    input.scriptDraftText !== undefined ? input.scriptDraftText : existing.scriptDraftText;
+  const nextFacilitatorId =
+    input.facilitatorId !== undefined ? input.facilitatorId : existing.facilitatorId;
+  const approvedAt =
+    nextStatus === "approved" && !existing.approvedAt
+      ? new Date().toISOString()
+      : existing.approvedAt;
+  const { rows } = await sql<LgdIntakeRecord>`
+    UPDATE lgd_intakes
+    SET
+      status = ${nextStatus},
+      script_draft_text = ${nextScript},
+      facilitator_id = ${nextFacilitatorId},
+      approved_at = ${approvedAt},
+      updated_at = now()
+    WHERE id = ${input.id}
+    RETURNING
+      id,
+      user_id AS "userId",
+      facilitator_id AS "facilitatorId",
+      status,
+      answers,
+      script_draft AS "scriptDraft",
+      script_draft_text AS "scriptDraftText",
+      voice_id AS "voiceId",
+      frequency_bed_id AS "frequencyBedId",
+      price_cents AS "priceCents",
+      created_at AS "createdAt",
+      updated_at AS "updatedAt",
+      submitted_at AS "submittedAt",
+      approved_at AS "approvedAt"
+  `;
+  return rows[0] ?? null;
+};
+
+let facilitatorLgdSettingsReady = false;
+
+const ensureFacilitatorLgdSettingsTable = async () => {
+  if (facilitatorLgdSettingsReady) return;
+  await sql`
+    CREATE TABLE IF NOT EXISTS facilitator_lgd_settings (
+      moderator_id uuid PRIMARY KEY REFERENCES moderators(id) ON DELETE CASCADE,
+      flags jsonb NOT NULL DEFAULT '{}'::jsonb,
+      updated_at timestamptz NOT NULL DEFAULT now()
+    )
+  `;
+  facilitatorLgdSettingsReady = true;
+};
+
+export const getFacilitatorLgdSettings = async (
+  moderatorId: string
+): Promise<Record<string, boolean>> => {
+  await ensureFacilitatorLgdSettingsTable();
+  const { rows } = await sql<{ flags: Record<string, boolean> | null }>`
+    SELECT flags FROM facilitator_lgd_settings WHERE moderator_id = ${moderatorId} LIMIT 1
+  `;
+  return rows[0]?.flags && typeof rows[0].flags === "object" ? rows[0].flags : {};
+};
+
+export const upsertFacilitatorLgdSettings = async (
+  moderatorId: string,
+  flags: Record<string, boolean>
+): Promise<Record<string, boolean>> => {
+  await ensureFacilitatorLgdSettingsTable();
+  const flagsJson = JSON.stringify(flags);
+  const { rows } = await sql<{ flags: Record<string, boolean> }>`
+    INSERT INTO facilitator_lgd_settings (moderator_id, flags, updated_at)
+    VALUES (${moderatorId}, CAST(${flagsJson} AS jsonb), now())
+    ON CONFLICT (moderator_id) DO UPDATE SET
+      flags = EXCLUDED.flags,
+      updated_at = now()
+    RETURNING flags
+  `;
+  return rows[0]?.flags ?? flags;
 };

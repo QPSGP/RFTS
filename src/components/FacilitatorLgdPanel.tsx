@@ -1,0 +1,352 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import {
+  LGD_FACILITATOR_FEATURE_FLAGS,
+  LGD_LIFE_AREAS,
+  type LgdFacilitatorFeatureFlags,
+  type LgdIntakeAnswers,
+  defaultLgdFacilitatorFeatureFlags
+} from "@/lib/lgd-intake";
+
+type IntakeRow = {
+  id: string;
+  memberEmail: string;
+  firstName: string | null;
+  lastName: string | null;
+  status: string;
+  answers: LgdIntakeAnswers;
+  scriptDraftText: string | null;
+  voiceId: string | null;
+  frequencyBedId: string | null;
+  submittedAt: string | null;
+  updatedAt: string;
+  approvedAt: string | null;
+};
+
+const STATUS_OPTIONS = [
+  "submitted",
+  "in_review",
+  "script_ready",
+  "approved",
+  "in_production",
+  "complete",
+  "cancelled"
+] as const;
+
+const inputStyle = {
+  padding: 10,
+  borderRadius: 8,
+  border: "1px solid #d1d5db",
+  width: "100%" as const
+};
+
+function memberLabel(row: IntakeRow): string {
+  const name = [row.firstName, row.lastName].filter(Boolean).join(" ").trim();
+  return name || row.memberEmail;
+}
+
+export default function FacilitatorLgdPanel() {
+  const [flags, setFlags] = useState<LgdFacilitatorFeatureFlags>(
+    defaultLgdFacilitatorFeatureFlags()
+  );
+  const [intakes, setIntakes] = useState<IntakeRow[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [scriptText, setScriptText] = useState("");
+  const [statusValue, setStatusValue] = useState<string>("submitted");
+  const [message, setMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [savingFlags, setSavingFlags] = useState(false);
+  const [savingIntake, setSavingIntake] = useState(false);
+
+  const selected = intakes.find((i) => i.id === selectedId) || null;
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      const [settingsRes, intakesRes] = await Promise.all([
+        fetch("/api/moderator/lgd-settings", { credentials: "include" }),
+        fetch("/api/moderator/lgd-intakes", { credentials: "include" })
+      ]);
+      if (!settingsRes.ok || !intakesRes.ok) {
+        setMessage("Unable to load Life Guidance Discovery tools.");
+        return;
+      }
+      const settingsData = await settingsRes.json();
+      const intakesData = await intakesRes.json();
+      if (settingsData.flags) setFlags(settingsData.flags);
+      const list: IntakeRow[] = intakesData.intakes || [];
+      setIntakes(list);
+      if (selectedId && !list.some((i) => i.id === selectedId)) {
+        setSelectedId(null);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedId]);
+
+  useEffect(() => {
+    void load();
+    // initial load only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!selected) {
+      setScriptText("");
+      return;
+    }
+    setScriptText(selected.scriptDraftText || "");
+    setStatusValue(selected.status);
+  }, [selected]);
+
+  const saveFlags = async () => {
+    setSavingFlags(true);
+    setMessage(null);
+    const res = await fetch("/api/moderator/lgd-settings", {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ flags })
+    });
+    setSavingFlags(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setMessage(data?.error || "Could not save feature settings.");
+      return;
+    }
+    const data = await res.json();
+    if (data.flags) setFlags(data.flags);
+    setMessage("LGD feature settings saved.");
+  };
+
+  const saveIntake = async () => {
+    if (!selectedId) return;
+    setSavingIntake(true);
+    setMessage(null);
+    const res = await fetch("/api/moderator/lgd-intakes", {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: selectedId,
+        status: statusValue,
+        scriptDraftText: scriptText
+      })
+    });
+    setSavingIntake(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setMessage(data?.error || "Could not update intake.");
+      return;
+    }
+    const data = await res.json();
+    setIntakes((prev) =>
+      prev.map((row) =>
+        row.id === selectedId
+          ? {
+              ...row,
+              status: data.intake.status,
+              scriptDraftText: data.intake.scriptDraftText,
+              approvedAt: data.intake.approvedAt,
+              updatedAt: data.intake.updatedAt
+            }
+          : row
+      )
+    );
+    setMessage("Intake updated.");
+  };
+
+  if (loading) {
+    return <p>Loading Life Guidance Discovery tools…</p>;
+  }
+
+  return (
+    <div>
+      <h2 style={{ marginTop: 0 }}>Life Guidance Discovery</h2>
+      <p style={{ color: "#64748b" }}>
+        Turn features on or off for your practice, then review submitted electronic intakes and
+        Goal Manifestation script drafts for your assigned members.
+      </p>
+
+      {message && (
+        <p
+          style={{
+            padding: 12,
+            borderRadius: 8,
+            background: "#ecfdf5",
+            border: "1px solid #a7f3d0",
+            color: "#065f46"
+          }}
+        >
+          {message}
+        </p>
+      )}
+
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h3 style={{ marginTop: 0 }}>Feature toggles</h3>
+        <div className="grid" style={{ gap: 10 }}>
+          {LGD_FACILITATOR_FEATURE_FLAGS.map((flag) => (
+            <label
+              key={flag.key}
+              style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer" }}
+            >
+              <input
+                type="checkbox"
+                checked={!!flags[flag.key]}
+                onChange={(e) => setFlags((prev) => ({ ...prev, [flag.key]: e.target.checked }))}
+                style={{ marginTop: 3 }}
+              />
+              <span>
+                <strong>{flag.label}</strong>
+                {flag.defaultOn ? "" : " (off by default)"}
+              </span>
+            </label>
+          ))}
+        </div>
+        <button
+          type="button"
+          className="button"
+          style={{ marginTop: 12 }}
+          disabled={savingFlags}
+          onClick={() => void saveFlags()}
+        >
+          {savingFlags ? "Saving…" : "Save feature settings"}
+        </button>
+      </div>
+
+      <div className="grid" style={{ gap: 16, gridTemplateColumns: "minmax(220px, 280px) 1fr" }}>
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>
+            Review queue {intakes.length ? `(${intakes.length})` : ""}
+          </h3>
+          {intakes.length === 0 ? (
+            <p style={{ color: "#64748b", fontSize: 14 }}>No submitted intakes yet.</p>
+          ) : (
+            <div className="stack" style={{ gap: 8 }}>
+              {intakes.map((row) => (
+                <button
+                  key={row.id}
+                  type="button"
+                  className="button button-secondary"
+                  style={{
+                    textAlign: "left",
+                    borderColor: selectedId === row.id ? "#0f766e" : undefined
+                  }}
+                  onClick={() => setSelectedId(row.id)}
+                >
+                  <strong style={{ display: "block" }}>{memberLabel(row)}</strong>
+                  <span style={{ fontSize: 12, color: "#64748b" }}>
+                    {row.status}
+                    {row.submittedAt
+                      ? ` · ${new Date(row.submittedAt).toLocaleDateString()}`
+                      : ""}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+          <button
+            type="button"
+            className="button button-secondary"
+            style={{ marginTop: 12 }}
+            onClick={() => void load()}
+          >
+            Refresh
+          </button>
+        </div>
+
+        <div className="card">
+          {!selected ? (
+            <p style={{ color: "#64748b" }}>Select an intake to review the brief and script.</p>
+          ) : (
+            <>
+              <h3 style={{ marginTop: 0 }}>{memberLabel(selected)}</h3>
+              <p style={{ fontSize: 14, color: "#64748b" }}>{selected.memberEmail}</p>
+
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "grid", gap: 6, marginBottom: 12 }}>
+                  Status
+                  <select
+                    style={inputStyle}
+                    value={statusValue}
+                    onChange={(e) => setStatusValue(e.target.value)}
+                  >
+                    {STATUS_OPTIONS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <p style={{ fontSize: 13, margin: "0 0 8px" }}>
+                  Voice: <strong>{selected.voiceId || "unset"}</strong> · Bed:{" "}
+                  <strong>{selected.frequencyBedId || "unset"}</strong>
+                </p>
+              </div>
+
+              <details open style={{ marginBottom: 16 }}>
+                <summary style={{ cursor: "pointer", fontWeight: 600 }}>Session brief</summary>
+                <div style={{ marginTop: 12, fontSize: 14, lineHeight: 1.5 }}>
+                  <p>
+                    <strong>Primary struggle:</strong>{" "}
+                    {selected.answers.primaryStruggle || "—"}
+                  </p>
+                  <p>
+                    <strong>Top outcomes:</strong>{" "}
+                    {selected.answers.topOutcomes.join("; ") || "—"}
+                  </p>
+                  <p>
+                    <strong>Identity statements:</strong>{" "}
+                    {selected.answers.identityStatements.join("; ") || "—"}
+                  </p>
+                  <p>
+                    <strong>Blocks:</strong> {selected.answers.blocks.join("; ") || "—"}
+                  </p>
+                  <p>
+                    <strong>Strengths:</strong> {selected.answers.strengths.join("; ") || "—"}
+                  </p>
+                  <p>
+                    <strong>Questions for facilitator:</strong>{" "}
+                    {selected.answers.questionsForFacilitator || "—"}
+                  </p>
+                  <p>
+                    <strong>Life area scores:</strong>
+                  </p>
+                  <ul style={{ marginTop: 4 }}>
+                    {LGD_LIFE_AREAS.map((area) => (
+                      <li key={area.id}>
+                        {area.label}: {selected.answers.lifeAreaScores[area.id] ?? "—"}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </details>
+
+              <label style={{ display: "grid", gap: 6 }}>
+                Goal Manifestation script draft (editable)
+                <textarea
+                  rows={18}
+                  style={{ ...inputStyle, fontFamily: "inherit", lineHeight: 1.45 }}
+                  value={scriptText}
+                  onChange={(e) => setScriptText(e.target.value)}
+                />
+              </label>
+
+              <button
+                type="button"
+                className="button"
+                style={{ marginTop: 12 }}
+                disabled={savingIntake}
+                onClick={() => void saveIntake()}
+              >
+                {savingIntake ? "Saving…" : "Save review"}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getUserSessionEmail } from "@/lib/user-auth";
 import {
   createLgdIntakeDraft,
+  getFacilitatorsForMemberEmail,
   getLatestLgdIntakeForUser,
   getMemberProfileByUserId,
   getUserProfile,
@@ -160,13 +161,17 @@ export async function POST(request: Request) {
     goalNames
   });
 
+  const facilitators = await getFacilitatorsForMemberEmail(email);
+  const facilitatorId = facilitators[0]?.id ?? null;
+
   const submitted = await submitLgdIntake({
     id: intake.id,
     userId: user.id,
     answers,
     scriptDraftText,
     voiceId: answers.voiceId || null,
-    frequencyBedId: answers.frequencyBedId || null
+    frequencyBedId: answers.frequencyBedId || null,
+    facilitatorId
   });
   if (!submitted) {
     return NextResponse.json({ error: "Could not submit intake." }, { status: 500 });

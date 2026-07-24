@@ -6,6 +6,8 @@ import { TOPIC_LANDING_PAGES } from "@/lib/topic-landing-pages";
 export const PUBLIC_MARKETING_PATHS = [
   "/",
   "/how-it-works",
+  "/life-guidance-discovery",
+  "/lgd",
   "/science",
   "/faqs",
   "/facilitator",

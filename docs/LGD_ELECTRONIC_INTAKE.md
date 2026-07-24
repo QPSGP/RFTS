@@ -182,13 +182,15 @@ facilitator_lgd_settings (
 
 ## 9. Build sequence (recommended)
 
-1. **Signup + profile fields** — `wantsLgdInfo` vs `hadLgdSession` (this release)  
-2. **Intake UI (member)** — sections A–F, save draft, submit  
-3. **Facilitator review** — brief + script draft + approve/edit  
-4. **Public LGD page + console offer/pricing**  
-5. **Professional voice catalog + production handoff**  
-6. **Frequency beds**  
-7. **Member own-voice** (consent + QA)  
+1. **Signup + profile fields** — `wantsLgdInfo` vs `hadLgdSession` ✅  
+2. **Intake UI (member)** — sections A–F, save draft, submit ✅ (`/member/lgd`)  
+3. **Facilitator review** — brief + script draft + approve/edit ✅ (Facilitators Console → Life Guidance Discovery)  
+4. **Public LGD page + console offer** ✅ (`/life-guidance-discovery`, `/lgd`; console CTA when no prior LGD)  
+5. **Facilitator feature toggles** ✅ (same console panel)  
+6. **Professional voice catalog + production handoff** (next)  
+7. **Frequency beds production** (next)  
+8. **Member own-voice** (consent + QA)  
+9. **Paid console offer / Stripe price** (optional packaging)  
 
 ---
 

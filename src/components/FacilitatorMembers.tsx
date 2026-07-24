@@ -3,6 +3,7 @@
 import { put } from "@vercel/blob/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
+import FacilitatorLgdPanel from "@/components/FacilitatorLgdPanel";
 import MemberProfileEditor from "@/components/MemberProfileEditor";
 import {
   draftToMemberProfilePatch,
@@ -194,7 +195,7 @@ function lineupAlgorithmNote(
   return parts.join(" · ") || "—";
 }
 
-type ConsolePanel = "client" | "add-member" | "member-audios" | "add-audio";
+type ConsolePanel = "client" | "add-member" | "member-audios" | "add-audio" | "lgd";
 
 export default function FacilitatorMembers() {
   const [facilitatorName, setFacilitatorName] = useState("");
@@ -1341,10 +1342,18 @@ export default function FacilitatorMembers() {
             >
               Add new audio
             </button>
+            <button
+              type="button"
+              className={adminSectionToggleClass(consolePanel === "lgd", true)}
+              onClick={() => openConsolePanel("lgd")}
+            >
+              Life Guidance Discovery
+            </button>
           </div>
         </section>
 
         <section className="card facilitator-console-main">
+          {consolePanel === "lgd" && <FacilitatorLgdPanel />}
           {consolePanel === "add-member" && (
             <>
               <h2 style={{ marginTop: 0 }}>Add new member</h2>
