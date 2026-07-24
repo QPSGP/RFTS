@@ -51,31 +51,31 @@ export const LGD_FREQUENCY_BEDS = [
     label: "Calm / sleep deepen",
     intent: "Restorative overnight listening",
     /** Place file at public/audio/beds/calm_delta.mp3 (ducked under voice in production). */
-    audioPath: "/audio/beds/calm_delta.mp3"
+    audioPath: "/audio/beds/calm_delta.wav"
   },
   {
     id: "heart_coherence",
     label: "Heart / emotional openness",
     intent: "Soft rhythmic support",
-    audioPath: "/audio/beds/heart_coherence.mp3"
+    audioPath: "/audio/beds/heart_coherence.wav"
   },
   {
     id: "focus_clarity",
     label: "Focus / clarity",
     intent: "Mental clarity under voice",
-    audioPath: "/audio/beds/focus_clarity.mp3"
+    audioPath: "/audio/beds/focus_clarity.wav"
   },
   {
     id: "abundance_warm",
     label: "Abundance / confidence",
     intent: "Warm harmonic bed",
-    audioPath: "/audio/beds/abundance_warm.mp3"
+    audioPath: "/audio/beds/abundance_warm.wav"
   },
   {
     id: "neutral_music",
     label: "Classic Success Center music",
     intent: "Familiar CGMR bed",
-    audioPath: "/audio/beds/neutral_music.mp3"
+    audioPath: "/audio/beds/neutral_music.wav"
   },
   {
     id: "choose_for_me",
