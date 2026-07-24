@@ -7,12 +7,20 @@ Overview
 Positioning
 - Accessible, calming audio experiences for real-life stress and recovery.
 - Emphasize evidence-informed guidance, ease of use, and trusted voices.
+- **USP (Terry / Success Center):** help people reach their highest potential physically, mentally, emotionally, spiritually, **and financially** — the financial piece is deliberate.
+- Nightly practice while falling asleep and during sleep (no extra daytime chore).
 
 Target Segments
 - Burnout and stress (ages 25-45).
 - First responders and healthcare workers.
 - Parents and caregivers seeking sleep and regulation support.
+- **Spiritual entrepreneurs** (coaches, hypnotists, healers, owners): spirit + profit, typically ~$65K+ income, want ~50%+ lift — see Persona 4 in `docs/personas.md`.
 - Secondary: students, remote workers, illness recovery.
+
+Ideal commercial client (from Barnes/Brussel Session 2)
+- Needs the offer, can pay, knows (or can be shown) they need it, and has **will to learn**.
+- Prefer paying clients who fund the business; intentional giveaways are separate (not the core avatar).
+- Full checklist and messaging notes: `docs/personas.md` → Ideal client checklist.
 
 Funnel Strategy
 - Top of funnel: short-form content, free meditations, SEO.
@@ -68,7 +76,7 @@ Analytics and KPIs
 
 90-Day Plan
 Weeks 1-2
-- Define top 3 personas — **done:** `docs/personas.md`
+- Define personas — **done:** `docs/personas.md` (Alex, Jordan, Sam, Chris + Ideal client / USP)
 - Build 3 landing pages (sleep, stress, burnout) — **done:** `/sleep-meditation`, `/stress-relief`, `/burnout-recovery`
 - Set up analytics events and funnels.
 - Design affiliate program and materials — **done:** public `/affiliates` + My Profile share links; short-form scripts in `docs/short-form-clips.md`

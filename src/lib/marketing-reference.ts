@@ -26,7 +26,8 @@ export const OUTREACH_ENTRY_PATHS = [
 export const OUTREACH_PERSONAS = [
   "Alex — Burned-Out Professional",
   "Jordan — Front-Line Caregiver",
-  "Sam — Sleep-Deprived Parent / Caregiver"
+  "Sam — Sleep-Deprived Parent / Caregiver",
+  "Chris — Spiritual Entrepreneur"
 ] as const;
 
 /** Segment categories from docs/target-organizations.md. */
@@ -434,15 +435,25 @@ export const REFERENCE_PERSONAS: ReferencePersona[] = [
       "Fragmented sleep and mental load; late night is the only quiet time, when anxiety spikes.",
     message:
       "Self-care that doesn't steal from family — happens while already in bed; replace the scroll."
+  },
+  {
+    name: "Chris — Spiritual Entrepreneur",
+    role: "Coach, hypnotist, healer, or owner — spirit + profit, ~$65K+ aiming higher",
+    snapshot:
+      "Wants spiritual growth and income lift; rejects starving-healer myth. Will to learn; buys when growth is an investment.",
+    message:
+      "Highest potential physically, mentally, emotionally, spiritually, and financially — nightly, while you sleep."
   }
 ];
 
-/** Marketing plan highlights (from docs/marketing-plan.md). */
+/** Marketing plan highlights (from docs/marketing-plan.md + Barnes/Brussel Session 2). */
 export const REFERENCE_PLAN_HIGHLIGHTS: string[] = [
   "North Star: weekly active listeners and 7-day retention (shown on Marketing overview).",
   "Weekly blog cadence (required): one article every 7 days, each linking to a goal/wellness page and driving signup.",
   "Short-form: 3–5 clips/week on TikTok & Instagram Reels.",
   "Affiliate payouts: 25% ongoing of subscription revenue for as long as the referred member stays subscribed.",
-  "Affiliate/facilitator targets: therapists, wellness coaches, community leaders, nonprofits.",
+  "Affiliate/facilitator targets: therapists, wellness coaches, community leaders, nonprofits — recruit Chris-like spiritual entrepreneurs who can pay and refer.",
+  "USP: highest potential physically, mentally, emotionally, spiritually, and financially (financial piece is intentional).",
+  "Ideal commercial client: need + ability to pay (~$65K+) + will to learn; intentional giveaway separate from core funnel.",
   "Offer bundles: Sleep Pack, Burnout Pack, First Responders Pack; annual discount for retention."
 ];

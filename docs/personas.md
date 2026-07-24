@@ -1,6 +1,8 @@
-# Reach For The Stars — Top 3 Marketing Personas
+# Reach For The Stars — Marketing Personas
 
 Use these personas to steer blog topics, ad creative, short-form hooks, affiliate outreach, and landing-page copy. Each maps to segments in `docs/marketing-plan.md`.
+
+**Source for Persona 4 and Ideal Client / USP notes:** Terry Brussel-Rogers with Steven Barnes, *Your First Hundred Thousand Dollars*, Session 2 (avatar, ability to pay, will to learn, holistic + financial USP). Use that framing for Balanced Life, Wealth, affiliate/facilitator recruitment, and partner outreach.
 
 ---
 
@@ -123,14 +125,83 @@ Sam's sleep is interrupted by others' needs, not choice. The only quiet moment i
 
 ---
 
+## Persona 4: The Spiritual Entrepreneur
+
+**Name:** Chris (composite)  
+**Age:** 35–55  
+**Role:** Coach, hypnotist, healer, consultant, or small-business owner who wants **both** inner growth and higher income — Terry’s primary commercial avatar (“spiritual entrepreneur”)
+
+### Snapshot
+Chris already earns roughly mid–high five figures or low six figures and wants the next tier (e.g. $65K–$100K → $150K–$200K+, or $50K+ → $100K). They care about mission, spiritual growth, and life purpose — and they refuse the “starving healer” story. They have (or can ignite) a **will to learn** and a burning desire for a better reality. They respond when growth is framed as an **investment**, not a guilt purchase.
+
+### Goals on RFTS
+- Balanced life, wealth, spirituality, inspiration
+- Often stress relief / sleep so they can perform at a higher level
+- Facilitators/affiliates: same avatar as the people they enroll
+
+### Pain points
+- Feels they must choose between soul work and making money
+- Avoids numbers (sessions/week, revenue) — so goals stay lottery-sized
+- Tried daytime programs that compete with client work and family
+
+### What they search for
+- "guided meditation for success"
+- "spiritual growth and abundance"
+- "hypnosis for entrepreneurs"
+- "reach your highest potential"
+- "meditation while sleeping for goals"
+
+### Messaging that resonates
+- **USP (Terry):** reach highest potential **physically, mentally, emotionally, spiritually, and financially** — the financial piece is intentional and proud
+- **Beacon of success** — you cannot be a beacon if your light doesn’t shine; nightly practice that supports real-world results
+- **Will to learn + belief you can learn** — desire can be ignited; nightly audios reinforce passion and skill without another daytime chore
+- **Investment framing** — income growth, sales confidence, quitting costly habits (e.g. smoking = years of cigarette spend avoided)
+
+### Ability to pay (pricing / offer design)
+- Prefer clients who can pay for real results; charity/giveaway is intentional (e.g. Terry’s pregnant smokers who can’t afford sessions), not the core funnel
+- Typical commercial floor: **~$65K+ household / individual income** (two-income households stronger); highly motivated people at $40K–$50K can still convert when stakes are high (life, business, doubling income)
+- Ideal from trade-show lead cards: checked **spiritual growth / life mission** *and* **raise income**, already at **$65K–$100K+**, wanting **~50%+ income lift** in the next year
+
+### Channels
+- Conscious Life Expo, business mixers, small-business expos, coach/healer networks
+- LinkedIn + Instagram for coaches; Hypnobiz / facilitator recruitment
+- Affiliate/facilitator page: `/affiliates`, Balanced Life + Wealth landings
+
+### CTA
+- Member trial: `/balanced-life`, `/wealth`, `/spirituality`
+- Partner path: affiliate / facilitator enrollment (25% ongoing) — they sell to their own Chris-like clients
+
+---
+
+## Ideal client checklist (marketing creations)
+
+Use this when writing ads, scripts, outreach emails, or lead cards:
+
+| Filter | Question |
+|--------|----------|
+| **Need** | Do they need what we offer (rest, goals, habits, income mindset, spiritual alignment)? |
+| **Ability to pay** | Can they afford membership / coaching path (~$65K+ typical; exception for extreme motivation)? |
+| **Awareness** | Do they know they need help — or can our content ignite the spark? |
+| **Will to learn** | Willing to practice (nightly Start Session) and believe they can learn what they need? |
+| **Avatar fit** | For Terry’s core offer: **spiritual + profit** oriented — not “everyone,” not only charity cases |
+
+**USP lock:** Avatar + unique promise must click with almost no sales resistance: *holistic success including financial — nightly, while you sleep — from a practitioner who has done this for decades.*
+
+**Market sizing tip (Barnes):** search the intersection of your promise (e.g. body/mind/spirit + income outcome). Enough search interest that **~1% of the interested pool** at your price could fund the business — then niche the USP until you are the clear key for that lock.
+
+**Numbers discipline (for affiliates/facilitators we recruit):** know sessions/week and trailing revenue; stair-step goals from current income; don’t promise $20K → $100K with no plan.
+
+---
+
 ## How to use this doc
 
 | Activity | Use personas for |
 |----------|------------------|
-| **Weekly blog** | Rotate pain points and search phrases; link to matching wellness page |
-| **Short-form video** | Open with persona hook ("Racing thoughts at 11 p.m.?") |
-| **Paid ads** | One creative angle per persona (stress / front-line / parent sleep) |
-| **Affiliate outreach** | Match partner type to persona (coach → Alex, department wellness → Jordan) |
-| **Product copy** | Feature bullets that answer persona pain (no daytime chore, one button, credible voice) |
+| **Weekly blog** | Rotate pain points and search phrases; link to matching wellness/goal page |
+| **Short-form video** | Open with persona hook ("Racing thoughts at 11 p.m.?" / "Starving healer is not a business plan") |
+| **Paid ads** | One creative angle per persona (stress / front-line / parent sleep / spiritual entrepreneur) |
+| **Affiliate outreach** | Match partner type to persona (coach → Alex or Chris, department wellness → Jordan) |
+| **Product copy** | Feature bullets that answer persona pain; Balanced Life copy leads with the five-area USP |
+| **Lead cards / expos** | Capture spiritual growth + income goals + current/desired income bands (Terry’s show method) |
 
 **Next marketing steps after personas:** public affiliate page, burnout landing page (or stress cluster), short-form clip cadence, conversion event tracking.
