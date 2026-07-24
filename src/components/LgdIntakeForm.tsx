@@ -17,6 +17,11 @@ import LgdOwnVoiceRecorder from "@/components/LgdOwnVoiceRecorder";
 
 type Props = {
   interests: Interest[];
+  /**
+   * When set (admin preview), load/save via /api/admin/lgd-intake for this member
+   * instead of the logged-in member session API.
+   */
+  adminMemberEmail?: string;
 };
 
 const inputStyle: CSSProperties = {
@@ -39,7 +44,7 @@ function listToLines(list: string[]): string {
   return list.join("\n");
 }
 
-export default function LgdIntakeForm({ interests }: Props) {
+export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
   const [sectionIndex, setSectionIndex] = useState(0);
   const [answers, setAnswers] = useState<LgdIntakeAnswers>(emptyLgdIntakeAnswers());
   const [status, setStatus] = useState<"loading" | "ready" | "error" | "disabled">("loading");
@@ -56,6 +61,8 @@ export default function LgdIntakeForm({ interests }: Props) {
   const [priceLabel, setPriceLabel] = useState<string | null>(null);
 
   const section = LGD_INTAKE_SECTIONS[sectionIndex];
+  const adminEmail = adminMemberEmail?.trim().toLowerCase() || "";
+  const isAdminMode = !!adminEmail;
 
   const sortedInterests = useMemo(
     () => interests.slice().sort((a, b) => a.name.localeCompare(b.name)),
@@ -68,7 +75,11 @@ export default function LgdIntakeForm({ interests }: Props) {
   }, [goalSearch, sortedInterests]);
 
   useEffect(() => {
-    fetch("/api/member/lgd-intake", { credentials: "include" })
+    setStatus("loading");
+    const url = isAdminMode
+      ? `/api/admin/lgd-intake?memberEmail=${encodeURIComponent(adminEmail)}`
+      : "/api/member/lgd-intake";
+    fetch(url, { credentials: "include" })
       .then(async (res) => {
         const data = await res.json().catch(() => ({}));
         if (res.status === 403) {
@@ -76,7 +87,7 @@ export default function LgdIntakeForm({ interests }: Props) {
           setMessage(data?.error || "Electronic LGD is not currently offered.");
           return;
         }
-        if (!res.ok) throw new Error("Unauthorized");
+        if (!res.ok) throw new Error(data?.error || "Unauthorized");
         if (data.intake?.answers) setAnswers(data.intake.answers);
         if (data.flags) setFlags(data.flags);
         if (data.priceLabel) setPriceLabel(data.priceLabel);
@@ -85,8 +96,11 @@ export default function LgdIntakeForm({ interests }: Props) {
         setScriptDraftText(data.intake?.scriptDraftText || null);
         setStatus("ready");
       })
-      .catch(() => setStatus("error"));
-  }, []);
+      .catch((err) => {
+        setStatus("error");
+        setMessage(err instanceof Error ? err.message : "Could not load intake.");
+      });
+  }, [adminEmail, isAdminMode]);
 
   const patchAnswers = (partial: Partial<LgdIntakeAnswers>) => {
     setAnswers((prev) => ({ ...prev, ...partial }));
@@ -112,11 +126,13 @@ export default function LgdIntakeForm({ interests }: Props) {
   const saveDraft = async () => {
     setSaving(true);
     setMessage(null);
-    const res = await fetch("/api/member/lgd-intake", {
+    const res = await fetch(isAdminMode ? "/api/admin/lgd-intake" : "/api/member/lgd-intake", {
       method: "PATCH",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ answers })
+      body: JSON.stringify(
+        isAdminMode ? { memberEmail: adminEmail, answers } : { answers }
+      )
     });
     setSaving(false);
     if (!res.ok) {
@@ -131,11 +147,13 @@ export default function LgdIntakeForm({ interests }: Props) {
   const submit = async () => {
     setSubmitting(true);
     setMessage(null);
-    const res = await fetch("/api/member/lgd-intake", {
+    const res = await fetch(isAdminMode ? "/api/admin/lgd-intake" : "/api/member/lgd-intake", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ answers })
+      body: JSON.stringify(
+        isAdminMode ? { memberEmail: adminEmail, answers } : { answers }
+      )
     });
     const data = await res.json().catch(() => ({}));
     setSubmitting(false);
@@ -146,7 +164,11 @@ export default function LgdIntakeForm({ interests }: Props) {
     setEditable(false);
     setIntakeStatus(data.intake?.status || "submitted");
     setScriptDraftText(data.scriptDraftText || data.intake?.scriptDraftText || null);
-    setMessage("Submitted. Your facilitator can review the brief and Goal Manifestation draft.");
+    setMessage(
+      isAdminMode
+        ? "Submitted. Open the review queue below (or refresh) to see the brief and script."
+        : "Submitted. Your facilitator can review the brief and Goal Manifestation draft."
+    );
   };
 
   if (status === "loading") {
@@ -166,13 +188,31 @@ export default function LgdIntakeForm({ interests }: Props) {
   if (status === "error") {
     return (
       <p>
-        Please <a href="/member/login?next=/member/lgd">log in</a> to continue.
+        {message || (
+          <>
+            Please <a href="/member/login?next=/member/lgd">log in</a> to continue.
+          </>
+        )}
       </p>
     );
   }
 
   return (
     <div>
+      {isAdminMode ? (
+        <p
+          style={{
+            padding: 12,
+            borderRadius: 8,
+            background: "#ecfeff",
+            border: "1px solid #a5f3fc",
+            color: "#155e75"
+          }}
+        >
+          Admin intake for <strong>{adminEmail}</strong> (sections A–F). Members do not see this
+          while LGD is admin-only.
+        </p>
+      ) : null}
       <div className="stepper" style={{ marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
         {LGD_INTAKE_SECTIONS.map((s, i) => (
           <button
@@ -743,7 +783,7 @@ export default function LgdIntakeForm({ interests }: Props) {
           >
             {scriptDraftText}
           </pre>
-          {priceLabel && intakeStatus !== "draft" ? (
+          {priceLabel && intakeStatus !== "draft" && !isAdminMode ? (
             <button
               type="button"
               className="button"
