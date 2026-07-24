@@ -207,39 +207,6 @@ export default function PlayOptionsClient({
       )}
       <PlayOptionsAndroidTips gapHours={gapHours} playsPerNight={playsPerNightSetting} />
       <section className="grid">
-        <div className="card">
-          <h3>Your Goals</h3>
-          <p>Manage the goals that drive your session lineup.</p>
-          <a className="button button-secondary" href="/goals">
-            Update Goals
-          </a>
-        </div>
-        <div className="card">
-          <h3>Current audios play list</h3>
-          <p>
-            The next 10 audios in your queue (starting from your current audio), by SKU and title. The same recording can appear
-            more than once when it is on multiple steps in your rotation.
-          </p>
-          {currentPlaylist.length === 0 ? (
-            <p style={{ color: "#6b7280" }}>No audios in your play list yet.</p>
-          ) : (
-            <div className="goal-list" style={{ marginTop: 8 }}>
-              {currentPlaylist.map((track, idx) => (
-                <div key={`${track.id}-cue-${idx}`} className="goal-item">
-                  {[track.skuCode, track.title].filter(Boolean).join(" – ")}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        <MemberListenProgress />
-        <div className="card" id="meditation-library">
-          <h3>Meditation Library</h3>
-          <p>Browse the full audio library and play any track on demand. This will not affect your guided audio set!</p>
-          <a className="button" href="/library" style={{ marginTop: 12 }}>
-            Open Library
-          </a>
-        </div>
         <div className="card" id="meditation-session">
           <h3>Guided Meditation Audios</h3>
           <p>
@@ -323,6 +290,39 @@ export default function PlayOptionsClient({
               }}
             />
         )}
+        <div className="card">
+          <h3>Your Goals</h3>
+          <p>Manage the goals that drive your session lineup.</p>
+          <a className="button button-secondary" href="/goals">
+            Update Goals
+          </a>
+        </div>
+        <div className="card">
+          <h3>Current audios play list</h3>
+          <p>
+            The next 10 audios in your queue (starting from your current audio), by SKU and title. The same recording can appear
+            more than once when it is on multiple steps in your rotation.
+          </p>
+          {currentPlaylist.length === 0 ? (
+            <p style={{ color: "#6b7280" }}>No audios in your play list yet.</p>
+          ) : (
+            <div className="goal-list" style={{ marginTop: 8 }}>
+              {currentPlaylist.map((track, idx) => (
+                <div key={`${track.id}-cue-${idx}`} className="goal-item">
+                  {[track.skuCode, track.title].filter(Boolean).join(" – ")}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <MemberListenProgress />
+        <div className="card" id="meditation-library">
+          <h3>Meditation Library</h3>
+          <p>Browse the full audio library and play any track on demand. This will not affect your guided audio set!</p>
+          <a className="button" href="/library" style={{ marginTop: 12 }}>
+            Open Library
+          </a>
+        </div>
         {status === "active" && profile && (
           <div className="card">
             <h3>Audios per night</h3>
