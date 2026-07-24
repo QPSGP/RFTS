@@ -28,6 +28,7 @@ export type MemberProfileDraft = {
   wantsPracticeGrowth: boolean;
   adultConsent: boolean;
   wantsPolyamory: boolean;
+  wantsLgdInfo: boolean;
   hadLgdSession: boolean;
   referralSource: string;
 };
@@ -50,6 +51,7 @@ export function emptyMemberProfileDraft(): MemberProfileDraft {
     wantsPracticeGrowth: false,
     adultConsent: false,
     wantsPolyamory: false,
+    wantsLgdInfo: false,
     hadLgdSession: false,
     referralSource: ""
   };
@@ -78,6 +80,7 @@ export function memberProfileToDraft(
     wantsPracticeGrowth: !!profile.wantsPracticeGrowth,
     adultConsent: !!profile.adultConsent,
     wantsPolyamory: !!profile.wantsPolyamory,
+    wantsLgdInfo: !!profile.wantsLgdInfo,
     hadLgdSession: !!profile.hadLgdSession,
     referralSource: profile.referralSource || ""
   };
@@ -116,6 +119,7 @@ export const memberProfilePatchSchema = z.object({
   wantsPracticeGrowth: z.boolean().optional(),
   adultConsent: z.boolean().optional(),
   wantsPolyamory: z.boolean().optional(),
+  wantsLgdInfo: z.boolean().optional(),
   hadLgdSession: z.boolean().optional(),
   referralSource: z.string().optional(),
   notes: z.string().nullable().optional()
@@ -141,6 +145,7 @@ export function draftToMemberProfilePatch(draft: MemberProfileDraft): MemberProf
     wantsPracticeGrowth: draft.wantsPracticeGrowth,
     adultConsent: draft.adultConsent,
     wantsPolyamory: draft.wantsPolyamory,
+    wantsLgdInfo: draft.wantsLgdInfo,
     hadLgdSession: draft.hadLgdSession,
     referralSource: draft.referralSource
   });
@@ -184,6 +189,7 @@ export function buildUpsertMemberProfilePayload(
       patch.wantsPracticeGrowth ?? existing?.wantsPracticeGrowth ?? false,
     adultConsent,
     wantsPolyamory: patch.wantsPolyamory ?? existing?.wantsPolyamory ?? false,
+    wantsLgdInfo: patch.wantsLgdInfo ?? existing?.wantsLgdInfo ?? false,
     hadLgdSession: patch.hadLgdSession ?? existing?.hadLgdSession ?? false,
     referralSource: patch.referralSource ?? existing?.referralSource ?? null,
     notes:

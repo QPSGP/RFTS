@@ -65,6 +65,9 @@ export type MemberProfile = {
   wantsPracticeGrowth?: boolean | null;
   adultConsent?: boolean | null;
   wantsPolyamory?: boolean | null;
+  /** Interested in LGD info / follow-up email. */
+  wantsLgdInfo?: boolean | null;
+  /** Already completed a Life Guidance Discovery Session. */
   hadLgdSession?: boolean | null;
   referralSource?: string | null;
   notes?: string | null;
@@ -402,7 +405,41 @@ export const getUserScreenWakeEnabled = async (userId: string): Promise<boolean>
   }
 };
 
+let memberProfileLgdInfoReady = false;
+
+/**
+ * Ensure wants_lgd_info exists. One-time: legacy UI stored “interested in LGD” in had_lgd_session —
+ * copy to wants_lgd_info and clear had_lgd_session for those rows only.
+ */
+const ensureMemberProfileLgdInfoColumn = async () => {
+  if (memberProfileLgdInfoReady) return;
+  await sql`
+    ALTER TABLE member_profiles
+    ADD COLUMN IF NOT EXISTS wants_lgd_info boolean DEFAULT false
+  `;
+  await sql`
+    ALTER TABLE member_profiles
+    ADD COLUMN IF NOT EXISTS lgd_interest_migrated boolean DEFAULT false
+  `;
+  await sql`
+    UPDATE member_profiles
+    SET
+      wants_lgd_info = true,
+      had_lgd_session = false,
+      lgd_interest_migrated = true
+    WHERE COALESCE(lgd_interest_migrated, false) = false
+      AND COALESCE(had_lgd_session, false) = true
+  `;
+  await sql`
+    UPDATE member_profiles
+    SET lgd_interest_migrated = true
+    WHERE COALESCE(lgd_interest_migrated, false) = false
+  `;
+  memberProfileLgdInfoReady = true;
+};
+
 export const upsertMemberProfile = async (profile: MemberProfile) => {
+  await ensureMemberProfileLgdInfoColumn();
   const birthDate = profile.birthDate?.trim() || null;
   const yearFromBirthDate =
     birthDate != null
@@ -440,6 +477,7 @@ export const upsertMemberProfile = async (profile: MemberProfile) => {
       wants_practice_growth,
       adult_consent,
       wants_polyamory,
+      wants_lgd_info,
       had_lgd_session,
       referral_source,
       notes,
@@ -464,6 +502,7 @@ export const upsertMemberProfile = async (profile: MemberProfile) => {
       ${profile.wantsPracticeGrowth ?? false},
       ${profile.adultConsent ?? false},
       ${profile.wantsPolyamory ?? false},
+      ${profile.wantsLgdInfo ?? false},
       ${profile.hadLgdSession ?? false},
       ${profile.referralSource || null},
       ${profile.notes || null},
@@ -488,6 +527,7 @@ export const upsertMemberProfile = async (profile: MemberProfile) => {
       wants_practice_growth = EXCLUDED.wants_practice_growth,
       adult_consent = EXCLUDED.adult_consent,
       wants_polyamory = EXCLUDED.wants_polyamory,
+      wants_lgd_info = EXCLUDED.wants_lgd_info,
       had_lgd_session = EXCLUDED.had_lgd_session,
       referral_source = EXCLUDED.referral_source,
       notes = EXCLUDED.notes,
@@ -498,6 +538,7 @@ export const upsertMemberProfile = async (profile: MemberProfile) => {
 };
 
 export const getMemberProfileByUserId = async (userId: string): Promise<MemberProfile | null> => {
+  await ensureMemberProfileLgdInfoColumn();
   const { rows } = await sql<Omit<MemberProfile, "birthDate"> & { birth_date: string | null }>`
     SELECT
       user_id as "userId",
@@ -517,6 +558,7 @@ export const getMemberProfileByUserId = async (userId: string): Promise<MemberPr
       wants_practice_growth as "wantsPracticeGrowth",
       adult_consent as "adultConsent",
       wants_polyamory as "wantsPolyamory",
+      wants_lgd_info as "wantsLgdInfo",
       had_lgd_session as "hadLgdSession",
       referral_source as "referralSource",
       notes,

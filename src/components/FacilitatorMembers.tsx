@@ -58,6 +58,7 @@ type MemberProfileDetail = {
   wantsPracticeGrowth?: boolean | null;
   adultConsent?: boolean | null;
   wantsPolyamory?: boolean | null;
+  wantsLgdInfo?: boolean | null;
   hadLgdSession?: boolean | null;
   referralSource?: string | null;
   notes?: string | null;

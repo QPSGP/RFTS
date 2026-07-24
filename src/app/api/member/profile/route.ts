@@ -51,6 +51,7 @@ const updateSchema = z.object({
   wantsPracticeGrowth: z.boolean().optional(),
   adultConsent: z.boolean().optional(),
   wantsPolyamory: z.boolean().optional(),
+  wantsLgdInfo: z.boolean().optional(),
   hadLgdSession: z.boolean().optional(),
   referralSource: z.string().optional(),
   affiliatePayoutMethod: z.string().optional(),
@@ -92,6 +93,7 @@ export async function GET() {
         wantsPracticeGrowth: false,
         adultConsent: false,
         wantsPolyamory: false,
+        wantsLgdInfo: false,
         hadLgdSession: false,
         referralSource: null
       }
@@ -117,6 +119,7 @@ export async function GET() {
       wantsPracticeGrowth: memberProfile.wantsPracticeGrowth ?? false,
       adultConsent: memberProfile.adultConsent ?? false,
       wantsPolyamory: memberProfile.wantsPolyamory ?? false,
+      wantsLgdInfo: memberProfile.wantsLgdInfo ?? false,
       hadLgdSession: memberProfile.hadLgdSession ?? false,
       referralSource: memberProfile.referralSource ?? null
     }
@@ -199,6 +202,8 @@ export async function PATCH(request: Request) {
     adultConsent,
     wantsPolyamory:
       parsed.data.wantsPolyamory ?? existing?.wantsPolyamory ?? false,
+    wantsLgdInfo:
+      parsed.data.wantsLgdInfo ?? existing?.wantsLgdInfo ?? false,
     hadLgdSession:
       parsed.data.hadLgdSession ?? existing?.hadLgdSession ?? false,
     referralSource:
@@ -221,11 +226,11 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Save failed." }, { status: 500 });
   }
 
-  const newHadLgd =
-    parsed.data.hadLgdSession ?? existing?.hadLgdSession ?? false;
+  const newWantsLgdInfo =
+    parsed.data.wantsLgdInfo ?? existing?.wantsLgdInfo ?? false;
   const newWantsPracticeGrowth =
     parsed.data.wantsPracticeGrowth ?? existing?.wantsPracticeGrowth ?? false;
-  const prevHadLgd = existing?.hadLgdSession ?? false;
+  const prevWantsLgdInfo = existing?.wantsLgdInfo ?? false;
   const prevWantsPracticeGrowth = existing?.wantsPracticeGrowth ?? false;
   const firstName =
     parsed.data.firstName ?? existing?.firstName ?? null;
@@ -237,7 +242,7 @@ export async function PATCH(request: Request) {
     referralSource: parsed.data.referralSource ?? existing?.referralSource ?? null
   });
 
-  if (newHadLgd && !prevHadLgd) {
+  if (newWantsLgdInfo && !prevWantsLgdInfo) {
     const lgd = getLgdInterestEmailContent(firstName);
     const lgdResult = await sendEmail({
       to: email,

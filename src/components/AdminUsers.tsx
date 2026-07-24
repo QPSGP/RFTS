@@ -196,6 +196,7 @@ type ProfileDraft = {
   wantsPracticeGrowth: boolean;
   adultConsent: boolean;
   wantsPolyamory: boolean;
+  wantsLgdInfo: boolean;
   hadLgdSession: boolean;
   referralSource: string;
   notes: string;
@@ -940,6 +941,7 @@ export default function AdminUsers() {
         wantsPracticeGrowth: !!profile.wantsPracticeGrowth,
         adultConsent: !!profile.adultConsent,
         wantsPolyamory: !!profile.wantsPolyamory,
+        wantsLgdInfo: !!profile.wantsLgdInfo,
         hadLgdSession: !!profile.hadLgdSession,
         referralSource: profile.referralSource || "",
         notes: profile.notes ?? ""
@@ -1743,6 +1745,7 @@ export default function AdminUsers() {
           wantsPracticeGrowth: draft.wantsPracticeGrowth,
           adultConsent: draft.adultConsent,
           wantsPolyamory: draft.wantsPolyamory,
+          wantsLgdInfo: draft.wantsLgdInfo,
           hadLgdSession: draft.hadLgdSession,
           referralSource: draft.referralSource,
           notes: draft.notes
@@ -2301,6 +2304,23 @@ export default function AdminUsers() {
                             <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
                               <input
                                 type="checkbox"
+                                checked={profileDrafts[user.email].wantsLgdInfo}
+                                onChange={(event) =>
+                                  setProfileDrafts({
+                                    ...profileDrafts,
+                                    [user.email]: { ...profileDrafts[user.email], wantsLgdInfo: event.target.checked }
+                                  })
+                                }
+                                style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
+                              />
+                              <span>
+                                I am interested in more information on a &quot;Life Guidance Discovery Session&quot;
+                                to receive a customized &quot;Goal Manifestation&quot; audio specific for me!
+                              </span>
+                            </label>
+                            <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                              <input
+                                type="checkbox"
                                 checked={profileDrafts[user.email].hadLgdSession}
                                 onChange={(event) =>
                                   setProfileDrafts({
@@ -2310,10 +2330,7 @@ export default function AdminUsers() {
                                 }
                                 style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
                               />
-                              <span>
-                                I am interested in more information on a &quot;Life Guidance Discovery Session&quot;
-                                to receive a customized &quot;Goal Manifestation&quot; audio specific for me!
-                              </span>
+                              <span>I have already had a Life Guidance Discovery Session.</span>
                             </label>
                             {(() => {
                               const y = profileDrafts[user.email].yearBorn;

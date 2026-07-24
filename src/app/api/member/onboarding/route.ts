@@ -57,6 +57,7 @@ const schema = z.object({
     wantsPracticeGrowth: z.boolean().optional().default(false),
     adultConsent: z.boolean().optional().default(false),
     wantsPolyamory: z.boolean().optional().default(false),
+    wantsLgdInfo: z.boolean().optional().default(false),
     hadLgdSession: z.boolean().optional().default(false),
     referralSource: z.string().optional().default("")
   })
@@ -142,6 +143,7 @@ export async function POST(request: Request) {
     wantsPracticeGrowth: parsed.data.profile.wantsPracticeGrowth,
     adultConsent,
     wantsPolyamory: parsed.data.profile.wantsPolyamory,
+    wantsLgdInfo: parsed.data.profile.wantsLgdInfo,
     hadLgdSession: parsed.data.profile.hadLgdSession,
     referralSource: parsed.data.profile.referralSource
   });
@@ -185,7 +187,7 @@ export async function POST(request: Request) {
     skipStaffBcc: true
   });
   if (!welcomeResult.ok) console.error("[onboarding] Welcome email failed:", welcomeResult.error);
-  if (parsed.data.profile.hadLgdSession) {
+  if (parsed.data.profile.wantsLgdInfo) {
     const lgd = getLgdInterestEmailContent(firstName);
     const lgdResult = await sendEmail({
       to: emailTo,

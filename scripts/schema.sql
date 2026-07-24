@@ -28,7 +28,12 @@ CREATE TABLE IF NOT EXISTS member_profiles (
   wants_practice_growth boolean DEFAULT false,
   adult_consent boolean DEFAULT false,
   wants_polyamory boolean DEFAULT false,
+  /** Interested in more information about a Life Guidance Discovery Session (follow-up email). */
+  wants_lgd_info boolean DEFAULT false,
+  /** Member already completed a Life Guidance Discovery Session (live or electronic). */
   had_lgd_session boolean DEFAULT false,
+  /** Internal: legacy interest→wants_lgd_info migration applied. */
+  lgd_interest_migrated boolean DEFAULT false,
   referral_source text,
   notes text,
   created_at timestamptz DEFAULT now(),
@@ -457,3 +462,29 @@ CREATE TABLE IF NOT EXISTS outreach_email_templates (
 );
 CREATE INDEX IF NOT EXISTS outreach_email_templates_purpose_idx
   ON outreach_email_templates (purpose);
+
+-- Electronic Life Guidance Discovery intakes (see docs/LGD_ELECTRONIC_INTAKE.md)
+CREATE TABLE IF NOT EXISTS lgd_intakes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  facilitator_id uuid REFERENCES moderators(id) ON DELETE SET NULL,
+  status text NOT NULL DEFAULT 'draft',
+  answers jsonb NOT NULL DEFAULT '{}'::jsonb,
+  script_draft jsonb,
+  script_draft_text text,
+  voice_id text,
+  frequency_bed_id text,
+  price_cents integer,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  submitted_at timestamptz,
+  approved_at timestamptz
+);
+CREATE INDEX IF NOT EXISTS lgd_intakes_user_id_idx ON lgd_intakes (user_id);
+CREATE INDEX IF NOT EXISTS lgd_intakes_status_idx ON lgd_intakes (status);
+
+CREATE TABLE IF NOT EXISTS facilitator_lgd_settings (
+  moderator_id uuid PRIMARY KEY REFERENCES moderators(id) ON DELETE CASCADE,
+  flags jsonb NOT NULL DEFAULT '{}'::jsonb,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);

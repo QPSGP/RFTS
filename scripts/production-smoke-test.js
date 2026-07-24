@@ -205,6 +205,7 @@ async function testOnboardingCheckoutPath() {
       isFirstResponder: false,
       wantsPracticeGrowth: false,
       wantsPolyamory: false,
+      wantsLgdInfo: false,
       hadLgdSession: false,
       referralSource: "smoke-test"
     }

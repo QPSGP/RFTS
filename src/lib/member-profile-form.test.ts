@@ -14,10 +14,12 @@ describe("member-profile-form", () => {
       yearBorn: 1985,
       birthDate: "1985-06-15",
       timeZone: "Pacific Time",
+      wantsLgdInfo: true,
       hadLgdSession: true
     } as MemberProfile);
     expect(draft.firstName).toBe("Alex");
     expect(draft.birthDate).toBe("1985-06-15");
+    expect(draft.wantsLgdInfo).toBe(true);
     expect(draft.hadLgdSession).toBe(true);
   });
 

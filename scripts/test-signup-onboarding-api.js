@@ -29,7 +29,8 @@ const body = {
     isFirstResponder: false,
     wantsPracticeGrowth: true,
     wantsPolyamory: false,
-    hadLgdSession: true,
+    wantsLgdInfo: true,
+    hadLgdSession: false,
     referralSource: "agent-email-test"
   }
 };

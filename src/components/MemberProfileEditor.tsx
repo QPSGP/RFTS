@@ -114,14 +114,23 @@ export default function MemberProfileEditor({
         <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
           <input
             type="checkbox"
+            checked={draft.wantsLgdInfo}
+            onChange={(event) => setField("wantsLgdInfo", event.target.checked)}
+            style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
+          />
+          <span>
+            I am interested in more information on a &quot;Life Guidance Discovery Session&quot; to receive a
+            customized &quot;Goal Manifestation&quot; audio specific for me!
+          </span>
+        </label>
+        <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <input
+            type="checkbox"
             checked={draft.hadLgdSession}
             onChange={(event) => setField("hadLgdSession", event.target.checked)}
             style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
           />
-          <span>
-            Interested in a Life Guidance Discovery Session for a customized Goal Manifestation
-            audio
-          </span>
+          <span>I have already had a Life Guidance Discovery Session.</span>
         </label>
 
         {showAdult ? (

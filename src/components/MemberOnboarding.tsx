@@ -65,6 +65,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     wantsPracticeGrowth: false,
     adultConsent: false,
     wantsPolyamory: false,
+    wantsLgdInfo: false,
     hadLgdSession: false,
     referralSource: ""
   });
@@ -218,6 +219,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
           wantsPracticeGrowth: profile.wantsPracticeGrowth,
           adultConsent: profile.adultConsent,
           wantsPolyamory: profile.wantsPolyamory,
+          wantsLgdInfo: profile.wantsLgdInfo,
           hadLgdSession: profile.hadLgdSession,
           referralSource: profile.referralSource
         }
@@ -375,6 +377,20 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
             <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10 }}>
               <input
                 type="checkbox"
+                checked={profile.wantsLgdInfo}
+                onChange={(event) =>
+                  setProfile({ ...profile, wantsLgdInfo: event.target.checked })
+                }
+                style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
+              />
+              <span style={{ minWidth: 0 }}>
+                I am interested in more information on a &quot;Life Guidance Discovery Session&quot; to receive a
+                customized &quot;Goal Manifestation&quot; audio specific for me!
+              </span>
+            </label>
+            <label className="card" style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 10 }}>
+              <input
+                type="checkbox"
                 checked={profile.hadLgdSession}
                 onChange={(event) =>
                   setProfile({ ...profile, hadLgdSession: event.target.checked })
@@ -382,8 +398,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
                 style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
               />
               <span style={{ minWidth: 0 }}>
-                I am interested in more information on a &quot;Life Guidance Discovery Session&quot; to receive a
-                customized &quot;Goal Manifestation&quot; audio specific for me!
+                I have already had a Life Guidance Discovery Session.
               </span>
             </label>
             {showAdultContent && (

@@ -42,6 +42,7 @@ type ProfileState = {
   wantsPracticeGrowth: boolean;
   adultConsent: boolean;
   wantsPolyamory: boolean;
+  wantsLgdInfo: boolean;
   hadLgdSession: boolean;
   referralSource: string | null;
 };
@@ -60,6 +61,7 @@ const emptyProfile: ProfileState = {
   wantsPracticeGrowth: false,
   adultConsent: false,
   wantsPolyamory: false,
+  wantsLgdInfo: false,
   hadLgdSession: false,
   referralSource: null
 };
@@ -78,6 +80,7 @@ function toState(profile: {
   wantsPracticeGrowth?: boolean;
   adultConsent?: boolean;
   wantsPolyamory?: boolean;
+  wantsLgdInfo?: boolean;
   hadLgdSession?: boolean;
   referralSource?: string | null;
 }): ProfileState {
@@ -100,6 +103,7 @@ function toState(profile: {
     wantsPracticeGrowth: profile.wantsPracticeGrowth ?? false,
     adultConsent: profile.adultConsent ?? false,
     wantsPolyamory: profile.wantsPolyamory ?? false,
+    wantsLgdInfo: profile.wantsLgdInfo ?? false,
     hadLgdSession: profile.hadLgdSession ?? false,
     referralSource: profile.referralSource ?? null
   };
@@ -180,6 +184,7 @@ export default function MemberProfilePage() {
         wantsPracticeGrowth: profile.wantsPracticeGrowth,
         adultConsent: profile.adultConsent,
         wantsPolyamory: profile.wantsPolyamory,
+        wantsLgdInfo: profile.wantsLgdInfo,
         hadLgdSession: profile.hadLgdSession,
         referralSource: profile.referralSource?.trim() || undefined
       })
@@ -365,9 +370,9 @@ export default function MemberProfilePage() {
           >
             <input
               type="checkbox"
-              checked={profile.hadLgdSession}
+              checked={profile.wantsLgdInfo}
               onChange={(e) =>
-                setProfile((p) => ({ ...p, hadLgdSession: e.target.checked }))
+                setProfile((p) => ({ ...p, wantsLgdInfo: e.target.checked }))
               }
               style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
             />
@@ -375,6 +380,20 @@ export default function MemberProfilePage() {
               I am interested in more information on a &quot;Life Guidance Discovery Session&quot; to receive a
               customized &quot;Goal Manifestation&quot; audio specific for me!
             </span>
+          </label>
+          <label
+            className="card"
+            style={{ cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}
+          >
+            <input
+              type="checkbox"
+              checked={profile.hadLgdSession}
+              onChange={(e) =>
+                setProfile((p) => ({ ...p, hadLgdSession: e.target.checked }))
+              }
+              style={{ marginTop: 3, flex: "0 0 auto", width: 18, minWidth: 18, height: 18 }}
+            />
+            <span>I have already had a Life Guidance Discovery Session.</span>
           </label>
           {showAdultContent && (
             <div className="card">
