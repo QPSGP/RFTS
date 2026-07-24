@@ -687,6 +687,10 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
             {flags.lgdProfessionalVoices || flags.lgdMemberOwnVoice ? (
               <fieldset style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
                 <legend>Voice preference</legend>
+                <p style={{ fontSize: 13, color: "#64748b", marginTop: 0 }}>
+                  The Voice Recording Agreement is required only if you choose{" "}
+                  <strong>My own voice</strong>. Professional voices do not need that agreement.
+                </p>
                 {flags.lgdProfessionalVoices
                   ? LGD_PROFESSIONAL_VOICES.map((voice) => (
                       <label
@@ -716,7 +720,9 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
                         name="voice"
                         disabled={!editable}
                         checked={answers.voiceId === "member_own"}
-                        onChange={() => patchAnswers({ voiceId: "member_own" })}
+                        onChange={() =>
+                          patchAnswers({ voiceId: "member_own", ownVoiceConsent: false })
+                        }
                       />
                       <span>
                         <strong>My own voice</strong> — affirmations in your voice (recording /
@@ -746,7 +752,8 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
                             <a href="/voice-recording-agreement" target="_blank" rel="noreferrer">
                               Voice Recording Agreement
                             </a>{" "}
-                            (record, store, and export for my Goal Manifestation audio).
+                            (record, store, and export for my Goal Manifestation audio). Required
+                            before submit when using your own voice.
                           </span>
                         </label>
                         <LgdOwnVoiceRecorder
@@ -757,7 +764,8 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
                   </>
                 ) : (
                   <p style={{ fontSize: 13, color: "#64748b", marginBottom: 0 }}>
-                    “My own voice” is not enabled for your facilitator yet.
+                    “My own voice” is not enabled yet (admin can turn it on later). Professional
+                    voice choices above do not require the Voice Recording Agreement.
                   </p>
                 )}
               </fieldset>

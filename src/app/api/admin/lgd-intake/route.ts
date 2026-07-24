@@ -141,6 +141,15 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+  if (answers.voiceId === "member_own" && !answers.ownVoiceConsent) {
+    return NextResponse.json(
+      {
+        error:
+          "Voice Recording Agreement consent is required when using the member’s own voice."
+      },
+      { status: 400 }
+    );
+  }
 
   let intake = await getLatestLgdIntakeForUser(user.id);
   if (!intake) {
