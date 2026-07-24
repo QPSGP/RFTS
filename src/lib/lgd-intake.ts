@@ -4,7 +4,7 @@
  * Full product design: docs/LGD_ELECTRONIC_INTAKE.md
  */
 
-export const LGD_INTAKE_VERSION = 1 as const;
+export const LGD_INTAKE_VERSION = 2 as const;
 
 export const LGD_LIFE_AREAS = [
   { id: "physical", label: "Physical / health" },
@@ -18,6 +18,193 @@ export const LGD_LIFE_AREAS = [
 ] as const;
 
 export type LgdLifeAreaId = (typeof LGD_LIFE_AREAS)[number]["id"];
+
+/**
+ * Premise: “How would you like your subconscious programmed?”
+ * Multi-select — shapes induction / support tone in the script draft.
+ */
+export const LGD_SUBCONSCIOUS_PROGRAMS = [
+  {
+    id: "release_limiting",
+    label: "Release limiting beliefs that hold me back",
+    scriptCue:
+      "You allow old limiting beliefs to soften and release, making room for truth that helps you grow."
+  },
+  {
+    id: "install_identity",
+    label: "Install empowering identity (“I am becoming…” / “I am now…”)",
+    scriptCue:
+      "Night after night, empowering identity statements settle as your natural way of being."
+  },
+  {
+    id: "goal_focus",
+    label: "Keep my prioritized goals front and center while I sleep",
+    scriptCue:
+      "Your prioritized goals stay clear and active in the subconscious while you rest."
+  },
+  {
+    id: "calm_rest",
+    label: "Calm my nervous system so I rest deeply and receive",
+    scriptCue:
+      "Your nervous system settles. You rest deeply and receive what supports you."
+  },
+  {
+    id: "confidence_action",
+    label: "Build confidence and follow-through by day",
+    scriptCue:
+      "Confidence and follow-through grow naturally in your waking choices."
+  },
+  {
+    id: "abundance_allowed",
+    label: "Allow success, abundance, and being valued for my contribution",
+    scriptCue:
+      "Success and abundance are allowed. You are valued for your contribution."
+  },
+  {
+    id: "self_worth",
+    label: "Strengthen self-worth and self-compassion",
+    scriptCue:
+      "Self-worth and self-compassion become steady companions."
+  },
+  {
+    id: "focus_clarity",
+    label: "Clear mental clutter and focus on what matters most",
+    scriptCue:
+      "Mental clutter clears. You focus easily on what matters most."
+  },
+  {
+    id: "relationship_open",
+    label: "Open to healthier connection, communication, and boundaries",
+    scriptCue:
+      "You open to healthier connection, clear communication, and kind boundaries."
+  },
+  {
+    id: "thrive_expand",
+    label: "Help me grow, expand, and thrive in all areas of life",
+    scriptCue:
+      "You grow, expand, and thrive — physically, mentally, emotionally, spiritually, and financially."
+  }
+] as const;
+
+export type LgdSubconsciousProgramId =
+  (typeof LGD_SUBCONSCIOUS_PROGRAMS)[number]["id"];
+
+/** Common limiting beliefs (multiple choice) with a default growth reframe. */
+export const LGD_LIMITING_BELIEF_CHOICES = [
+  {
+    id: "not_enough",
+    label: "I'm not enough / I don't measure up",
+    defaultGrowthId: "enough_growing"
+  },
+  {
+    id: "do_it_alone",
+    label: "I have to do everything myself",
+    defaultGrowthId: "allow_support"
+  },
+  {
+    id: "success_hard",
+    label: "Success has to be hard or I don't deserve ease",
+    defaultGrowthId: "ease_allowed"
+  },
+  {
+    id: "cant_change",
+    label: "I can't really change / this is just who I am",
+    defaultGrowthId: "can_change"
+  },
+  {
+    id: "not_safe_rest",
+    label: "I can't rest until everything else is handled",
+    defaultGrowthId: "safe_rest"
+  },
+  {
+    id: "money_bad",
+    label: "Money / success isn't spiritual or safe for me",
+    defaultGrowthId: "abundance_aligned"
+  },
+  {
+    id: "will_fail",
+    label: "I'll probably fail if I try something important",
+    defaultGrowthId: "learn_succeed"
+  },
+  {
+    id: "others_first",
+    label: "Others' needs always come before mine",
+    defaultGrowthId: "balanced_care"
+  },
+  {
+    id: "unlovable",
+    label: "I'm hard to love / connection isn't for me",
+    defaultGrowthId: "worthy_love"
+  },
+  {
+    id: "stuck_past",
+    label: "My past defines what I can become",
+    defaultGrowthId: "future_open"
+  }
+] as const;
+
+export type LgdLimitingBeliefId = (typeof LGD_LIMITING_BELIEF_CHOICES)[number]["id"];
+
+/** Growth / thriving beliefs to install (multiple choice). */
+export const LGD_GROWTH_BELIEF_CHOICES = [
+  {
+    id: "enough_growing",
+    label: "I am enough, and I grow stronger every day."
+  },
+  {
+    id: "allow_support",
+    label: "I allow support and still lead with clarity."
+  },
+  {
+    id: "ease_allowed",
+    label: "Ease and success can travel together for me."
+  },
+  {
+    id: "can_change",
+    label: "I can change. New patterns become natural with repetition."
+  },
+  {
+    id: "safe_rest",
+    label: "I am safe to rest. Rest renews my clarity and power."
+  },
+  {
+    id: "abundance_aligned",
+    label: "Abundance and right action grow side by side in my life."
+  },
+  {
+    id: "learn_succeed",
+    label: "I learn, adjust, and succeed — one clear step at a time."
+  },
+  {
+    id: "balanced_care",
+    label: "I care for myself and others with healthy balance."
+  },
+  {
+    id: "worthy_love",
+    label: "I am worthy of love, respect, and real connection."
+  },
+  {
+    id: "future_open",
+    label: "My future is open. I become who I choose to be."
+  },
+  {
+    id: "thrive_expand",
+    label: "I grow, expand, and thrive in ways that feel true for me."
+  },
+  {
+    id: "custom",
+    label: "Custom (write my own below)"
+  }
+] as const;
+
+export type LgdGrowthBeliefId = (typeof LGD_GROWTH_BELIEF_CHOICES)[number]["id"];
+
+export type LgdBeliefTransformation = {
+  limitingId: LgdLimitingBeliefId | "custom";
+  limitingText: string;
+  growthId: LgdGrowthBeliefId | "custom";
+  growthText: string;
+};
 
 /** Professional hypnotic voices (Phase A). Member-own-voice is Phase B. */
 export const LGD_PROFESSIONAL_VOICES = [
@@ -172,7 +359,12 @@ export type LgdIntakeAnswers = {
   permissionToEditDraft?: boolean;
   /** Consent for Phase B own-voice recording / clone when offered. */
   ownVoiceConsent?: boolean;
+  /** Multi-select: how they want the subconscious programmed. */
+  subconsciousPrograms: LgdSubconsciousProgramId[];
   lifeAreaScores: Partial<Record<LgdLifeAreaId, number>>;
+  /** Structured limiting → growth belief pairs (preferred). */
+  beliefTransformations: LgdBeliefTransformation[];
+  /** Legacy free-text limiting phrases; synced from beliefTransformations when present. */
   occupyingBeliefs: string[];
   gratitude: string[];
   primaryStruggle: string;
@@ -204,7 +396,9 @@ export function emptyLgdIntakeAnswers(): LgdIntakeAnswers {
     alreadyHadLiveLgd: false,
     permissionToEditDraft: true,
     ownVoiceConsent: false,
+    subconsciousPrograms: [],
     lifeAreaScores: {},
+    beliefTransformations: [],
     occupyingBeliefs: [],
     gratitude: [],
     primaryStruggle: "",
@@ -236,6 +430,74 @@ function asStringArray(value: unknown, max = 20): string[] {
     .slice(0, max);
 }
 
+const PROGRAM_IDS = new Set(LGD_SUBCONSCIOUS_PROGRAMS.map((p) => p.id));
+const LIMITING_IDS = new Set(LGD_LIMITING_BELIEF_CHOICES.map((b) => b.id));
+const GROWTH_IDS = new Set(LGD_GROWTH_BELIEF_CHOICES.map((b) => b.id));
+
+export function growthBeliefLabel(id: string): string {
+  return LGD_GROWTH_BELIEF_CHOICES.find((b) => b.id === id)?.label ?? "";
+}
+
+export function limitingBeliefLabel(id: string): string {
+  return LGD_LIMITING_BELIEF_CHOICES.find((b) => b.id === id)?.label ?? "";
+}
+
+export function defaultGrowthForLimiting(
+  limitingId: LgdLimitingBeliefId | "custom"
+): { growthId: LgdGrowthBeliefId; growthText: string } {
+  if (limitingId === "custom") {
+    return { growthId: "thrive_expand", growthText: growthBeliefLabel("thrive_expand") };
+  }
+  const choice = LGD_LIMITING_BELIEF_CHOICES.find((b) => b.id === limitingId);
+  const growthId = (choice?.defaultGrowthId ?? "thrive_expand") as LgdGrowthBeliefId;
+  return { growthId, growthText: growthBeliefLabel(growthId) };
+}
+
+function normalizeBeliefTransformations(raw: unknown): LgdBeliefTransformation[] {
+  if (!Array.isArray(raw)) return [];
+  const out: LgdBeliefTransformation[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const o = item as Partial<LgdBeliefTransformation>;
+    const limitingIdRaw = String(o.limitingId ?? "custom").trim();
+    const limitingId = (
+      LIMITING_IDS.has(limitingIdRaw as LgdLimitingBeliefId) ? limitingIdRaw : "custom"
+    ) as LgdLimitingBeliefId | "custom";
+    const growthIdRaw = String(o.growthId ?? "custom").trim();
+    const growthId = (
+      GROWTH_IDS.has(growthIdRaw as LgdGrowthBeliefId) ? growthIdRaw : "custom"
+    ) as LgdGrowthBeliefId | "custom";
+    const limitingText =
+      String(o.limitingText ?? "").trim() ||
+      (limitingId !== "custom" ? limitingBeliefLabel(limitingId) : "");
+    let growthText = String(o.growthText ?? "").trim();
+    if (!growthText && growthId !== "custom") {
+      growthText = growthBeliefLabel(growthId);
+    }
+    if (!limitingText && !growthText) continue;
+    out.push({
+      limitingId,
+      limitingText,
+      growthId,
+      growthText
+    });
+    if (out.length >= 6) break;
+  }
+  return out;
+}
+
+function normalizeSubconsciousPrograms(raw: unknown): LgdSubconsciousProgramId[] {
+  if (!Array.isArray(raw)) return [];
+  const ids: LgdSubconsciousProgramId[] = [];
+  for (const item of raw) {
+    const id = String(item ?? "").trim();
+    if (PROGRAM_IDS.has(id as LgdSubconsciousProgramId)) {
+      ids.push(id as LgdSubconsciousProgramId);
+    }
+  }
+  return [...new Set(ids)].slice(0, 8);
+}
+
 /** Merge stored JSON into a full answers object. */
 export function normalizeLgdIntakeAnswers(raw: unknown): LgdIntakeAnswers {
   const base = emptyLgdIntakeAnswers();
@@ -246,6 +508,21 @@ export function normalizeLgdIntakeAnswers(raw: unknown): LgdIntakeAnswers {
     const n = o.lifeAreaScores?.[area.id];
     if (typeof n === "number" && n >= 1 && n <= 10) scores[area.id] = n;
   }
+  let beliefTransformations = normalizeBeliefTransformations(o.beliefTransformations);
+  const legacyOccupying = asStringArray(o.occupyingBeliefs, 5);
+  // Backfill pairs from older free-text occupying beliefs.
+  if (!beliefTransformations.length && legacyOccupying.length) {
+    beliefTransformations = legacyOccupying.map((limitingText) => ({
+      limitingId: "custom" as const,
+      limitingText,
+      growthId: "thrive_expand" as const,
+      growthText: growthBeliefLabel("thrive_expand")
+    }));
+  }
+  const occupyingBeliefs = beliefTransformations.length
+    ? beliefTransformations.map((p) => p.limitingText).filter(Boolean).slice(0, 5)
+    : legacyOccupying;
+
   return {
     version: LGD_INTAKE_VERSION,
     consentStored: !!o.consentStored,
@@ -253,8 +530,10 @@ export function normalizeLgdIntakeAnswers(raw: unknown): LgdIntakeAnswers {
     alreadyHadLiveLgd: !!o.alreadyHadLiveLgd,
     permissionToEditDraft: o.permissionToEditDraft !== false,
     ownVoiceConsent: !!o.ownVoiceConsent,
+    subconsciousPrograms: normalizeSubconsciousPrograms(o.subconsciousPrograms),
     lifeAreaScores: scores,
-    occupyingBeliefs: asStringArray(o.occupyingBeliefs, 5),
+    beliefTransformations,
+    occupyingBeliefs,
     gratitude: asStringArray(o.gratitude, 5),
     primaryStruggle: String(o.primaryStruggle ?? "").trim(),
     topOutcomes: asStringArray(o.topOutcomes, 3),
@@ -298,8 +577,8 @@ export function normalizeLgdIntakeAnswers(raw: unknown): LgdIntakeAnswers {
 }
 
 export const LGD_INTAKE_SECTIONS = [
-  { id: "A", title: "Orientation & consent" },
-  { id: "B", title: "Where you are" },
+  { id: "A", title: "Subconscious programming" },
+  { id: "B", title: "Beliefs & where you are" },
   { id: "C", title: "Where you want to go" },
   { id: "D", title: "How you get there" },
   { id: "E", title: "Language & modality" },
@@ -368,6 +647,12 @@ export function findLgdContradictionNotes(answers: LgdIntakeAnswers): string[] {
   )) {
     notes.push("An identity statement may contain a word marked to avoid — edit before production.");
   }
+  if (!answers.subconsciousPrograms.length) {
+    notes.push("No subconscious programming preferences selected — confirm tone with member.");
+  }
+  if (!answers.beliefTransformations.some((p) => p.limitingText && p.growthText)) {
+    notes.push("No belief transformation pairs — script may lack clear release → install reframes.");
+  }
   return notes;
 }
 
@@ -383,7 +668,9 @@ export function buildLgdScriptDraftBlocks(input: {
   const a = input.answers;
   const identities = a.identityStatements.map((s) => s.trim()).filter(Boolean);
   const outcomes = a.topOutcomes.map((s) => s.trim()).filter(Boolean);
-  const beliefs = a.occupyingBeliefs.map((s) => s.trim()).filter(Boolean);
+  const pairs = a.beliefTransformations.filter(
+    (p) => p.limitingText.trim() || p.growthText.trim()
+  );
   const strengths = a.strengths.map((s) => s.trim()).filter(Boolean);
   const gratitude = a.gratitude.map((s) => s.trim()).filter(Boolean);
   const metaphors = a.metaphors.map((s) => s.trim()).filter(Boolean);
@@ -392,6 +679,9 @@ export function buildLgdScriptDraftBlocks(input: {
   const goals =
     input.goalNames && input.goalNames.length ? input.goalNames : a.goalIds;
   const bed = input.resolvedBedId || resolveFrequencyBedId(a);
+  const programCues = LGD_SUBCONSCIOUS_PROGRAMS.filter((p) =>
+    a.subconsciousPrograms.includes(p.id)
+  ).map((p) => p.scriptCue);
 
   const metaphorLine = metaphors.length
     ? `Images that feel true for you — ${metaphors.join(", ")} — support this deepening.`
@@ -416,7 +706,9 @@ export function buildLgdScriptDraftBlocks(input: {
 
   const induction = [
     `Allow yourself to settle, ${name}. With each breath, the body softens. You are safe to rest and receive.`,
-    metaphorLine
+    "Tonight your subconscious is programmed for growth, expansion, and thriving — in the ways you chose.",
+    metaphorLine,
+    ...programCues.slice(0, 4)
   ];
 
   const presentBridge: string[] = [];
@@ -429,19 +721,39 @@ export function buildLgdScriptDraftBlocks(input: {
       "You acknowledge where you have been, and you choose to move forward with clarity and calm."
     );
   }
-  if (beliefs.length) {
+  if (pairs.length) {
+    presentBridge.push(
+      "Beliefs that were harmful to you can soften and release. In their place, you install beliefs that help you grow, expand, and thrive:"
+    );
+    for (const pair of pairs) {
+      if (pair.limitingText.trim()) {
+        presentBridge.push(`Releasing: “${pair.limitingText.trim()}”`);
+      }
+      if (pair.growthText.trim()) {
+        presentBridge.push(`Installing: “${pair.growthText.trim()}”`);
+      }
+    }
+  } else if (a.occupyingBeliefs.length) {
     presentBridge.push(
       "Old phrases that no longer define you can soften and release as you make room for new truth:"
     );
-    for (const b of beliefs) presentBridge.push(`Releasing: “${b}”`);
+    for (const b of a.occupyingBeliefs) {
+      if (b.trim()) presentBridge.push(`Releasing: “${b.trim()}”`);
+    }
   }
   if (gratitude.length) {
     presentBridge.push(`You also remember what already works: ${gratitude.join("; ")}.`);
   }
 
   const identitySuggestions: string[] = [];
-  if (identities.length) {
-    for (const phrase of identities) {
+  const growthFromPairs = pairs.map((p) => p.growthText.trim()).filter(Boolean);
+  const identitySource = identities.length
+    ? identities
+    : growthFromPairs.length
+      ? growthFromPairs
+      : [];
+  if (identitySource.length) {
+    for (const phrase of identitySource) {
       identitySuggestions.push(`You are becoming — and more and more you are — “${phrase}”`);
     }
   } else {
@@ -466,12 +778,17 @@ export function buildLgdScriptDraftBlocks(input: {
   }
 
   const supportSuggestions: string[] = [];
+  if (programCues.length) {
+    supportSuggestions.push(
+      "Your subconscious programming preferences continue to settle with each breath and each night of listening."
+    );
+  }
   if (strengths.length) {
     supportSuggestions.push(`You draw on what already works: ${strengths.join("; ")}.`);
   }
   if (a.blocks.length) {
     supportSuggestions.push(
-      `As old blocks soften — ${a.blocks.join("; ")} — you choose the next right step.`
+      "As old outer blocks soften, you choose the next right step with calm confidence — without rehearsing the old story."
     );
   }
   if (a.pastAttempts.trim()) {

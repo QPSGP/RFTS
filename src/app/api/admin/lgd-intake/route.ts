@@ -135,7 +135,32 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-  if (!answers.identityStatements.length && !answers.topOutcomes.length) {
+  if (!answers.subconsciousPrograms.length) {
+    return NextResponse.json(
+      {
+        error:
+          "Choose at least one option for how the subconscious should be programmed."
+      },
+      { status: 400 }
+    );
+  }
+  const completeBeliefPairs = answers.beliefTransformations.filter(
+    (p) => p.limitingText.trim() && p.growthText.trim()
+  );
+  if (!completeBeliefPairs.length) {
+    return NextResponse.json(
+      {
+        error:
+          "Select at least one limiting belief and the growth belief that should replace it."
+      },
+      { status: 400 }
+    );
+  }
+  if (
+    !answers.identityStatements.length &&
+    !answers.topOutcomes.length &&
+    !completeBeliefPairs.length
+  ) {
     return NextResponse.json(
       { error: "Add at least one identity statement or top outcome." },
       { status: 400 }

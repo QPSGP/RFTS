@@ -84,17 +84,18 @@ Chosen from intake answers (primary life area + sleep vs daytime preference). Al
 
 Each section collects **structured fields + free-text “in your words”**. Free text is copied verbatim into script suggestion lines where marked `[MEMBER_WORDS]`.
 
-### Section A — Orientation & consent
-- Purpose of LGD / CGMR (read-only)
+### Section A — Subconscious programming & consent
+- Premise: **How would you like your subconscious programmed?** (multi-select catalog)
 - Consent to store answers and generate a draft script
-- Crisis / medical disclaimer; free-text red-flag screen (escalate to human, no auto-script)
+- Crisis / medical disclaimer (escalate to human, no auto-script)
 - Already completed live LGD? (syncs `hadLgdSession`)
 
-### Section B — Where you are (present state)
+### Section B — Beliefs & where you are
+- **Belief transformation** (multiple choice): select limiting beliefs → choose growth belief to install (or custom pair)
 - Life areas 1–10 ratings: physical, mental, emotional, spiritual, financial, relationship, work/mission, sleep/energy
-- Occupying beliefs: “I am…”, “I always…”, “I can’t…” (up to 5 exact phrases)
 - What is working / gratitude (3 items)
 - Primary struggle this season (one paragraph)
+- Script uses each pair as **Releasing… / Installing…** (does not rehearse blocks as suggestions)
 
 ### Section C — Where you want to go (desired state)
 - Top 3 outcomes in **their words** (must be sensory/specific)
