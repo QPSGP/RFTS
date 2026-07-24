@@ -4165,3 +4165,183 @@ export const seedOutreachEmailTemplates = async (): Promise<number> => {
   }
   return added;
 };
+
+export type LgdIntakeRecord = {
+  id: string;
+  userId: string;
+  facilitatorId: string | null;
+  status: string;
+  answers: unknown;
+  scriptDraft: unknown | null;
+  scriptDraftText: string | null;
+  voiceId: string | null;
+  frequencyBedId: string | null;
+  priceCents: number | null;
+  createdAt: string;
+  updatedAt: string;
+  submittedAt: string | null;
+  approvedAt: string | null;
+};
+
+let lgdIntakesReady = false;
+
+const ensureLgdIntakesTable = async () => {
+  if (lgdIntakesReady) return;
+  await sql`
+    CREATE TABLE IF NOT EXISTS lgd_intakes (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      facilitator_id uuid REFERENCES moderators(id) ON DELETE SET NULL,
+      status text NOT NULL DEFAULT 'draft',
+      answers jsonb NOT NULL DEFAULT '{}'::jsonb,
+      script_draft jsonb,
+      script_draft_text text,
+      voice_id text,
+      frequency_bed_id text,
+      price_cents integer,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      submitted_at timestamptz,
+      approved_at timestamptz
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS lgd_intakes_user_id_idx ON lgd_intakes (user_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS lgd_intakes_status_idx ON lgd_intakes (status)`;
+  lgdIntakesReady = true;
+};
+
+export const getLatestLgdIntakeForUser = async (
+  userId: string
+): Promise<LgdIntakeRecord | null> => {
+  await ensureLgdIntakesTable();
+  const { rows } = await sql<LgdIntakeRecord>`
+    SELECT
+      id,
+      user_id AS "userId",
+      facilitator_id AS "facilitatorId",
+      status,
+      answers,
+      script_draft AS "scriptDraft",
+      script_draft_text AS "scriptDraftText",
+      voice_id AS "voiceId",
+      frequency_bed_id AS "frequencyBedId",
+      price_cents AS "priceCents",
+      created_at AS "createdAt",
+      updated_at AS "updatedAt",
+      submitted_at AS "submittedAt",
+      approved_at AS "approvedAt"
+    FROM lgd_intakes
+    WHERE user_id = ${userId}
+    ORDER BY updated_at DESC
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+};
+
+export const createLgdIntakeDraft = async (
+  userId: string,
+  answers: unknown
+): Promise<LgdIntakeRecord> => {
+  await ensureLgdIntakesTable();
+  const answersJson = JSON.stringify(answers);
+  const { rows } = await sql<LgdIntakeRecord>`
+    INSERT INTO lgd_intakes (user_id, status, answers)
+    VALUES (${userId}, 'draft', CAST(${answersJson} AS jsonb))
+    RETURNING
+      id,
+      user_id AS "userId",
+      facilitator_id AS "facilitatorId",
+      status,
+      answers,
+      script_draft AS "scriptDraft",
+      script_draft_text AS "scriptDraftText",
+      voice_id AS "voiceId",
+      frequency_bed_id AS "frequencyBedId",
+      price_cents AS "priceCents",
+      created_at AS "createdAt",
+      updated_at AS "updatedAt",
+      submitted_at AS "submittedAt",
+      approved_at AS "approvedAt"
+  `;
+  return rows[0];
+};
+
+export const updateLgdIntakeDraft = async (input: {
+  id: string;
+  userId: string;
+  answers: unknown;
+  voiceId?: string | null;
+  frequencyBedId?: string | null;
+}): Promise<LgdIntakeRecord | null> => {
+  await ensureLgdIntakesTable();
+  const answersJson = JSON.stringify(input.answers);
+  const { rows } = await sql<LgdIntakeRecord>`
+    UPDATE lgd_intakes
+    SET
+      answers = CAST(${answersJson} AS jsonb),
+      voice_id = ${input.voiceId ?? null},
+      frequency_bed_id = ${input.frequencyBedId ?? null},
+      updated_at = now()
+    WHERE id = ${input.id}
+      AND user_id = ${input.userId}
+      AND status = 'draft'
+    RETURNING
+      id,
+      user_id AS "userId",
+      facilitator_id AS "facilitatorId",
+      status,
+      answers,
+      script_draft AS "scriptDraft",
+      script_draft_text AS "scriptDraftText",
+      voice_id AS "voiceId",
+      frequency_bed_id AS "frequencyBedId",
+      price_cents AS "priceCents",
+      created_at AS "createdAt",
+      updated_at AS "updatedAt",
+      submitted_at AS "submittedAt",
+      approved_at AS "approvedAt"
+  `;
+  return rows[0] ?? null;
+};
+
+export const submitLgdIntake = async (input: {
+  id: string;
+  userId: string;
+  answers: unknown;
+  scriptDraftText: string;
+  voiceId?: string | null;
+  frequencyBedId?: string | null;
+}): Promise<LgdIntakeRecord | null> => {
+  await ensureLgdIntakesTable();
+  const answersJson = JSON.stringify(input.answers);
+  const { rows } = await sql<LgdIntakeRecord>`
+    UPDATE lgd_intakes
+    SET
+      answers = CAST(${answersJson} AS jsonb),
+      script_draft_text = ${input.scriptDraftText},
+      voice_id = ${input.voiceId ?? null},
+      frequency_bed_id = ${input.frequencyBedId ?? null},
+      status = 'submitted',
+      submitted_at = now(),
+      updated_at = now()
+    WHERE id = ${input.id}
+      AND user_id = ${input.userId}
+      AND status = 'draft'
+    RETURNING
+      id,
+      user_id AS "userId",
+      facilitator_id AS "facilitatorId",
+      status,
+      answers,
+      script_draft AS "scriptDraft",
+      script_draft_text AS "scriptDraftText",
+      voice_id AS "voiceId",
+      frequency_bed_id AS "frequencyBedId",
+      price_cents AS "priceCents",
+      created_at AS "createdAt",
+      updated_at AS "updatedAt",
+      submitted_at AS "submittedAt",
+      approved_at AS "approvedAt"
+  `;
+  return rows[0] ?? null;
+};

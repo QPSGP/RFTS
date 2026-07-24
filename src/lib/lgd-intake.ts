@@ -183,6 +183,81 @@ export function emptyLgdIntakeAnswers(): LgdIntakeAnswers {
   };
 }
 
+function asStringArray(value: unknown, max = 20): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => String(item ?? "").trim())
+    .filter(Boolean)
+    .slice(0, max);
+}
+
+/** Merge stored JSON into a full answers object. */
+export function normalizeLgdIntakeAnswers(raw: unknown): LgdIntakeAnswers {
+  const base = emptyLgdIntakeAnswers();
+  if (!raw || typeof raw !== "object") return base;
+  const o = raw as Partial<LgdIntakeAnswers> & { lifeAreaScores?: Record<string, number> };
+  const scores: Partial<Record<LgdLifeAreaId, number>> = {};
+  for (const area of LGD_LIFE_AREAS) {
+    const n = o.lifeAreaScores?.[area.id];
+    if (typeof n === "number" && n >= 1 && n <= 10) scores[area.id] = n;
+  }
+  return {
+    version: LGD_INTAKE_VERSION,
+    consentStored: !!o.consentStored,
+    crisisFlag: !!o.crisisFlag,
+    lifeAreaScores: scores,
+    occupyingBeliefs: asStringArray(o.occupyingBeliefs, 5),
+    gratitude: asStringArray(o.gratitude, 5),
+    primaryStruggle: String(o.primaryStruggle ?? "").trim(),
+    topOutcomes: asStringArray(o.topOutcomes, 3),
+    goalIds: asStringArray(o.goalIds, 10),
+    identityStatements: asStringArray(o.identityStatements, 7),
+    timeline:
+      o.timeline === "90_days" || o.timeline === "12_months" || o.timeline === "ongoing"
+        ? o.timeline
+        : "",
+    incomeCurrentBand: String(o.incomeCurrentBand ?? "").trim() || undefined,
+    incomeDesiredBand: String(o.incomeDesiredBand ?? "").trim() || undefined,
+    blocks: asStringArray(o.blocks, 10),
+    pastAttempts: String(o.pastAttempts ?? "").trim(),
+    strengths: asStringArray(o.strengths, 10),
+    willToLearn:
+      typeof o.willToLearn === "number" && o.willToLearn >= 1 && o.willToLearn <= 5
+        ? o.willToLearn
+        : null,
+    beliefCanLearn:
+      typeof o.beliefCanLearn === "number" && o.beliefCanLearn >= 1 && o.beliefCanLearn <= 5
+        ? o.beliefCanLearn
+        : null,
+    metaphors: asStringArray(o.metaphors, 10),
+    wordsLove: asStringArray(o.wordsLove, 20),
+    wordsAvoid: asStringArray(o.wordsAvoid, 20),
+    spiritualLanguage:
+      o.spiritualLanguage === "yes" ||
+      o.spiritualLanguage === "minimal" ||
+      o.spiritualLanguage === "none"
+        ? o.spiritualLanguage
+        : "",
+    listenContext:
+      o.listenContext === "sleep" || o.listenContext === "sleep_and_day"
+        ? o.listenContext
+        : "",
+    voiceId: (String(o.voiceId ?? "").trim() || "") as LgdIntakeAnswers["voiceId"],
+    frequencyBedId: (String(o.frequencyBedId ?? "").trim() ||
+      "choose_for_me") as LgdFrequencyBedId | "",
+    questionsForFacilitator: String(o.questionsForFacilitator ?? "").trim()
+  };
+}
+
+export const LGD_INTAKE_SECTIONS = [
+  { id: "A", title: "Orientation & consent" },
+  { id: "B", title: "Where you are" },
+  { id: "C", title: "Where you want to go" },
+  { id: "D", title: "How you get there" },
+  { id: "E", title: "Language & modality" },
+  { id: "F", title: "Facilitator handoff" }
+] as const;
+
 /**
  * Build a reviewable Markdown Goal Manifestation script draft from intake answers.
  * Preserves member phrasing; facilitator may edit before production.

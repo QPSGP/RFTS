@@ -50,6 +50,7 @@ export async function GET() {
     const storedConsent = memberProfile?.adultConsent ?? false;
     const adultConsent = storedConsent && hasVerifiedAge;
     const wantsPracticeGrowth = memberProfile?.wantsPracticeGrowth ?? false;
+    const hadLgdSession = memberProfile?.hadLgdSession ?? false;
     const firstName = memberProfile?.firstName ?? null;
     const lastName = memberProfile?.lastName ?? null;
     
@@ -66,6 +67,7 @@ export async function GET() {
         yearBorn: yearBornNum,
         hasVerifiedAge,
         wantsPracticeGrowth,
+        hadLgdSession,
         isManaged
       }
     });

@@ -20,6 +20,7 @@ export default function PlayOptionsPage() {
     subscriptionTier: string | null;
     playsPerNight: number;
     isManaged?: boolean;
+    hadLgdSession?: boolean;
   } | null>(null);
   const [schedule, setSchedule] = useState<
     { night: number; tracks: { id: string; title: string; skuCode?: string; audioUrl: string }[]; note?: string }[]
@@ -346,6 +347,18 @@ export default function PlayOptionsPage() {
           </a>
         </section>
       )}
+      {profile && !profile.hadLgdSession && (
+        <section className="card" style={{ marginBottom: 16 }}>
+          <h3>Life Guidance Discovery</h3>
+          <p>
+            Complete an electronic Life Guidance Discovery to prepare your facilitator and draft a
+            customized Goal Manifestation script specific to you.
+          </p>
+          <a className="button" href="/member/lgd">
+            Start Life Guidance Discovery
+          </a>
+        </section>
+      )}
       {profile && profile.isManaged && (
         <section className="card" style={{ marginBottom: 16, background: "#f0fdf4", borderColor: "#bbf7d0" }}>
           <h3>Managed Account</h3>
@@ -372,6 +385,15 @@ export default function PlayOptionsPage() {
             </a>
           </div>
         )}
+        <div className="card">
+          <h3>Life Guidance Discovery</h3>
+          <p>
+            Structured intake for your Goal Manifestation audio — session brief and script draft.
+          </p>
+          <a className="button button-secondary" href="/member/lgd">
+            Open LGD intake
+          </a>
+        </div>
         <div className="card">
           <h3>Current audios play list</h3>
           <p>
