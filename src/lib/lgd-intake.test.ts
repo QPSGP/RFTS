@@ -1,6 +1,8 @@
 import {
   emptyLgdIntakeAnswers,
   findLgdContradictionNotes,
+  normalizeLgdIntakeAnswers,
+  prioritizedLgdChallenges,
   resolveFrequencyBedId
 } from "@/lib/lgd-intake";
 
@@ -24,5 +26,22 @@ describe("lgd-intake helpers", () => {
     answers.incomeDesiredBand = "six figures";
     const notes = findLgdContradictionNotes(answers);
     expect(notes.some((n) => n.toLowerCase().includes("spiritual"))).toBe(true);
+  });
+
+  it("keeps challenge priority as an ordered subset of checked challenges", () => {
+    const answers = normalizeLgdIntakeAnswers({
+      challengeIds: ["sleep_issues", "raise_income", "public_speaking", "bogus"],
+      challengePriority: ["raise_income", "bogus", "sleep_issues", "raise_income"]
+    });
+    expect(answers.challengeIds).toEqual([
+      "sleep_issues",
+      "raise_income",
+      "public_speaking"
+    ]);
+    expect(answers.challengePriority).toEqual(["raise_income", "sleep_issues"]);
+    expect(prioritizedLgdChallenges(answers).map((c) => c.label)).toEqual([
+      "Raise income / earning power",
+      "Sleep issues"
+    ]);
   });
 });

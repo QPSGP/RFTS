@@ -93,9 +93,10 @@ Each section collects **structured fields + free-text “in your words”**. Fre
 ### Section B — Beliefs & where you are
 - **Belief transformation** (multiple choice): select limiting beliefs → choose growth belief to install (or custom pair)
 - Life areas 1–10 ratings: physical, mental, emotional, spiritual, financial, relationship, work/mission, sleep/energy
+- **Challenges checklist** (curated ~34 items in 6 categories; not the full clinical paper inventory) — check applicable, then rank **top 10 priorities**
 - What is working / gratitude (3 items)
-- Primary struggle this season (one paragraph)
-- Script uses each pair as **Releasing… / Installing…** (does not rehearse blocks as suggestions)
+- Most important challenge this season (one paragraph)
+- Script uses each belief pair as **Releasing… / Installing…** (does not rehearse challenge labels as suggestions); priorities appear on facilitator brief + production packet
 
 ### Section C — Where you want to go (desired state)
 - Top 3 outcomes in **their words** (must be sensory/specific)

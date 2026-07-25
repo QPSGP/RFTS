@@ -5,6 +5,7 @@ import {
   LGD_FACILITATOR_FEATURE_FLAGS,
   LGD_LIFE_AREAS,
   buildLgdProductionPacket,
+  prioritizedLgdChallenges,
   type LgdFacilitatorFeatureFlags,
   type LgdIntakeAnswers,
   type LgdIntakeEditEvent,
@@ -406,6 +407,18 @@ export default function FacilitatorLgdPanel() {
                     <strong>Primary struggle:</strong>{" "}
                     {selected.answers.primaryStruggle || "—"}
                   </p>
+                  {prioritizedLgdChallenges(selected.answers).length > 0 ? (
+                    <>
+                      <p style={{ marginBottom: 4 }}>
+                        <strong>Priority challenges:</strong>
+                      </p>
+                      <ol style={{ marginTop: 0 }}>
+                        {prioritizedLgdChallenges(selected.answers).map((c) => (
+                          <li key={c.id}>{c.label}</li>
+                        ))}
+                      </ol>
+                    </>
+                  ) : null}
                   <p>
                     <strong>Top outcomes:</strong>{" "}
                     {selected.answers.topOutcomes.join("; ") || "—"}

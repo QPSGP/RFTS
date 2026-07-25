@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { Interest } from "@/lib/types";
 import {
+  LGD_CHALLENGES,
+  LGD_CHALLENGE_CATEGORIES,
   LGD_FREQUENCY_BEDS,
   LGD_GROWTH_BELIEF_CHOICES,
   LGD_INTAKE_SECTIONS,
@@ -15,7 +17,10 @@ import {
   emptyLgdIntakeAnswers,
   growthBeliefLabel,
   limitingBeliefLabel,
+  lgdChallengeLabel,
+  prioritizedLgdChallenges,
   type LgdBeliefTransformation,
+  type LgdChallengeId,
   type LgdFacilitatorFeatureFlags,
   type LgdGrowthBeliefId,
   type LgdIntakeAnswers,
@@ -240,6 +245,62 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
       return { ...prev, goalIds: next };
     });
   };
+
+  const toggleChallenge = (id: LgdChallengeId) => {
+    setAnswers((prev) => {
+      if (prev.challengeIds.includes(id)) {
+        return {
+          ...prev,
+          challengeIds: prev.challengeIds.filter((c) => c !== id),
+          challengePriority: prev.challengePriority.filter((c) => c !== id)
+        };
+      }
+      const challengeIds = [...prev.challengeIds, id];
+      const challengePriority =
+        prev.challengePriority.length < 10
+          ? [...prev.challengePriority, id]
+          : prev.challengePriority;
+      return { ...prev, challengeIds, challengePriority };
+    });
+  };
+
+  const moveChallengePriority = (fromIndex: number, toIndex: number) => {
+    setAnswers((prev) => {
+      if (toIndex < 0 || toIndex >= prev.challengePriority.length) return prev;
+      const next = [...prev.challengePriority];
+      const [item] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, item);
+      return { ...prev, challengePriority: next };
+    });
+  };
+
+  const addChallengeToPriority = (id: LgdChallengeId) => {
+    setAnswers((prev) => {
+      if (!prev.challengeIds.includes(id)) return prev;
+      if (prev.challengePriority.includes(id) || prev.challengePriority.length >= 10) {
+        return prev;
+      }
+      return { ...prev, challengePriority: [...prev.challengePriority, id] };
+    });
+  };
+
+  const removeChallengeFromPriority = (id: LgdChallengeId) => {
+    setAnswers((prev) => ({
+      ...prev,
+      challengePriority: prev.challengePriority.filter((c) => c !== id)
+    }));
+  };
+
+  const rankedChallenges = useMemo(
+    () => prioritizedLgdChallenges(answers),
+    [answers.challengePriority, answers.challengeIds]
+  );
+
+  const checkedNotPrioritized = useMemo(
+    () =>
+      answers.challengeIds.filter((id) => !answers.challengePriority.includes(id)),
+    [answers.challengeIds, answers.challengePriority]
+  );
 
   const orderedSelectedGoals = useMemo(
     () =>
@@ -885,6 +946,133 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
                 />
               </label>
             ))}
+
+            <hr style={{ border: 0, borderTop: "1px solid #e5e7eb", margin: "4px 0" }} />
+            <div>
+              <p style={{ marginTop: 0, fontSize: 17, fontWeight: 600 }}>Challenges checklist</p>
+              <p style={{ color: "#475569", marginTop: 0 }}>
+                Check what applies. Then rank up to 10 priorities below (1 = most important). This
+                helps your facilitator prepare — it is not a medical assessment.
+              </p>
+              {LGD_CHALLENGE_CATEGORIES.map((cat) => (
+                <div key={cat.id} style={{ marginBottom: 14 }}>
+                  <p style={{ margin: "0 0 8px", fontWeight: 600 }}>{cat.label}</p>
+                  <div style={{ display: "grid", gap: 6 }}>
+                    {LGD_CHALLENGES.filter((c) => c.category === cat.id).map((challenge) => {
+                      const selected = answers.challengeIds.includes(challenge.id);
+                      return (
+                        <label
+                          key={challenge.id}
+                          style={{
+                            display: "flex",
+                            gap: 10,
+                            alignItems: "flex-start",
+                            cursor: editable ? "pointer" : "default",
+                            padding: "6px 8px",
+                            borderRadius: 8,
+                            border: selected ? "1px solid #0f766e" : "1px solid #e5e7eb"
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            disabled={!editable}
+                            checked={selected}
+                            onChange={() => toggleChallenge(challenge.id)}
+                            style={{ marginTop: 3 }}
+                          />
+                          <span>{challenge.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {answers.challengeIds.length > 0 ? (
+              <div>
+                <p style={{ marginTop: 0, fontWeight: 600 }}>
+                  Priority order (up to 10) — #1 is highest
+                </p>
+                {rankedChallenges.length === 0 ? (
+                  <p style={{ color: "#64748b", fontSize: 14 }}>
+                    Checked items are added to priority automatically until you hit 10. Use the
+                    buttons below to reorder.
+                  </p>
+                ) : (
+                  <div className="stack" style={{ gap: 8 }}>
+                    {rankedChallenges.map((row, index) => (
+                      <div
+                        key={row.id}
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 8,
+                          alignItems: "center",
+                          padding: "8px 10px",
+                          borderRadius: 8,
+                          border: "1px solid #d1d5db"
+                        }}
+                      >
+                        <strong style={{ minWidth: 28 }}>#{row.priority}</strong>
+                        <span style={{ flex: "1 1 160px" }}>{row.label}</span>
+                        {editable ? (
+                          <span style={{ display: "flex", gap: 6 }}>
+                            <button
+                              type="button"
+                              className="button button-secondary"
+                              style={{ padding: "4px 8px", fontSize: 12 }}
+                              disabled={index === 0}
+                              onClick={() => moveChallengePriority(index, index - 1)}
+                            >
+                              Up
+                            </button>
+                            <button
+                              type="button"
+                              className="button button-secondary"
+                              style={{ padding: "4px 8px", fontSize: 12 }}
+                              disabled={index === rankedChallenges.length - 1}
+                              onClick={() => moveChallengePriority(index, index + 1)}
+                            >
+                              Down
+                            </button>
+                            <button
+                              type="button"
+                              className="button button-secondary"
+                              style={{ padding: "4px 8px", fontSize: 12 }}
+                              onClick={() => removeChallengeFromPriority(row.id)}
+                            >
+                              Remove from top 10
+                            </button>
+                          </span>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {editable && checkedNotPrioritized.length > 0 && answers.challengePriority.length < 10 ? (
+                  <div style={{ marginTop: 10 }}>
+                    <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 6px" }}>
+                      Checked but not in top 10 — add if space:
+                    </p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {checkedNotPrioritized.map((id) => (
+                        <button
+                          key={id}
+                          type="button"
+                          className="button button-secondary"
+                          style={{ padding: "4px 10px", fontSize: 12 }}
+                          onClick={() => addChallengeToPriority(id)}
+                        >
+                          + {lgdChallengeLabel(id)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             <label style={{ display: "grid", gap: 6 }}>
               What is working / gratitude (one per line, up to 3)
               <textarea
@@ -896,7 +1084,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
               />
             </label>
             <label style={{ display: "grid", gap: 6 }}>
-              Primary struggle this season
+              Most important challenge this season (in your words)
               <textarea
                 disabled={!editable}
                 rows={4}

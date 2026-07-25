@@ -4,7 +4,7 @@
  * Full product design: docs/LGD_ELECTRONIC_INTAKE.md
  */
 
-export const LGD_INTAKE_VERSION = 2 as const;
+export const LGD_INTAKE_VERSION = 3 as const;
 
 export type LgdIntakeEditorRole = "admin" | "member" | "facilitator";
 
@@ -78,6 +78,108 @@ export const LGD_LIFE_AREAS = [
 ] as const;
 
 export type LgdLifeAreaId = (typeof LGD_LIFE_AREAS)[number]["id"];
+
+/**
+ * Curated Challenges Checklist (Success Center style) — not the full clinical inventory.
+ * Member checks applicable items, then ranks up to 10 priorities.
+ */
+export const LGD_CHALLENGE_CATEGORIES = [
+  { id: "emotional", label: "Emotional" },
+  { id: "relationship", label: "Relationship / communication" },
+  { id: "focus", label: "Focus, memory & learning" },
+  { id: "success", label: "Success & money" },
+  { id: "spirit", label: "Spirit" },
+  { id: "health", label: "Health & habits" }
+] as const;
+
+export type LgdChallengeCategoryId = (typeof LGD_CHALLENGE_CATEGORIES)[number]["id"];
+
+export const LGD_CHALLENGES = [
+  { id: "anger_issues", category: "emotional", label: "Anger / frustration responses" },
+  { id: "depression_sadness", category: "emotional", label: "Depression or frequent sadness" },
+  { id: "fear_anxiety", category: "emotional", label: "Fear, anxiety, or panic" },
+  { id: "low_self_esteem", category: "emotional", label: "Low self-esteem / self-worth" },
+  { id: "guilt", category: "emotional", label: "Guilt that won’t release" },
+  { id: "unwanted_emotions", category: "emotional", label: "Unwanted emotions I can’t shake" },
+  { id: "stress_overwhelm", category: "emotional", label: "Stress / feeling overwhelmed" },
+  {
+    id: "communication_difficulty",
+    category: "relationship",
+    label: "Difficulty communicating / feeling misunderstood"
+  },
+  { id: "loneliness", category: "relationship", label: "Loneliness / hard to meet people" },
+  { id: "trust_issues", category: "relationship", label: "Trust issues with others" },
+  {
+    id: "relationship_enhancement",
+    category: "relationship",
+    label: "Improve an existing love relationship"
+  },
+  { id: "want_love_relationship", category: "relationship", label: "Want a quality love relationship" },
+  { id: "grief", category: "relationship", label: "Still grieving a loss" },
+  { id: "concentration_focus", category: "focus", label: "Concentration / focus" },
+  { id: "memory", category: "focus", label: "Memory" },
+  { id: "creativity_block", category: "focus", label: "Creativity block / inspiration" },
+  {
+    id: "overwhelm_information",
+    category: "focus",
+    label: "Overwhelmed by too much information"
+  },
+  { id: "procrastination", category: "success", label: "Procrastination / follow-through" },
+  { id: "lack_motivation", category: "success", label: "Lack of motivation / ambition" },
+  { id: "self_sabotage", category: "success", label: "Self-sabotage / can’t get ahead" },
+  { id: "financial_independence", category: "success", label: "Financial independence" },
+  { id: "raise_income", category: "success", label: "Raise income / earning power" },
+  { id: "public_speaking", category: "success", label: "Public speaking" },
+  { id: "organization_time", category: "success", label: "Organization / time management" },
+  { id: "spiritual_growth", category: "spirit", label: "Desire spiritual growth" },
+  { id: "life_mission", category: "spirit", label: "Clarify life mission / purpose" },
+  { id: "spiritual_blocks", category: "spirit", label: "Spiritual blocks" },
+  { id: "sleep_issues", category: "health", label: "Sleep issues" },
+  { id: "energy_fatigue", category: "health", label: "Low energy / fatigue" },
+  { id: "weight_habits", category: "health", label: "Weight / eating habits" },
+  { id: "exercise_consistency", category: "health", label: "Exercise consistency" },
+  { id: "aging_longevity", category: "health", label: "Healthy longevity / aging well" },
+  { id: "relaxation", category: "health", label: "Relaxation / can’t unwind" },
+  { id: "pain_discomfort", category: "health", label: "Physical pain / discomfort (non-medical focus)" }
+] as const;
+
+export type LgdChallengeId = (typeof LGD_CHALLENGES)[number]["id"];
+
+const CHALLENGE_IDS = new Set(LGD_CHALLENGES.map((c) => c.id));
+
+export function lgdChallengeLabel(id: string): string {
+  return LGD_CHALLENGES.find((c) => c.id === id)?.label ?? id;
+}
+
+export function lgdChallengeCategoryLabel(categoryId: string): string {
+  return LGD_CHALLENGE_CATEGORIES.find((c) => c.id === categoryId)?.label ?? categoryId;
+}
+
+/** Prioritized challenges (1 = highest), max 10. */
+export function prioritizedLgdChallenges(answers: {
+  challengePriority?: string[];
+  challengeIds?: string[];
+}): { priority: number; id: LgdChallengeId; label: string; category: LgdChallengeCategoryId }[] {
+  const order = Array.isArray(answers.challengePriority) ? answers.challengePriority : [];
+  const out: {
+    priority: number;
+    id: LgdChallengeId;
+    label: string;
+    category: LgdChallengeCategoryId;
+  }[] = [];
+  for (const id of order) {
+    const row = LGD_CHALLENGES.find((c) => c.id === id);
+    if (!row) continue;
+    out.push({
+      priority: out.length + 1,
+      id: row.id,
+      label: row.label,
+      category: row.category
+    });
+    if (out.length >= 10) break;
+  }
+  return out;
+}
 
 /**
  * Premise: “How would you like your subconscious programmed?”
@@ -427,6 +529,10 @@ export type LgdIntakeAnswers = {
   /** Legacy free-text limiting phrases; synced from beliefTransformations when present. */
   occupyingBeliefs: string[];
   gratitude: string[];
+  /** Checked items from the curated Challenges Checklist. */
+  challengeIds: LgdChallengeId[];
+  /** Priority order of challenges (1 = highest); subset of challengeIds, max 10. */
+  challengePriority: LgdChallengeId[];
   primaryStruggle: string;
   topOutcomes: string[];
   goalIds: string[];
@@ -461,6 +567,8 @@ export function emptyLgdIntakeAnswers(): LgdIntakeAnswers {
     beliefTransformations: [],
     occupyingBeliefs: [],
     gratitude: [],
+    challengeIds: [],
+    challengePriority: [],
     primaryStruggle: "",
     topOutcomes: [],
     goalIds: [],
@@ -558,6 +666,35 @@ function normalizeSubconsciousPrograms(raw: unknown): LgdSubconsciousProgramId[]
   return [...new Set(ids)].slice(0, 8);
 }
 
+function normalizeChallengeIds(raw: unknown): LgdChallengeId[] {
+  if (!Array.isArray(raw)) return [];
+  const ids: LgdChallengeId[] = [];
+  for (const item of raw) {
+    const id = String(item ?? "").trim();
+    if (CHALLENGE_IDS.has(id as LgdChallengeId)) {
+      ids.push(id as LgdChallengeId);
+    }
+  }
+  return [...new Set(ids)].slice(0, LGD_CHALLENGES.length);
+}
+
+function normalizeChallengePriority(
+  raw: unknown,
+  selected: LgdChallengeId[]
+): LgdChallengeId[] {
+  const selectedSet = new Set(selected);
+  if (!Array.isArray(raw)) return [];
+  const ids: LgdChallengeId[] = [];
+  for (const item of raw) {
+    const id = String(item ?? "").trim() as LgdChallengeId;
+    if (!selectedSet.has(id) || !CHALLENGE_IDS.has(id)) continue;
+    if (ids.includes(id)) continue;
+    ids.push(id);
+    if (ids.length >= 10) break;
+  }
+  return ids;
+}
+
 /** Merge stored JSON into a full answers object. */
 export function normalizeLgdIntakeAnswers(raw: unknown): LgdIntakeAnswers {
   const base = emptyLgdIntakeAnswers();
@@ -582,6 +719,8 @@ export function normalizeLgdIntakeAnswers(raw: unknown): LgdIntakeAnswers {
   const occupyingBeliefs = beliefTransformations.length
     ? beliefTransformations.map((p) => p.limitingText).filter(Boolean).slice(0, 5)
     : legacyOccupying;
+  const challengeIds = normalizeChallengeIds(o.challengeIds);
+  const challengePriority = normalizeChallengePriority(o.challengePriority, challengeIds);
 
   return {
     version: LGD_INTAKE_VERSION,
@@ -595,6 +734,8 @@ export function normalizeLgdIntakeAnswers(raw: unknown): LgdIntakeAnswers {
     beliefTransformations,
     occupyingBeliefs,
     gratitude: asStringArray(o.gratitude, 5),
+    challengeIds,
+    challengePriority,
     primaryStruggle: String(o.primaryStruggle ?? "").trim(),
     topOutcomes: asStringArray(o.topOutcomes, 3),
     goalIds: asStringArray(o.goalIds, 10),
@@ -779,6 +920,12 @@ export function buildLgdScriptDraftBlocks(input: {
   } else {
     presentBridge.push(
       "You acknowledge where you have been, and you choose to move forward with clarity and calm."
+    );
+  }
+  const topChallenges = prioritizedLgdChallenges(a);
+  if (topChallenges.length) {
+    presentBridge.push(
+      "The priorities you named for growth can resolve as your subconscious cooperates with your clear goals — without rehearsing old struggle."
     );
   }
   if (pairs.length) {
@@ -1007,6 +1154,15 @@ export function buildLgdProductionPacket(input: {
     `Permission to edit draft: ${input.answers.permissionToEditDraft !== false ? "yes" : "no"}`,
     `Own-voice consent: ${input.answers.ownVoiceConsent ? "yes" : "no"}`,
     "",
+    (() => {
+      const ranked = prioritizedLgdChallenges(input.answers);
+      if (!ranked.length) return "";
+      return [
+        "Priority challenges (member ranking):",
+        ...ranked.map((c) => `${c.priority}. ${c.label} [${lgdChallengeCategoryLabel(c.category)}]`),
+        ""
+      ].join("\n");
+    })(),
     "Schedule placement (Success Center rules):",
     "- 2 plays/night → CGMR as 2nd play every other night",
     "- 1 play/night → every 4th play",

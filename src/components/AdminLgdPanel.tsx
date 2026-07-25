@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   LGD_LIFE_AREAS,
   buildLgdProductionPacket,
+  prioritizedLgdChallenges,
   type LgdIntakeAnswers,
   type LgdIntakeEditEvent
 } from "@/lib/lgd-intake";
@@ -398,6 +399,18 @@ export default function AdminLgdPanel({ onEditForm, onCloseForm, registerRefresh
                   <p>
                     <strong>Struggle:</strong> {selected.answers.primaryStruggle || "—"}
                   </p>
+                  {prioritizedLgdChallenges(selected.answers).length > 0 ? (
+                    <>
+                      <p style={{ marginBottom: 4 }}>
+                        <strong>Priority challenges:</strong>
+                      </p>
+                      <ol style={{ marginTop: 0 }}>
+                        {prioritizedLgdChallenges(selected.answers).map((c) => (
+                          <li key={c.id}>{c.label}</li>
+                        ))}
+                      </ol>
+                    </>
+                  ) : null}
                   <p>
                     <strong>Outcomes:</strong> {selected.answers.topOutcomes.join("; ") || "—"}
                   </p>
