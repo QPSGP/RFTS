@@ -8,13 +8,15 @@ type Props = {
   interests: Interest[];
   activeEmail?: string | null;
   onActiveEmailChange?: (email: string | null) => void;
+  onFormSaved?: () => void;
 };
 
 /** Lets super-admin open the full A–F intake for a member while LGD_ADMIN_ONLY is on. */
 export default function AdminLgdIntakeRunner({
   interests,
   activeEmail: controlledEmail,
-  onActiveEmailChange
+  onActiveEmailChange,
+  onFormSaved
 }: Props) {
   const [emailInput, setEmailInput] = useState("");
   const [internalEmail, setInternalEmail] = useState<string | null>(null);
@@ -74,7 +76,14 @@ export default function AdminLgdIntakeRunner({
       </div>
       {activeEmail ? (
         <div style={{ marginTop: 20 }}>
-          <LgdIntakeForm interests={interests} adminMemberEmail={activeEmail} />
+          <LgdIntakeForm
+            interests={interests}
+            adminMemberEmail={activeEmail}
+            onAdminSaved={() => {
+              setActiveEmail(null);
+              onFormSaved?.();
+            }}
+          />
         </div>
       ) : null}
     </div>

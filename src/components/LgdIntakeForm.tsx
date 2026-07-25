@@ -33,6 +33,8 @@ type Props = {
    * instead of the logged-in member session API.
    */
   adminMemberEmail?: string;
+  /** Admin: called after an explicit Save (not section auto-save). */
+  onAdminSaved?: () => void;
 };
 
 const inputStyle: CSSProperties = {
@@ -55,7 +57,7 @@ function listToLines(list: string[]): string {
   return list.join("\n");
 }
 
-export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
+export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSaved }: Props) {
   const [sectionIndex, setSectionIndex] = useState(0);
   const [answers, setAnswers] = useState<LgdIntakeAnswers>(emptyLgdIntakeAnswers());
   const [status, setStatus] = useState<"loading" | "ready" | "error" | "disabled">("loading");
@@ -422,6 +424,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
       showMessage(
         intakeStatus === "draft" ? "Draft saved." : "Form changes saved (edit logged)."
       );
+      if (isAdminMode) onAdminSaved?.();
     }
     return true;
   };
@@ -462,10 +465,12 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
     setEditable(data.intake?.editable !== false);
     setCanStartNew(!!data.intake?.canStartNew);
     setEditHistory(Array.isArray(data.intake?.editHistory) ? data.intake.editHistory : []);
+    if (isAdminMode) {
+      onAdminSaved?.();
+      return;
+    }
     showMessage(
-      isAdminMode
-        ? "Submitted. You can keep editing the form; changes are logged. Refresh the review queue for the script."
-        : "Submitted. Your facilitator can review the brief and script. You can still edit if paid or authorized."
+      "Submitted. Your facilitator can review the brief and script. You can still edit if paid or authorized."
     );
   };
 

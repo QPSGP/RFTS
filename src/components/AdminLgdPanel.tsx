@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   LGD_LIFE_AREAS,
   buildLgdProductionPacket,
@@ -51,12 +51,16 @@ function memberLabel(row: IntakeRow): string {
   return name || row.memberEmail;
 }
 
+type SortMode = "newest" | "name";
+
 type Props = {
   onEditForm?: (memberEmail: string) => void;
+  onCloseForm?: () => void;
+  registerRefresh?: (fn: () => void) => void;
 };
 
 /** Super-admin LGD review (all members) while LGD_ADMIN_ONLY is on. */
-export default function AdminLgdPanel({ onEditForm }: Props) {
+export default function AdminLgdPanel({ onEditForm, onCloseForm, registerRefresh }: Props) {
   const [intakes, setIntakes] = useState<IntakeRow[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [scriptText, setScriptText] = useState("");
@@ -65,8 +69,30 @@ export default function AdminLgdPanel({ onEditForm }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
+  const [search, setSearch] = useState("");
+  const [sortMode, setSortMode] = useState<SortMode>("newest");
 
   const selected = intakes.find((i) => i.id === selectedId) || null;
+
+  const visibleIntakes = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    const filtered = term
+      ? intakes.filter((row) => {
+          const label = memberLabel(row).toLowerCase();
+          const email = row.memberEmail.toLowerCase();
+          return label.includes(term) || email.includes(term);
+        })
+      : intakes.slice();
+    filtered.sort((a, b) => {
+      if (sortMode === "name") {
+        return memberLabel(a).localeCompare(memberLabel(b), undefined, { sensitivity: "base" });
+      }
+      const aTime = Date.parse(a.updatedAt || a.submittedAt || "") || 0;
+      const bTime = Date.parse(b.updatedAt || b.submittedAt || "") || 0;
+      return bTime - aTime;
+    });
+    return filtered;
+  }, [intakes, search, sortMode]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -87,6 +113,12 @@ export default function AdminLgdPanel({ onEditForm }: Props) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    registerRefresh?.(() => {
+      void load();
+    });
+  }, [load, registerRefresh]);
 
   useEffect(() => {
     if (!selected) {
@@ -132,7 +164,9 @@ export default function AdminLgdPanel({ onEditForm }: Props) {
           : row
       )
     );
-    setMessage("Saved.");
+    setSelectedId(null);
+    onCloseForm?.();
+    setMessage("Saved. Intake closed.");
   };
 
   const setMemberFormEdit = async (authorize: boolean) => {
@@ -185,16 +219,50 @@ export default function AdminLgdPanel({ onEditForm }: Props) {
 
       <div className="grid" style={{ gap: 16, gridTemplateColumns: "minmax(220px, 300px) 1fr" }}>
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>All intakes ({intakes.length})</h3>
+          <h3 style={{ marginTop: 0 }}>
+            All intakes (
+            {search.trim()
+              ? `${visibleIntakes.length} of ${intakes.length}`
+              : intakes.length}
+            )
+          </h3>
           <p style={{ fontSize: 13, color: "#64748b" }}>
             Drafts are incomplete until <strong>Submit intake</strong> on section F. Only submitted
-            rows are ready for script review.
+            rows are ready for script review. Saving review closes the open form.
           </p>
+          <label style={{ display: "grid", gap: 6, marginBottom: 8, fontSize: 13 }}>
+            Search by name or email
+            <input
+              type="search"
+              placeholder="e.g. Jane or member@…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={inputStyle}
+            />
+          </label>
+          <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className={sortMode === "newest" ? "button" : "button button-secondary"}
+              onClick={() => setSortMode("newest")}
+            >
+              Newest
+            </button>
+            <button
+              type="button"
+              className={sortMode === "name" ? "button" : "button button-secondary"}
+              onClick={() => setSortMode("name")}
+            >
+              By name
+            </button>
+          </div>
           {intakes.length === 0 ? (
             <p style={{ color: "#64748b", fontSize: 14 }}>No intakes yet.</p>
+          ) : visibleIntakes.length === 0 ? (
+            <p style={{ color: "#64748b", fontSize: 14 }}>No intakes match your search.</p>
           ) : (
             <div className="stack" style={{ gap: 8 }}>
-              {intakes.map((row) => (
+              {visibleIntakes.map((row) => (
                 <button
                   key={row.id}
                   type="button"
