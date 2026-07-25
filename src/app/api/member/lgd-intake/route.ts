@@ -9,13 +9,15 @@ import {
   getUserProfile,
   listInterests,
   submitLgdIntake,
-  updateLgdIntakeDraft,
+  updateLgdIntakeAnswersWithAudit,
   upsertMemberProfile
 } from "@/lib/db";
 import {
   buildGoalManifestationScriptDraft,
   buildLgdScriptDraftBlocks,
+  canMemberEditLgdForm,
   emptyLgdIntakeAnswers,
+  normalizeLgdEditHistory,
   normalizeLgdIntakeAnswers,
   resolveFrequencyBedId
 } from "@/lib/lgd-intake";
@@ -53,6 +55,7 @@ const startNewSchema = z.object({
 function serializeIntake(row: NonNullable<Awaited<ReturnType<typeof getLatestLgdIntakeForUser>>>) {
   const answers = normalizeLgdIntakeAnswers(row.answers);
   const paid = !!row.paidAt;
+  const editable = canMemberEditLgdForm(row);
   return {
     id: row.id,
     status: row.status,
@@ -61,12 +64,15 @@ function serializeIntake(row: NonNullable<Awaited<ReturnType<typeof getLatestLgd
     voiceId: row.voiceId || answers.voiceId || null,
     frequencyBedId: row.frequencyBedId || answers.frequencyBedId || null,
     paidAt: row.paidAt ?? null,
+    memberEditAuthorizedAt: row.memberEditAuthorizedAt ?? null,
+    memberEditAuthorizedBy: row.memberEditAuthorizedBy ?? null,
+    editHistory: normalizeLgdEditHistory(row.editHistory),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     submittedAt: row.submittedAt,
     approvedAt: row.approvedAt,
-    editable: row.status === "draft",
-    /** Member must pay before submit (pay-first packaging). */
+    editable,
+    /** Member must pay before first fill/submit (pay-first packaging). */
     needsPayment: row.status === "draft" && !paid,
     canStartNew: row.status !== "draft"
   };
@@ -152,36 +158,66 @@ export async function PATCH(request: Request) {
       { status: 402 }
     );
   }
-  if (intake.status !== "draft") {
-    return NextResponse.json(
-      { error: "This intake was already submitted and can no longer be edited." },
-      { status: 409 }
-    );
-  }
-  if (!intake.paidAt) {
+  if (!canMemberEditLgdForm(intake)) {
     return NextResponse.json(
       {
         error:
-          "Complete payment for this Life Guidance Discovery before saving your answers."
+          intake.status === "draft" && !intake.paidAt
+            ? "Complete payment before saving your answers."
+            : "This intake is locked. Ask your facilitator to authorize edits, or start a new paid intake."
       },
-      { status: 402 }
+      { status: intake.status === "draft" && !intake.paidAt ? 402 : 403 }
     );
-  }
-  {
-    const updated = await updateLgdIntakeDraft({
-      id: intake.id,
-      userId: user.id,
-      answers,
-      voiceId: answers.voiceId || null,
-      frequencyBedId: answers.frequencyBedId || null
-    });
-    if (!updated) {
-      return NextResponse.json({ error: "Could not save draft." }, { status: 500 });
-    }
-    intake = updated;
   }
 
   const memberProfile = await getMemberProfileByUserId(user.id);
+  const resolvedBedId = resolveFrequencyBedId(answers);
+  const filled = { ...answers, frequencyBedId: resolvedBedId };
+  let scriptDraftText: string | undefined;
+  let scriptDraft: unknown;
+  if (intake.status !== "draft") {
+    const interests = await listInterests();
+    const goalNames = filled.goalIds
+      .map((id) => interests.find((i) => i.id === id)?.name)
+      .filter((n): n is string => !!n);
+    scriptDraft = buildLgdScriptDraftBlocks({
+      firstName: memberProfile?.firstName || "friend",
+      answers: filled,
+      goalNames,
+      resolvedBedId
+    });
+    scriptDraftText = buildGoalManifestationScriptDraft({
+      firstName: memberProfile?.firstName || "friend",
+      answers: filled,
+      goalNames,
+      resolvedBedId
+    });
+  }
+
+  const updated = await updateLgdIntakeAnswersWithAudit({
+    id: intake.id,
+    userId: user.id,
+    answers: filled,
+    voiceId: filled.voiceId || null,
+    frequencyBedId: resolvedBedId,
+    scriptDraftText,
+    scriptDraft,
+    audit: {
+      byRole: "member",
+      byEmail: email,
+      byName: [memberProfile?.firstName, memberProfile?.lastName].filter(Boolean).join(" ") || null,
+      action: "save_answers",
+      note:
+        intake.status === "draft"
+          ? "Member saved draft answers"
+          : "Member edited submitted intake form; script regenerated from form"
+    }
+  });
+  if (!updated) {
+    return NextResponse.json({ error: "Could not save answers." }, { status: 500 });
+  }
+  intake = updated;
+
   if (answers.alreadyHadLiveLgd && memberProfile && !memberProfile.hadLgdSession) {
     await upsertMemberProfile({
       ...memberProfile,
@@ -190,7 +226,11 @@ export async function PATCH(request: Request) {
     });
   }
 
-  return NextResponse.json({ intake: serializeIntake(intake), flags });
+  return NextResponse.json({
+    intake: serializeIntake(intake),
+    scriptDraftText: intake.scriptDraftText,
+    flags
+  });
 }
 
 export async function POST(request: Request) {
@@ -372,7 +412,14 @@ export async function POST(request: Request) {
     voiceId: answers.voiceId || null,
     frequencyBedId: resolvedBedId,
     facilitatorId,
-    priceCents: price.priceCents
+    priceCents: price.priceCents,
+    audit: {
+      byRole: "member",
+      byEmail: email,
+      byName: [memberProfile?.firstName, memberProfile?.lastName].filter(Boolean).join(" ") || null,
+      action: "submit",
+      note: "Member submitted intake"
+    }
   });
   if (!submitted) {
     return NextResponse.json({ error: "Could not submit intake." }, { status: 500 });

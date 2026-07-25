@@ -7,6 +7,7 @@ import {
   buildLgdProductionPacket,
   type LgdFacilitatorFeatureFlags,
   type LgdIntakeAnswers,
+  type LgdIntakeEditEvent,
   defaultLgdFacilitatorFeatureFlags
 } from "@/lib/lgd-intake";
 
@@ -21,6 +22,10 @@ type IntakeRow = {
   voiceId: string | null;
   frequencyBedId: string | null;
   reviewFlags?: string[];
+  paidAt?: string | null;
+  memberEditAuthorizedAt?: string | null;
+  memberEditAuthorizedBy?: string | null;
+  editHistory?: LgdIntakeEditEvent[];
   submittedAt: string | null;
   updatedAt: string;
   approvedAt: string | null;
@@ -60,6 +65,7 @@ export default function FacilitatorLgdPanel() {
   const [loading, setLoading] = useState(true);
   const [savingFlags, setSavingFlags] = useState(false);
   const [savingIntake, setSavingIntake] = useState(false);
+  const [authBusy, setAuthBusy] = useState(false);
 
   const selected = intakes.find((i) => i.id === selectedId) || null;
 
@@ -159,6 +165,43 @@ export default function FacilitatorLgdPanel() {
       )
     );
     setMessage("Intake updated.");
+  };
+
+  const setMemberFormEdit = async (authorize: boolean) => {
+    if (!selectedId) return;
+    setAuthBusy(true);
+    setMessage(null);
+    const res = await fetch("/api/moderator/lgd-intakes", {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: selectedId, authorizeMemberEdit: authorize })
+    });
+    setAuthBusy(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setMessage(data?.error || "Could not update member edit access.");
+      return;
+    }
+    const data = await res.json();
+    setIntakes((prev) =>
+      prev.map((row) =>
+        row.id === selectedId
+          ? {
+              ...row,
+              memberEditAuthorizedAt: data.intake.memberEditAuthorizedAt ?? null,
+              memberEditAuthorizedBy: data.intake.memberEditAuthorizedBy ?? null,
+              editHistory: data.intake.editHistory ?? row.editHistory,
+              updatedAt: data.intake.updatedAt
+            }
+          : row
+      )
+    );
+    setMessage(
+      authorize
+        ? "Member can now edit the submitted form."
+        : "Member form edit access revoked."
+    );
   };
 
   if (loading) {
@@ -269,6 +312,21 @@ export default function FacilitatorLgdPanel() {
               <p style={{ fontSize: 14, color: "#64748b" }}>{selected.memberEmail}</p>
 
               <div style={{ marginBottom: 16 }}>
+                {selected.status !== "cancelled" ? (
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    style={{ marginBottom: 12 }}
+                    disabled={authBusy}
+                    onClick={() => void setMemberFormEdit(!selected.memberEditAuthorizedAt)}
+                  >
+                    {authBusy
+                      ? "Updating…"
+                      : selected.memberEditAuthorizedAt
+                        ? "Revoke member form edit"
+                        : "Authorize member form edit"}
+                  </button>
+                ) : null}
                 <label style={{ display: "grid", gap: 6, marginBottom: 12 }}>
                   Status
                   <select
@@ -291,7 +349,35 @@ export default function FacilitatorLgdPanel() {
                 <p style={{ fontSize: 13, margin: "0 0 8px" }}>
                   Voice: <strong>{selected.voiceId || "unset"}</strong> · Bed:{" "}
                   <strong>{selected.frequencyBedId || "unset"}</strong>
+                  {selected.paidAt ? (
+                    <>
+                      {" "}
+                      · Paid: <strong>{new Date(selected.paidAt).toLocaleDateString()}</strong>
+                    </>
+                  ) : null}
+                  {selected.memberEditAuthorizedAt ? (
+                    <>
+                      {" "}
+                      · Member edit authorized
+                    </>
+                  ) : null}
                 </p>
+                {(selected.editHistory || []).length > 0 ? (
+                  <details style={{ marginBottom: 12, fontSize: 13 }}>
+                    <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+                      Edit history ({selected.editHistory!.length})
+                    </summary>
+                    <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#475569" }}>
+                      {[...selected.editHistory!].reverse().slice(0, 20).map((ev, i) => (
+                        <li key={`${ev.at}-${i}`}>
+                          {new Date(ev.at).toLocaleString()} — <strong>{ev.byRole}</strong>{" "}
+                          {ev.byName || ev.byEmail}: {ev.action.replace(/_/g, " ")}
+                          {ev.note ? ` (${ev.note})` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : null}
                 {(selected.reviewFlags || []).length > 0 ? (
                   <div
                     style={{

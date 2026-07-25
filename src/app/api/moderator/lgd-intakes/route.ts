@@ -4,11 +4,13 @@ import { requireActiveModerator } from "@/lib/moderator-member-access";
 import {
   getLgdIntakeById,
   listLgdIntakesForMemberEmails,
+  setLgdMemberFormEditAuthorization,
   updateLgdIntakeByFacilitator
 } from "@/lib/db";
 import {
   buildLgdProductionPacket,
   findLgdContradictionNotes,
+  normalizeLgdEditHistory,
   normalizeLgdIntakeAnswers,
   resolveFrequencyBedId
 } from "@/lib/lgd-intake";
@@ -55,6 +57,10 @@ export async function GET() {
         voiceId: row.voiceId,
         frequencyBedId: row.frequencyBedId || resolveFrequencyBedId(answers),
         reviewFlags: findLgdContradictionNotes(answers),
+        paidAt: row.paidAt ?? null,
+        memberEditAuthorizedAt: row.memberEditAuthorizedAt ?? null,
+        memberEditAuthorizedBy: row.memberEditAuthorizedBy ?? null,
+        editHistory: normalizeLgdEditHistory(row.editHistory),
         submittedAt: row.submittedAt,
         updatedAt: row.updatedAt,
         approvedAt: row.approvedAt,
@@ -67,7 +73,8 @@ export async function GET() {
 const patchSchema = z.object({
   id: z.string().uuid(),
   status: z.enum(STATUSES).optional(),
-  scriptDraftText: z.string().optional()
+  scriptDraftText: z.string().optional(),
+  authorizeMemberEdit: z.boolean().optional()
 });
 
 export async function PATCH(request: Request) {
@@ -128,40 +135,70 @@ export async function PATCH(request: Request) {
     }
   }
 
-  const updated = await updateLgdIntakeByFacilitator({
-    id: parsed.data.id,
-    status: parsed.data.status,
-    scriptDraftText: parsed.data.scriptDraftText,
-    facilitatorId: moderator.id
-  });
-  if (!updated) {
-    return NextResponse.json({ error: "Could not update intake." }, { status: 500 });
+  let updated = existing;
+  if (typeof parsed.data.authorizeMemberEdit === "boolean") {
+    const auth = await setLgdMemberFormEditAuthorization({
+      id: parsed.data.id,
+      authorized: parsed.data.authorizeMemberEdit,
+      audit: {
+        byRole: "facilitator",
+        byEmail: moderator.email || `moderator:${moderator.id}`,
+        byName: moderator.name || null,
+        action: parsed.data.authorizeMemberEdit
+          ? "authorize_member_edit"
+          : "revoke_member_edit",
+        note: parsed.data.authorizeMemberEdit
+          ? "Facilitator authorized member form edits"
+          : "Facilitator revoked member form edits"
+      }
+    });
+    if (!auth) {
+      return NextResponse.json({ error: "Could not update authorization." }, { status: 500 });
+    }
+    updated = auth;
   }
 
-  const answers = normalizeLgdIntakeAnswers(updated.answers);
+  if (parsed.data.status !== undefined || parsed.data.scriptDraftText !== undefined) {
+    const statusUpdated = await updateLgdIntakeByFacilitator({
+      id: parsed.data.id,
+      status: parsed.data.status,
+      scriptDraftText: parsed.data.scriptDraftText,
+      facilitatorId: moderator.id
+    });
+    if (!statusUpdated) {
+      return NextResponse.json({ error: "Could not update intake." }, { status: 500 });
+    }
+    updated = statusUpdated;
+  }
+
+  const refreshed = (await getLgdIntakeById(updated.id)) || updated;
+  const answers = normalizeLgdIntakeAnswers(refreshed.answers);
   const productionPacket = buildLgdProductionPacket({
     memberEmail: owned.memberEmail,
     firstName: owned.firstName,
     lastName: owned.lastName,
     answers,
-    scriptDraftText: updated.scriptDraftText || "",
-    status: updated.status,
-    resolvedBedId: updated.frequencyBedId || resolveFrequencyBedId(answers)
+    scriptDraftText: refreshed.scriptDraftText || "",
+    status: refreshed.status,
+    resolvedBedId: refreshed.frequencyBedId || resolveFrequencyBedId(answers)
   });
 
   return NextResponse.json({
     intake: {
-      id: updated.id,
-      status: updated.status,
-      scriptDraftText: updated.scriptDraftText,
-      approvedAt: updated.approvedAt,
-      updatedAt: updated.updatedAt,
+      id: refreshed.id,
+      status: refreshed.status,
+      scriptDraftText: refreshed.scriptDraftText,
+      approvedAt: refreshed.approvedAt,
+      updatedAt: refreshed.updatedAt,
       memberEmail: owned.memberEmail,
       firstName: owned.firstName,
       lastName: owned.lastName,
       answers,
-      voiceId: updated.voiceId,
-      frequencyBedId: updated.frequencyBedId,
+      voiceId: refreshed.voiceId,
+      frequencyBedId: refreshed.frequencyBedId,
+      memberEditAuthorizedAt: refreshed.memberEditAuthorizedAt ?? null,
+      memberEditAuthorizedBy: refreshed.memberEditAuthorizedBy ?? null,
+      editHistory: normalizeLgdEditHistory(refreshed.editHistory),
       reviewFlags: findLgdContradictionNotes(answers),
       productionPacket
     }

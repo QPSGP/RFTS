@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { isAdminSession } from "@/lib/auth";
+import { getSessionEmail, isAdminSession } from "@/lib/auth";
 import {
   createLgdIntakeDraft,
   getLatestLgdIntakeForUser,
@@ -8,14 +8,17 @@ import {
   getUserByEmail,
   getUserProfile,
   listInterests,
+  setLgdMemberFormEditAuthorization,
   submitLgdIntake,
-  updateLgdIntakeDraft,
+  updateLgdIntakeAnswersWithAudit,
   upsertMemberProfile
 } from "@/lib/db";
 import {
   buildGoalManifestationScriptDraft,
   buildLgdScriptDraftBlocks,
+  canMemberEditLgdForm,
   emptyLgdIntakeAnswers,
+  normalizeLgdEditHistory,
   normalizeLgdIntakeAnswers,
   resolveFrequencyBedId
 } from "@/lib/lgd-intake";
@@ -25,11 +28,16 @@ import { defaultLgdFacilitatorFeatureFlags } from "@/lib/lgd-intake";
 const bodySchema = z.object({
   memberEmail: z.string().email(),
   answers: z.record(z.string(), z.unknown()).optional(),
-  action: z.literal("startNew").optional()
+  action: z.enum(["startNew", "authorizeMemberEdit", "revokeMemberEdit"]).optional(),
+  regenerateScript: z.boolean().optional()
 });
 
-function serializeIntake(row: NonNullable<Awaited<ReturnType<typeof getLatestLgdIntakeForUser>>>) {
+function serializeIntake(
+  row: NonNullable<Awaited<ReturnType<typeof getLatestLgdIntakeForUser>>>,
+  opts?: { asAdmin?: boolean }
+) {
   const answers = normalizeLgdIntakeAnswers(row.answers);
+  const asAdmin = opts?.asAdmin !== false;
   return {
     id: row.id,
     status: row.status,
@@ -38,11 +46,15 @@ function serializeIntake(row: NonNullable<Awaited<ReturnType<typeof getLatestLgd
     voiceId: row.voiceId || answers.voiceId || null,
     frequencyBedId: row.frequencyBedId || answers.frequencyBedId || null,
     paidAt: row.paidAt ?? null,
+    memberEditAuthorizedAt: row.memberEditAuthorizedAt ?? null,
+    memberEditAuthorizedBy: row.memberEditAuthorizedBy ?? null,
+    editHistory: normalizeLgdEditHistory(row.editHistory),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     submittedAt: row.submittedAt,
     approvedAt: row.approvedAt,
-    editable: row.status === "draft",
+    /** Admin can always edit the form (except cancelled). */
+    editable: asAdmin ? row.status !== "cancelled" : canMemberEditLgdForm(row),
     needsPayment: false,
     canStartNew: row.status !== "draft"
   };
@@ -69,7 +81,7 @@ export async function GET(request: Request) {
     intake = await createLgdIntakeDraft(user.id, emptyLgdIntakeAnswers());
   }
   return NextResponse.json({
-    intake: serializeIntake(intake),
+    intake: serializeIntake(intake, { asAdmin: true }),
     firstName: memberProfile?.firstName ?? null,
     hadLgdSession: memberProfile?.hadLgdSession ?? false,
     flags: defaultLgdFacilitatorFeatureFlags(),
@@ -85,7 +97,7 @@ export async function PATCH(request: Request) {
   }
   const body = await request.json().catch(() => null);
   const parsed = bodySchema.safeParse(body);
-  if (!parsed.success || !parsed.data.answers) {
+  if (!parsed.success) {
     return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
   }
   const email = parsed.data.memberEmail.trim().toLowerCase();
@@ -93,32 +105,105 @@ export async function PATCH(request: Request) {
   if (!user) {
     return NextResponse.json({ error: "Member not found." }, { status: 404 });
   }
+
+  if (
+    parsed.data.action === "authorizeMemberEdit" ||
+    parsed.data.action === "revokeMemberEdit"
+  ) {
+    let intake = await getLatestLgdIntakeForUser(user.id);
+    if (!intake) {
+      return NextResponse.json({ error: "No intake found." }, { status: 404 });
+    }
+    const adminEmail = getSessionEmail() || "admin";
+    const updated = await setLgdMemberFormEditAuthorization({
+      id: intake.id,
+      authorized: parsed.data.action === "authorizeMemberEdit",
+      audit: {
+        byRole: "admin",
+        byEmail: adminEmail,
+        byName: "Admin",
+        action:
+          parsed.data.action === "authorizeMemberEdit"
+            ? "authorize_member_edit"
+            : "revoke_member_edit",
+        note:
+          parsed.data.action === "authorizeMemberEdit"
+            ? "Admin authorized member to edit the intake form"
+            : "Admin revoked member form edit access"
+      }
+    });
+    if (!updated) {
+      return NextResponse.json({ error: "Could not update authorization." }, { status: 500 });
+    }
+    return NextResponse.json({ intake: serializeIntake(updated, { asAdmin: true }) });
+  }
+
+  if (!parsed.data.answers) {
+    return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
+  }
   const answers = normalizeLgdIntakeAnswers(parsed.data.answers);
   let intake = await getLatestLgdIntakeForUser(user.id);
   if (!intake) {
     intake = await createLgdIntakeDraft(user.id, answers);
-  } else if (intake.status !== "draft") {
-    return NextResponse.json(
-      {
-        error:
-          "This intake was already submitted. Use Start new intake to create another draft."
-      },
-      { status: 409 }
-    );
-  } else {
-    const updated = await updateLgdIntakeDraft({
-      id: intake.id,
-      userId: user.id,
-      answers,
-      voiceId: answers.voiceId || null,
-      frequencyBedId: answers.frequencyBedId || null
-    });
-    if (!updated) {
-      return NextResponse.json({ error: "Could not save draft." }, { status: 500 });
-    }
-    intake = updated;
   }
-  return NextResponse.json({ intake: serializeIntake(intake) });
+  if (intake.status === "cancelled") {
+    return NextResponse.json({ error: "Cancelled intakes cannot be edited." }, { status: 409 });
+  }
+
+  const regenerate = parsed.data.regenerateScript !== false && intake.status !== "draft";
+  let scriptDraftText: string | undefined;
+  let scriptDraft: unknown;
+  if (regenerate || intake.status === "draft") {
+    const interests = await listInterests();
+    const goalNames = answers.goalIds
+      .map((id) => interests.find((i) => i.id === id)?.name)
+      .filter((n): n is string => !!n);
+    const memberProfile = await getMemberProfileByUserId(user.id);
+    const resolvedBedId = resolveFrequencyBedId(answers);
+    const filled = { ...answers, frequencyBedId: resolvedBedId };
+    scriptDraft = buildLgdScriptDraftBlocks({
+      firstName: memberProfile?.firstName || "friend",
+      answers: filled,
+      goalNames,
+      resolvedBedId
+    });
+    scriptDraftText = buildGoalManifestationScriptDraft({
+      firstName: memberProfile?.firstName || "friend",
+      answers: filled,
+      goalNames,
+      resolvedBedId
+    });
+  }
+
+  const resolvedBedId = resolveFrequencyBedId(answers);
+  const adminEmail = getSessionEmail() || "admin";
+  const updated = await updateLgdIntakeAnswersWithAudit({
+    id: intake.id,
+    userId: user.id,
+    answers: { ...answers, frequencyBedId: resolvedBedId },
+    voiceId: answers.voiceId || null,
+    frequencyBedId: resolvedBedId,
+    scriptDraftText: scriptDraftText,
+    scriptDraft,
+    audit: {
+      byRole: "admin",
+      byEmail: adminEmail,
+      byName: "Admin",
+      action: "save_answers",
+      note:
+        intake.status === "draft"
+          ? "Admin saved draft answers"
+          : "Admin edited submitted intake form" +
+            (scriptDraftText !== undefined ? "; script regenerated from form" : "")
+    }
+  });
+  if (!updated) {
+    return NextResponse.json({ error: "Could not save answers." }, { status: 500 });
+  }
+  return NextResponse.json({
+    intake: serializeIntake(updated, { asAdmin: true }),
+    scriptDraftText: updated.scriptDraftText
+  });
 }
 
 export async function POST(request: Request) {
@@ -138,7 +223,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Member not found." }, { status: 404 });
     }
     const intake = await createLgdIntakeDraft(user.id, emptyLgdIntakeAnswers());
-    return NextResponse.json({ intake: serializeIntake(intake) });
+    return NextResponse.json({ intake: serializeIntake(intake, { asAdmin: true }) });
   }
 
   if (!parsed.data.answers) {
@@ -177,16 +262,6 @@ export async function POST(request: Request) {
         error:
           "Select at least one limiting belief and the growth belief that should replace it."
       },
-      { status: 400 }
-    );
-  }
-  if (
-    !answers.identityStatements.length &&
-    !answers.topOutcomes.length &&
-    !completeBeliefPairs.length
-  ) {
-    return NextResponse.json(
-      { error: "Add at least one identity statement or top outcome." },
       { status: 400 }
     );
   }
@@ -235,7 +310,14 @@ export async function POST(request: Request) {
     scriptDraft,
     voiceId: answers.voiceId || null,
     frequencyBedId: resolvedBedId,
-    priceCents: price.priceCents
+    priceCents: price.priceCents,
+    audit: {
+      byRole: "admin",
+      byEmail: getSessionEmail() || "admin",
+      byName: "Admin",
+      action: "submit",
+      note: "Admin submitted intake"
+    }
   });
   if (!submitted) {
     return NextResponse.json({ error: "Could not submit intake." }, { status: 500 });
@@ -246,7 +328,7 @@ export async function POST(request: Request) {
     hadLgdSession: true
   });
   return NextResponse.json({
-    intake: serializeIntake(submitted),
+    intake: serializeIntake(submitted, { asAdmin: true }),
     scriptDraftText
   });
 }

@@ -4180,6 +4180,9 @@ export type LgdIntakeRecord = {
   paidAt?: string | null;
   stripeCheckoutSessionId?: string | null;
   ownVoiceAudioUrl?: string | null;
+  memberEditAuthorizedAt?: string | null;
+  memberEditAuthorizedBy?: string | null;
+  editHistory?: unknown;
   createdAt: string;
   updatedAt: string;
   submittedAt: string | null;
@@ -4211,6 +4214,9 @@ const ensureLgdIntakesTable = async () => {
   await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS paid_at timestamptz`;
   await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS stripe_checkout_session_id text`;
   await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS own_voice_audio_url text`;
+  await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS member_edit_authorized_at timestamptz`;
+  await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS member_edit_authorized_by text`;
+  await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS edit_history jsonb NOT NULL DEFAULT '[]'::jsonb`;
   await sql`CREATE INDEX IF NOT EXISTS lgd_intakes_user_id_idx ON lgd_intakes (user_id)`;
   await sql`CREATE INDEX IF NOT EXISTS lgd_intakes_status_idx ON lgd_intakes (status)`;
   lgdIntakesReady = true;
@@ -4235,6 +4241,9 @@ export const getLatestLgdIntakeForUser = async (
       paid_at AS "paidAt",
       stripe_checkout_session_id AS "stripeCheckoutSessionId",
       own_voice_audio_url AS "ownVoiceAudioUrl",
+      member_edit_authorized_at AS "memberEditAuthorizedAt",
+      member_edit_authorized_by AS "memberEditAuthorizedBy",
+      edit_history AS "editHistory",
       created_at AS "createdAt",
       updated_at AS "updatedAt",
       submitted_at AS "submittedAt",
@@ -4341,11 +4350,30 @@ export const submitLgdIntake = async (input: {
   frequencyBedId?: string | null;
   facilitatorId?: string | null;
   priceCents?: number | null;
+  audit?: LgdIntakeEditAuditInput;
 }): Promise<LgdIntakeRecord | null> => {
   await ensureLgdIntakesTable();
   const answersJson = JSON.stringify(input.answers);
   const scriptDraftJson = JSON.stringify(input.scriptDraft ?? null);
-  const { rows } = await sql<LgdIntakeRecord>`
+  const event = input.audit
+    ? {
+        at: new Date().toISOString(),
+        byRole: input.audit.byRole,
+        byEmail: input.audit.byEmail.trim().toLowerCase(),
+        byName: input.audit.byName ?? null,
+        action: "submit" as const,
+        note: input.audit.note
+      }
+    : {
+        at: new Date().toISOString(),
+        byRole: "member" as const,
+        byEmail: "unknown",
+        byName: null,
+        action: "submit" as const,
+        note: "Submitted intake"
+      };
+  const eventJson = JSON.stringify([event]);
+  await sql`
     UPDATE lgd_intakes
     SET
       answers = CAST(${answersJson} AS jsonb),
@@ -4357,30 +4385,13 @@ export const submitLgdIntake = async (input: {
       price_cents = ${input.priceCents ?? null},
       status = 'submitted',
       submitted_at = now(),
+      edit_history = COALESCE(edit_history, '[]'::jsonb) || CAST(${eventJson} AS jsonb),
       updated_at = now()
     WHERE id = ${input.id}
       AND user_id = ${input.userId}
       AND status = 'draft'
-    RETURNING
-      id,
-      user_id AS "userId",
-      facilitator_id AS "facilitatorId",
-      status,
-      answers,
-      script_draft AS "scriptDraft",
-      script_draft_text AS "scriptDraftText",
-      voice_id AS "voiceId",
-      frequency_bed_id AS "frequencyBedId",
-      price_cents AS "priceCents",
-      paid_at AS "paidAt",
-      stripe_checkout_session_id AS "stripeCheckoutSessionId",
-      own_voice_audio_url AS "ownVoiceAudioUrl",
-      created_at AS "createdAt",
-      updated_at AS "updatedAt",
-      submitted_at AS "submittedAt",
-      approved_at AS "approvedAt"
   `;
-  return rows[0] ?? null;
+  return getLgdIntakeById(input.id);
 };
 
 export type LgdIntakeListItem = LgdIntakeRecord & {
@@ -4409,6 +4420,10 @@ export const listLgdIntakesForMemberEmails = async (
       i.voice_id AS "voiceId",
       i.frequency_bed_id AS "frequencyBedId",
       i.price_cents AS "priceCents",
+      i.paid_at AS "paidAt",
+      i.member_edit_authorized_at AS "memberEditAuthorizedAt",
+      i.member_edit_authorized_by AS "memberEditAuthorizedBy",
+      i.edit_history AS "editHistory",
       i.created_at AS "createdAt",
       i.updated_at AS "updatedAt",
       i.submitted_at AS "submittedAt",
@@ -4440,6 +4455,12 @@ export const getLgdIntakeById = async (id: string): Promise<LgdIntakeRecord | nu
       voice_id AS "voiceId",
       frequency_bed_id AS "frequencyBedId",
       price_cents AS "priceCents",
+      paid_at AS "paidAt",
+      stripe_checkout_session_id AS "stripeCheckoutSessionId",
+      own_voice_audio_url AS "ownVoiceAudioUrl",
+      member_edit_authorized_at AS "memberEditAuthorizedAt",
+      member_edit_authorized_by AS "memberEditAuthorizedBy",
+      edit_history AS "editHistory",
       created_at AS "createdAt",
       updated_at AS "updatedAt",
       submitted_at AS "submittedAt",
@@ -4449,6 +4470,110 @@ export const getLgdIntakeById = async (id: string): Promise<LgdIntakeRecord | nu
     LIMIT 1
   `;
   return rows[0] ?? null;
+};
+
+export type LgdIntakeEditAuditInput = {
+  byRole: "admin" | "member" | "facilitator";
+  byEmail: string;
+  byName?: string | null;
+  action:
+    | "save_answers"
+    | "submit"
+    | "authorize_member_edit"
+    | "revoke_member_edit"
+    | "create_draft";
+  note?: string;
+};
+
+/** Save answers on draft or submitted intake; appends who/when to edit_history. */
+export const updateLgdIntakeAnswersWithAudit = async (input: {
+  id: string;
+  userId: string;
+  answers: unknown;
+  voiceId?: string | null;
+  frequencyBedId?: string | null;
+  scriptDraftText?: string | null;
+  scriptDraft?: unknown;
+  audit: LgdIntakeEditAuditInput;
+}): Promise<LgdIntakeRecord | null> => {
+  await ensureLgdIntakesTable();
+  const existing = await getLgdIntakeById(input.id);
+  if (!existing || existing.userId !== input.userId) return null;
+  if (existing.status === "cancelled") return null;
+
+  const answersJson = JSON.stringify(input.answers);
+  const event = {
+    at: new Date().toISOString(),
+    byRole: input.audit.byRole,
+    byEmail: input.audit.byEmail.trim().toLowerCase(),
+    byName: input.audit.byName ?? null,
+    action: input.audit.action,
+    note: input.audit.note
+  };
+  const eventJson = JSON.stringify([event]);
+  const hasScript = input.scriptDraftText !== undefined;
+  const scriptDraftJson = JSON.stringify(input.scriptDraft ?? null);
+
+  if (hasScript) {
+    await sql`
+      UPDATE lgd_intakes
+      SET
+        answers = CAST(${answersJson} AS jsonb),
+        voice_id = ${input.voiceId ?? null},
+        frequency_bed_id = ${input.frequencyBedId ?? null},
+        script_draft = CAST(${scriptDraftJson} AS jsonb),
+        script_draft_text = ${input.scriptDraftText ?? null},
+        edit_history = COALESCE(edit_history, '[]'::jsonb) || CAST(${eventJson} AS jsonb),
+        updated_at = now()
+      WHERE id = ${input.id}
+        AND user_id = ${input.userId}
+        AND status <> 'cancelled'
+    `;
+  } else {
+    await sql`
+      UPDATE lgd_intakes
+      SET
+        answers = CAST(${answersJson} AS jsonb),
+        voice_id = ${input.voiceId ?? null},
+        frequency_bed_id = ${input.frequencyBedId ?? null},
+        edit_history = COALESCE(edit_history, '[]'::jsonb) || CAST(${eventJson} AS jsonb),
+        updated_at = now()
+      WHERE id = ${input.id}
+        AND user_id = ${input.userId}
+        AND status <> 'cancelled'
+    `;
+  }
+  return getLgdIntakeById(input.id);
+};
+
+export const setLgdMemberFormEditAuthorization = async (input: {
+  id: string;
+  authorized: boolean;
+  audit: LgdIntakeEditAuditInput;
+}): Promise<LgdIntakeRecord | null> => {
+  await ensureLgdIntakesTable();
+  const existing = await getLgdIntakeById(input.id);
+  if (!existing) return null;
+  const event = {
+    at: new Date().toISOString(),
+    byRole: input.audit.byRole,
+    byEmail: input.audit.byEmail.trim().toLowerCase(),
+    byName: input.audit.byName ?? null,
+    action: input.authorized ? ("authorize_member_edit" as const) : ("revoke_member_edit" as const),
+    note: input.audit.note
+  };
+  const eventJson = JSON.stringify([event]);
+  const authBy = input.authorized ? input.audit.byEmail.trim().toLowerCase() : null;
+  await sql`
+    UPDATE lgd_intakes
+    SET
+      member_edit_authorized_at = ${input.authorized ? event.at : null},
+      member_edit_authorized_by = ${authBy},
+      edit_history = COALESCE(edit_history, '[]'::jsonb) || CAST(${eventJson} AS jsonb),
+      updated_at = now()
+    WHERE id = ${input.id}
+  `;
+  return getLgdIntakeById(input.id);
 };
 
 export const updateLgdIntakeByFacilitator = async (input: {
@@ -4555,6 +4680,9 @@ export const listAllLgdIntakes = async (): Promise<LgdIntakeListItem[]> => {
       i.paid_at AS "paidAt",
       i.stripe_checkout_session_id AS "stripeCheckoutSessionId",
       i.own_voice_audio_url AS "ownVoiceAudioUrl",
+      i.member_edit_authorized_at AS "memberEditAuthorizedAt",
+      i.member_edit_authorized_by AS "memberEditAuthorizedBy",
+      i.edit_history AS "editHistory",
       i.created_at AS "createdAt",
       i.updated_at AS "updatedAt",
       i.submitted_at AS "submittedAt",

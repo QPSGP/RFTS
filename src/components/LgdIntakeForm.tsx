@@ -19,6 +19,7 @@ import {
   type LgdFacilitatorFeatureFlags,
   type LgdGrowthBeliefId,
   type LgdIntakeAnswers,
+  type LgdIntakeEditEvent,
   type LgdLifeAreaId,
   type LgdLimitingBeliefId,
   type LgdSubconsciousProgramId
@@ -74,6 +75,8 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
   const [needsPayment, setNeedsPayment] = useState(false);
   const [needsCheckoutToStart, setNeedsCheckoutToStart] = useState(false);
   const [canStartNew, setCanStartNew] = useState(false);
+  const [editHistory, setEditHistory] = useState<LgdIntakeEditEvent[]>([]);
+  const [memberEditAuthorizedAt, setMemberEditAuthorizedAt] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [checkingOut, setCheckingOut] = useState(false);
 
@@ -112,12 +115,14 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
           const unpaidMember =
             !isAdminMode && data.intake.status === "draft" && !data.intake.paidAt;
           setAnswers(data.intake.answers);
-          setEditable(data.intake.editable !== false && !unpaidMember);
+          setEditable(!!data.intake.editable && !unpaidMember);
           setIntakeStatus(data.intake.status || "draft");
           setScriptDraftText(data.intake.scriptDraftText || null);
           setPaidAt(data.intake.paidAt || null);
           setNeedsPayment(unpaidMember);
           setCanStartNew(!!data.intake.canStartNew);
+          setEditHistory(Array.isArray(data.intake.editHistory) ? data.intake.editHistory : []);
+          setMemberEditAuthorizedAt(data.intake.memberEditAuthorizedAt || null);
         } else {
           setAnswers(emptyLgdIntakeAnswers());
           setEditable(false);
@@ -126,6 +131,8 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
           setPaidAt(null);
           setNeedsPayment(false);
           setCanStartNew(false);
+          setEditHistory([]);
+          setMemberEditAuthorizedAt(null);
         }
         setStatus("ready");
       })
@@ -396,13 +403,26 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
         isAdminMode ? { memberEmail: adminEmail, answers } : { answers }
       )
     });
+    const data = await res.json().catch(() => ({}));
     setSaving(false);
     if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      showMessage(data?.error || "Could not save draft.", true);
+      showMessage(data?.error || "Could not save form.", true);
       return false;
     }
-    if (!quiet) showMessage("Draft saved.");
+    if (data.intake) {
+      setEditable(!!data.intake.editable);
+      setIntakeStatus(data.intake.status || intakeStatus);
+      setEditHistory(Array.isArray(data.intake.editHistory) ? data.intake.editHistory : []);
+      setMemberEditAuthorizedAt(data.intake.memberEditAuthorizedAt || null);
+      if (data.intake.scriptDraftText != null || data.scriptDraftText != null) {
+        setScriptDraftText(data.scriptDraftText || data.intake.scriptDraftText || null);
+      }
+    }
+    if (!quiet) {
+      showMessage(
+        intakeStatus === "draft" ? "Draft saved." : "Form changes saved (edit logged)."
+      );
+    }
     return true;
   };
 
@@ -437,13 +457,15 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
       showMessage(data?.error || "Could not submit.", true);
       return;
     }
-    setEditable(false);
     setIntakeStatus(data.intake?.status || "submitted");
     setScriptDraftText(data.scriptDraftText || data.intake?.scriptDraftText || null);
+    setEditable(data.intake?.editable !== false);
+    setCanStartNew(!!data.intake?.canStartNew);
+    setEditHistory(Array.isArray(data.intake?.editHistory) ? data.intake.editHistory : []);
     showMessage(
       isAdminMode
-        ? "Submitted. Refresh the review queue below to see the brief and script."
-        : "Submitted. Your facilitator can review the brief and Goal Manifestation draft."
+        ? "Submitted. You can keep editing the form; changes are logged. Refresh the review queue for the script."
+        : "Submitted. Your facilitator can review the brief and script. You can still edit if paid or authorized."
     );
   };
 
@@ -573,8 +595,26 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
 
       <p style={{ fontSize: 13, color: "#64748b", marginTop: 0 }}>
         Status: <strong>{intakeStatus}</strong>
-        {!editable ? " · Submitted (read-only)" : null}
+        {paidAt ? " · paid" : null}
+        {memberEditAuthorizedAt ? " · member edit authorized" : null}
+        {editable ? " · editable" : " · locked"}
       </p>
+      {editHistory.length > 0 ? (
+        <details style={{ marginBottom: 16, fontSize: 13 }}>
+          <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+            Edit history ({editHistory.length})
+          </summary>
+          <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#475569" }}>
+            {[...editHistory].reverse().slice(0, 20).map((ev, i) => (
+              <li key={`${ev.at}-${i}`}>
+                {new Date(ev.at).toLocaleString()} — <strong>{ev.byRole}</strong>{" "}
+                {ev.byName || ev.byEmail}: {ev.action.replace(/_/g, " ")}
+                {ev.note ? ` (${ev.note})` : ""}
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
 
       {message && (
         <p
@@ -1330,9 +1370,13 @@ export default function LgdIntakeForm({ interests, adminMemberEmail }: Props) {
               disabled={saving}
               onClick={() => void saveDraft()}
             >
-              {saving ? "Saving…" : "Save draft"}
+              {saving
+                ? "Saving…"
+                : intakeStatus === "draft"
+                  ? "Save draft"
+                  : "Save form changes"}
             </button>
-            {sectionIndex === LGD_INTAKE_SECTIONS.length - 1 ? (
+            {sectionIndex === LGD_INTAKE_SECTIONS.length - 1 && intakeStatus === "draft" ? (
               <button
                 type="button"
                 className="button"

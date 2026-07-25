@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { isAdminSession } from "@/lib/auth";
+import { getSessionEmail, isAdminSession } from "@/lib/auth";
 import {
   getLgdIntakeById,
   listAllLgdIntakes,
+  setLgdMemberFormEditAuthorization,
   updateLgdIntakeByFacilitator
 } from "@/lib/db";
 import {
   buildLgdProductionPacket,
   findLgdContradictionNotes,
+  normalizeLgdEditHistory,
   normalizeLgdIntakeAnswers,
   resolveFrequencyBedId
 } from "@/lib/lgd-intake";
@@ -46,6 +48,9 @@ export async function GET() {
         reviewFlags: findLgdContradictionNotes(answers),
         paidAt: row.paidAt ?? null,
         ownVoiceAudioUrl: row.ownVoiceAudioUrl ?? null,
+        memberEditAuthorizedAt: row.memberEditAuthorizedAt ?? null,
+        memberEditAuthorizedBy: row.memberEditAuthorizedBy ?? null,
+        editHistory: normalizeLgdEditHistory(row.editHistory),
         submittedAt: row.submittedAt,
         updatedAt: row.updatedAt,
         approvedAt: row.approvedAt
@@ -57,7 +62,8 @@ export async function GET() {
 const patchSchema = z.object({
   id: z.string().uuid(),
   status: z.enum(STATUSES).optional(),
-  scriptDraftText: z.string().optional()
+  scriptDraftText: z.string().optional(),
+  authorizeMemberEdit: z.boolean().optional()
 });
 
 export async function PATCH(request: Request) {
@@ -73,39 +79,77 @@ export async function PATCH(request: Request) {
   if (!existing) {
     return NextResponse.json({ error: "Intake not found." }, { status: 404 });
   }
-  const updated = await updateLgdIntakeByFacilitator({
-    id: parsed.data.id,
-    status: parsed.data.status,
-    scriptDraftText: parsed.data.scriptDraftText
-  });
-  if (!updated) {
-    return NextResponse.json({ error: "Could not update intake." }, { status: 500 });
+
+  let updated = existing;
+  if (typeof parsed.data.authorizeMemberEdit === "boolean") {
+    const adminEmail = getSessionEmail() || "admin";
+    const auth = await setLgdMemberFormEditAuthorization({
+      id: parsed.data.id,
+      authorized: parsed.data.authorizeMemberEdit,
+      audit: {
+        byRole: "admin",
+        byEmail: adminEmail,
+        byName: "Admin",
+        action: parsed.data.authorizeMemberEdit
+          ? "authorize_member_edit"
+          : "revoke_member_edit",
+        note: parsed.data.authorizeMemberEdit
+          ? "Admin authorized member form edits"
+          : "Admin revoked member form edits"
+      }
+    });
+    if (!auth) {
+      return NextResponse.json({ error: "Could not update authorization." }, { status: 500 });
+    }
+    updated = auth;
   }
+
+  if (parsed.data.status !== undefined || parsed.data.scriptDraftText !== undefined) {
+    const statusUpdated = await updateLgdIntakeByFacilitator({
+      id: parsed.data.id,
+      status: parsed.data.status,
+      scriptDraftText: parsed.data.scriptDraftText
+    });
+    if (!statusUpdated) {
+      return NextResponse.json({ error: "Could not update intake." }, { status: 500 });
+    }
+    updated = statusUpdated;
+  }
+
   const all = await listAllLgdIntakes();
-  const owned = all.find((i) => i.id === updated.id);
-  const answers = normalizeLgdIntakeAnswers(updated.answers);
+  const owned = all.find((i) => i.id === updated.id) || (await getLgdIntakeById(updated.id));
+  const refreshed = await getLgdIntakeById(updated.id);
+  const row = refreshed || updated;
+  const answers = normalizeLgdIntakeAnswers(row.answers);
+  const listRow = all.find((i) => i.id === updated.id);
+  const memberEmail = listRow?.memberEmail || "";
+  const firstName = listRow?.firstName ?? null;
+  const lastName = listRow?.lastName ?? null;
   return NextResponse.json({
     intake: {
-      id: updated.id,
-      status: updated.status,
-      scriptDraftText: updated.scriptDraftText,
-      approvedAt: updated.approvedAt,
-      updatedAt: updated.updatedAt,
-      memberEmail: owned?.memberEmail || "",
-      firstName: owned?.firstName ?? null,
-      lastName: owned?.lastName ?? null,
+      id: row.id,
+      status: row.status,
+      scriptDraftText: row.scriptDraftText,
+      approvedAt: row.approvedAt,
+      updatedAt: row.updatedAt,
+      memberEmail,
+      firstName,
+      lastName,
       answers,
-      voiceId: updated.voiceId,
-      frequencyBedId: updated.frequencyBedId,
+      voiceId: row.voiceId,
+      frequencyBedId: row.frequencyBedId,
+      memberEditAuthorizedAt: row.memberEditAuthorizedAt ?? null,
+      memberEditAuthorizedBy: row.memberEditAuthorizedBy ?? null,
+      editHistory: normalizeLgdEditHistory(row.editHistory),
       reviewFlags: findLgdContradictionNotes(answers),
       productionPacket: buildLgdProductionPacket({
-        memberEmail: owned?.memberEmail || "",
-        firstName: owned?.firstName ?? null,
-        lastName: owned?.lastName ?? null,
+        memberEmail,
+        firstName,
+        lastName,
         answers,
-        scriptDraftText: updated.scriptDraftText || "",
-        status: updated.status,
-        resolvedBedId: updated.frequencyBedId || resolveFrequencyBedId(answers)
+        scriptDraftText: row.scriptDraftText || "",
+        status: row.status,
+        resolvedBedId: row.frequencyBedId || resolveFrequencyBedId(answers)
       })
     }
   });

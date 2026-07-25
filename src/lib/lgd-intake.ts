@@ -6,6 +6,66 @@
 
 export const LGD_INTAKE_VERSION = 2 as const;
 
+export type LgdIntakeEditorRole = "admin" | "member" | "facilitator";
+
+export type LgdIntakeEditEvent = {
+  at: string;
+  byRole: LgdIntakeEditorRole;
+  byEmail: string;
+  byName?: string | null;
+  action:
+    | "save_answers"
+    | "submit"
+    | "authorize_member_edit"
+    | "revoke_member_edit"
+    | "create_draft";
+  note?: string;
+};
+
+/** Member may edit the form when paid, or when a facilitator/admin authorized edits. */
+export function canMemberEditLgdForm(intake: {
+  status: string;
+  paidAt?: string | null;
+  memberEditAuthorizedAt?: string | null;
+}): boolean {
+  if (intake.status === "cancelled") return false;
+  if (intake.status === "draft") return !!intake.paidAt;
+  return !!intake.paidAt || !!intake.memberEditAuthorizedAt;
+}
+
+export function normalizeLgdEditHistory(raw: unknown): LgdIntakeEditEvent[] {
+  if (!Array.isArray(raw)) return [];
+  const out: LgdIntakeEditEvent[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const o = item as Partial<LgdIntakeEditEvent>;
+    const at = String(o.at ?? "").trim();
+    const byEmail = String(o.byEmail ?? "").trim().toLowerCase();
+    const byRole = o.byRole;
+    const action = o.action;
+    if (!at || !byEmail) continue;
+    if (byRole !== "admin" && byRole !== "member" && byRole !== "facilitator") continue;
+    if (
+      action !== "save_answers" &&
+      action !== "submit" &&
+      action !== "authorize_member_edit" &&
+      action !== "revoke_member_edit" &&
+      action !== "create_draft"
+    ) {
+      continue;
+    }
+    out.push({
+      at,
+      byRole,
+      byEmail,
+      byName: o.byName ? String(o.byName) : null,
+      action,
+      note: o.note ? String(o.note) : undefined
+    });
+  }
+  return out.slice(-100);
+}
+
 export const LGD_LIFE_AREAS = [
   { id: "physical", label: "Physical / health" },
   { id: "mental", label: "Mental / focus" },

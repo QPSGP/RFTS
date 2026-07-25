@@ -1,24 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Interest } from "@/lib/types";
 import LgdIntakeForm from "@/components/LgdIntakeForm";
 
 type Props = {
   interests: Interest[];
+  activeEmail?: string | null;
+  onActiveEmailChange?: (email: string | null) => void;
 };
 
 /** Lets super-admin open the full A–F intake for a member while LGD_ADMIN_ONLY is on. */
-export default function AdminLgdIntakeRunner({ interests }: Props) {
+export default function AdminLgdIntakeRunner({
+  interests,
+  activeEmail: controlledEmail,
+  onActiveEmailChange
+}: Props) {
   const [emailInput, setEmailInput] = useState("");
-  const [activeEmail, setActiveEmail] = useState<string | null>(null);
+  const [internalEmail, setInternalEmail] = useState<string | null>(null);
+  const isControlled = onActiveEmailChange != null;
+  const activeEmail = isControlled ? controlledEmail ?? null : internalEmail;
+
+  useEffect(() => {
+    if (controlledEmail) setEmailInput(controlledEmail);
+  }, [controlledEmail]);
+
+  const setActiveEmail = (email: string | null) => {
+    if (isControlled) onActiveEmailChange?.(email);
+    else setInternalEmail(email);
+  };
 
   return (
     <div className="card" style={{ marginBottom: 24 }}>
-      <h2 style={{ marginTop: 0 }}>Run / preview intake (A–F)</h2>
+      <h2 style={{ marginTop: 0 }}>Run / edit intake form (A–F)</h2>
       <p style={{ color: "#64748b" }}>
-        Enter a member login email, then open the electronic Life Guidance Discovery form for that
-        account. After submit, it appears in the review queue below.
+        Enter a member login email, then open the electronic Life Guidance Discovery form. You can
+        edit drafts and submitted answers; every save is logged with who and when. After submit, the
+        intake also appears in the review queue below.
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
         <input
