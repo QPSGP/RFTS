@@ -664,7 +664,26 @@ export type LgdIntakeAnswers = {
   voiceId: LgdProfessionalVoiceId | "member_own" | "";
   frequencyBedId: LgdFrequencyBedId | "";
   questionsForFacilitator: string;
+  /** Member wants live Life Guidance / private sessions with a facilitator. */
+  wantsLiveLgdSessions: boolean;
 };
+
+/** Member-facing CGMR listening guidance (Success Center / Terry Brussel-Rogers). */
+export const LGD_CGMR_USAGE = {
+  title: "How to use your Customized Goal Manifestation Recording (CGMR)",
+  lead:
+    "Your CGMR is the overview of your goals — mental, physical, emotional, spiritual, and financial — so they settle into the subconscious on a continuing basis. Other hypnotic recordings implement those suggestions with specific skills and habits.",
+  bullets: [
+    "Best as reinforcement for private sessions when you have them — and powerful on its own with night listening.",
+    "Use your CGMR at least three or four nights a week.",
+    "Alternate with supporting library / program recordings: CGMR suggests; specific tracks implement (e.g. memory, vision, sales, health).",
+    "If you wake at night, you may switch to a different recording. If you sleep through, play CGMR and supporting tracks on different nights — or spaced MP3s, no more than three per night.",
+    "Schedule placement on Reach For The Stars: 2 plays/night → CGMR as 2nd play every other night; 1 play/night → every 4th play (when your CGMR is in rotation).",
+    "Plan an annual Life Guidance Renewal to update goals and your CGMR as life changes."
+  ],
+  contactNote:
+    "For personal assistance selecting supporting materials or booking sessions, call 800-GOAL-NOW (800-462-5669)."
+} as const;
 
 export function emptyLgdIntakeAnswers(): LgdIntakeAnswers {
   return {
@@ -702,7 +721,8 @@ export function emptyLgdIntakeAnswers(): LgdIntakeAnswers {
     listenContext: "",
     voiceId: "",
     frequencyBedId: "choose_for_me",
-    questionsForFacilitator: ""
+    questionsForFacilitator: "",
+    wantsLiveLgdSessions: false
   };
 }
 
@@ -894,7 +914,8 @@ export function normalizeLgdIntakeAnswers(raw: unknown): LgdIntakeAnswers {
     voiceId: (String(o.voiceId ?? "").trim() || "") as LgdIntakeAnswers["voiceId"],
     frequencyBedId: (String(o.frequencyBedId ?? "").trim() ||
       "choose_for_me") as LgdFrequencyBedId | "",
-    questionsForFacilitator: String(o.questionsForFacilitator ?? "").trim()
+    questionsForFacilitator: String(o.questionsForFacilitator ?? "").trim(),
+    wantsLiveLgdSessions: !!o.wantsLiveLgdSessions
   };
 }
 
@@ -1321,6 +1342,7 @@ export function buildLgdProductionPacket(input: {
     `Listen context: ${input.answers.listenContext || "unset"}`,
     `Permission to edit draft: ${input.answers.permissionToEditDraft !== false ? "yes" : "no"}`,
     `Own-voice consent: ${input.answers.ownVoiceConsent ? "yes" : "no"}`,
+    `Wants live LGD / private sessions: ${input.answers.wantsLiveLgdSessions ? "yes" : "no"}`,
     "",
     (() => {
       const ranked = prioritizedLgdChallenges(input.answers);

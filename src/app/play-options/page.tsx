@@ -5,6 +5,7 @@ import ScreenWakeToggle from "@/components/ScreenWakeToggle";
 import PlayOptionsAndroidTips from "@/components/PlayOptionsAndroidTips";
 import SessionPlayer, { SessionPlayerHandle } from "@/components/SessionPlayer";
 import MemberListenProgress from "@/components/MemberListenProgress";
+import LgdCgmrUsageCard from "@/components/LgdCgmrUsageCard";
 import { getMemberTonightTrackItems } from "@/lib/schedule-progress";
 
 export default function PlayOptionsPage() {
@@ -25,6 +26,7 @@ export default function PlayOptionsPage() {
   const [lgdConsoleOffer, setLgdConsoleOffer] = useState(true);
   const [lgdIntakeEnabled, setLgdIntakeEnabled] = useState(true);
   const [lgdPriceLabel, setLgdPriceLabel] = useState<string | null>(null);
+  const [showCgmrUsage, setShowCgmrUsage] = useState(false);
   const [schedule, setSchedule] = useState<
     { night: number; tracks: { id: string; title: string; skuCode?: string; audioUrl: string }[]; note?: string }[]
   >([]);
@@ -134,6 +136,7 @@ export default function PlayOptionsPage() {
         const data = await res.json().catch(() => ({}));
         setLgdConsoleOffer(data.consoleOffer !== false);
         setLgdIntakeEnabled(data.electronicIntakeEnabled !== false);
+        setShowCgmrUsage(!!data.showCgmrUsage);
         if (data.priceLabel) setLgdPriceLabel(data.priceLabel);
       })
       .catch(() => {});
@@ -373,6 +376,7 @@ export default function PlayOptionsPage() {
           </a>
         </section>
       )}
+      {showCgmrUsage ? <LgdCgmrUsageCard /> : null}
       {profile && profile.isManaged && (
         <section className="card" style={{ marginBottom: 16, background: "#f0fdf4", borderColor: "#bbf7d0" }}>
           <h3>Managed Account</h3>

@@ -399,6 +399,14 @@ export default function AdminLgdPanel({ onEditForm, onCloseForm, registerRefresh
                 <summary style={{ fontWeight: 600, cursor: "pointer" }}>Brief</summary>
                 <div style={{ fontSize: 14, marginTop: 8 }}>
                   <p>
+                    <strong>Live sessions interest:</strong>{" "}
+                    {selected.answers.wantsLiveLgdSessions ? (
+                      <span style={{ color: "#0f766e", fontWeight: 600 }}>Yes — follow up</span>
+                    ) : (
+                      "Not requested"
+                    )}
+                  </p>
+                  <p>
                     <strong>Struggle:</strong> {selected.answers.primaryStruggle || "—"}
                   </p>
                   {prioritizedLgdChallenges(selected.answers).length > 0 ? (

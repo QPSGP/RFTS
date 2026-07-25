@@ -124,8 +124,9 @@ Each section collects **structured fields + free-text “in your words”**. Fre
 
 ### Section F — Facilitator handoff
 - Questions for the live session
-- Scheduling preference / urgency
+- **Interested in live LGD / private sessions** (checkbox — facilitator follow-up)
 - Permission for facilitator to edit draft
+- After submit / CGMR path: member console shows **CGMR usage instructions** (3–4 nights/week; CGMR overview vs supporting tracks; annual renewal)
 
 ---
 

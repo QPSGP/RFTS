@@ -34,6 +34,7 @@ import {
   type LgdSubconsciousProgramId
 } from "@/lib/lgd-intake";
 import LgdOwnVoiceRecorder from "@/components/LgdOwnVoiceRecorder";
+import LgdCgmrUsageCard from "@/components/LgdCgmrUsageCard";
 
 type Props = {
   interests: Interest[];
@@ -1696,6 +1697,34 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
                 onChange={(e) => patchAnswers({ questionsForFacilitator: e.target.value })}
               />
             </label>
+            <label
+              style={{
+                display: "flex",
+                gap: 10,
+                alignItems: "flex-start",
+                cursor: editable ? "pointer" : "default",
+                padding: 12,
+                borderRadius: 8,
+                border: answers.wantsLiveLgdSessions ? "1px solid #0f766e" : "1px solid #e5e7eb",
+                background: answers.wantsLiveLgdSessions ? "#f0fdfa" : undefined
+              }}
+            >
+              <input
+                type="checkbox"
+                disabled={!editable}
+                checked={!!answers.wantsLiveLgdSessions}
+                onChange={(e) => patchAnswers({ wantsLiveLgdSessions: e.target.checked })}
+                style={{ marginTop: 3 }}
+              />
+              <span>
+                <strong>I am interested in live Life Guidance / private sessions</strong>
+                <span style={{ display: "block", fontSize: 14, color: "#475569", marginTop: 4 }}>
+                  Check this if you want a facilitator (such as Terry Brussel-Rogers or an assigned
+                  associate) to follow up about phone, Zoom, or in-person sessions and your Seven
+                  Keys path — not only the electronic intake and CGMR.
+                </span>
+              </span>
+            </label>
             <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer" }}>
               <input
                 type="checkbox"
@@ -1794,6 +1823,16 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
           </>
         ) : null}
       </div>
+
+      {!isAdminMode &&
+      (scriptDraftText ||
+        (intakeStatus !== "draft" &&
+          intakeStatus !== "none" &&
+          intakeStatus !== "loading")) ? (
+        <div style={{ marginTop: 20 }}>
+          <LgdCgmrUsageCard compact />
+        </div>
+      ) : null}
 
       {scriptDraftText ? (
         <div className="card" style={{ marginTop: 24 }}>

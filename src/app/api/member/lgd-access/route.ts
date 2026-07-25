@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import { getUserSessionEmail } from "@/lib/user-auth";
-import { getMemberProfileByUserId, getUserProfile } from "@/lib/db";
+import {
+  getLatestLgdIntakeForUser,
+  getMemberProfileByUserId,
+  getUserProfile
+} from "@/lib/db";
 import {
   getLgdFlagsForMemberEmail,
   getLgdPriceDisplay,
   isLgdAdminOnlyMode
 } from "@/lib/lgd-access";
+import { isAdminSession } from "@/lib/auth";
 
 /** Lightweight flags/price for console CTAs (does not create an intake draft). */
 export async function GET() {
@@ -17,12 +22,13 @@ export async function GET() {
   if (!user) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
-  if (isLgdAdminOnlyMode()) {
+  if (isLgdAdminOnlyMode() && !(await isAdminSession())) {
     return NextResponse.json({
       hadLgdSession: false,
       adminOnly: true,
       electronicIntakeEnabled: false,
       consoleOffer: false,
+      showCgmrUsage: false,
       priceLabel: getLgdPriceDisplay().label,
       priceCents: getLgdPriceDisplay().priceCents
     });
@@ -30,12 +36,22 @@ export async function GET() {
   const memberProfile = await getMemberProfileByUserId(user.id);
   const { flags } = await getLgdFlagsForMemberEmail(email);
   const price = getLgdPriceDisplay();
+  const intake = await getLatestLgdIntakeForUser(user.id);
+  const hadLgdSession = memberProfile?.hadLgdSession ?? false;
+  const intakePastDraft =
+    !!intake &&
+    intake.status !== "draft" &&
+    intake.status !== "cancelled";
+  const showCgmrUsage =
+    hadLgdSession || intakePastDraft || !!intake?.scriptDraftText;
   return NextResponse.json({
-    hadLgdSession: memberProfile?.hadLgdSession ?? false,
+    hadLgdSession,
     flags,
     priceLabel: price.label,
     priceCents: price.priceCents,
     electronicIntakeEnabled: flags.lgdElectronicIntake,
-    consoleOffer: flags.lgdMemberConsoleOffer && flags.lgdElectronicIntake
+    consoleOffer: flags.lgdMemberConsoleOffer && flags.lgdElectronicIntake,
+    showCgmrUsage,
+    intakeStatus: intake?.status ?? null
   });
 }

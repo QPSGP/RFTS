@@ -440,6 +440,14 @@ export default function FacilitatorLgdPanel() {
                 <summary style={{ cursor: "pointer", fontWeight: 600 }}>Session brief</summary>
                 <div style={{ marginTop: 12, fontSize: 14, lineHeight: 1.5 }}>
                   <p>
+                    <strong>Live sessions interest:</strong>{" "}
+                    {selected.answers.wantsLiveLgdSessions ? (
+                      <span style={{ color: "#0f766e", fontWeight: 600 }}>Yes — follow up</span>
+                    ) : (
+                      "Not requested"
+                    )}
+                  </p>
+                  <p>
                     <strong>Primary struggle:</strong>{" "}
                     {selected.answers.primaryStruggle || "—"}
                   </p>
