@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   LGD_LIFE_AREAS,
   buildLgdProductionPacket,
+  formatLgdHorizonGoals,
   orderedLgdSevenKeys,
   prioritizedLgdChallenges,
   type LgdIntakeAnswers,
@@ -422,6 +423,20 @@ export default function AdminLgdPanel({ onEditForm, onCloseForm, registerRefresh
                       </li>
                     ))}
                   </ol>
+                  {formatLgdHorizonGoals(selected.answers).length > 0 ? (
+                    <>
+                      <p style={{ marginBottom: 4 }}>
+                        <strong>Goal horizons:</strong>
+                      </p>
+                      <ul style={{ marginTop: 0 }}>
+                        {formatLgdHorizonGoals(selected.answers).map((h) => (
+                          <li key={h.label}>
+                            <strong>{h.label}:</strong> {h.value}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : null}
                   <p>
                     <strong>Outcomes:</strong> {selected.answers.topOutcomes.join("; ") || "—"}
                   </p>

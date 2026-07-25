@@ -6,6 +6,7 @@ import {
   LGD_LIFE_AREAS,
   LGD_SEVEN_KEYS,
   buildLgdProductionPacket,
+  formatLgdHorizonGoals,
   orderedLgdSevenKeys,
   prioritizedLgdChallenges,
   type LgdFacilitatorFeatureFlags,
@@ -464,6 +465,20 @@ export default function FacilitatorLgdPanel() {
                       </li>
                     ))}
                   </ol>
+                  {formatLgdHorizonGoals(selected.answers).length > 0 ? (
+                    <>
+                      <p style={{ marginBottom: 4 }}>
+                        <strong>Goal horizons:</strong>
+                      </p>
+                      <ul style={{ marginTop: 0 }}>
+                        {formatLgdHorizonGoals(selected.answers).map((h) => (
+                          <li key={h.label}>
+                            <strong>{h.label}:</strong> {h.value}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : null}
                   <p>
                     <strong>Top outcomes:</strong>{" "}
                     {selected.answers.topOutcomes.join("; ") || "—"}

@@ -99,6 +99,7 @@ Each section collects **structured fields + free-text “in your words”**. Fre
 - Script uses each belief pair as **Releasing… / Installing…** (does not rehearse challenge labels as suggestions); priorities appear on facilitator brief + production packet
 
 ### Section C — Where you want to go (desired state)
+- **Goal horizons** (Success Center intake): short-term, long-term, one-year change, ultimate goal
 - Top 3 outcomes in **their words** (must be sensory/specific)
 - Align with RFTS goal catalog (multi-select + priority order, max 10)
 - Identity statements desired: “I am becoming…” / “I am now…” (up to 7 phrases — **core of CGMR**)

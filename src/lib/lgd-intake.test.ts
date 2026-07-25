@@ -2,6 +2,7 @@ import {
   emptyLgdIntakeAnswers,
   findLgdContradictionNotes,
   normalizeLgdIntakeAnswers,
+  formatLgdHorizonGoals,
   normalizeSevenKeysOrder,
   orderedLgdSevenKeys,
   prioritizedLgdChallenges,
@@ -59,5 +60,19 @@ describe("lgd-intake helpers", () => {
     });
     expect(ordered.map((k) => k.id)).toEqual(["bronze", "ruby", "silver"]);
     expect(ordered[0].metal).toBe("Bronze");
+  });
+
+  it("formats non-empty goal horizons", () => {
+    const answers = normalizeLgdIntakeAnswers({
+      shortTermGoals: "  Connect better  ",
+      longTermGoals: "",
+      oneYearChange: "Calm evenings",
+      ultimateGoal: "Benevolent impact"
+    });
+    expect(formatLgdHorizonGoals(answers)).toEqual([
+      { label: "Short-term", value: "Connect better" },
+      { label: "One-year change", value: "Calm evenings" },
+      { label: "Ultimate goal", value: "Benevolent impact" }
+    ]);
   });
 });

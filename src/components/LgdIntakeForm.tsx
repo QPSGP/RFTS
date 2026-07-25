@@ -1134,6 +1134,54 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
 
         {section.id === "C" && (
           <div className="grid" style={{ gap: 16 }}>
+            <p style={{ marginTop: 0, fontSize: 17, fontWeight: 600 }}>Goal horizons</p>
+            <p style={{ color: "#475569", marginTop: 0 }}>
+              From the Success Center intake — short arcs and your North Star. Sensory top-3
+              outcomes and identity statements below still drive the CGMR script.
+            </p>
+            <label style={{ display: "grid", gap: 6 }}>
+              Short-term goals
+              <textarea
+                disabled={!editable}
+                rows={3}
+                style={inputStyle}
+                placeholder="What you want to move on in the near term…"
+                value={answers.shortTermGoals}
+                onChange={(e) => patchAnswers({ shortTermGoals: e.target.value })}
+              />
+            </label>
+            <label style={{ display: "grid", gap: 6 }}>
+              Long-term goals
+              <textarea
+                disabled={!editable}
+                rows={3}
+                style={inputStyle}
+                placeholder="Larger goals over years…"
+                value={answers.longTermGoals}
+                onChange={(e) => patchAnswers({ longTermGoals: e.target.value })}
+              />
+            </label>
+            <label style={{ display: "grid", gap: 6 }}>
+              How would you like your life to have changed in one year?
+              <textarea
+                disabled={!editable}
+                rows={3}
+                style={inputStyle}
+                value={answers.oneYearChange}
+                onChange={(e) => patchAnswers({ oneYearChange: e.target.value })}
+              />
+            </label>
+            <label style={{ display: "grid", gap: 6 }}>
+              What is your ultimate goal in life?
+              <textarea
+                disabled={!editable}
+                rows={3}
+                style={inputStyle}
+                value={answers.ultimateGoal}
+                onChange={(e) => patchAnswers({ ultimateGoal: e.target.value })}
+              />
+            </label>
+            <hr style={{ border: 0, borderTop: "1px solid #e5e7eb", margin: "4px 0" }} />
             <label style={{ display: "grid", gap: 6 }}>
               Top 3 outcomes in your words (one per line) — sensory and specific
               <textarea

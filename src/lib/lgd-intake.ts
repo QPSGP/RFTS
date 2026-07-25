@@ -632,6 +632,14 @@ export type LgdIntakeAnswers = {
   /** Priority order of challenges (1 = highest); subset of challengeIds, max 10. */
   challengePriority: LgdChallengeId[];
   primaryStruggle: string;
+  /** Success Center intake: short-term goals (free text). */
+  shortTermGoals: string;
+  /** Success Center intake: long-term goals (free text). */
+  longTermGoals: string;
+  /** How life should have changed in one year. */
+  oneYearChange: string;
+  /** Ultimate goal in life. */
+  ultimateGoal: string;
   topOutcomes: string[];
   goalIds: string[];
   identityStatements: string[];
@@ -673,6 +681,10 @@ export function emptyLgdIntakeAnswers(): LgdIntakeAnswers {
     challengeIds: [],
     challengePriority: [],
     primaryStruggle: "",
+    shortTermGoals: "",
+    longTermGoals: "",
+    oneYearChange: "",
+    ultimateGoal: "",
     topOutcomes: [],
     goalIds: [],
     identityStatements: [],
@@ -841,6 +853,10 @@ export function normalizeLgdIntakeAnswers(raw: unknown): LgdIntakeAnswers {
     challengeIds,
     challengePriority,
     primaryStruggle: String(o.primaryStruggle ?? "").trim(),
+    shortTermGoals: String(o.shortTermGoals ?? "").trim(),
+    longTermGoals: String(o.longTermGoals ?? "").trim(),
+    oneYearChange: String(o.oneYearChange ?? "").trim(),
+    ultimateGoal: String(o.ultimateGoal ?? "").trim(),
     topOutcomes: asStringArray(o.topOutcomes, 3),
     goalIds: asStringArray(o.goalIds, 10),
     identityStatements: asStringArray(o.identityStatements, 7),
@@ -885,7 +901,7 @@ export function normalizeLgdIntakeAnswers(raw: unknown): LgdIntakeAnswers {
 export const LGD_INTAKE_SECTIONS = [
   { id: "A", title: "Subconscious programming" },
   { id: "B", title: "Beliefs & where you are" },
-  { id: "C", title: "Where you want to go" },
+  { id: "C", title: "Goals & where you want to go" },
   { id: "D", title: "Seven Keys & how you get there" },
   { id: "E", title: "Language & modality" },
   { id: "F", title: "Facilitator handoff" }
@@ -1144,10 +1160,28 @@ export function buildLgdScriptDraftBlocks(input: {
   const futurePacing = [
     "In the days ahead you notice small proofs — calmer evenings, clearer choices, aligned action — and each proof deepens trust in this path."
   ];
+  if (a.shortTermGoals.trim()) {
+    futurePacing.push(`Near-term, you move toward: ${a.shortTermGoals.trim()}.`);
+  }
+  if (a.oneYearChange.trim()) {
+    futurePacing.push(
+      `Looking ahead one year, your life has changed in this direction: ${a.oneYearChange.trim()}.`
+    );
+  }
+  if (a.longTermGoals.trim()) {
+    futurePacing.push(`Over the longer arc, you hold: ${a.longTermGoals.trim()}.`);
+  }
+  if (a.ultimateGoal.trim()) {
+    futurePacing.push(
+      `Your ultimate direction — the North Star you keep — is: ${a.ultimateGoal.trim()}.`
+    );
+  }
   if (a.timeline === "90_days") {
     futurePacing.push("Over the next ninety days, progress feels tangible and repeatable.");
-  } else if (a.timeline === "12_months") {
+  } else if (a.timeline === "12_months" && !a.oneYearChange.trim()) {
     futurePacing.push("Across this year, the new pattern becomes natural.");
+  } else if (a.timeline === "ongoing") {
+    futurePacing.push("This is an ongoing path — each day you practice, the pattern deepens.");
   }
 
   const postHypnotic =
@@ -1235,6 +1269,19 @@ function outcomesLine(p: string, answers: LgdIntakeAnswers): boolean {
   return answers.topOutcomes.some((o) => o.trim() === p.trim());
 }
 
+/** Horizon goal lines for briefs / packets (omit empty). */
+export function formatLgdHorizonGoals(answers: LgdIntakeAnswers): {
+  label: string;
+  value: string;
+}[] {
+  return [
+    { label: "Short-term", value: answers.shortTermGoals.trim() },
+    { label: "Long-term", value: answers.longTermGoals.trim() },
+    { label: "One-year change", value: answers.oneYearChange.trim() },
+    { label: "Ultimate goal", value: answers.ultimateGoal.trim() }
+  ].filter((row) => row.value);
+}
+
 /** Plain-text production packet for studio / engineer handoff. */
 export function buildLgdProductionPacket(input: {
   memberEmail: string;
@@ -1289,6 +1336,15 @@ export function buildLgdProductionPacket(input: {
       return [
         "Seven Keys order (Bronze always first):",
         ...keys.map((k) => `${k.rank}. ${k.metal} — ${k.label}`),
+        ""
+      ].join("\n");
+    })(),
+    (() => {
+      const horizons = formatLgdHorizonGoals(input.answers);
+      if (!horizons.length) return "";
+      return [
+        "Goal horizons:",
+        ...horizons.map((h) => `- ${h.label}: ${h.value}`),
         ""
       ].join("\n");
     })(),
