@@ -11,6 +11,7 @@ import {
   LGD_LIFE_AREAS,
   LGD_LIMITING_BELIEF_CHOICES,
   LGD_PROFESSIONAL_VOICES,
+  LGD_SEVEN_KEYS,
   LGD_SUBCONSCIOUS_PROGRAMS,
   defaultGrowthForLimiting,
   defaultLgdFacilitatorFeatureFlags,
@@ -18,6 +19,8 @@ import {
   growthBeliefLabel,
   limitingBeliefLabel,
   lgdChallengeLabel,
+  normalizeSevenKeysOrder,
+  orderedLgdSevenKeys,
   prioritizedLgdChallenges,
   type LgdBeliefTransformation,
   type LgdChallengeId,
@@ -27,6 +30,7 @@ import {
   type LgdIntakeEditEvent,
   type LgdLifeAreaId,
   type LgdLimitingBeliefId,
+  type LgdSevenKeyId,
   type LgdSubconsciousProgramId
 } from "@/lib/lgd-intake";
 import LgdOwnVoiceRecorder from "@/components/LgdOwnVoiceRecorder";
@@ -301,6 +305,38 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
       answers.challengeIds.filter((id) => !answers.challengePriority.includes(id)),
     [answers.challengeIds, answers.challengePriority]
   );
+
+  const sevenKeysOrdered = useMemo(
+    () => orderedLgdSevenKeys(answers),
+    [answers.sevenKeysOrder]
+  );
+
+  const toggleSevenKey = (id: LgdSevenKeyId) => {
+    if (id === "bronze") return;
+    setAnswers((prev) => {
+      const current = normalizeSevenKeysOrder(prev.sevenKeysOrder);
+      if (current.includes(id)) {
+        return {
+          ...prev,
+          sevenKeysOrder: normalizeSevenKeysOrder(current.filter((k) => k !== id))
+        };
+      }
+      return { ...prev, sevenKeysOrder: normalizeSevenKeysOrder([...current, id]) };
+    });
+  };
+
+  const moveSevenKey = (fromIndex: number, toIndex: number) => {
+    setAnswers((prev) => {
+      const current = normalizeSevenKeysOrder(prev.sevenKeysOrder);
+      // Index 0 is Bronze — locked.
+      if (fromIndex <= 0 || toIndex <= 0) return prev;
+      if (toIndex >= current.length) return prev;
+      const next = [...current];
+      const [item] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, item);
+      return { ...prev, sevenKeysOrder: normalizeSevenKeysOrder(next) };
+    });
+  };
 
   const orderedSelectedGoals = useMemo(
     () =>
@@ -1241,6 +1277,129 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
 
         {section.id === "D" && (
           <div className="grid" style={{ gap: 16 }}>
+            <div>
+              <p style={{ marginTop: 0, fontSize: 17, fontWeight: 600 }}>
+                Seven Keys to Self-Actualization
+              </p>
+              <p style={{ color: "#475569", marginTop: 0 }}>
+                Terry Brussel-Rogers’ systematic path from problem resolution to self-actualization.
+                The <strong>Bronze Key is always #1</strong> (self-hypnosis foundation). Check other
+                Keys that apply, then rank them — leave blank any that do not apply.
+              </p>
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 8,
+                  border: "1px solid #0f766e",
+                  background: "#f0fdfa",
+                  marginBottom: 12
+                }}
+              >
+                <strong>#1 Bronze — Auto-suggestion &amp; self-hypnosis</strong>
+                <p style={{ margin: "6px 0 0", fontSize: 14, color: "#334155" }}>
+                  {LGD_SEVEN_KEYS[0].summary}
+                </p>
+              </div>
+              <div style={{ display: "grid", gap: 8, marginBottom: 12 }}>
+                {LGD_SEVEN_KEYS.filter((k) => k.id !== "bronze").map((key) => {
+                  const selected = answers.sevenKeysOrder.includes(key.id);
+                  const rank = selected
+                    ? answers.sevenKeysOrder.indexOf(key.id) + 1
+                    : null;
+                  return (
+                    <label
+                      key={key.id}
+                      style={{
+                        display: "flex",
+                        gap: 10,
+                        alignItems: "flex-start",
+                        cursor: editable ? "pointer" : "default",
+                        padding: "8px 10px",
+                        borderRadius: 8,
+                        border: selected ? "1px solid #0f766e" : "1px solid #e5e7eb"
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        disabled={!editable}
+                        checked={selected}
+                        onChange={() => toggleSevenKey(key.id)}
+                        style={{ marginTop: 3 }}
+                      />
+                      <span>
+                        <strong>
+                          {rank ? `#${rank} ` : ""}
+                          {key.metal}
+                        </strong>{" "}
+                        — {key.label}
+                        <span
+                          style={{
+                            display: "block",
+                            fontSize: 13,
+                            color: "#64748b",
+                            marginTop: 4
+                          }}
+                        >
+                          {key.summary}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+              {sevenKeysOrdered.length > 1 ? (
+                <div>
+                  <p style={{ fontWeight: 600, margin: "0 0 8px" }}>Your Keys order</p>
+                  <div className="stack" style={{ gap: 8 }}>
+                    {sevenKeysOrdered.map((row, index) => (
+                      <div
+                        key={row.id}
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 8,
+                          alignItems: "center",
+                          padding: "8px 10px",
+                          borderRadius: 8,
+                          border: "1px solid #d1d5db"
+                        }}
+                      >
+                        <strong style={{ minWidth: 28 }}>#{row.rank}</strong>
+                        <span style={{ flex: "1 1 180px" }}>
+                          {row.metal} — {row.label}
+                        </span>
+                        {editable && index > 0 ? (
+                          <span style={{ display: "flex", gap: 6 }}>
+                            <button
+                              type="button"
+                              className="button button-secondary"
+                              style={{ padding: "4px 8px", fontSize: 12 }}
+                              disabled={index <= 1}
+                              onClick={() => moveSevenKey(index, index - 1)}
+                            >
+                              Up
+                            </button>
+                            <button
+                              type="button"
+                              className="button button-secondary"
+                              style={{ padding: "4px 8px", fontSize: 12 }}
+                              disabled={index === sevenKeysOrdered.length - 1}
+                              onClick={() => moveSevenKey(index, index + 1)}
+                            >
+                              Down
+                            </button>
+                          </span>
+                        ) : index === 0 ? (
+                          <span style={{ fontSize: 12, color: "#0f766e" }}>Always first</span>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <hr style={{ border: 0, borderTop: "1px solid #e5e7eb", margin: "4px 0" }} />
             <label style={{ display: "grid", gap: 6 }}>
               Known blocks (one per line)
               <textarea

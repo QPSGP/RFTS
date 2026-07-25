@@ -4,7 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import {
   LGD_FACILITATOR_FEATURE_FLAGS,
   LGD_LIFE_AREAS,
+  LGD_SEVEN_KEYS,
   buildLgdProductionPacket,
+  orderedLgdSevenKeys,
   prioritizedLgdChallenges,
   type LgdFacilitatorFeatureFlags,
   type LgdIntakeAnswers,
@@ -217,6 +219,39 @@ export default function FacilitatorLgdPanel() {
         Goal Manifestation script drafts for your assigned members.
       </p>
 
+      <div
+        className="card"
+        style={{
+          marginBottom: 16,
+          background: "linear-gradient(160deg, #f0fdfa 0%, #fff 55%)",
+          border: "1px solid #99f6e4"
+        }}
+      >
+        <h3 style={{ marginTop: 0 }}>Seven Keys — what makes this facilitation unique</h3>
+        <p style={{ color: "#334155", marginTop: 0 }}>
+          Reach For The Stars LGD follows{" "}
+          <strong>Terry Brussel-Rogers’ Seven Keys to Self-Actualization</strong>: a systematic
+          self-hypnosis path she pioneered through Success Center — not generic goal coaching.
+          Bronze (self-hypnosis) is always first; the other Keys become a customized roadmap from
+          the member’s challenges to CGMR + supporting sessions.
+        </p>
+        <ul style={{ margin: "0 0 8px", paddingLeft: 18, color: "#475569", fontSize: 14 }}>
+          {LGD_SEVEN_KEYS.map((k) => (
+            <li key={k.id}>
+              <strong>{k.metal}</strong> — {k.label}
+            </li>
+          ))}
+        </ul>
+        <p style={{ fontSize: 14, color: "#0f766e", marginBottom: 0 }}>
+          Your edge as a facilitator: you review their Key order + priority challenges, then shape
+          the Goal Manifestation script and library path the way Terry’s live LGDR does — overview
+          (CGMR) plus Keys that implement.
+        </p>
+        <p style={{ fontSize: 13, margin: "10px 0 0" }}>
+          <a href="/facilitators/terry-brussel-rogers">Terry Brussel-Rogers facilitator profile →</a>
+        </p>
+      </div>
+
       {message && (
         <p
           style={{
@@ -419,6 +454,16 @@ export default function FacilitatorLgdPanel() {
                       </ol>
                     </>
                   ) : null}
+                  <p style={{ marginBottom: 4 }}>
+                    <strong>Seven Keys order:</strong>
+                  </p>
+                  <ol style={{ marginTop: 0 }}>
+                    {orderedLgdSevenKeys(selected.answers).map((k) => (
+                      <li key={k.id}>
+                        {k.metal} — {k.label}
+                      </li>
+                    ))}
+                  </ol>
                   <p>
                     <strong>Top outcomes:</strong>{" "}
                     {selected.answers.topOutcomes.join("; ") || "—"}

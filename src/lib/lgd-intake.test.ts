@@ -2,6 +2,8 @@ import {
   emptyLgdIntakeAnswers,
   findLgdContradictionNotes,
   normalizeLgdIntakeAnswers,
+  normalizeSevenKeysOrder,
+  orderedLgdSevenKeys,
   prioritizedLgdChallenges,
   resolveFrequencyBedId
 } from "@/lib/lgd-intake";
@@ -43,5 +45,19 @@ describe("lgd-intake helpers", () => {
       "Raise income / earning power",
       "Sleep issues"
     ]);
+  });
+
+  it("keeps Bronze first in Seven Keys order", () => {
+    expect(normalizeSevenKeysOrder(["platinum", "bronze", "gold", "bronze"])).toEqual([
+      "bronze",
+      "platinum",
+      "gold"
+    ]);
+    expect(normalizeSevenKeysOrder([])).toEqual(["bronze"]);
+    const ordered = orderedLgdSevenKeys({
+      sevenKeysOrder: ["ruby", "silver"]
+    });
+    expect(ordered.map((k) => k.id)).toEqual(["bronze", "ruby", "silver"]);
+    expect(ordered[0].metal).toBe("Bronze");
   });
 });

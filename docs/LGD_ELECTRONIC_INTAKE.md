@@ -106,6 +106,7 @@ Each section collects **structured fields + free-text “in your words”**. Fre
 - Income intention (optional; Chris avatar): current band, desired band, “investment” framing notes
 
 ### Section D — How you get there (bridges & blocks)
+- **Seven Keys ranking** — Bronze always #1; member checks and orders Copper→Platinum Keys that apply (Success Center / Terry Brussel-Rogers)
 - Known blocks (fear, habit, people, time, money story)
 - Past attempts and what failed
 - Resources / strengths to leverage

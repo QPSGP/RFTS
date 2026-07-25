@@ -182,6 +182,104 @@ export function prioritizedLgdChallenges(answers: {
 }
 
 /**
+ * Seven Keys to Self-Actualization (Success Center / Terry Brussel-Rogers).
+ * Bronze is always first; members order the remaining Keys that apply.
+ */
+export const LGD_SEVEN_KEYS = [
+  {
+    id: "bronze",
+    metal: "Bronze",
+    label: "Auto-suggestion & self-hypnosis",
+    summary:
+      "Heightened sensory awareness, emotional control, decision-making, and the Will to Learn — the foundation before every other Key."
+  },
+  {
+    id: "copper",
+    metal: "Copper",
+    label: "Memory enhancement",
+    summary:
+      "Photo/phonographic memory, focus, comprehension, rapid learning, names and faces."
+  },
+  {
+    id: "silver",
+    metal: "Silver",
+    label: "Creativity & inspiration",
+    summary:
+      "Inspiration at will; remove blocks to speaking, writing, problem-solving, and creative talents."
+  },
+  {
+    id: "diamond",
+    metal: "Diamond",
+    label: "Success",
+    summary:
+      "Remove blocks to personal and business success; motivation, NLP-informed communication, career skills."
+  },
+  {
+    id: "gold",
+    metal: "Gold",
+    label: "Body awareness & health",
+    summary:
+      "Stress, weight, comfort, athletic skill, vision/hearing support, rejuvenation — body cooperating with goals."
+  },
+  {
+    id: "ruby",
+    metal: "Ruby",
+    label: "Relationship establishment & enhancement",
+    summary:
+      "Choose, attract, and deepen quality relationships — life mate, partnership, or family bonds."
+  },
+  {
+    id: "platinum",
+    metal: "Platinum",
+    label: "Spiritual growth",
+    summary:
+      "Higher Self, meaning, psychic/spiritual development options, and helper-healer skills when chosen."
+  }
+] as const;
+
+export type LgdSevenKeyId = (typeof LGD_SEVEN_KEYS)[number]["id"];
+
+const SEVEN_KEY_IDS = new Set(LGD_SEVEN_KEYS.map((k) => k.id));
+export const LGD_BRONZE_KEY_ID: LgdSevenKeyId = "bronze";
+
+export function lgdSevenKeyById(id: string) {
+  return LGD_SEVEN_KEYS.find((k) => k.id === id) ?? null;
+}
+
+/** Ordered Keys for brief/UI — Bronze always rank 1 when any Keys are set. */
+export function orderedLgdSevenKeys(answers: {
+  sevenKeysOrder?: string[];
+}): { rank: number; id: LgdSevenKeyId; metal: string; label: string; summary: string }[] {
+  const order = normalizeSevenKeysOrder(answers.sevenKeysOrder);
+  return order.map((id, i) => {
+    const key = lgdSevenKeyById(id)!;
+    return {
+      rank: i + 1,
+      id: key.id,
+      metal: key.metal,
+      label: key.label,
+      summary: key.summary
+    };
+  });
+}
+
+export function normalizeSevenKeysOrder(raw: unknown): LgdSevenKeyId[] {
+  const ids: LgdSevenKeyId[] = [];
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      const id = String(item ?? "").trim() as LgdSevenKeyId;
+      if (!SEVEN_KEY_IDS.has(id) || ids.includes(id)) continue;
+      ids.push(id);
+    }
+  }
+  const withoutBronze = ids.filter((id) => id !== "bronze");
+  // Bronze is always first when the member engages the Keys path.
+  if (ids.length === 0) return ["bronze"];
+  const ordered: LgdSevenKeyId[] = ["bronze", ...withoutBronze];
+  return ordered.slice(0, 7);
+}
+
+/**
  * Premise: “How would you like your subconscious programmed?”
  * Multi-select — shapes induction / support tone in the script draft.
  */
@@ -543,6 +641,11 @@ export type LgdIntakeAnswers = {
   blocks: string[];
   pastAttempts: string;
   strengths: string[];
+  /**
+   * Seven Keys order — Bronze is always first; remaining Keys the member wants, ranked.
+   * Keys left blank on paper are simply omitted after Bronze.
+   */
+  sevenKeysOrder: LgdSevenKeyId[];
   willToLearn: number | null;
   beliefCanLearn: number | null;
   metaphors: string[];
@@ -577,6 +680,7 @@ export function emptyLgdIntakeAnswers(): LgdIntakeAnswers {
     blocks: [],
     pastAttempts: "",
     strengths: [],
+    sevenKeysOrder: ["bronze"],
     willToLearn: null,
     beliefCanLearn: null,
     metaphors: [],
@@ -749,6 +853,7 @@ export function normalizeLgdIntakeAnswers(raw: unknown): LgdIntakeAnswers {
     blocks: asStringArray(o.blocks, 10),
     pastAttempts: String(o.pastAttempts ?? "").trim(),
     strengths: asStringArray(o.strengths, 10),
+    sevenKeysOrder: normalizeSevenKeysOrder(o.sevenKeysOrder),
     willToLearn:
       typeof o.willToLearn === "number" && o.willToLearn >= 1 && o.willToLearn <= 5
         ? o.willToLearn
@@ -781,7 +886,7 @@ export const LGD_INTAKE_SECTIONS = [
   { id: "A", title: "Subconscious programming" },
   { id: "B", title: "Beliefs & where you are" },
   { id: "C", title: "Where you want to go" },
-  { id: "D", title: "How you get there" },
+  { id: "D", title: "Seven Keys & how you get there" },
   { id: "E", title: "Language & modality" },
   { id: "F", title: "Facilitator handoff" }
 ] as const;
@@ -926,6 +1031,22 @@ export function buildLgdScriptDraftBlocks(input: {
   if (topChallenges.length) {
     presentBridge.push(
       "The priorities you named for growth can resolve as your subconscious cooperates with your clear goals — without rehearsing old struggle."
+    );
+  }
+  const keysPath = orderedLgdSevenKeys(a);
+  if (keysPath.length > 1) {
+    const pathLabels = keysPath
+      .slice(0, 4)
+      .map((k) => `${k.metal} (${k.label})`)
+      .join("; ");
+    presentBridge.push(
+      `Your growth path begins with the Bronze Key — self-hypnosis as foundation — then continues through: ${pathLabels}${
+        keysPath.length > 4 ? "; and the Keys you chose beyond these" : ""
+      }.`
+    );
+  } else if (keysPath.length === 1) {
+    presentBridge.push(
+      "Your foundation is the Bronze Key — auto-suggestion and self-hypnosis — the doorway to every other Key."
     );
   }
   if (pairs.length) {
@@ -1160,6 +1281,14 @@ export function buildLgdProductionPacket(input: {
       return [
         "Priority challenges (member ranking):",
         ...ranked.map((c) => `${c.priority}. ${c.label} [${lgdChallengeCategoryLabel(c.category)}]`),
+        ""
+      ].join("\n");
+    })(),
+    (() => {
+      const keys = orderedLgdSevenKeys(input.answers);
+      return [
+        "Seven Keys order (Bronze always first):",
+        ...keys.map((k) => `${k.rank}. ${k.metal} — ${k.label}`),
         ""
       ].join("\n");
     })(),

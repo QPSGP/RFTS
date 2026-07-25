@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   LGD_LIFE_AREAS,
   buildLgdProductionPacket,
+  orderedLgdSevenKeys,
   prioritizedLgdChallenges,
   type LgdIntakeAnswers,
   type LgdIntakeEditEvent
@@ -411,6 +412,16 @@ export default function AdminLgdPanel({ onEditForm, onCloseForm, registerRefresh
                       </ol>
                     </>
                   ) : null}
+                  <p style={{ marginBottom: 4 }}>
+                    <strong>Seven Keys order:</strong>
+                  </p>
+                  <ol style={{ marginTop: 0 }}>
+                    {orderedLgdSevenKeys(selected.answers).map((k) => (
+                      <li key={k.id}>
+                        {k.metal} — {k.label}
+                      </li>
+                    ))}
+                  </ol>
                   <p>
                     <strong>Outcomes:</strong> {selected.answers.topOutcomes.join("; ") || "—"}
                   </p>
