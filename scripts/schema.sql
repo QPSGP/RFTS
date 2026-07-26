@@ -478,6 +478,8 @@ CREATE TABLE IF NOT EXISTS lgd_intakes (
   paid_at timestamptz,
   stripe_checkout_session_id text,
   own_voice_audio_url text,
+  library_item_id uuid,
+  produced_audio_url text,
   member_edit_authorized_at timestamptz,
   member_edit_authorized_by text,
   edit_history jsonb NOT NULL DEFAULT '[]'::jsonb,

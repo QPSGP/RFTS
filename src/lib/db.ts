@@ -4180,6 +4180,8 @@ export type LgdIntakeRecord = {
   paidAt?: string | null;
   stripeCheckoutSessionId?: string | null;
   ownVoiceAudioUrl?: string | null;
+  libraryItemId?: string | null;
+  producedAudioUrl?: string | null;
   memberEditAuthorizedAt?: string | null;
   memberEditAuthorizedBy?: string | null;
   editHistory?: unknown;
@@ -4214,6 +4216,8 @@ const ensureLgdIntakesTable = async () => {
   await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS paid_at timestamptz`;
   await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS stripe_checkout_session_id text`;
   await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS own_voice_audio_url text`;
+  await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS library_item_id uuid`;
+  await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS produced_audio_url text`;
   await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS member_edit_authorized_at timestamptz`;
   await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS member_edit_authorized_by text`;
   await sql`ALTER TABLE lgd_intakes ADD COLUMN IF NOT EXISTS edit_history jsonb NOT NULL DEFAULT '[]'::jsonb`;
@@ -4421,6 +4425,9 @@ export const listLgdIntakesForMemberEmails = async (
       i.frequency_bed_id AS "frequencyBedId",
       i.price_cents AS "priceCents",
       i.paid_at AS "paidAt",
+      i.own_voice_audio_url AS "ownVoiceAudioUrl",
+      i.library_item_id AS "libraryItemId",
+      i.produced_audio_url AS "producedAudioUrl",
       i.member_edit_authorized_at AS "memberEditAuthorizedAt",
       i.member_edit_authorized_by AS "memberEditAuthorizedBy",
       i.edit_history AS "editHistory",
@@ -4458,6 +4465,8 @@ export const getLgdIntakeById = async (id: string): Promise<LgdIntakeRecord | nu
       paid_at AS "paidAt",
       stripe_checkout_session_id AS "stripeCheckoutSessionId",
       own_voice_audio_url AS "ownVoiceAudioUrl",
+      library_item_id AS "libraryItemId",
+      produced_audio_url AS "producedAudioUrl",
       member_edit_authorized_at AS "memberEditAuthorizedAt",
       member_edit_authorized_by AS "memberEditAuthorizedBy",
       edit_history AS "editHistory",
@@ -4470,6 +4479,25 @@ export const getLgdIntakeById = async (id: string): Promise<LgdIntakeRecord | nu
     LIMIT 1
   `;
   return rows[0] ?? null;
+};
+
+/** Link a produced CGMR library item to the intake and mark complete. */
+export const linkLgdIntakeCgmrLibraryItem = async (input: {
+  id: string;
+  libraryItemId: string;
+  producedAudioUrl: string;
+}): Promise<LgdIntakeRecord | null> => {
+  await ensureLgdIntakesTable();
+  await sql`
+    UPDATE lgd_intakes
+    SET
+      library_item_id = ${input.libraryItemId}::uuid,
+      produced_audio_url = ${input.producedAudioUrl},
+      status = 'complete',
+      updated_at = now()
+    WHERE id = ${input.id}
+  `;
+  return getLgdIntakeById(input.id);
 };
 
 export type LgdIntakeEditAuditInput = {
@@ -4680,6 +4708,8 @@ export const listAllLgdIntakes = async (): Promise<LgdIntakeListItem[]> => {
       i.paid_at AS "paidAt",
       i.stripe_checkout_session_id AS "stripeCheckoutSessionId",
       i.own_voice_audio_url AS "ownVoiceAudioUrl",
+      i.library_item_id AS "libraryItemId",
+      i.produced_audio_url AS "producedAudioUrl",
       i.member_edit_authorized_at AS "memberEditAuthorizedAt",
       i.member_edit_authorized_by AS "memberEditAuthorizedBy",
       i.edit_history AS "editHistory",

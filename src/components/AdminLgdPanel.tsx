@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import LgdCgmrProducePanel from "@/components/LgdCgmrProducePanel";
 import {
   LGD_LIFE_AREAS,
   buildLgdProductionPacket,
@@ -24,6 +25,8 @@ type IntakeRow = {
   reviewFlags?: string[];
   paidAt?: string | null;
   ownVoiceAudioUrl?: string | null;
+  libraryItemId?: string | null;
+  producedAudioUrl?: string | null;
   memberEditAuthorizedAt?: string | null;
   memberEditAuthorizedBy?: string | null;
   editHistory?: LgdIntakeEditEvent[];
@@ -496,6 +499,39 @@ export default function AdminLgdPanel({ onEditForm, onCloseForm, registerRefresh
                   Copy production packet
                 </button>
               </div>
+              {selected.status !== "draft" && selected.status !== "cancelled" && (
+                <LgdCgmrProducePanel
+                  intakeId={selected.id}
+                  memberEmail={selected.memberEmail}
+                  voiceId={selected.voiceId}
+                  frequencyBedId={selected.frequencyBedId}
+                  scriptText={scriptText}
+                  libraryItemId={selected.libraryItemId}
+                  producedAudioUrl={selected.producedAudioUrl}
+                  apiBase="/api/admin/lgd-intakes"
+                  uploadHandler="/api/admin/upload-audio-handler"
+                  onProduced={(result) => {
+                    setIntakes((prev) =>
+                      prev.map((row) =>
+                        row.id === selected.id
+                          ? {
+                              ...row,
+                              status: "complete",
+                              libraryItemId: result.libraryItemId,
+                              producedAudioUrl: result.audioUrl
+                            }
+                          : row
+                      )
+                    );
+                    setStatusValue("complete");
+                    setMessage(
+                      result.regenerated
+                        ? "CGMR updated on member playlist."
+                        : "CGMR added to member playlist."
+                    );
+                  }}
+                />
+              )}
             </>
           )}
         </div>

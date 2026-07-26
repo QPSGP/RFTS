@@ -192,18 +192,21 @@ facilitator_lgd_settings (
 3. **Facilitator review** — brief + script draft + approve/edit ✅ (Facilitators Console → Life Guidance Discovery)  
 4. **Public LGD page + console offer** ✅ (`/life-guidance-discovery`, `/lgd`; console CTA when no prior LGD)  
 5. **Facilitator feature toggles** ✅ (same console panel)  
-6. **Professional voice catalog + production handoff** ✅ (catalog + production packet copy; studio audio files TBD)  
-7. **Frequency beds** ✅ (selection + choose-for-me resolution; audio beds TBD)  
-8. **Member own-voice** ✅ gated + consent (recording/clone pipeline TBD)  
-9. **Paid Stripe checkout** — needs price decision (`NEXT_PUBLIC_LGD_PRICE_DISPLAY` / `LGD_PRICE_CENTS` display ready; one-time Checkout not wired)  
+6. **Professional voice catalog + production handoff** ✅ (catalog + production packet + Produce CGMR)  
+7. **Frequency beds** ✅ (selection + choose-for-me; bed path stored on CGMR; automatic duck-mix TBD)  
+8. **Member own-voice** ✅ gated + consent (recording used when assigned; clone/mix TBD)  
+9. **Paid Stripe checkout** ✅ (`/api/member/lgd-checkout`, product `prod_I7hhOenF6qstnH`)  
 10. **Feature flag enforcement** ✅ public / console / intake / approval gate / script draft  
+11. **Produce CGMR → playlist** ✅ Admin/Facilitator: AI TTS (OpenAI) or upload/assign → personalized `CGMR` library item for member  
 
 ### Ops notes (current)
 - **Admin-only preview:** `LGD_ADMIN_ONLY=true` (default) — review at `/admin/lgd`; members/facilitators/public hidden. Set `false` to open.  
 - **Stripe:** product `prod_I7hhOenF6qstnH` at **$397** one-time Checkout (`/api/member/lgd-checkout`). Optional `STRIPE_LGD_PRICE_ID`.  
 - **Voice production:** prefer AI/internal (`LGD_VOICE_PRODUCTION=ai_internal`); studio files (Paul Griffin) as fallback.  
+- **AI generate:** set `OPENAI_API_KEY` on Vercel; optional `LGD_OPENAI_VOICE_*` overrides. Without the key, upload a finished file and **Assign to playlist**.  
 - **Own voice:** `/voice-recording-agreement` + device recorder upload.  
-- **Beds:** place MP3s under `public/audio/beds/` (paths in production packet).  
+- **Beds:** place files under `public/audio/beds/`; selection is linked on produce (full under-voice mix is a follow-up).  
+- **Schedule:** produced CGMR uses category `CGMR` + member email → night special slot (else T-18).  
 - **Schedule cap:** `SCHEDULE_MAX_NIGHTS = 732`.  
 
 ---

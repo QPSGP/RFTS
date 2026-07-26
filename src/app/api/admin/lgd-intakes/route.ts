@@ -48,6 +48,8 @@ export async function GET() {
         reviewFlags: findLgdContradictionNotes(answers),
         paidAt: row.paidAt ?? null,
         ownVoiceAudioUrl: row.ownVoiceAudioUrl ?? null,
+        libraryItemId: row.libraryItemId ?? null,
+        producedAudioUrl: row.producedAudioUrl ?? null,
         memberEditAuthorizedAt: row.memberEditAuthorizedAt ?? null,
         memberEditAuthorizedBy: row.memberEditAuthorizedBy ?? null,
         editHistory: normalizeLgdEditHistory(row.editHistory),
