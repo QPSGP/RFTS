@@ -42,6 +42,7 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
   const [connectMessage, setConnectMessage] = useState<string | null>(null);
   const [connectReady, setConnectReady] = useState(false);
   const [connectStarted, setConnectStarted] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     setPayoutMethod(affiliate?.payoutMethod ?? "crypto");
@@ -51,12 +52,17 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
   useEffect(() => {
     if (!affiliate?.affiliateCode) return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get("connect") === "return") {
-      setConnectMessage("Stripe setup updated. We will refresh your payout status.");
+    const connectParam = params.get("connect");
+    if (connectParam === "return" || connectParam === "refresh") {
+      setExpanded(true);
+      if (connectParam === "return") {
+        setConnectMessage("Stripe setup updated. We will refresh your payout status.");
+      }
     }
     fetch("/api/member/affiliate/connect", { credentials: "include" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
+      .then(async (res) => {
+        const data = await res.json().catch(() => null);
+        if (!res.ok) return;
         if (data?.status) {
           setConnectReady(data.status.readyForTransfers);
           setConnectStarted(Boolean(data.status.accountId));
@@ -68,19 +74,23 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
   const startConnectOnboarding = async () => {
     setConnectLoading(true);
     setConnectMessage(null);
-    const response = await fetch("/api/member/affiliate/connect", {
-      method: "POST",
-      credentials: "include"
-    });
-    if (response.ok) {
-      const data = await response.json();
-      if (data.url) {
+    try {
+      const response = await fetch("/api/member/affiliate/connect", {
+        method: "POST",
+        credentials: "include"
+      });
+      const data = await response.json().catch(() => null);
+      if (response.ok && data?.url) {
         window.location.href = data.url;
         return;
       }
-      setConnectMessage("Could not start Stripe setup. Try again or contact support.");
-    } else {
-      setConnectMessage("Could not start Stripe setup. Try again or contact support.");
+      setConnectMessage(
+        typeof data?.error === "string" && data.error.trim()
+          ? data.error
+          : "Could not start Stripe setup. Try again or contact support."
+      );
+    } catch {
+      setConnectMessage("Could not reach the server to start Stripe setup. Try again.");
     }
     setConnectLoading(false);
   };
@@ -136,187 +146,245 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
         background: "#fafafa"
       }}
     >
-      <h2 style={{ marginTop: 0, marginBottom: 8, fontSize: 20 }}>Affiliate program</h2>
-      <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
-        Share Reach For The Stars and earn <strong>25% ongoing</strong> for each member who
-        subscribes through your link. Every member receives an affiliate number — use yours to
-        help others discover the program.
-      </p>
-      <p style={{ margin: "0 0 4px", fontSize: 15 }}>
-        <strong>Your affiliate number:</strong> {affiliate.affiliateCode}
-      </p>
-      {affiliate.applicationStatus === "pending" && (
-        <p style={{ margin: "8px 0 12px", fontSize: 14, color: "#92400e" }}>
-          Your separate affiliate application is pending review. You can still share using the
-          number above.
-        </p>
-      )}
-      {affiliate.applicationStatus === "paused" && (
-        <p style={{ margin: "8px 0 12px", fontSize: 14, color: "#b45309" }}>
-          Your affiliate application is paused. Contact support if you need help.
-        </p>
-      )}
-      <p style={{ margin: "0 0 8px", fontSize: 14, color: "#4b5563" }}>
-        <strong>Your referral link:</strong>
-      </p>
-      <p
-        style={{
-          margin: "0 0 12px",
-          fontSize: 13,
-          wordBreak: "break-all",
-          padding: 10,
-          borderRadius: 8,
-          background: "#fff",
-          border: "1px solid #e5e7eb"
-        }}
-      >
-        {affiliate.referralUrl}
-      </p>
       <button
         type="button"
-        className={`button${referralCopied ? " is-copied" : ""}`}
-        onClick={copyLink}
-        aria-live="polite"
-      >
-        {referralCopied ? "Copied!" : "Copy referral link"}
-      </button>
-      {copyMessage && (
-        <p
-          style={{
-            margin: "12px 0 0",
-            fontSize: 14,
-            fontWeight: 600,
-            color: copyMessage.includes("Could not") ? "#b45309" : "#059669"
-          }}
-          role="status"
-        >
-          {copyMessage}
-        </p>
-      )}
-
-      <AffiliateShareLinks affiliateCode={affiliate.affiliateCode} />
-
-      {(affiliate.pendingBalanceCents ?? 0) > 0 && (
-        <p style={{ margin: "16px 0 0", fontSize: 14, color: "#4b5563" }}>
-          <strong>Pending commission balance:</strong>{" "}
-          {formatUsdFromCents(affiliate.pendingBalanceCents ?? 0)}
-          {affiliate.readyForPayout ? (
-            <span style={{ color: "#059669" }}> — ready for payout</span>
-          ) : (
-            <span>
-              {" "}
-              — minimum payout is ${affiliate.thresholdUsd ?? 25}
-            </span>
-          )}
-        </p>
-      )}
-
-      <div
+        onClick={() => setExpanded((open) => !open)}
+        aria-expanded={expanded}
         style={{
-          marginTop: 24,
-          paddingTop: 20,
-          borderTop: "1px solid #e5e7eb"
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          width: "100%",
+          margin: 0,
+          padding: 0,
+          border: "none",
+          background: "transparent",
+          cursor: "pointer",
+          textAlign: "left"
         }}
       >
-        <h3 style={{ margin: "0 0 8px", fontSize: 17 }}>Automatic payouts (Stripe)</h3>
-        <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
-          Connect your bank account through Stripe for faster commission payouts when your balance
-          reaches the minimum. You can still keep manual payout preferences below as a backup.
-        </p>
-        {connectReady ? (
-          <p style={{ margin: "0 0 12px", fontSize: 14, color: "#059669" }}>
-            Stripe Connect is active — eligible payouts can be sent automatically.
-          </p>
-        ) : connectStarted ? (
-          <p style={{ margin: "0 0 12px", fontSize: 14, color: "#92400e" }}>
-            Stripe setup is incomplete. Finish onboarding so we can send payouts to your bank.
-          </p>
-        ) : null}
-        <button
-          type="button"
-          className="button"
-          disabled={connectLoading}
-          onClick={startConnectOnboarding}
-        >
-          {connectLoading
-            ? "Opening Stripe…"
-            : connectStarted
-              ? "Continue Stripe setup"
-              : "Set up automatic payouts (Stripe)"}
-        </button>
-        {connectMessage && (
-          <p style={{ margin: "12px 0 0", fontSize: 14, color: "#4b5563" }}>{connectMessage}</p>
-        )}
-      </div>
-
-      <div
-        style={{
-          marginTop: 24,
-          paddingTop: 20,
-          borderTop: "1px solid #e5e7eb"
-        }}
-      >
-        <h3 style={{ margin: "0 0 8px", fontSize: 17 }}>Manual payout preferences</h3>
-        <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
-          {formatAffiliatePayoutThresholdPolicy()}
-        </p>
-        {hasPayoutPrefs && (
-          <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
-            Current: {formatAffiliatePayoutMethodLabel(affiliate.payoutMethod)}
-            {affiliate.payoutDetail ? ` — ${affiliate.payoutDetail}` : ""}
-          </p>
-        )}
-        <form onSubmit={savePayout} className="grid" style={{ gap: 10 }}>
-          <label style={{ fontSize: 14, color: "#4b5563" }}>
-            Payout method
-            <select
-              value={payoutMethod}
-              onChange={(e) => setPayoutMethod(e.target.value as AffiliatePayoutMethod)}
-              required
-              style={{
-                display: "block",
-                width: "100%",
-                marginTop: 4,
-                padding: 10,
-                borderRadius: 8,
-                border: "1px solid #d1d5db"
-              }}
-            >
-              {AFFILIATE_PAYOUT_METHODS.map((method) => (
-                <option key={method} value={method}>
-                  {AFFILIATE_PAYOUT_METHOD_LABELS[method]}
-                </option>
-              ))}
-            </select>
-          </label>
-          <input
-            value={payoutDetail}
-            onChange={(e) => setPayoutDetail(e.target.value)}
-            placeholder={AFFILIATE_PAYOUT_DETAIL_PLACEHOLDERS[payoutMethod]}
-            required={detailRequired}
-            style={{ padding: 10, borderRadius: 8, border: "1px solid #d1d5db" }}
-          />
-          {payoutMethod === "bank_contact" && (
-            <p style={{ fontSize: 13, color: "#4b5563", margin: 0 }}>
-              We will contact you to collect bank details for ACH payouts.
-            </p>
-          )}
-          <button className="button" type="submit" disabled={payoutSaving}>
-            {payoutSaving ? "Saving..." : "Save payout preferences"}
-          </button>
-        </form>
-        {payoutMessage && (
-          <p
+        <span>
+          <span
             style={{
-              margin: "12px 0 0",
-              fontSize: 14,
-              color: payoutMessage.includes("saved") ? "#059669" : "#b45309"
+              display: "block",
+              margin: 0,
+              fontSize: 20,
+              fontWeight: 700,
+              color: "#111827"
             }}
           >
-            {payoutMessage}
+            Affiliate program
+          </span>
+          <span style={{ display: "block", marginTop: 4, fontSize: 14, color: "#4b5563" }}>
+            Affiliate #{affiliate.affiliateCode}
+            {(affiliate.pendingBalanceCents ?? 0) > 0
+              ? ` · ${formatUsdFromCents(affiliate.pendingBalanceCents ?? 0)} pending`
+              : ""}
+            {connectReady ? " · Stripe payouts active" : ""}
+          </span>
+        </span>
+        <span style={{ fontSize: 14, color: "#6b7280", flexShrink: 0 }} aria-hidden>
+          {expanded ? "Hide ▲" : "Show ▼"}
+        </span>
+      </button>
+
+      {expanded && (
+        <div style={{ marginTop: 16 }}>
+          <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
+            Share Reach For The Stars and earn <strong>25% ongoing</strong> for each member who
+            subscribes through your link. Every member receives an affiliate number — use yours to
+            help others discover the program.
           </p>
-        )}
-      </div>
+          <p style={{ margin: "0 0 4px", fontSize: 15 }}>
+            <strong>Your affiliate number:</strong> {affiliate.affiliateCode}
+          </p>
+          {affiliate.applicationStatus === "pending" && (
+            <p style={{ margin: "8px 0 12px", fontSize: 14, color: "#92400e" }}>
+              Your separate affiliate application is pending review. You can still share using the
+              number above.
+            </p>
+          )}
+          {affiliate.applicationStatus === "paused" && (
+            <p style={{ margin: "8px 0 12px", fontSize: 14, color: "#b45309" }}>
+              Your affiliate application is paused. Contact support if you need help.
+            </p>
+          )}
+          <p style={{ margin: "0 0 8px", fontSize: 14, color: "#4b5563" }}>
+            <strong>Your referral link:</strong>
+          </p>
+          <p
+            style={{
+              margin: "0 0 12px",
+              fontSize: 13,
+              wordBreak: "break-all",
+              padding: 10,
+              borderRadius: 8,
+              background: "#fff",
+              border: "1px solid #e5e7eb"
+            }}
+          >
+            {affiliate.referralUrl}
+          </p>
+          <button
+            type="button"
+            className={`button${referralCopied ? " is-copied" : ""}`}
+            onClick={copyLink}
+            aria-live="polite"
+          >
+            {referralCopied ? "Copied!" : "Copy referral link"}
+          </button>
+          {copyMessage && (
+            <p
+              style={{
+                margin: "12px 0 0",
+                fontSize: 14,
+                fontWeight: 600,
+                color: copyMessage.includes("Could not") ? "#b45309" : "#059669"
+              }}
+              role="status"
+            >
+              {copyMessage}
+            </p>
+          )}
+
+          <AffiliateShareLinks affiliateCode={affiliate.affiliateCode} />
+
+          {(affiliate.pendingBalanceCents ?? 0) > 0 && (
+            <p style={{ margin: "16px 0 0", fontSize: 14, color: "#4b5563" }}>
+              <strong>Pending commission balance:</strong>{" "}
+              {formatUsdFromCents(affiliate.pendingBalanceCents ?? 0)}
+              {affiliate.readyForPayout ? (
+                <span style={{ color: "#059669" }}> — ready for payout</span>
+              ) : (
+                <span>
+                  {" "}
+                  — minimum payout is ${affiliate.thresholdUsd ?? 25}
+                </span>
+              )}
+            </p>
+          )}
+
+          <div
+            style={{
+              marginTop: 24,
+              paddingTop: 20,
+              borderTop: "1px solid #e5e7eb"
+            }}
+          >
+            <h3 style={{ margin: "0 0 8px", fontSize: 17 }}>Automatic payouts (Stripe)</h3>
+            <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
+              Connect your bank account through Stripe for faster commission payouts when your balance
+              reaches the minimum. You can still keep manual payout preferences below as a backup.
+            </p>
+            {connectReady ? (
+              <p style={{ margin: "0 0 12px", fontSize: 14, color: "#059669" }}>
+                Stripe Connect is active — eligible payouts can be sent automatically.
+              </p>
+            ) : connectStarted ? (
+              <p style={{ margin: "0 0 12px", fontSize: 14, color: "#92400e" }}>
+                Stripe setup is incomplete. Finish onboarding so we can send payouts to your bank.
+              </p>
+            ) : null}
+            <button
+              type="button"
+              className="button"
+              disabled={connectLoading}
+              onClick={startConnectOnboarding}
+            >
+              {connectLoading
+                ? "Opening Stripe…"
+                : connectStarted
+                  ? "Continue Stripe setup"
+                  : "Set up automatic payouts (Stripe)"}
+            </button>
+            {connectMessage && (
+              <p
+                style={{
+                  margin: "12px 0 0",
+                  fontSize: 14,
+                  color:
+                    connectMessage.includes("active") || connectMessage.includes("updated")
+                      ? "#059669"
+                      : "#b45309"
+                }}
+                role="status"
+              >
+                {connectMessage}
+              </p>
+            )}
+          </div>
+
+          <div
+            style={{
+              marginTop: 24,
+              paddingTop: 20,
+              borderTop: "1px solid #e5e7eb"
+            }}
+          >
+            <h3 style={{ margin: "0 0 8px", fontSize: 17 }}>Manual payout preferences</h3>
+            <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
+              {formatAffiliatePayoutThresholdPolicy()}
+            </p>
+            {hasPayoutPrefs && (
+              <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
+                Current: {formatAffiliatePayoutMethodLabel(affiliate.payoutMethod)}
+                {affiliate.payoutDetail ? ` — ${affiliate.payoutDetail}` : ""}
+              </p>
+            )}
+            <form onSubmit={savePayout} className="grid" style={{ gap: 10 }}>
+              <label style={{ fontSize: 14, color: "#4b5563" }}>
+                Payout method
+                <select
+                  value={payoutMethod}
+                  onChange={(e) => setPayoutMethod(e.target.value as AffiliatePayoutMethod)}
+                  required
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    marginTop: 4,
+                    padding: 10,
+                    borderRadius: 8,
+                    border: "1px solid #d1d5db"
+                  }}
+                >
+                  {AFFILIATE_PAYOUT_METHODS.map((method) => (
+                    <option key={method} value={method}>
+                      {AFFILIATE_PAYOUT_METHOD_LABELS[method]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <input
+                value={payoutDetail}
+                onChange={(e) => setPayoutDetail(e.target.value)}
+                placeholder={AFFILIATE_PAYOUT_DETAIL_PLACEHOLDERS[payoutMethod]}
+                required={detailRequired}
+                style={{ padding: 10, borderRadius: 8, border: "1px solid #d1d5db" }}
+              />
+              {payoutMethod === "bank_contact" && (
+                <p style={{ fontSize: 13, color: "#4b5563", margin: 0 }}>
+                  We will contact you to collect bank details for ACH payouts.
+                </p>
+              )}
+              <button className="button" type="submit" disabled={payoutSaving}>
+                {payoutSaving ? "Saving..." : "Save payout preferences"}
+              </button>
+            </form>
+            {payoutMessage && (
+              <p
+                style={{
+                  margin: "12px 0 0",
+                  fontSize: 14,
+                  color: payoutMessage.includes("saved") ? "#059669" : "#b45309"
+                }}
+              >
+                {payoutMessage}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

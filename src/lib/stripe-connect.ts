@@ -53,20 +53,53 @@ export async function refreshStripeConnectStatusFromStripe(
   return parseStripeConnectStatus(account);
 }
 
+export function formatStripeConnectError(err: unknown): string {
+  if (err && typeof err === "object") {
+    const stripeErr = err as {
+      message?: string;
+      raw?: { message?: string; code?: string; decline_code?: string };
+      type?: string;
+    };
+    const message = stripeErr.raw?.message || stripeErr.message || "";
+    const lower = message.toLowerCase();
+    if (
+      lower.includes("signed up for connect") ||
+      lower.includes("connect is not enabled") ||
+      lower.includes("responsible for negative balances") ||
+      (lower.includes("connect") && lower.includes("not been completed"))
+    ) {
+      return "Stripe Connect is not enabled on the platform yet. Please contact support.";
+    }
+    if (lower.includes("invalid url") || lower.includes("not a valid url")) {
+      return "Stripe setup could not start because the return URL is invalid. Please contact support.";
+    }
+    if (message.trim()) return message.trim();
+  }
+  if (err instanceof Error && err.message.trim()) return err.message.trim();
+  return "Could not start Stripe setup. Try again or contact support.";
+}
+
 export async function createExpressConnectAccount(
   stripe: Stripe,
   userId: string,
   email: string
 ): Promise<string> {
+  const siteUrl = getPublicSiteUrl();
   const account = await stripe.accounts.create({
     type: "express",
     country: "US",
     email,
     metadata: { rfts_user_id: userId },
     capabilities: {
+      // Express onboarding commonly expects both; transfers alone can fail on some platforms.
+      card_payments: { requested: true },
       transfers: { requested: true }
     },
-    business_type: "individual"
+    business_type: "individual",
+    business_profile: {
+      url: siteUrl,
+      product_description: "Reach For The Stars affiliate commission payouts"
+    }
   });
   await setUserStripeConnectAccount(userId, account.id, {
     detailsSubmitted: account.details_submitted ?? false,

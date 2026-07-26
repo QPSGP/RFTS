@@ -3,6 +3,7 @@ import { getUserProfile, getUserStripeConnectFields } from "@/lib/db";
 import {
   createConnectOnboardingLink,
   createExpressConnectAccount,
+  formatStripeConnectError,
   getMemberStripeConnectStatus
 } from "@/lib/stripe-connect";
 import { getStripe } from "@/lib/stripe";
@@ -17,8 +18,13 @@ export async function GET() {
   if (!user) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
-  const status = await getMemberStripeConnectStatus(user.id);
-  return NextResponse.json({ status });
+  try {
+    const status = await getMemberStripeConnectStatus(user.id);
+    return NextResponse.json({ status });
+  } catch (err) {
+    console.error("[affiliate/connect GET]", err);
+    return NextResponse.json({ error: formatStripeConnectError(err) }, { status: 502 });
+  }
 }
 
 export async function POST() {
@@ -31,12 +37,17 @@ export async function POST() {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
 
-  const stripe = getStripe();
-  const fields = await getUserStripeConnectFields(user.id);
-  let accountId = fields?.stripeConnectAccountId;
-  if (!accountId) {
-    accountId = await createExpressConnectAccount(stripe, user.id, user.email);
+  try {
+    const stripe = getStripe();
+    const fields = await getUserStripeConnectFields(user.id);
+    let accountId = fields?.stripeConnectAccountId;
+    if (!accountId) {
+      accountId = await createExpressConnectAccount(stripe, user.id, user.email);
+    }
+    const url = await createConnectOnboardingLink(stripe, accountId);
+    return NextResponse.json({ url });
+  } catch (err) {
+    console.error("[affiliate/connect POST]", err);
+    return NextResponse.json({ error: formatStripeConnectError(err) }, { status: 502 });
   }
-  const url = await createConnectOnboardingLink(stripe, accountId);
-  return NextResponse.json({ url });
 }
