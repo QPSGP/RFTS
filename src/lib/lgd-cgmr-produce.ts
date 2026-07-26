@@ -39,6 +39,13 @@ export type LgdCgmrProduceError = {
 
 const OPENAI_TTS_MAX_CHARS = 3900;
 
+/** Default hypnotic pace — OpenAI speed is 0.25–4.0 (1.0 = normal). */
+const DEFAULT_TTS_SPEED = 0.85;
+
+const DEFAULT_GENTLE_INSTRUCTIONS =
+  "Speak slowly and gently, like a calm hypnotherapist guiding overnight listening. " +
+  "Warm, soft, reassuring tone. Soft pauses between sentences. No urgency or bright sales energy.";
+
 /** Map LGD voice catalog → OpenAI TTS voice ids (override via env). */
 export function resolveOpenAiTtsVoice(voiceId: string | null | undefined): string {
   const id = (voiceId || "associate_warm").trim();
@@ -47,15 +54,34 @@ export function resolveOpenAiTtsVoice(voiceId: string | null | undefined): strin
   if (fromEnv) return fromEnv;
   switch (id) {
     case "terry":
-      return process.env.LGD_OPENAI_VOICE_TERRY?.trim() || "nova";
+      // Softer default than nova for overnight CGMR pacing.
+      return process.env.LGD_OPENAI_VOICE_TERRY?.trim() || "shimmer";
     case "associate_clear":
-      return "alloy";
+      return "coral";
     case "associate_deep":
-      return "onyx";
+      return "sage";
     case "associate_warm":
     default:
       return "shimmer";
   }
+}
+
+export function resolveOpenAiTtsSpeed(): number {
+  const raw = process.env.LGD_OPENAI_TTS_SPEED?.trim();
+  if (!raw) return DEFAULT_TTS_SPEED;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return DEFAULT_TTS_SPEED;
+  return Math.min(4, Math.max(0.25, n));
+}
+
+function usesTtsInstructions(model: string): boolean {
+  return model.toLowerCase().includes("gpt-4o-mini-tts");
+}
+
+export function resolveOpenAiTtsInstructions(model: string): string | undefined {
+  if (!usesTtsInstructions(model)) return undefined;
+  const fromEnv = process.env.LGD_OPENAI_TTS_INSTRUCTIONS?.trim();
+  return fromEnv || DEFAULT_GENTLE_INSTRUCTIONS;
 }
 
 function scriptTextForTts(raw: string): string {
@@ -93,21 +119,27 @@ async function synthesizeOpenAiSpeech(script: string, voice: string): Promise<Bu
     );
   }
   const model = process.env.LGD_OPENAI_TTS_MODEL?.trim() || "tts-1-hd";
+  const speed = resolveOpenAiTtsSpeed();
+  const instructions = resolveOpenAiTtsInstructions(model);
   const chunks = chunkScriptForTts(scriptTextForTts(script));
   const parts: Buffer[] = [];
   for (const input of chunks) {
+    const body: Record<string, unknown> = {
+      model,
+      voice,
+      input,
+      response_format: "mp3",
+      speed
+    };
+    if (instructions) body.instructions = instructions;
+
     const res = await fetch("https://api.openai.com/v1/audio/speech", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        model,
-        voice,
-        input,
-        response_format: "mp3"
-      })
+      body: JSON.stringify(body)
     });
     if (!res.ok) {
       const detail = await res.text().catch(() => "");
