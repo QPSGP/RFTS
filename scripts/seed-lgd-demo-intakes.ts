@@ -299,7 +299,7 @@ const PERSONAS: DemoPersona[] = [
         wordsAvoid: ["old", "fail"],
         spiritualLanguage: "yes",
         listenContext: "sleep_and_day",
-        voiceId: "terry",
+        voiceId: "associate_deep",
         frequencyBedId: "heart_coherence",
         questionsForFacilitator: "How to pair Gold Key health with Silver speaking work?",
         wantsLiveLgdSessions: true

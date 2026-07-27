@@ -77,8 +77,36 @@ export default function AdminLgdPanel({ onEditForm, onCloseForm, registerRefresh
   const [authBusy, setAuthBusy] = useState(false);
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("newest");
+  const [producingDemos, setProducingDemos] = useState(false);
 
   const selected = intakes.find((i) => i.id === selectedId) || null;
+
+  const produceDemoCgmrs = async () => {
+    setProducingDemos(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/admin/lgd-intakes/produce-demos", {
+        method: "POST",
+        credentials: "include"
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage(data?.error || "Could not produce demo CGMRs.");
+        return;
+      }
+      const lines = (data.results || [])
+        .map((r: { email: string; ok: boolean; voiceId?: string; error?: string }) =>
+          r.ok ? `✓ ${r.email} (${r.voiceId})` : `✗ ${r.email}: ${r.error || "failed"}`
+        )
+        .join(" · ");
+      setMessage(
+        `Demo CGMRs: ${data.produced}/${data.total} produced. Listen as richard@visimon.app (Library / personalized CGMR). ${lines}`
+      );
+      await load();
+    } finally {
+      setProducingDemos(false);
+    }
+  };
 
   const visibleIntakes = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -221,6 +249,30 @@ export default function AdminLgdPanel({ onEditForm, onCloseForm, registerRefresh
         facilitators, and the public site do not see this process until you set{" "}
         <code>LGD_ADMIN_ONLY=false</code>.
       </p>
+      <div
+        style={{
+          marginTop: 12,
+          marginBottom: 8,
+          padding: 12,
+          borderRadius: 8,
+          border: "1px solid #d1d5db",
+          background: "#f8fafc"
+        }}
+      >
+        <p style={{ margin: "0 0 8px", fontSize: 14, color: "#334155" }}>
+          Produce the three <strong>lgd-demo-*</strong> CGMRs with distinct hypnotic voices (Terry,
+          nurturing, deep resonant), assign each to that member’s playlist, and grant listen access
+          to <strong>richard@visimon.app</strong>. Uses OpenAI on the server (~1–3 minutes).
+        </p>
+        <button
+          type="button"
+          className="button"
+          disabled={producingDemos}
+          onClick={() => void produceDemoCgmrs()}
+        >
+          {producingDemos ? "Producing demo CGMRs…" : "Produce 3 demo CGMRs + assign to library"}
+        </button>
+      </div>
       {message ? <p style={{ color: "#065f46" }}>{message}</p> : null}
 
       <div className="grid" style={{ gap: 16, gridTemplateColumns: "minmax(220px, 300px) 1fr" }}>

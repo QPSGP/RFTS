@@ -13,6 +13,11 @@ export async function GET() {
   const items = await listPersonalizedLibraryForUser(email);
   const personalized = items.filter((item) => isCgmr(item.categories));
   return NextResponse.json({
-    items: personalized.map((item) => ({ id: item.id, title: item.title }))
+    items: personalized.map((item) => ({
+      id: item.id,
+      title: item.title,
+      audioUrl: item.audioUrl || "",
+      description: item.description || ""
+    }))
   });
 }

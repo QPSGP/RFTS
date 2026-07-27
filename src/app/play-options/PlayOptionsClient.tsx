@@ -34,7 +34,7 @@ export default function PlayOptionsClient({
   const [gapHours, setGapHours] = useState(2.5);
   const [autoStart, setAutoStart] = useState(false);
   const [personalizedAudios, setPersonalizedAudios] = useState<
-    { id: string; title: string }[]
+    { id: string; title: string; audioUrl?: string }[]
   >([]);
   const [nextInCue, setNextInCue] = useState<{ id: string; title: string; skuCode?: string }[]>([]);
   const sessionRef = useRef<SessionPlayerHandle | null>(null);
@@ -235,11 +235,11 @@ export default function PlayOptionsClient({
                 </div>
                 {personalizedAudios.length > 0 && (
                   <div style={{ marginTop: 12 }}>
-                    <strong>Personalized audio (view only)</strong>
+                    <strong>Personalized CGMR audio</strong>
                     <div className="goal-list" style={{ marginTop: 6 }}>
                       {personalizedAudios.map((item) => (
                         <div key={item.id} className="goal-item">
-                          {item.title}
+                          <a href={`/library/${item.id}`}>{item.title}</a>
                         </div>
                       ))}
                     </div>
