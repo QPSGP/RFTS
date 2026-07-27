@@ -132,6 +132,8 @@ export function scriptTextForTts(raw: string): string {
     .replace(/^#{1,6}\s+/gm, "")
     .replace(/\*\*|__/g, "")
     .replace(/`+/g, "")
+    // Strip studio/production notes so TTS does not speak them.
+    .replace(/\(Production note[^)]*\)/gi, "")
     .replace(/^\s*[-*•]\s+/gm, "")
     .replace(/^\s*\d+\.\s+/gm, "")
     .replace(/[ \t]+\n/g, "\n")

@@ -4,6 +4,11 @@
  * Full product design: docs/LGD_ELECTRONIC_INTAKE.md
  */
 
+import {
+  buildTerryCgmrClose,
+  buildTerryCgmrInductionAndDeepener
+} from "@/lib/terry-cgmr-shared-script";
+
 export const LGD_INTAKE_VERSION = 3 as const;
 
 export type LgdIntakeEditorRole = "admin" | "member" | "facilitator";
@@ -1046,20 +1051,6 @@ export function buildLgdScriptDraftBlocks(input: {
     a.subconsciousPrograms.includes(p.id)
   ).map((p) => p.scriptCue);
 
-  const metaphorLine = metaphors.length
-    ? `Images that feel true for you — ${metaphors.join(", ")} — support this deepening.`
-    : "Allow images that feel natural for you to support this deepening.";
-
-  const deepener =
-    a.listenContext === "sleep"
-      ? [
-          "Deeper with each breath as sleep arrives… ten… nine… drifting… eight… seven… the body heavy and safe… six… five… four… three… two… one… deeply receptive while you rest."
-        ]
-      : [
-          "Deeper with each count… ten… nine… drifting… eight… seven… deeper still… six… five… four… three… two… one… deeply receptive.",
-          metaphorLine
-        ];
-
   const spiritualTone =
     a.spiritualLanguage === "yes"
       ? "You honor spirit and practical action together."
@@ -1067,12 +1058,21 @@ export function buildLgdScriptDraftBlocks(input: {
         ? "You honor quiet meaning without needing special language."
         : "You stay with clear, practical language that fits you.";
 
-  const induction = [
-    `Allow yourself to settle, ${name}. With each breath, the body softens. You are safe to rest and receive.`,
-    "Tonight your subconscious is programmed for growth, expansion, and thriving — in the ways you chose.",
-    metaphorLine,
-    ...programCues.slice(0, 4)
-  ];
+  // Classic SC CGMR shared frame (from library CGMR transcriptions).
+  const terryFrame = buildTerryCgmrInductionAndDeepener(name);
+  const induction = [...terryFrame.induction];
+  if (programCues.length) {
+    induction.push(
+      "Tonight your subconscious continues to receive programming for growth, expansion, and thriving — in the ways you chose."
+    );
+    induction.push(...programCues.slice(0, 4));
+  }
+  const deepener = [...terryFrame.deepener];
+  if (metaphors.length) {
+    deepener.push(
+      `Images that feel especially true for you — ${metaphors.join(", ")} — can join this natural deepening.`
+    );
+  }
 
   const presentBridge: string[] = [];
   if (a.primaryStruggle.trim()) {
@@ -1228,15 +1228,17 @@ export function buildLgdScriptDraftBlocks(input: {
   const postHypnotic =
     a.listenContext === "sleep_and_day"
       ? [
-          "As you sleep or rest, these suggestions continue to settle. By day you notice yourself choosing aligned action more easily."
+          "These personalized suggestions continue to settle as you rest. By day you notice yourself choosing aligned action more easily."
         ]
       : [
-          "As you sleep, these suggestions continue to settle. You wake when it is time, refreshed, or you sleep through the night as your body prefers."
+          "These personalized suggestions continue to settle as you sleep and rest."
         ];
 
+  // Classic SC CGMR close (self-mastery + emerge into natural sleep + nightly reinforcement).
   const close = [
-    "Rest now. You are supported. These words work with you while you sleep.",
-    `Voice preference: ${a.voiceId || "unset"} · Sound bed: ${bed}`
+    ...buildTerryCgmrClose(),
+    // Studio/production note only — strip before final voice read if desired.
+    `(Production note — not spoken: voice ${a.voiceId || "unset"} · sound bed ${bed})`
   ];
 
   return {

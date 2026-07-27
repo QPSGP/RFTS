@@ -136,15 +136,17 @@ Each section collects **structured fields + free-text “in your words”**. Fre
 
 ### Script skeleton (always generated)
 
-1. **Induction** — progressive relaxation + permission to sleep  
-2. **Deepener** — countdown / staircase / breath (from modality prefs)  
+1. **Induction** — classic SC CGMR progressive relaxation (feet → scalp), recovered from library CGMRs  
+2. **Deepener** — classic 5→0 into hypnosis + soft grass / tall tree / brook / forest vitality scene  
 3. **Present → future bridge** — acknowledge current state without reinforcing blocks  
 4. **Identity & goal suggestions** — member’s “I am now…” phrases, prioritized goals, USP five areas when Balanced Life / holistic selected  
 5. **Behavioral / emotional supports** — sleep, stress, will to learn, specific bridges  
 6. **Financial / mission** (if opted) — investment mindset, ethical success (beacon language)  
 7. **Future pacing** — waking life evidence cues  
-8. **Post-hypnotic sleep suggestion** — continue overnight; second-play friendly  
-9. **Emergence / sleep close** — stay asleep if night listening  
+8. **Post-hypnotic sleep suggestion** — personalized suggestions continue overnight  
+9. **Emergence / sleep close** — classic SC self-mastery close, 0→5 into natural sleep, nightly Reach For The Stars reinforcement  
+
+Shared open/close text lives in `src/lib/terry-cgmr-shared-script.ts` (transcribed from SC CGMR library audio).  
 
 ### Draft quality rules
 - Prefer `[MEMBER_WORDS]` over paraphrasing  
