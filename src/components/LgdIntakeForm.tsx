@@ -11,6 +11,7 @@ import {
   LGD_LIFE_AREAS,
   LGD_LIMITING_BELIEF_CHOICES,
   LGD_PROFESSIONAL_VOICES,
+  LGD_VOICE_SELECTION_LEAD,
   LGD_SEVEN_KEYS,
   LGD_SUBCONSCIOUS_PROGRAMS,
   defaultGrowthForLimiting,
@@ -1573,10 +1574,13 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
             </label>
             {flags.lgdProfessionalVoices || flags.lgdMemberOwnVoice ? (
               <fieldset style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
-                <legend>Voice preference</legend>
+                <legend>Hypnotic voice for sleep programming</legend>
                 <p style={{ fontSize: 13, color: "#64748b", marginTop: 0 }}>
+                  {LGD_VOICE_SELECTION_LEAD}
+                </p>
+                <p style={{ fontSize: 13, color: "#64748b" }}>
                   The Voice Recording Agreement is required only if you choose{" "}
-                  <strong>My own voice</strong>. Professional voices do not need that agreement.
+                  <strong>My own voice</strong>. Catalog voices do not need that agreement.
                 </p>
                 {flags.lgdProfessionalVoices
                   ? LGD_PROFESSIONAL_VOICES.map((voice) => (
@@ -1612,8 +1616,9 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
                         }
                       />
                       <span>
-                        <strong>My own voice</strong> — affirmations in your voice (recording /
-                        clone process with your facilitator)
+                        <strong>My own voice</strong> — your voice in a calm, peaceful hypnotic
+                        state (record a slow relaxed sample so AI/studio can match how you sound
+                        when guiding yourself into sleep — not daytime speech)
                       </span>
                     </label>
                     {answers.voiceId === "member_own" ? (
@@ -1643,6 +1648,11 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
                             before submit when using your own voice.
                           </span>
                         </label>
+                        <p style={{ fontSize: 13, color: "#0f766e", marginLeft: 8 }}>
+                          Tip: Speak slowly and softly, as if already relaxed and drifting toward
+                          sleep. That sample is what we use to match your hypnotic voice as closely
+                          as possible.
+                        </p>
                         <LgdOwnVoiceRecorder
                           enabled={!!answers.ownVoiceConsent}
                         />

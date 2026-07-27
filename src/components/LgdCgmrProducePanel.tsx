@@ -159,8 +159,8 @@ export default function LgdCgmrProducePanel({
     >
       <h3 style={{ margin: 0, fontSize: 17 }}>Produce CGMR → member playlist</h3>
       <p style={{ margin: 0, fontSize: 14, color: "#4b5563" }}>
-        Convert the script draft using the member’s voice and bed choices, then add the recording as
-        their personalized CGMR (night schedule special slot).
+        Generate a sleep-hypnotic reading of the script (slow, smooth, continuous — not choppy),
+        using the member’s voice color and bed, then add it as their personalized CGMR night slot.
       </p>
       <p style={{ margin: 0, fontSize: 14 }}>
         <strong>Member:</strong> {memberEmail}
@@ -188,7 +188,9 @@ export default function LgdCgmrProducePanel({
               : "Requires OPENAI_API_KEY on the server, or use upload/assign"
           }
         >
-          {busy === "generate" ? "Generating…" : "Generate with voice choice (AI)"}
+          {busy === "generate"
+            ? "Generating hypnotic voice…"
+            : "Generate hypnotic voice (AI)"}
         </button>
         {!aiAvailable && (
           <span style={{ fontSize: 13, color: "#92400e" }}>
@@ -196,6 +198,11 @@ export default function LgdCgmrProducePanel({
           </span>
         )}
       </div>
+      <p style={{ margin: 0, fontSize: 12, color: "#6b7280" }}>
+        AI defaults: hypnotic instructions + slower pace (~0.78). Prefer model{" "}
+        <code>gpt-4o-mini-tts</code> on Vercel for the smoothest sleep tone. Studio uploads should
+        already be a calm hypnotic read.
+      </p>
 
       <label style={{ display: "grid", gap: 6, fontSize: 14 }}>
         Studio / finished audio URL

@@ -466,31 +466,51 @@ export type LgdBeliefTransformation = {
   growthText: string;
 };
 
-/** Professional hypnotic voices (Phase A). Member-own-voice is Phase B. */
+/**
+ * Hypnotic voice catalog for CGMR overnight programming.
+ * First priority for every option: calm, continuous, sleep-inducing delivery
+ * that helps the subconscious accept suggestions — then gender/tone color.
+ */
 export const LGD_PROFESSIONAL_VOICES = [
   {
     id: "terry",
     label: "Terry Brussel-Rogers",
-    description: "Signature Success Center voice — warm, authoritative, holistic."
+    description:
+      "Signature Success Center hypnotic voice — warm, trusted, peaceful authority for sleep programming.",
+    presentation: "feminine",
+    toneFamily: "signature_warm"
   },
   {
     id: "associate_warm",
-    label: "Associate — warm",
-    description: "Gentle, nurturing tone for rest and emotional healing goals."
+    label: "Nurturing — soft / feminine",
+    description:
+      "Gentle, caring hypnotic guide — soft cadence for rest, healing, and bedtime acceptance.",
+    presentation: "feminine",
+    toneFamily: "nurturing"
   },
   {
     id: "associate_clear",
-    label: "Associate — clear",
-    description: "Clear professional tone for focus, business, and performance goals."
+    label: "Professional — calm guide",
+    description:
+      "Clear but unhurried professional hypnotic tone — steady trust without brightness or urgency.",
+    presentation: "neutral",
+    toneFamily: "professional"
   },
   {
     id: "associate_deep",
-    label: "Associate — deep",
-    description: "Deeper resonant tone for sleep deepening and subconscious work."
+    label: "Deeper resonant — masculine",
+    description:
+      "Lower, resonant hypnotic tone — peaceful depth for sleep deepening and subconscious work.",
+    presentation: "masculine",
+    toneFamily: "deep_resonant"
   }
 ] as const;
 
 export type LgdProfessionalVoiceId = (typeof LGD_PROFESSIONAL_VOICES)[number]["id"];
+
+/** Shared premise shown wherever members pick a CGMR voice. */
+export const LGD_VOICE_SELECTION_LEAD =
+  "Your CGMR voice must first sound hypnotic: slow, smooth, and peaceful enough to help you relax into sleep so the subconscious can accept the programming. Then choose the color that fits you — nurturing, professional calm, or deeper resonant (or Terry’s signature voice).";
 
 export const LGD_FREQUENCY_BEDS = [
   {

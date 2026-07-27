@@ -52,15 +52,17 @@ Stored per facilitator (defaults below). Admin may also set platform defaults.
 **Phase A — Professional hypnotic voices (ship first)**  
 Catalog examples (names illustrative; final talent TBD):
 
-- Terry Brussel-Rogers (signature)
-- Associate A — warm / maternal
-- Associate B — clear / professional
-- Associate C — deep / resonant
+Every CGMR voice is judged first on **hypnotic sleep delivery** (slow, smooth, continuous, peaceful — suitable for inducing a receptive subconscious state). Tone color is secondary:
 
-Member or facilitator selects one voice for the CGMR. Production uses that talent (live read or licensed studio bank).
+- Terry Brussel-Rogers (signature warm feminine authority)
+- Nurturing — soft / feminine
+- Professional — calm guide
+- Deeper resonant — masculine
 
-**Phase B — “My own voice” (later, separate flow)**  
-Checkbox/option “Use my own voice” → consent → phrase bank recording → clone or spliced affirmations → quality QA → optional mix with professional induction.
+Member or facilitator selects one voice. AI produce uses hypnotic instructions + slower pace (`gpt-4o-mini-tts` by default); studio uploads should already be a calm hypnotic read.
+
+**Phase B — “My own voice”**  
+Consent → record a **calm, peaceful hypnotic-state** sample (not daytime speech) → clone/studio match that relaxed voice as closely as possible → QA → optional mix with induction/bed.
 
 ---
 
