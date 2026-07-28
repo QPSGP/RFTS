@@ -12,3 +12,5 @@ data/*.json
 # Local schedule algorithm CSV/HTML exports (see npm run schedule:spreadsheet)
 scripts/output/
 .vercel
+tmp/
+*.tsbuildinfo
