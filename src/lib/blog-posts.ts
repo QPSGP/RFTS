@@ -23,6 +23,66 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "overcoming-addiction-guided-meditation-habit-change-sleep",
+    title: "Overcoming addiction: guided meditation for habit change while you sleep",
+    metaTitle: "Overcoming Addiction — Guided Meditation & Habit Change at Night | RFTS Blog",
+    metaDescription:
+      "Support overcoming addiction and unwanted habits with nightly guided meditation — smoking, overeating, and automatic patterns reinforced at bedtime and during sleep. Free trial.",
+    publishedAt: "2026-07-28",
+    readMinutes: 6,
+    excerpt:
+      "Freedom from unwanted habits rarely comes from willpower alone at 3 p.m. When overcoming addiction is a prioritized goal, guided meditations reinforce calm, control, and new choices at bedtime and during sleep.",
+    goalSlug: "overcoming-addiction",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for help with overcoming addiction often already know what they want to change — smoking, overeating, scrolling, drinking, or another automatic pattern. The hard part is not naming the habit. It is staying consistent when cravings hit and daytime willpower is already spent.",
+          "Reach For The Stars treats overcoming addiction as a goal you can prioritize. Supportive guided meditations play while you fall asleep and, if you choose two audios per night, again during sleep — so habit-change messages reach your subconscious when you are most receptive, without adding another recovery task to an already full day."
+        ]
+      },
+      {
+        heading: "What “habit change at night” actually supports",
+        paragraphs: [
+          "Hypnosis and guided meditation have long been used for smoking cessation, overeating, and other behavioral patterns by pairing deep relaxation with clear intention: calm instead of compulsion, control instead of autopilot, and a balanced life instead of the old loop. You are not asked to white-knuckle through a daytime lecture. You hear the same supportive framing as you wind down and rest.",
+          "That does not replace clinical care, detox, medication-assisted treatment, or a recovery program when those are needed. Nightly audios are a mindset and habit layer — useful alongside the professional support you already trust."
+        ]
+      },
+      {
+        heading: "Why bedtime beats fighting the urge alone",
+        paragraphs: [
+          "Cravings and old cues often show up when you are tired, stressed, or alone at night — exactly when “trying harder” fails. A fixed bedtime session flips that window: intro relaxation music, then your habit-change recording as you drift, then optional reinforcement about 2.5 hours later while you are still in restorative sleep.",
+          "Members often pair overcoming addiction with health, balanced life, or inspiration goals so the lineup addresses body, daily structure, and motivation together. The schedule rotates priorities so supportive themes return on a predictable cadence instead of disappearing after one random track."
+        ]
+      },
+      {
+        heading: "Consistency over heroic nights",
+        paragraphs: [
+          "One powerful session can feel hopeful. Lasting change usually comes from weeks of the same cue: Start Session, then rest. Skipping several nights and restarting with a new app resets both the habit of practice and the subconscious repetition that habit change depends on.",
+          "If you want extra personalization, a facilitator can help with a Customized Goal Manifestation Recording (CGMR) alongside library goals — especially when your story or triggers need more than a general track."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits people quitting smoking or cutting back on overeating, anyone rebuilding after a slip, and high performers whose “addiction” looks like compulsive work, scrolling, or stress habits that undermine health. It also helps people who have tried daytime programs but could not keep a consistent practice when life got busy.",
+          "Guided meditation supports wellness and habit change. It is not a substitute for medical detox, addiction medicine, therapy, or crisis care. If you are in acute withdrawal, danger, or active substance dependence that needs clinical supervision, get professional help first — then consider nightly guided audios as one supportive layer."
+        ]
+      },
+      {
+        heading: "Get started tonight",
+        paragraphs: [
+          "Choose overcoming addiction among your goals and complete registration to activate your membership. Order habit-change, health, and related priorities by importance — your personalized audios begin the first night you press Start Session.",
+          "Explore our overcoming addiction goal page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Calm control and freedom from old habits (excerpt)",
+      quote:
+        "You choose freedom now… old urges soften and pass… calm fills the space where the habit used to live… you trust your new choices… each night you grow stronger, freer, and more in control…"
+    }
+  },
+  {
     slug: "better-sleep-guided-meditation-nightly-audios",
     title: "Better sleep: how guided meditation at night improves rest without daytime effort",
     metaTitle: "Better Sleep with Guided Meditation at Night | Reach For The Stars Blog",
