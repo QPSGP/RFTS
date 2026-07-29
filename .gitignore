@@ -14,3 +14,5 @@ scripts/output/
 .vercel
 tmp/
 *.tsbuildinfo
+# Local SC client intake PDF (not shipped; process consent restricted)
+docs/Client_Intake_Form_fillable.pdf
