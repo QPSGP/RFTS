@@ -3264,6 +3264,9 @@ export const updateFacilitatorProfile = async (payload: {
   return { application, moderator };
 };
 
+/** Plans offered for signup / upgrade — exclude legacy bronze/gold package rows. */
+const OFFERED_SUBSCRIPTION_PLAN_IDS = new Set(["platinum", "platinum_managed"]);
+
 export const listSubscriptionPlans = async () => {
   await ensureSubscriptionPlansSeeded();
   const { rows } = await sql<SubscriptionPlan>`
@@ -3271,7 +3274,7 @@ export const listSubscriptionPlans = async () => {
     FROM subscription_plans
     ORDER BY id ASC
   `;
-  return rows;
+  return rows.filter((plan) => OFFERED_SUBSCRIPTION_PLAN_IDS.has(plan.id));
 };
 
 export const saveSubscriptionPlans = async (plans: SubscriptionPlan[]) => {
