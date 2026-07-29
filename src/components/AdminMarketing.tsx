@@ -10,8 +10,10 @@ import {
   OUTREACH_INTERESTS,
   OUTREACH_PERSONAS,
   OUTREACH_STATUSES,
+  OUTREACH_TARGET_TYPES,
   REFERENCE_PERSONAS,
-  REFERENCE_PLAN_HIGHLIGHTS
+  REFERENCE_PLAN_HIGHLIGHTS,
+  outreachTargetTypeLabel
 } from "@/lib/marketing-reference";
 import AdminOutreachCrmPanel from "@/components/AdminOutreachCrmPanel";
 
@@ -65,6 +67,7 @@ type OverviewData = {
 type OutreachTarget = {
   id: string;
   organization: string;
+  targetType: string;
   category: string | null;
   persona: string | null;
   entryPath: string | null;
@@ -96,6 +99,7 @@ const tdStyle = { padding: "10px 12px", verticalAlign: "top" } as const;
 const tdMutedStyle = { padding: "10px 12px", color: "#4b5563", verticalAlign: "top" } as const;
 
 const emptyForm = {
+  targetType: "organization",
   organization: "",
   category: "",
   persona: "",
@@ -248,12 +252,17 @@ export default function AdminMarketing() {
 
   const submitForm = async () => {
     if (!form.organization.trim()) {
-      setOutreachStatus("Organization name is required.");
+      setOutreachStatus(
+        form.targetType === "individual"
+          ? "Person name is required."
+          : "Organization name is required."
+      );
       return;
     }
     setSaving(true);
     setOutreachStatus(null);
     const payload = {
+      targetType: form.targetType === "individual" ? "individual" : "organization",
       organization: form.organization.trim(),
       category: form.category || null,
       persona: form.persona || null,
@@ -288,6 +297,7 @@ export default function AdminMarketing() {
   const startEdit = (t: OutreachTarget) => {
     setEditingId(t.id);
     setForm({
+      targetType: t.targetType === "individual" ? "individual" : "organization",
       organization: t.organization,
       category: t.category ?? "",
       persona: t.persona ?? "",
@@ -319,6 +329,7 @@ export default function AdminMarketing() {
       body: JSON.stringify({
         id: t.id,
         organization: t.organization,
+        targetType: t.targetType === "individual" ? "individual" : "organization",
         category: t.category,
         interest: t.interest,
         audienceSize: t.audienceSize,
@@ -720,8 +731,9 @@ export default function AdminMarketing() {
         <section id="marketing-outreach" style={{ marginBottom: 24 }}>
           <h2 style={{ marginBottom: 12, fontSize: 18 }}>Outreach tracker / CRM</h2>
           <p style={{ color: "#4b5563", marginBottom: 12 }}>
-            Partner pipeline with structured contacts, Resend email send, follow-up dates, and an
-            activity timeline. Open <strong>CRM</strong> on a row to work a target.
+            Pipeline for organizations and individuals: structured contacts, Resend email send,
+            follow-up dates, and an activity timeline. Open <strong>CRM</strong> on a row to work a
+            target.
           </p>
 
           <div className="card" style={{ marginBottom: 16 }}>
@@ -730,11 +742,38 @@ export default function AdminMarketing() {
             </h3>
             <div className="grid grid-2" style={{ gap: 12 }}>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
-                Organization *
+                Type *
+                <select
+                  value={form.targetType}
+                  onChange={(e) => {
+                    const targetType = e.target.value;
+                    setForm((f) => ({
+                      ...f,
+                      targetType,
+                      category:
+                        targetType === "individual" && !f.category
+                          ? "Individuals & influencers"
+                          : f.category
+                    }));
+                  }}
+                >
+                  {OUTREACH_TARGET_TYPES.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+                {form.targetType === "individual" ? "Person name *" : "Organization *"}
                 <input
                   value={form.organization}
                   onChange={(e) => setForm((f) => ({ ...f, organization: e.target.value }))}
-                  placeholder="e.g. City Fire Dept. wellness program"
+                  placeholder={
+                    form.targetType === "individual"
+                      ? "e.g. Jordan Lee — wellness coach"
+                      : "e.g. City Fire Dept. wellness program"
+                  }
                 />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
@@ -784,7 +823,11 @@ export default function AdminMarketing() {
                 <input
                   value={form.contact}
                   onChange={(e) => setForm((f) => ({ ...f, contact: e.target.value }))}
-                  placeholder="name@org.org, wellness@org.org"
+                  placeholder={
+                    form.targetType === "individual"
+                      ? "person@email.com"
+                      : "name@org.org, wellness@org.org"
+                  }
                 />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
@@ -823,11 +866,15 @@ export default function AdminMarketing() {
                 </select>
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
-                Audience size
+                {form.targetType === "individual" ? "Reach / following" : "Audience size"}
                 <input
                   value={form.audienceSize}
                   onChange={(e) => setForm((f) => ({ ...f, audienceSize: e.target.value }))}
-                  placeholder="e.g. ~200 staff"
+                  placeholder={
+                    form.targetType === "individual"
+                      ? "e.g. newsletter ~5k, Instagram ~12k"
+                      : "e.g. ~200 staff"
+                  }
                 />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
@@ -1120,7 +1167,8 @@ export default function AdminMarketing() {
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720, fontSize: 14 }}>
               <thead>
                 <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
-                  <th style={thStyle}>Organization</th>
+                  <th style={thStyle}>Name</th>
+                  <th className="admin-col-optional" style={thStyle}>Type</th>
                   <th className="admin-col-optional" style={thStyle}>Category</th>
                   <th className="admin-col-optional" style={thStyle}>Persona</th>
                   <th className="admin-col-optional" style={thStyle}>Entry path</th>
@@ -1143,6 +1191,9 @@ export default function AdminMarketing() {
                           ref: {t.refCode}
                         </div>
                       )}
+                    </td>
+                    <td className="admin-col-optional" style={tdMutedStyle}>
+                      {outreachTargetTypeLabel(t.targetType || "organization")}
                     </td>
                     <td className="admin-col-optional" style={tdMutedStyle}>{t.category || "—"}</td>
                     <td className="admin-col-optional" style={tdMutedStyle}>{t.persona || "—"}</td>

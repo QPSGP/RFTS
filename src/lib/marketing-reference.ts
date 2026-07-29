@@ -10,6 +10,17 @@ export const OUTREACH_STATUSES = [
   { id: "declined", label: "Declined / paused" }
 ] as const;
 
+/** Organization vs individual prospect in the outreach CRM. */
+export const OUTREACH_TARGET_TYPES = [
+  { id: "organization", label: "Organization" },
+  { id: "individual", label: "Individual" }
+] as const;
+
+export type OutreachTargetTypeId = (typeof OUTREACH_TARGET_TYPES)[number]["id"];
+
+export const outreachTargetTypeLabel = (id: string): string =>
+  OUTREACH_TARGET_TYPES.find((t) => t.id === id)?.label ?? id;
+
 export type OutreachStatusId = (typeof OUTREACH_STATUSES)[number]["id"];
 
 export const outreachStatusLabel = (id: string): string =>
@@ -22,9 +33,10 @@ export const OUTREACH_ENTRY_PATHS = [
   "Facilitator / Managed"
 ] as const;
 
-/** What the organization is interested in (CRM gather-info). */
+/** What the prospect is interested in (CRM gather-info). */
 export const OUTREACH_INTERESTS = [
   "Affiliate partnership",
+  "Personal membership",
   "Speaker / seminar",
   "Wellness program for staff",
   "Facilitator / managed memberships",
@@ -68,6 +80,7 @@ export const OUTREACH_PERSONAS = [
 
 /** Segment categories from docs/target-organizations.md. */
 export const OUTREACH_CATEGORIES = [
+  "Individuals & influencers",
   "First responders & public safety",
   "Healthcare & front-line medical",
   "Mental & behavioral health providers",

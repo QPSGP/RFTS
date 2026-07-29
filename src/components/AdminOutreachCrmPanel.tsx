@@ -7,6 +7,7 @@ import { mergeOutreachTemplate } from "@/lib/marketing-reference";
 type OutreachTarget = {
   id: string;
   organization: string;
+  targetType: string;
   category: string | null;
   persona: string | null;
   entryPath: string | null;
@@ -205,6 +206,7 @@ export default function AdminOutreachCrmPanel({
         body: JSON.stringify({
           id: target.id,
           organization: target.organization,
+          targetType: target.targetType === "individual" ? "individual" : "organization",
           category: target.category,
           persona: target.persona,
           entryPath: target.entryPath,
@@ -383,7 +385,8 @@ export default function AdminOutreachCrmPanel({
         <div>
           <h3 style={{ margin: 0, fontSize: 17 }}>CRM — {target.organization}</h3>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: "#475569" }}>
-            Contacts, send email (Resend), follow-ups, and activity timeline.
+            {target.targetType === "individual" ? "Individual" : "Organization"} · contacts, send
+            email (Resend), follow-ups, and activity timeline.
           </p>
         </div>
         <button
@@ -429,11 +432,15 @@ export default function AdminOutreachCrmPanel({
               </select>
             </label>
             <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
-              Audience size
+              {target.targetType === "individual" ? "Reach / following" : "Audience size"}
               <input
                 value={crmForm.audienceSize}
                 onChange={(e) => setCrmForm((f) => ({ ...f, audienceSize: e.target.value }))}
-                placeholder="e.g. 200 staff"
+                placeholder={
+                  target.targetType === "individual"
+                    ? "e.g. newsletter ~5k"
+                    : "e.g. 200 staff"
+                }
               />
             </label>
             <label style={{ display: "grid", gap: 4, fontSize: 13 }}>

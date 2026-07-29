@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   }
   if (target.doNotEmail) {
     return NextResponse.json(
-      { error: "This organization is marked do-not-email." },
+      { error: "This target is marked do-not-email." },
       { status: 400 }
     );
   }

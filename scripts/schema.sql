@@ -430,6 +430,7 @@ CREATE INDEX IF NOT EXISTS library_items_moderator_id_idx ON library_items (mode
 CREATE TABLE IF NOT EXISTS marketing_outreach_targets (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization text NOT NULL,
+  target_type text NOT NULL DEFAULT 'organization',
   category text,
   persona text,
   entry_path text,
@@ -445,6 +446,8 @@ CREATE TABLE IF NOT EXISTS marketing_outreach_targets (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE marketing_outreach_targets
+  ADD COLUMN IF NOT EXISTS target_type text NOT NULL DEFAULT 'organization';
 CREATE INDEX IF NOT EXISTS marketing_outreach_targets_status_idx
   ON marketing_outreach_targets (status);
 CREATE INDEX IF NOT EXISTS marketing_outreach_targets_follow_up_idx

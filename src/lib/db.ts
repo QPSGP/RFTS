@@ -3831,6 +3831,8 @@ export const listTopReferrers = async (
 export type OutreachTarget = {
   id: string;
   organization: string;
+  /** `organization` | `individual` — `organization` column stores the display name either way. */
+  targetType: string;
   category: string | null;
   persona: string | null;
   entryPath: string | null;
@@ -3879,6 +3881,7 @@ const ensureMarketingOutreachTable = async () => {
     CREATE TABLE IF NOT EXISTS marketing_outreach_targets (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       organization text NOT NULL,
+      target_type text NOT NULL DEFAULT 'organization',
       category text,
       persona text,
       entry_path text,
@@ -3894,6 +3897,10 @@ const ensureMarketingOutreachTable = async () => {
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
     )
+  `;
+  await sql`
+    ALTER TABLE marketing_outreach_targets
+    ADD COLUMN IF NOT EXISTS target_type text NOT NULL DEFAULT 'organization'
   `;
   await sql`ALTER TABLE marketing_outreach_targets ADD COLUMN IF NOT EXISTS interest text`;
   await sql`ALTER TABLE marketing_outreach_targets ADD COLUMN IF NOT EXISTS audience_size text`;
@@ -3937,7 +3944,9 @@ export const listOutreachTargets = async (): Promise<OutreachTarget[]> => {
   await ensureMarketingOutreachTable();
   const { rows } = await sql<OutreachTarget>`
     SELECT
-      id, organization, category, persona,
+      id, organization,
+      COALESCE(NULLIF(target_type, ''), 'organization') AS "targetType",
+      category, persona,
       entry_path AS "entryPath", contact, ref_code AS "refCode",
       status, notes, interest,
       audience_size AS "audienceSize",
@@ -3958,7 +3967,9 @@ export const getOutreachTarget = async (id: string): Promise<OutreachTarget | nu
   await ensureMarketingOutreachTable();
   const { rows } = await sql<OutreachTarget>`
     SELECT
-      id, organization, category, persona,
+      id, organization,
+      COALESCE(NULLIF(target_type, ''), 'organization') AS "targetType",
+      category, persona,
       entry_path AS "entryPath", contact, ref_code AS "refCode",
       status, notes, interest,
       audience_size AS "audienceSize",
@@ -3975,6 +3986,7 @@ export const getOutreachTarget = async (id: string): Promise<OutreachTarget | nu
 
 type OutreachTargetWrite = {
   organization: string;
+  targetType?: string | null;
   category?: string | null;
   persona?: string | null;
   entryPath?: string | null;
@@ -3989,16 +4001,21 @@ type OutreachTargetWrite = {
   doNotEmail?: boolean | null;
 };
 
+const normalizeOutreachTargetType = (value?: string | null): string =>
+  value === "individual" ? "individual" : "organization";
+
 export const createOutreachTarget = async (
   input: OutreachTargetWrite
 ): Promise<OutreachTarget> => {
   await ensureMarketingOutreachTable();
+  const targetType = normalizeOutreachTargetType(input.targetType);
   const { rows } = await sql<OutreachTarget>`
     INSERT INTO marketing_outreach_targets
-      (organization, category, persona, entry_path, contact, ref_code, status, notes,
+      (organization, target_type, category, persona, entry_path, contact, ref_code, status, notes,
        interest, audience_size, decision_timeline, follow_up_at, do_not_email)
     VALUES (
       ${input.organization},
+      ${targetType},
       ${input.category ?? null},
       ${input.persona ?? null},
       ${input.entryPath ?? null},
@@ -4013,7 +4030,9 @@ export const createOutreachTarget = async (
       ${input.doNotEmail ?? false}
     )
     RETURNING
-      id, organization, category, persona,
+      id, organization,
+      COALESCE(NULLIF(target_type, ''), 'organization') AS "targetType",
+      category, persona,
       entry_path AS "entryPath", contact, ref_code AS "refCode",
       status, notes, interest,
       audience_size AS "audienceSize",
@@ -4030,10 +4049,12 @@ export const updateOutreachTarget = async (
   input: OutreachTargetWrite
 ): Promise<OutreachTarget | null> => {
   await ensureMarketingOutreachTable();
+  const targetType = normalizeOutreachTargetType(input.targetType);
   const { rows } = await sql<OutreachTarget>`
     UPDATE marketing_outreach_targets
     SET
       organization = ${input.organization},
+      target_type = ${targetType},
       category = ${input.category ?? null},
       persona = ${input.persona ?? null},
       entry_path = ${input.entryPath ?? null},
@@ -4049,7 +4070,9 @@ export const updateOutreachTarget = async (
       updated_at = now()
     WHERE id = ${id}
     RETURNING
-      id, organization, category, persona,
+      id, organization,
+      COALESCE(NULLIF(target_type, ''), 'organization') AS "targetType",
+      category, persona,
       entry_path AS "entryPath", contact, ref_code AS "refCode",
       status, notes, interest,
       audience_size AS "audienceSize",

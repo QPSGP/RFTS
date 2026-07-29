@@ -13,6 +13,7 @@ import { STARTER_OUTREACH_TARGETS } from "@/lib/marketing-reference";
 
 const targetSchema = z.object({
   organization: z.string().trim().min(1).max(200),
+  targetType: z.enum(["organization", "individual"]).nullish(),
   category: z.string().trim().max(120).nullish(),
   persona: z.string().trim().max(120).nullish(),
   entryPath: z.string().trim().max(60).nullish(),
