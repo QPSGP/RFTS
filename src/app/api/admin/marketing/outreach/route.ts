@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { isAdminSession } from "@/lib/auth";
+import { getSessionEmail, isAdminSession } from "@/lib/auth";
 import {
+  createOutreachActivity,
   createOutreachTarget,
   deleteOutreachTarget,
+  getOutreachTarget,
   listOutreachTargets,
   updateOutreachTarget
 } from "@/lib/db";
@@ -17,13 +19,24 @@ const targetSchema = z.object({
   contact: z.string().trim().max(500).nullish(),
   refCode: z.string().trim().max(40).nullish(),
   status: z.string().trim().max(40).nullish(),
-  notes: z.string().trim().max(2000).nullish()
+  notes: z.string().trim().max(2000).nullish(),
+  interest: z.string().trim().max(120).nullish(),
+  audienceSize: z.string().trim().max(80).nullish(),
+  decisionTimeline: z.string().trim().max(120).nullish(),
+  followUpAt: z
+    .string()
+    .trim()
+    .max(40)
+    .nullish()
+    .transform((v) => {
+      if (!v) return null;
+      const ms = Date.parse(v);
+      return Number.isNaN(ms) ? null : new Date(ms).toISOString();
+    }),
+  doNotEmail: z.boolean().nullish()
 });
 
-const createSchema = z.union([
-  z.object({ seed: z.literal(true) }),
-  targetSchema
-]);
+const createSchema = z.union([z.object({ seed: z.literal(true) }), targetSchema]);
 
 const updateSchema = targetSchema.extend({
   id: z.string().uuid()
@@ -51,9 +64,7 @@ export async function POST(request: Request) {
 
   if ("seed" in parsed.data) {
     const existing = await listOutreachTargets();
-    const existingNames = new Set(
-      existing.map((t) => t.organization.trim().toLowerCase())
-    );
+    const existingNames = new Set(existing.map((t) => t.organization.trim().toLowerCase()));
     let added = 0;
     for (const starter of STARTER_OUTREACH_TARGETS) {
       if (existingNames.has(starter.organization.trim().toLowerCase())) continue;
@@ -71,6 +82,13 @@ export async function POST(request: Request) {
   }
 
   const target = await createOutreachTarget(parsed.data);
+  await createOutreachActivity({
+    targetId: target.id,
+    kind: "created",
+    subject: "Target added",
+    bodyPreview: target.organization,
+    createdByEmail: getSessionEmail()
+  });
   return NextResponse.json({ ok: true, target });
 }
 
@@ -84,9 +102,21 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
   const { id, ...rest } = parsed.data;
+  const before = await getOutreachTarget(id);
   const target = await updateOutreachTarget(id, rest);
   if (!target) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
+  }
+  const by = getSessionEmail();
+  if (before && before.status !== target.status) {
+    await createOutreachActivity({
+      targetId: id,
+      kind: "status_change",
+      subject: `Status → ${target.status}`,
+      bodyPreview: `${before.status} → ${target.status}`,
+      meta: { from: before.status, to: target.status },
+      createdByEmail: by
+    });
   }
   return NextResponse.json({ ok: true, target });
 }

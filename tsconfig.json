@@ -38,6 +38,8 @@
   "exclude": [
     "node_modules",
     "**/*.test.ts",
-    "**/*.test.tsx"
+    "**/*.test.tsx",
+    "docs/intake-form-quarantine-*/**",
+    "docs/intake-form-backup-*/**"
   ]
 }

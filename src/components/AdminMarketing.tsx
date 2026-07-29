@@ -7,11 +7,13 @@ import {
   MARKETING_LANDING_LINKS,
   OUTREACH_CATEGORIES,
   OUTREACH_ENTRY_PATHS,
+  OUTREACH_INTERESTS,
   OUTREACH_PERSONAS,
   OUTREACH_STATUSES,
   REFERENCE_PERSONAS,
   REFERENCE_PLAN_HIGHLIGHTS
 } from "@/lib/marketing-reference";
+import AdminOutreachCrmPanel from "@/components/AdminOutreachCrmPanel";
 
 const marketingSections = {
   overview: false,
@@ -70,6 +72,11 @@ type OutreachTarget = {
   refCode: string | null;
   status: string;
   notes: string | null;
+  interest: string | null;
+  audienceSize: string | null;
+  decisionTimeline: string | null;
+  followUpAt: string | null;
+  doNotEmail: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -96,7 +103,12 @@ const emptyForm = {
   contact: "",
   refCode: "",
   status: "prospect",
-  notes: ""
+  notes: "",
+  interest: "",
+  audienceSize: "",
+  decisionTimeline: "",
+  followUpAt: "",
+  doNotEmail: false
 };
 
 const emptyTemplateForm = {
@@ -132,6 +144,7 @@ export default function AdminMarketing() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [outreachStatus, setOutreachStatus] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [crmTargetId, setCrmTargetId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const [templates, setTemplates] = useState<OutreachEmailTemplate[]>([]);
@@ -248,7 +261,12 @@ export default function AdminMarketing() {
       contact: form.contact.trim() || null,
       refCode: form.refCode.trim() || null,
       status: form.status || "prospect",
-      notes: form.notes.trim() || null
+      notes: form.notes.trim() || null,
+      interest: form.interest.trim() || null,
+      audienceSize: form.audienceSize.trim() || null,
+      decisionTimeline: form.decisionTimeline.trim() || null,
+      followUpAt: form.followUpAt || null,
+      doNotEmail: !!form.doNotEmail
     };
     const res = await fetch("/api/admin/marketing/outreach", {
       method: editingId ? "PATCH" : "POST",
@@ -277,7 +295,12 @@ export default function AdminMarketing() {
       contact: t.contact ?? "",
       refCode: t.refCode ?? "",
       status: t.status || "prospect",
-      notes: t.notes ?? ""
+      notes: t.notes ?? "",
+      interest: t.interest ?? "",
+      audienceSize: t.audienceSize ?? "",
+      decisionTimeline: t.decisionTimeline ?? "",
+      followUpAt: t.followUpAt ? t.followUpAt.slice(0, 10) : "",
+      doNotEmail: !!t.doNotEmail
     });
     requestAnimationFrame(() => {
       document.getElementById("marketing-outreach")?.scrollIntoView({
@@ -297,6 +320,11 @@ export default function AdminMarketing() {
         id: t.id,
         organization: t.organization,
         category: t.category,
+        interest: t.interest,
+        audienceSize: t.audienceSize,
+        decisionTimeline: t.decisionTimeline,
+        followUpAt: t.followUpAt,
+        doNotEmail: t.doNotEmail,
         persona: t.persona,
         entryPath: t.entryPath,
         contact: t.contact,
@@ -316,6 +344,7 @@ export default function AdminMarketing() {
     if (res.ok) {
       setTargets((prev) => prev.filter((row) => row.id !== t.id));
       if (editingId === t.id) resetForm();
+      if (crmTargetId === t.id) setCrmTargetId(null);
     }
   };
 
@@ -424,12 +453,31 @@ export default function AdminMarketing() {
     }
   };
 
-  const filteredTargets = useMemo(
-    () =>
-      statusFilter === "all"
-        ? targets
-        : targets.filter((t) => t.status === statusFilter),
-    [targets, statusFilter]
+  const dueSoonCount = useMemo(() => {
+    const week = Date.now() + 7 * 86400000;
+    return targets.filter((t) => {
+      if (!t.followUpAt) return false;
+      const ms = Date.parse(t.followUpAt);
+      return !Number.isNaN(ms) && ms <= week;
+    }).length;
+  }, [targets]);
+
+  const filteredTargets = useMemo(() => {
+    if (statusFilter === "due") {
+      const week = Date.now() + 7 * 86400000;
+      return targets.filter((t) => {
+        if (!t.followUpAt) return false;
+        const ms = Date.parse(t.followUpAt);
+        return !Number.isNaN(ms) && ms <= week;
+      });
+    }
+    if (statusFilter === "all") return targets;
+    return targets.filter((t) => t.status === statusFilter);
+  }, [targets, statusFilter]);
+
+  const crmTarget = useMemo(
+    () => (crmTargetId ? targets.find((t) => t.id === crmTargetId) ?? null : null),
+    [crmTargetId, targets]
   );
 
   const statusCounts = useMemo(() => {
@@ -670,10 +718,10 @@ export default function AdminMarketing() {
       {/* Outreach tracker */}
       {openSections.outreach && (
         <section id="marketing-outreach" style={{ marginBottom: 24 }}>
-          <h2 style={{ marginBottom: 12, fontSize: 18 }}>Outreach tracker</h2>
+          <h2 style={{ marginBottom: 12, fontSize: 18 }}>Outreach tracker / CRM</h2>
           <p style={{ color: "#4b5563", marginBottom: 12 }}>
-            Track partner organizations, contact emails, and outbound message templates. Everything
-            here is saved to the database.
+            Partner pipeline with structured contacts, Resend email send, follow-up dates, and an
+            activity timeline. Open <strong>CRM</strong> on a row to work a target.
           </p>
 
           <div className="card" style={{ marginBottom: 16 }}>
@@ -761,12 +809,66 @@ export default function AdminMarketing() {
                 </select>
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+                Interest
+                <select
+                  value={form.interest}
+                  onChange={(e) => setForm((f) => ({ ...f, interest: e.target.value }))}
+                >
+                  <option value="">—</option>
+                  {OUTREACH_INTERESTS.map((i) => (
+                    <option key={i} value={i}>
+                      {i}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+                Audience size
+                <input
+                  value={form.audienceSize}
+                  onChange={(e) => setForm((f) => ({ ...f, audienceSize: e.target.value }))}
+                  placeholder="e.g. ~200 staff"
+                />
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+                Decision timeline
+                <input
+                  value={form.decisionTimeline}
+                  onChange={(e) => setForm((f) => ({ ...f, decisionTimeline: e.target.value }))}
+                  placeholder="e.g. Q3 budget cycle"
+                />
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+                Follow-up date
+                <input
+                  type="date"
+                  value={form.followUpAt}
+                  onChange={(e) => setForm((f) => ({ ...f, followUpAt: e.target.value }))}
+                />
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
                 Notes
                 <input
                   value={form.notes}
                   onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
                   placeholder="Next step, context, etc."
                 />
+              </label>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 13,
+                  marginTop: 20
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={form.doNotEmail}
+                  onChange={(e) => setForm((f) => ({ ...f, doNotEmail: e.target.checked }))}
+                />
+                Do not email
               </label>
             </div>
             <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
@@ -807,8 +909,8 @@ export default function AdminMarketing() {
           <div id="outreach-email-templates" className="card" style={{ marginBottom: 16 }}>
             <h3 style={{ marginTop: 0, fontSize: 16 }}>Outreach email templates</h3>
             <p style={{ color: "#4b5563", marginTop: 0, marginBottom: 12, fontSize: 13 }}>
-              Member- and partner-facing copy you edit here (welcome-style, partner intros, etc.).
-              Copy subject/body into your mail client when contacting a target. Placeholders:{" "}
+              Member- and partner-facing copy you edit here. Use <strong>CRM → Send email</strong> to
+              merge and send via Resend, or copy subject/body into your mail client. Placeholders:{" "}
               <code>{"{{name}}"}</code>, <code>{"{{contactName}}"}</code>,{" "}
               <code>{"{{organization}}"}</code>, <code>{"{{siteUrl}}"}</code>.
             </p>
@@ -992,6 +1094,14 @@ export default function AdminMarketing() {
             >
               All ({targets.length})
             </button>
+            <button
+              type="button"
+              className={`button button-secondary${statusFilter === "due" ? " is-open" : ""}`}
+              style={{ width: "auto", padding: "6px 10px", fontSize: 13 }}
+              onClick={() => setStatusFilter("due")}
+            >
+              Due this week ({dueSoonCount})
+            </button>
             {OUTREACH_STATUSES.map((s) => (
               <button
                 key={s.id}
@@ -1015,6 +1125,7 @@ export default function AdminMarketing() {
                   <th className="admin-col-optional" style={thStyle}>Persona</th>
                   <th className="admin-col-optional" style={thStyle}>Entry path</th>
                   <th className="admin-col-optional" style={thStyle}>Contact emails</th>
+                  <th className="admin-col-optional" style={thStyle}>Follow-up</th>
                   <th style={thStyle}>Status</th>
                   <th style={thStyle}>Actions</th>
                 </tr>
@@ -1037,6 +1148,12 @@ export default function AdminMarketing() {
                     <td className="admin-col-optional" style={tdMutedStyle}>{t.persona || "—"}</td>
                     <td className="admin-col-optional" style={tdMutedStyle}>{t.entryPath || "—"}</td>
                     <td className="admin-col-optional" style={tdMutedStyle}>{t.contact || "—"}</td>
+                    <td className="admin-col-optional" style={tdMutedStyle}>
+                      {t.followUpAt ? formatDate(t.followUpAt) : "—"}
+                      {t.doNotEmail ? (
+                        <div style={{ color: "#b91c1c", fontSize: 11 }}>Do not email</div>
+                      ) : null}
+                    </td>
                     <td style={tdStyle}>
                       <select
                         value={t.status}
@@ -1052,6 +1169,22 @@ export default function AdminMarketing() {
                     </td>
                     <td style={tdStyle}>
                       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          className="button"
+                          style={{ width: "auto", padding: "6px 10px", fontSize: 13 }}
+                          onClick={() => {
+                            setCrmTargetId(t.id);
+                            requestAnimationFrame(() => {
+                              document.getElementById("outreach-crm-panel")?.scrollIntoView({
+                                behavior: "smooth",
+                                block: "start"
+                              });
+                            });
+                          }}
+                        >
+                          CRM
+                        </button>
                         <button
                           type="button"
                           className="button button-secondary"
@@ -1082,6 +1215,21 @@ export default function AdminMarketing() {
               </p>
             )}
             {!targetsLoaded && <p style={{ padding: 16, color: "#6b7280", margin: 0 }}>Loading…</p>}
+          </div>
+
+          <div id="outreach-crm-panel">
+            {crmTarget ? (
+              <AdminOutreachCrmPanel
+                target={crmTarget}
+                templates={templates}
+                onClose={() => setCrmTargetId(null)}
+                onTargetUpdated={(updated) => {
+                  setTargets((prev) =>
+                    prev.map((row) => (row.id === updated.id ? { ...row, ...updated } : row))
+                  );
+                }}
+              />
+            ) : null}
           </div>
         </section>
       )}

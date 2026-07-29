@@ -3838,8 +3838,38 @@ export type OutreachTarget = {
   refCode: string | null;
   status: string;
   notes: string | null;
+  interest: string | null;
+  audienceSize: string | null;
+  decisionTimeline: string | null;
+  followUpAt: string | null;
+  doNotEmail: boolean;
   createdAt: string;
   updatedAt: string;
+};
+
+export type OutreachContact = {
+  id: string;
+  targetId: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  roleTitle: string | null;
+  preferredTimes: string | null;
+  isPrimary: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type OutreachActivity = {
+  id: string;
+  targetId: string;
+  contactId: string | null;
+  kind: string;
+  subject: string | null;
+  bodyPreview: string | null;
+  meta: Record<string, unknown>;
+  createdByEmail: string | null;
+  createdAt: string;
 };
 
 let marketingOutreachTableReady = false;
@@ -3856,8 +3886,48 @@ const ensureMarketingOutreachTable = async () => {
       ref_code text,
       status text NOT NULL DEFAULT 'prospect',
       notes text,
+      interest text,
+      audience_size text,
+      decision_timeline text,
+      follow_up_at timestamptz,
+      do_not_email boolean NOT NULL DEFAULT false,
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
+    )
+  `;
+  await sql`ALTER TABLE marketing_outreach_targets ADD COLUMN IF NOT EXISTS interest text`;
+  await sql`ALTER TABLE marketing_outreach_targets ADD COLUMN IF NOT EXISTS audience_size text`;
+  await sql`ALTER TABLE marketing_outreach_targets ADD COLUMN IF NOT EXISTS decision_timeline text`;
+  await sql`ALTER TABLE marketing_outreach_targets ADD COLUMN IF NOT EXISTS follow_up_at timestamptz`;
+  await sql`
+    ALTER TABLE marketing_outreach_targets
+    ADD COLUMN IF NOT EXISTS do_not_email boolean NOT NULL DEFAULT false
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS marketing_outreach_contacts (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      target_id uuid NOT NULL REFERENCES marketing_outreach_targets(id) ON DELETE CASCADE,
+      name text NOT NULL DEFAULT '',
+      email text,
+      phone text,
+      role_title text,
+      preferred_times text,
+      is_primary boolean NOT NULL DEFAULT false,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS marketing_outreach_activities (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      target_id uuid NOT NULL REFERENCES marketing_outreach_targets(id) ON DELETE CASCADE,
+      contact_id uuid REFERENCES marketing_outreach_contacts(id) ON DELETE SET NULL,
+      kind text NOT NULL,
+      subject text,
+      body_preview text,
+      meta jsonb NOT NULL DEFAULT '{}'::jsonb,
+      created_by_email text,
+      created_at timestamptz NOT NULL DEFAULT now()
     )
   `;
   marketingOutreachTableReady = true;
@@ -3869,14 +3939,41 @@ export const listOutreachTargets = async (): Promise<OutreachTarget[]> => {
     SELECT
       id, organization, category, persona,
       entry_path AS "entryPath", contact, ref_code AS "refCode",
-      status, notes, created_at AS "createdAt", updated_at AS "updatedAt"
+      status, notes, interest,
+      audience_size AS "audienceSize",
+      decision_timeline AS "decisionTimeline",
+      follow_up_at AS "followUpAt",
+      COALESCE(do_not_email, false) AS "doNotEmail",
+      created_at AS "createdAt", updated_at AS "updatedAt"
     FROM marketing_outreach_targets
-    ORDER BY created_at DESC
+    ORDER BY
+      CASE WHEN follow_up_at IS NOT NULL AND follow_up_at <= now() + interval '7 days' THEN 0 ELSE 1 END,
+      follow_up_at ASC NULLS LAST,
+      created_at DESC
   `;
   return rows;
 };
 
-export const createOutreachTarget = async (input: {
+export const getOutreachTarget = async (id: string): Promise<OutreachTarget | null> => {
+  await ensureMarketingOutreachTable();
+  const { rows } = await sql<OutreachTarget>`
+    SELECT
+      id, organization, category, persona,
+      entry_path AS "entryPath", contact, ref_code AS "refCode",
+      status, notes, interest,
+      audience_size AS "audienceSize",
+      decision_timeline AS "decisionTimeline",
+      follow_up_at AS "followUpAt",
+      COALESCE(do_not_email, false) AS "doNotEmail",
+      created_at AS "createdAt", updated_at AS "updatedAt"
+    FROM marketing_outreach_targets
+    WHERE id = ${id}
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+};
+
+type OutreachTargetWrite = {
   organization: string;
   category?: string | null;
   persona?: string | null;
@@ -3885,11 +3982,21 @@ export const createOutreachTarget = async (input: {
   refCode?: string | null;
   status?: string | null;
   notes?: string | null;
-}): Promise<OutreachTarget> => {
+  interest?: string | null;
+  audienceSize?: string | null;
+  decisionTimeline?: string | null;
+  followUpAt?: string | null;
+  doNotEmail?: boolean | null;
+};
+
+export const createOutreachTarget = async (
+  input: OutreachTargetWrite
+): Promise<OutreachTarget> => {
   await ensureMarketingOutreachTable();
   const { rows } = await sql<OutreachTarget>`
     INSERT INTO marketing_outreach_targets
-      (organization, category, persona, entry_path, contact, ref_code, status, notes)
+      (organization, category, persona, entry_path, contact, ref_code, status, notes,
+       interest, audience_size, decision_timeline, follow_up_at, do_not_email)
     VALUES (
       ${input.organization},
       ${input.category ?? null},
@@ -3898,28 +4005,29 @@ export const createOutreachTarget = async (input: {
       ${input.contact ?? null},
       ${input.refCode ?? null},
       ${input.status ?? "prospect"},
-      ${input.notes ?? null}
+      ${input.notes ?? null},
+      ${input.interest ?? null},
+      ${input.audienceSize ?? null},
+      ${input.decisionTimeline ?? null},
+      ${input.followUpAt ?? null},
+      ${input.doNotEmail ?? false}
     )
     RETURNING
       id, organization, category, persona,
       entry_path AS "entryPath", contact, ref_code AS "refCode",
-      status, notes, created_at AS "createdAt", updated_at AS "updatedAt"
+      status, notes, interest,
+      audience_size AS "audienceSize",
+      decision_timeline AS "decisionTimeline",
+      follow_up_at AS "followUpAt",
+      COALESCE(do_not_email, false) AS "doNotEmail",
+      created_at AS "createdAt", updated_at AS "updatedAt"
   `;
   return rows[0];
 };
 
 export const updateOutreachTarget = async (
   id: string,
-  input: {
-    organization: string;
-    category?: string | null;
-    persona?: string | null;
-    entryPath?: string | null;
-    contact?: string | null;
-    refCode?: string | null;
-    status?: string | null;
-    notes?: string | null;
-  }
+  input: OutreachTargetWrite
 ): Promise<OutreachTarget | null> => {
   await ensureMarketingOutreachTable();
   const { rows } = await sql<OutreachTarget>`
@@ -3933,12 +4041,22 @@ export const updateOutreachTarget = async (
       ref_code = ${input.refCode ?? null},
       status = ${input.status ?? "prospect"},
       notes = ${input.notes ?? null},
+      interest = ${input.interest ?? null},
+      audience_size = ${input.audienceSize ?? null},
+      decision_timeline = ${input.decisionTimeline ?? null},
+      follow_up_at = ${input.followUpAt ?? null},
+      do_not_email = ${input.doNotEmail ?? false},
       updated_at = now()
     WHERE id = ${id}
     RETURNING
       id, organization, category, persona,
       entry_path AS "entryPath", contact, ref_code AS "refCode",
-      status, notes, created_at AS "createdAt", updated_at AS "updatedAt"
+      status, notes, interest,
+      audience_size AS "audienceSize",
+      decision_timeline AS "decisionTimeline",
+      follow_up_at AS "followUpAt",
+      COALESCE(do_not_email, false) AS "doNotEmail",
+      created_at AS "createdAt", updated_at AS "updatedAt"
   `;
   return rows[0] ?? null;
 };
@@ -3949,6 +4067,205 @@ export const deleteOutreachTarget = async (id: string): Promise<boolean> => {
     DELETE FROM marketing_outreach_targets WHERE id = ${id}
   `;
   return (rowCount ?? 0) > 0;
+};
+
+export const listOutreachContacts = async (targetId: string): Promise<OutreachContact[]> => {
+  await ensureMarketingOutreachTable();
+  const { rows } = await sql<OutreachContact>`
+    SELECT
+      id, target_id AS "targetId", name, email, phone,
+      role_title AS "roleTitle", preferred_times AS "preferredTimes",
+      COALESCE(is_primary, false) AS "isPrimary",
+      created_at AS "createdAt", updated_at AS "updatedAt"
+    FROM marketing_outreach_contacts
+    WHERE target_id = ${targetId}
+    ORDER BY is_primary DESC, created_at ASC
+  `;
+  return rows;
+};
+
+export const getOutreachContact = async (id: string): Promise<OutreachContact | null> => {
+  await ensureMarketingOutreachTable();
+  const { rows } = await sql<OutreachContact>`
+    SELECT
+      id, target_id AS "targetId", name, email, phone,
+      role_title AS "roleTitle", preferred_times AS "preferredTimes",
+      COALESCE(is_primary, false) AS "isPrimary",
+      created_at AS "createdAt", updated_at AS "updatedAt"
+    FROM marketing_outreach_contacts
+    WHERE id = ${id}
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+};
+
+export const createOutreachContact = async (input: {
+  targetId: string;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  roleTitle?: string | null;
+  preferredTimes?: string | null;
+  isPrimary?: boolean | null;
+}): Promise<OutreachContact> => {
+  await ensureMarketingOutreachTable();
+  if (input.isPrimary) {
+    await sql`
+      UPDATE marketing_outreach_contacts SET is_primary = false WHERE target_id = ${input.targetId}
+    `;
+  }
+  const { rows } = await sql<OutreachContact>`
+    INSERT INTO marketing_outreach_contacts
+      (target_id, name, email, phone, role_title, preferred_times, is_primary)
+    VALUES (
+      ${input.targetId},
+      ${input.name?.trim() || ""},
+      ${input.email?.trim() || null},
+      ${input.phone?.trim() || null},
+      ${input.roleTitle?.trim() || null},
+      ${input.preferredTimes?.trim() || null},
+      ${!!input.isPrimary}
+    )
+    RETURNING
+      id, target_id AS "targetId", name, email, phone,
+      role_title AS "roleTitle", preferred_times AS "preferredTimes",
+      COALESCE(is_primary, false) AS "isPrimary",
+      created_at AS "createdAt", updated_at AS "updatedAt"
+  `;
+  return rows[0];
+};
+
+export const updateOutreachContact = async (
+  id: string,
+  input: {
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    roleTitle?: string | null;
+    preferredTimes?: string | null;
+    isPrimary?: boolean | null;
+  }
+): Promise<OutreachContact | null> => {
+  await ensureMarketingOutreachTable();
+  const existing = await getOutreachContact(id);
+  if (!existing) return null;
+  if (input.isPrimary) {
+    await sql`
+      UPDATE marketing_outreach_contacts SET is_primary = false WHERE target_id = ${existing.targetId}
+    `;
+  }
+  const { rows } = await sql<OutreachContact>`
+    UPDATE marketing_outreach_contacts
+    SET
+      name = ${input.name?.trim() ?? existing.name},
+      email = ${input.email !== undefined ? input.email?.trim() || null : existing.email},
+      phone = ${input.phone !== undefined ? input.phone?.trim() || null : existing.phone},
+      role_title = ${
+        input.roleTitle !== undefined ? input.roleTitle?.trim() || null : existing.roleTitle
+      },
+      preferred_times = ${
+        input.preferredTimes !== undefined
+          ? input.preferredTimes?.trim() || null
+          : existing.preferredTimes
+      },
+      is_primary = ${input.isPrimary !== undefined ? !!input.isPrimary : existing.isPrimary},
+      updated_at = now()
+    WHERE id = ${id}
+    RETURNING
+      id, target_id AS "targetId", name, email, phone,
+      role_title AS "roleTitle", preferred_times AS "preferredTimes",
+      COALESCE(is_primary, false) AS "isPrimary",
+      created_at AS "createdAt", updated_at AS "updatedAt"
+  `;
+  return rows[0] ?? null;
+};
+
+export const deleteOutreachContact = async (id: string): Promise<boolean> => {
+  await ensureMarketingOutreachTable();
+  const { rowCount } = await sql`
+    DELETE FROM marketing_outreach_contacts WHERE id = ${id}
+  `;
+  return (rowCount ?? 0) > 0;
+};
+
+export const listOutreachActivities = async (
+  targetId: string,
+  limit = 50
+): Promise<OutreachActivity[]> => {
+  await ensureMarketingOutreachTable();
+  const { rows } = await sql<{
+    id: string;
+    targetId: string;
+    contactId: string | null;
+    kind: string;
+    subject: string | null;
+    bodyPreview: string | null;
+    meta: Record<string, unknown> | null;
+    createdByEmail: string | null;
+    createdAt: string;
+  }>`
+    SELECT
+      id, target_id AS "targetId", contact_id AS "contactId",
+      kind, subject, body_preview AS "bodyPreview",
+      COALESCE(meta, '{}'::jsonb) AS meta,
+      created_by_email AS "createdByEmail",
+      created_at AS "createdAt"
+    FROM marketing_outreach_activities
+    WHERE target_id = ${targetId}
+    ORDER BY created_at DESC
+    LIMIT ${Math.min(Math.max(limit, 1), 100)}
+  `;
+  return rows.map((r) => ({
+    ...r,
+    meta: (r.meta && typeof r.meta === "object" ? r.meta : {}) as Record<string, unknown>
+  }));
+};
+
+export const createOutreachActivity = async (input: {
+  targetId: string;
+  contactId?: string | null;
+  kind: string;
+  subject?: string | null;
+  bodyPreview?: string | null;
+  meta?: Record<string, unknown> | null;
+  createdByEmail?: string | null;
+}): Promise<OutreachActivity> => {
+  await ensureMarketingOutreachTable();
+  const metaJson = JSON.stringify(input.meta ?? {});
+  const { rows } = await sql<{
+    id: string;
+    targetId: string;
+    contactId: string | null;
+    kind: string;
+    subject: string | null;
+    bodyPreview: string | null;
+    meta: Record<string, unknown> | null;
+    createdByEmail: string | null;
+    createdAt: string;
+  }>`
+    INSERT INTO marketing_outreach_activities
+      (target_id, contact_id, kind, subject, body_preview, meta, created_by_email)
+    VALUES (
+      ${input.targetId},
+      ${input.contactId ?? null},
+      ${input.kind},
+      ${input.subject ?? null},
+      ${input.bodyPreview ?? null},
+      CAST(${metaJson} AS jsonb),
+      ${input.createdByEmail ?? null}
+    )
+    RETURNING
+      id, target_id AS "targetId", contact_id AS "contactId",
+      kind, subject, body_preview AS "bodyPreview",
+      COALESCE(meta, '{}'::jsonb) AS meta,
+      created_by_email AS "createdByEmail",
+      created_at AS "createdAt"
+  `;
+  const r = rows[0];
+  return {
+    ...r,
+    meta: (r.meta && typeof r.meta === "object" ? r.meta : {}) as Record<string, unknown>
+  };
 };
 
 let emailStaffListsTableReady = false;

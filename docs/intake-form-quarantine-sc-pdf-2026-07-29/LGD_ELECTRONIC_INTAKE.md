@@ -1,7 +1,5 @@
 # Electronic Life Guidance Discovery (LGD) & Goal Manifestation Script Design
 
-> **Consent note (2026-07-29):** A Success Center PDF-aligned intake rewrite is **quarantined** (not live) at `docs/intake-form-quarantine-sc-pdf-2026-07-29/` because the process creator revoked consent to use that process. Live code uses the RFTS electronic A–F intake in `src/` (version 3). Do not re-enable the quarantined files without clearance.
-
 Product design for a digital Life Guidance Discovery intake that (a) prepares a facilitator/hypnotherapist session and/or (b) produces a high-quality **Goal Manifestation script draft** for Customized Goal Manifestation Recording (CGMR) production.
 
 Aligned with Success Center practice (Terry Brussel-Rogers), Platinum CGMR placement rules, and personas in `docs/personas.md` (especially Chris — Spiritual Entrepreneur).
@@ -88,49 +86,42 @@ Chosen from intake answers (primary life area + sleep vs daytime preference). Al
 
 Each section collects **structured fields + free-text “in your words”**. Free text is copied verbatim into script suggestion lines where marked `[MEMBER_WORDS]`.
 
-### Section A — Subconscious programming & consent
+Aligned to Success Center paper form `Client_Intake_Form_fillable.pdf` (intake version **4**). Backup of the prior electronic form: `docs/intake-form-backup-2026-07-29/`.
+
+### Section A — Instructions & subconscious programming
+- Paper-form completion instructions (personal/clinical, challenges ranking, Seven Keys)
 - Premise: **How would you like your subconscious programmed?** (multi-select catalog)
 - Consent to store answers and generate a draft script
 - Crisis / medical disclaimer (escalate to human, no auto-script)
 - Already completed live LGD? (syncs `hadLgdSession`)
 
-### Section B — Beliefs & where you are
+### Section P — Personal & clinical information (paper pages 2–4)
+- Contact, address, phones/hours, employment, marital/family, children, education, occupation
+- **Clinical:** doctor, emergency contact, current health issues, medications, prior hypnosis, religion
+- How heard about us (+ specify), hobbies, speaker/org interest
+- Hypnosis missed-appointment agreement + date
+
+### Section B — Beliefs & life areas
 - **Belief transformation** (multiple choice): select limiting beliefs → choose growth belief to install (or custom pair)
 - Life areas 1–10 ratings: physical, mental, emotional, spiritual, financial, relationship, work/mission, sleep/energy
-- **Challenges checklist** (curated ~34 items in 6 categories; not the full clinical paper inventory) — check applicable, then rank **top 10 priorities**
-- What is working / gratitude (3 items)
-- Most important challenge this season (one paragraph)
-- Script uses each belief pair as **Releasing… / Installing…** (does not rehearse challenge labels as suggestions); priorities appear on facilitator brief + production packet
 
-### Section C — Where you want to go (desired state)
-- **Goal horizons** (Success Center intake): short-term, long-term, one-year change, ultimate goal
-- Top 3 outcomes in **their words** (must be sensory/specific)
-- Align with RFTS goal catalog (multi-select + priority order, max 10)
-- Identity statements desired: “I am becoming…” / “I am now…” (up to 7 phrases — **core of CGMR**)
-- Timeline: 90 days / 12 months / ongoing
-- Income intention (optional; Chris avatar): current band, desired band, “investment” framing notes
+### Section C — Challenges checklist (paper page 5)
+- **Full Success Center checklist** (not the short curated list) with detail subfields (drug, weight/height, cigarettes/day, income bands, etc.)
+- Check applicable, then rank **top 10 priorities**
+- Gratitude + “My most important challenge is…”
 
-### Section D — How you get there (bridges & blocks)
-- **Seven Keys ranking** — Bronze always #1; member checks and orders Copper→Platinum Keys that apply (Success Center / Terry Brussel-Rogers)
-- Known blocks (fear, habit, people, time, money story)
-- Past attempts and what failed
-- Resources / strengths to leverage
-- Will to learn (1–5) + belief I can learn (1–5) — from Barnes/Brussel Session 2
-- Non-negotiables / ethics / spiritual frame (optional)
+### Section D — Goals for your CGMR
+- **Goal horizons:** short-term, long-term, one-year, **five-year**, ultimate goal
+- Top 3 outcomes in **their words**; RFTS goal catalog; identity statements; timeline; income bands
 
-### Section E — Language & modality preferences
-- Preferred metaphors (ocean, mountain, light, business, sports, faith, etc.)
-- Words they love / words to avoid
-- Faith / spiritual language OK? (yes / minimal / none)
-- Sleep listening vs also daytime
-- Voice preference (catalog) + later “my own”
-- Frequency bed preference (or “choose for me”)
+### Section E — Seven Keys & how you get there (paper page 6)
+- **Seven Keys ranking** — Bronze always #1; member checks and orders Copper→Platinum Keys that apply
+- Known blocks, past attempts, strengths, will to learn / belief I can learn
 
-### Section F — Facilitator handoff
-- Questions for the live session
-- **Interested in live LGD / private sessions** (checkbox — facilitator follow-up)
-- Permission for facilitator to edit draft
-- After submit / CGMR path: member console shows **CGMR usage instructions** (3–4 nights/week; CGMR overview vs supporting tracks; annual renewal)
+### Section F — Language, modality & facilitator handoff
+- Metaphors, words love/avoid, spiritual language, listen context, voice, frequency bed
+- Questions for facilitator; live LGD interest; permission to edit draft
+- After submit / CGMR path: **CGMR usage instructions** in member console
 
 ---
 

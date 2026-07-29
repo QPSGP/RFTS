@@ -1,7 +1,5 @@
 # Electronic Life Guidance Discovery (LGD) & Goal Manifestation Script Design
 
-> **Consent note (2026-07-29):** A Success Center PDF-aligned intake rewrite is **quarantined** (not live) at `docs/intake-form-quarantine-sc-pdf-2026-07-29/` because the process creator revoked consent to use that process. Live code uses the RFTS electronic A–F intake in `src/` (version 3). Do not re-enable the quarantined files without clearance.
-
 Product design for a digital Life Guidance Discovery intake that (a) prepares a facilitator/hypnotherapist session and/or (b) produces a high-quality **Goal Manifestation script draft** for Customized Goal Manifestation Recording (CGMR) production.
 
 Aligned with Success Center practice (Terry Brussel-Rogers), Platinum CGMR placement rules, and personas in `docs/personas.md` (especially Chris — Spiritual Entrepreneur).

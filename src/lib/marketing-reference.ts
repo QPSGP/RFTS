@@ -22,6 +22,42 @@ export const OUTREACH_ENTRY_PATHS = [
   "Facilitator / Managed"
 ] as const;
 
+/** What the organization is interested in (CRM gather-info). */
+export const OUTREACH_INTERESTS = [
+  "Affiliate partnership",
+  "Speaker / seminar",
+  "Wellness program for staff",
+  "Facilitator / managed memberships",
+  "Other"
+] as const;
+
+export type OutreachTemplateVars = {
+  name?: string;
+  contactName?: string;
+  organization?: string;
+  persona?: string;
+  siteUrl?: string;
+  yourName?: string;
+  refCode?: string;
+};
+
+/** Replace {{placeholders}} in outreach email templates. Unknown keys become empty. */
+export function mergeOutreachTemplate(
+  text: string,
+  vars: OutreachTemplateVars
+): string {
+  const map: Record<string, string> = {
+    name: vars.name ?? vars.contactName ?? "",
+    contactName: vars.contactName ?? vars.name ?? "",
+    organization: vars.organization ?? "",
+    persona: vars.persona ?? "",
+    siteUrl: vars.siteUrl ?? "",
+    yourName: vars.yourName ?? "",
+    refCode: vars.refCode ?? ""
+  };
+  return text.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key: string) => map[key] ?? "");
+}
+
 /** Personas from docs/personas.md, used to tag outreach targets. */
 export const OUTREACH_PERSONAS = [
   "Alex — Burned-Out Professional",

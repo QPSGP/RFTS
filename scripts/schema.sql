@@ -426,7 +426,7 @@ ALTER TABLE library_items ADD COLUMN IF NOT EXISTS in_general_catalog boolean NO
 CREATE INDEX IF NOT EXISTS library_items_moderator_id_idx ON library_items (moderator_id)
   WHERE moderator_id IS NOT NULL;
 
--- Marketing outreach tracker: prospective partner organizations and their status
+-- Marketing outreach tracker / lightweight CRM: partner orgs, contacts, activity
 CREATE TABLE IF NOT EXISTS marketing_outreach_targets (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization text NOT NULL,
@@ -437,11 +437,48 @@ CREATE TABLE IF NOT EXISTS marketing_outreach_targets (
   ref_code text,
   status text NOT NULL DEFAULT 'prospect',
   notes text,
+  interest text,
+  audience_size text,
+  decision_timeline text,
+  follow_up_at timestamptz,
+  do_not_email boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS marketing_outreach_targets_status_idx
   ON marketing_outreach_targets (status);
+CREATE INDEX IF NOT EXISTS marketing_outreach_targets_follow_up_idx
+  ON marketing_outreach_targets (follow_up_at)
+  WHERE follow_up_at IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS marketing_outreach_contacts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  target_id uuid NOT NULL REFERENCES marketing_outreach_targets(id) ON DELETE CASCADE,
+  name text NOT NULL DEFAULT '',
+  email text,
+  phone text,
+  role_title text,
+  preferred_times text,
+  is_primary boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS marketing_outreach_contacts_target_idx
+  ON marketing_outreach_contacts (target_id);
+
+CREATE TABLE IF NOT EXISTS marketing_outreach_activities (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  target_id uuid NOT NULL REFERENCES marketing_outreach_targets(id) ON DELETE CASCADE,
+  contact_id uuid REFERENCES marketing_outreach_contacts(id) ON DELETE SET NULL,
+  kind text NOT NULL,
+  subject text,
+  body_preview text,
+  meta jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_by_email text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS marketing_outreach_activities_target_idx
+  ON marketing_outreach_activities (target_id, created_at DESC);
 
 -- Admin-editable staff / transactional email recipient lists
 CREATE TABLE IF NOT EXISTS email_staff_lists (
