@@ -75,7 +75,11 @@ export const OUTREACH_PERSONAS = [
   "Alex — Burned-Out Professional",
   "Jordan — Front-Line Caregiver",
   "Sam — Sleep-Deprived Parent / Caregiver",
-  "Chris — Spiritual Entrepreneur"
+  "Chris — Spiritual Entrepreneur",
+  "Riley — Single Seeking a Match",
+  "Morgan — High-Pressure Sales Professional",
+  "Taylor — Exam-Bound Professional",
+  "Casey — Working Actor / Performer"
 ] as const;
 
 /** Segment categories from docs/target-organizations.md. */
@@ -492,6 +496,38 @@ export const REFERENCE_PERSONAS: ReferencePersona[] = [
       "Wants spiritual growth and income lift; rejects starving-healer myth. Will to learn; buys when growth is an investment.",
     message:
       "Highest potential physically, mentally, emotionally, spiritually, and financially — nightly, while you sleep."
+  },
+  {
+    name: "Riley — Single Seeking a Match",
+    role: "Single adult wanting a healthy romantic relationship, 28–48",
+    snapshot:
+      "Dating fatigue and old patterns; wants confidence and readiness without desperation or another daytime course.",
+    message:
+      "Become the match you want — relationship goals reinforce nightly while you sleep."
+  },
+  {
+    name: "Morgan — High-Pressure Sales Professional",
+    role: "AE, realtor, advisor, or founder on quota, 26–55",
+    snapshot:
+      "Income tied to confidence and follow-through; rejection and pre-close anxiety wreck sleep and momentum.",
+    message:
+      "Quota calm and bounce-back — sales confidence and prospecting drive reinforced at bedtime."
+  },
+  {
+    name: "Taylor — Exam-Bound Professional",
+    role: "Student or working pro facing boards, bar, CPA, certs, 22–45",
+    snapshot:
+      "Career hinge is a test date; knows the material but blanks under pressure; cramming steals sleep.",
+    message:
+      "Know it when it counts — calm recall and protected sleep through the exam window."
+  },
+  {
+    name: "Casey — Working Actor / Performer",
+    role: "Actor, voice, dancer, musician, or presenter, 20–50",
+    snapshot:
+      "Auditions and rejection loops; nerves steal presence; irregular schedule makes wellness fragile.",
+    message:
+      "Presence over perfection — creative flow and rejection recovery, one Start at bedtime."
   }
 ];
 

@@ -4,6 +4,8 @@ Use these personas to steer blog topics, ad creative, short-form hooks, affiliat
 
 **Source for Persona 4 and Ideal Client / USP notes:** Terry Brussel-Rogers with Steven Barnes, *Your First Hundred Thousand Dollars*, Session 2 (avatar, ability to pay, will to learn, holistic + financial USP). Use that framing for Balanced Life, Wealth, affiliate/facilitator recruitment, and partner outreach.
 
+**Source for Personas 5–8:** Additional commercial avatars from Terry (originator) — singles seeking a match, sales professionals, exam-bound professionals, and actors / performers. Classic Success Center goal niches that map cleanly to nightly sleep-side reinforcement.
+
 ---
 
 ## Persona 1: The Burned-Out Professional
@@ -173,6 +175,185 @@ Chris already earns roughly mid–high five figures or low six figures and wants
 
 ---
 
+## Persona 5: The Single Seeking a Match
+
+**Name:** Riley (composite)  
+**Age:** 28–48  
+**Role:** Single adult (never married, divorced, or long-term single) actively wanting a healthy romantic relationship — dating apps, setups, or “ready but stuck”
+
+### Snapshot
+Riley wants a real partnership, not endless scrolling. They may attract the wrong people, freeze on dates, replay old heartbreak, or sabotage closeness when it finally appears. Daytime dating advice piles on more homework; nights are when loneliness and hope both get loud. They respond to confidence, self-worth, and “right person / right timing” framing — without desperation energy.
+
+### Goals on RFTS
+- Relationship (primary) — joyful new match or readiness for a healthy bond
+- Emotional health, stress relief, sleep (anxiety before/after dates)
+- Self-awareness / will power for boundaries and consistency
+
+### Pain points
+- Dating fatigue; apps feel hollow or addictive
+- Fear of rejection, “settling,” or repeating the last bad pattern
+- Overthinks texts and first dates; hard to be natural and present
+- Feels behind peers who are paired up
+
+### What they search for
+- "guided meditation for finding love"
+- "hypnosis for dating confidence"
+- "attract a healthy relationship"
+- "get over an ex sleep meditation"
+- "self worth before dating"
+
+### Messaging that resonates
+- **Become the match you want** — calm confidence and clear standards, not clinginess
+- **Nightly reinforcement** — relationship goals settle while you sleep; no daytime dating course required
+- **Hope without desperation** — open, warm, selective; ready when the right person appears
+- **Emotional reset** — release old loops so new connection can land
+
+### Channels
+- Instagram / TikTok (dating & self-worth creators), relationship podcasts
+- Life coaches, matchmakers, divorce recovery groups, church/community singles ministries
+- Blog + `/relationship` SEO cluster; emotional-health cross-links
+
+### CTA
+- Trial → `/relationship`, `/emotional-health`, `/sleep-meditation`
+- Affiliate angle: coaches and facilitators who already counsel singles
+
+---
+
+## Persona 6: The High-Pressure Sales Professional
+
+**Name:** Morgan (composite)  
+**Age:** 26–55  
+**Role:** B2B or B2C salesperson, account executive, realtor, insurance/financial advisor, or founder who lives on pipeline — quota, commission, and rejection are daily weather
+
+### Snapshot
+Morgan’s income is tied to confidence and follow-through. They know the script but still freeze on cold calls, over-prepare and under-ask, or crash after a lost deal. Sleep suffers before big closes and after bad months. They want an edge that is practical — mindset, persistence, and composure — not another daytime sales podcast they won’t finish.
+
+### Goals on RFTS
+- Wealth (primary) — income, abundance, sales confidence
+- Stress relief, resilience, sleep (recovery between pushes)
+- Will power / focus for prospecting consistency
+- May add balanced life when burnout hits mid-quarter
+
+### Pain points
+- Call reluctance / rejection sensitivity
+- Feast-or-famine energy; confidence collapses with the pipeline
+- “Always on” culture; brain will not shut off after the last dial
+- Tried motivational content that fades by Monday morning
+
+### What they search for
+- "guided meditation for sales confidence"
+- "hypnosis for closing deals"
+- "overcome fear of rejection sales"
+- "meditation for high performers"
+- "sleep hypnosis for success"
+
+### Messaging that resonates
+- **Quota calm** — composure under pressure; ask for the sale without apology
+- **Nightly competitive advantage** — reinforce prospecting habits and belief while you sleep
+- **Bounce-back** — lost deals don’t define the month; resilience is trained
+- **Income as a skill state** — not hype; consistent action + settled nervous system
+
+### Channels
+- LinkedIn, sales Slack/Discord communities, realtor and insurance associations
+- Sales coaches, Tony-style masterminds, corporate sales enablement / wellness pilots
+- Short-form: “Close the laptop — let tonight’s audio work the pipeline mindset”
+
+### CTA
+- Trial → `/wealth`, `/stress-relief`, `/will-power`, `/resilience-meditation`
+- Affiliate angle: sales trainers and team leads with `?ref=` for their books of business
+
+---
+
+## Persona 7: The Exam-Bound Professional
+
+**Name:** Taylor (composite)  
+**Age:** 22–45  
+**Role:** Student or working professional facing a high-stakes exam — bar, medical boards, nursing (NCLEX), CPA, Series licenses, IT certs, graduate admissions (LSAT/GRE), civil service, or professional recertification
+
+### Snapshot
+Taylor’s career hinge is a test date. Days are packed with content review; nights bring dread that “I haven’t covered enough.” They blank on practice questions under timed conditions even when they know the material. They need calm recall, focus, and sleep that actually restores — not another daytime study method that steals rest.
+
+### Goals on RFTS
+- Memory / focus (primary) — retention, calm recall under pressure
+- Stress relief, sleep, will power (study consistency)
+- May add wealth or career confidence after the credential
+
+### Pain points
+- Test anxiety; mind goes blank in the exam room
+- Cramming destroys sleep the week before the test
+- Imposter syndrome (“everyone else is further ahead”)
+- Distraction and phone drift during study blocks
+
+### What they search for
+- "guided meditation for exams"
+- "hypnosis for test anxiety"
+- "sleep learning for studying"
+- "improve memory for board exams"
+- "calm focus before a test"
+
+### Messaging that resonates
+- **Know it when it counts** — material you studied can surface calmly under timed pressure
+- **Protect the sleep that scores** — nightly downshift so review sticks; no all-nighter badge of honor
+- **Steady study drive** — willpower for the plan you already have, without panic spirals
+- **One credential, one season** — intensive support through the test window, habit that remains after
+
+### Channels
+- Study Discord/Reddit (r/barexam, nursing, CPA), university counseling, bootcamp partners
+- Tutors, review-course instructors, professional associations, employer tuition programs
+- SEO: exam anxiety + memory/sleep clusters; `/memory`, `/memory-improvement`
+
+### CTA
+- Trial timed to exam season → `/memory`, `/memory-improvement`, `/stress-relief`, `/sleep-meditation`, `/will-power`
+- Affiliate angle: tutors and review courses; cohort codes for study groups
+
+---
+
+## Persona 8: The Working Actor / Performer
+
+**Name:** Casey (composite)  
+**Age:** 20–50  
+**Role:** Actor, voice actor, dancer, musician, comedian, or presenter — auditions, callbacks, stage/set days, and long stretches of uncertainty between gigs
+
+### Snapshot
+Casey lives in evaluation: casting rooms, self-tapes, reviews, and “what did they think?” loops. Talent is not the only issue — nerves steal presence, comparison drains joy, and irregular schedules wreck sleep. They want creative flow, confident presence, and emotional recovery after rejection — without a daytime practice that competes with rehearsal and day jobs.
+
+### Goals on RFTS
+- Inspiration (primary) — creative flow on demand
+- Emotional health, stress relief, resilience (rejection recovery)
+- Sleep (call times / night shoots / post-show crash)
+- May add wealth (booking consistency) or relationship when life feels unstable
+
+### Pain points
+- Audition anxiety; freezes or overacts when stakes feel high
+- Rejection hangover that lasts days
+- Self-tape perfectionism; can’t “just send it”
+- Irregular income and schedule make wellness routines fragile
+
+### What they search for
+- "guided meditation for actors"
+- "hypnosis for stage fright"
+- "audition anxiety relief"
+- "creative flow meditation"
+- "sleep hypnosis for performers"
+
+### Messaging that resonates
+- **Presence over perfection** — grounded, available, memorable in the room
+- **Creative channel open** — inspiration at will; less force, more flow
+- **Rejection metabolism** — feel it, release it, show up fresh for the next tape
+- **Nightly reset for irregular lives** — one Start at bedtime whether you worked a double or booked the lead
+
+### Channels
+- Actor Facebook/Discord groups, casting newsletters, drama-school alumni nets
+- Acting coaches, dialect coaches, talent managers, theater wellness programs
+- Short-form: “Self-tape tomorrow — train presence tonight while you sleep”
+- Landing: `/inspiration`, `/emotional-health`, `/stress-relief`, `/sleep-meditation`
+
+### CTA
+- Trial → `/inspiration`, `/emotional-health`, `/stress-relief`
+- Affiliate angle: acting coaches and studios; workshop bundles with membership trial
+
+---
+
 ## Ideal client checklist (marketing creations)
 
 Use this when writing ads, scripts, outreach emails, or lead cards:
@@ -198,10 +379,10 @@ Use this when writing ads, scripts, outreach emails, or lead cards:
 | Activity | Use personas for |
 |----------|------------------|
 | **Weekly blog** | Rotate pain points and search phrases; link to matching wellness/goal page |
-| **Short-form video** | Open with persona hook ("Racing thoughts at 11 p.m.?" / "Starving healer is not a business plan") |
-| **Paid ads** | One creative angle per persona (stress / front-line / parent sleep / spiritual entrepreneur) |
-| **Affiliate outreach** | Match partner type to persona (coach → Alex or Chris, department wellness → Jordan) |
+| **Short-form video** | Open with persona hook ("Racing thoughts at 11 p.m.?" / "Starving healer is not a business plan" / "Self-tape tomorrow?") |
+| **Paid ads** | One creative angle per persona (stress / front-line / parent sleep / spiritual entrepreneur / dating / sales / exams / actors) |
+| **Affiliate outreach** | Match partner type to persona (coach → Alex or Chris, department wellness → Jordan, sales trainer → Morgan, tutor → Taylor, acting coach → Casey) |
 | **Product copy** | Feature bullets that answer persona pain; Balanced Life copy leads with the five-area USP |
-| **Lead cards / expos** | Capture spiritual growth + income goals + current/desired income bands (Terry’s show method) |
+| **Lead cards / expos** | Capture spiritual growth + income goals + current/desired income bands (Terry’s show method); also relationship / exam / performance goals when relevant |
 
-**Next marketing steps after personas:** public affiliate page, burnout landing page (or stress cluster), short-form clip cadence, conversion event tracking.
+**Next marketing steps after personas:** public affiliate page, burnout landing page (or stress cluster), short-form clip cadence, conversion event tracking; persona-specific packs (Dating Confidence, Sales Edge, Exam Calm, Audition Presence).
