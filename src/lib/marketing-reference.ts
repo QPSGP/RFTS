@@ -46,6 +46,8 @@ export const OUTREACH_INTERESTS = [
 export type OutreachTemplateVars = {
   name?: string;
   contactName?: string;
+  firstName?: string;
+  lastName?: string;
   organization?: string;
   persona?: string;
   siteUrl?: string;
@@ -58,9 +60,16 @@ export function mergeOutreachTemplate(
   text: string,
   vars: OutreachTemplateVars
 ): string {
+  const fullName =
+    vars.name ||
+    vars.contactName ||
+    [vars.firstName, vars.lastName].filter(Boolean).join(" ") ||
+    "";
   const map: Record<string, string> = {
-    name: vars.name ?? vars.contactName ?? "",
-    contactName: vars.contactName ?? vars.name ?? "",
+    name: fullName,
+    contactName: vars.contactName || fullName,
+    firstName: vars.firstName || fullName.split(/\s+/)[0] || "",
+    lastName: vars.lastName || "",
     organization: vars.organization ?? "",
     persona: vars.persona ?? "",
     siteUrl: vars.siteUrl ?? "",

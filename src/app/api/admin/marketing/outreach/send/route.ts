@@ -68,6 +68,8 @@ export async function POST(request: Request) {
   const vars = {
     name: contact.name || to,
     contactName: contact.name || to,
+    firstName: contact.firstName || "",
+    lastName: contact.lastName || "",
     organization: target.organization,
     persona: target.persona || "",
     siteUrl: getBaseUrl(),

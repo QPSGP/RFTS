@@ -3852,11 +3852,21 @@ export type OutreachTarget = {
 export type OutreachContact = {
   id: string;
   targetId: string;
+  /** Display name (synced from first + last when those are set). */
   name: string;
+  firstName: string | null;
+  lastName: string | null;
   email: string | null;
   phone: string | null;
+  phoneMobile: string | null;
   roleTitle: string | null;
   preferredTimes: string | null;
+  linkedinUrl: string | null;
+  instagramUrl: string | null;
+  facebookUrl: string | null;
+  xUrl: string | null;
+  websiteUrl: string | null;
+  notes: string | null;
   isPrimary: boolean;
   createdAt: string;
   updatedAt: string;
@@ -3915,15 +3925,33 @@ const ensureMarketingOutreachTable = async () => {
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       target_id uuid NOT NULL REFERENCES marketing_outreach_targets(id) ON DELETE CASCADE,
       name text NOT NULL DEFAULT '',
+      first_name text,
+      last_name text,
       email text,
       phone text,
+      phone_mobile text,
       role_title text,
       preferred_times text,
+      linkedin_url text,
+      instagram_url text,
+      facebook_url text,
+      x_url text,
+      website_url text,
+      notes text,
       is_primary boolean NOT NULL DEFAULT false,
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
     )
   `;
+  await sql`ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS first_name text`;
+  await sql`ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS last_name text`;
+  await sql`ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS phone_mobile text`;
+  await sql`ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS linkedin_url text`;
+  await sql`ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS instagram_url text`;
+  await sql`ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS facebook_url text`;
+  await sql`ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS x_url text`;
+  await sql`ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS website_url text`;
+  await sql`ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS notes text`;
   await sql`
     CREATE TABLE IF NOT EXISTS marketing_outreach_activities (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -4096,8 +4124,13 @@ export const listOutreachContacts = async (targetId: string): Promise<OutreachCo
   await ensureMarketingOutreachTable();
   const { rows } = await sql<OutreachContact>`
     SELECT
-      id, target_id AS "targetId", name, email, phone,
+      id, target_id AS "targetId", name,
+      first_name AS "firstName", last_name AS "lastName",
+      email, phone, phone_mobile AS "phoneMobile",
       role_title AS "roleTitle", preferred_times AS "preferredTimes",
+      linkedin_url AS "linkedinUrl", instagram_url AS "instagramUrl",
+      facebook_url AS "facebookUrl", x_url AS "xUrl", website_url AS "websiteUrl",
+      notes,
       COALESCE(is_primary, false) AS "isPrimary",
       created_at AS "createdAt", updated_at AS "updatedAt"
     FROM marketing_outreach_contacts
@@ -4111,8 +4144,13 @@ export const getOutreachContact = async (id: string): Promise<OutreachContact | 
   await ensureMarketingOutreachTable();
   const { rows } = await sql<OutreachContact>`
     SELECT
-      id, target_id AS "targetId", name, email, phone,
+      id, target_id AS "targetId", name,
+      first_name AS "firstName", last_name AS "lastName",
+      email, phone, phone_mobile AS "phoneMobile",
       role_title AS "roleTitle", preferred_times AS "preferredTimes",
+      linkedin_url AS "linkedinUrl", instagram_url AS "instagramUrl",
+      facebook_url AS "facebookUrl", x_url AS "xUrl", website_url AS "websiteUrl",
+      notes,
       COALESCE(is_primary, false) AS "isPrimary",
       created_at AS "createdAt", updated_at AS "updatedAt"
     FROM marketing_outreach_contacts
@@ -4122,36 +4160,84 @@ export const getOutreachContact = async (id: string): Promise<OutreachContact | 
   return rows[0] ?? null;
 };
 
-export const createOutreachContact = async (input: {
-  targetId: string;
+const composeOutreachContactName = (input: {
+  firstName?: string | null;
+  lastName?: string | null;
+  name?: string | null;
+}): string => {
+  const composed = [input.firstName, input.lastName]
+    .map((p) => (p || "").trim())
+    .filter(Boolean)
+    .join(" ");
+  if (composed) return composed;
+  return (input.name || "").trim();
+};
+
+type OutreachContactWrite = {
+  firstName?: string | null;
+  lastName?: string | null;
   name?: string | null;
   email?: string | null;
   phone?: string | null;
+  phoneMobile?: string | null;
   roleTitle?: string | null;
   preferredTimes?: string | null;
+  linkedinUrl?: string | null;
+  instagramUrl?: string | null;
+  facebookUrl?: string | null;
+  xUrl?: string | null;
+  websiteUrl?: string | null;
+  notes?: string | null;
   isPrimary?: boolean | null;
-}): Promise<OutreachContact> => {
+};
+
+export const createOutreachContact = async (
+  input: OutreachContactWrite & { targetId: string }
+): Promise<OutreachContact> => {
   await ensureMarketingOutreachTable();
   if (input.isPrimary) {
     await sql`
       UPDATE marketing_outreach_contacts SET is_primary = false WHERE target_id = ${input.targetId}
     `;
   }
+  const firstName = input.firstName?.trim() || null;
+  const lastName = input.lastName?.trim() || null;
+  const name = composeOutreachContactName({
+    firstName,
+    lastName,
+    name: input.name
+  });
   const { rows } = await sql<OutreachContact>`
     INSERT INTO marketing_outreach_contacts
-      (target_id, name, email, phone, role_title, preferred_times, is_primary)
+      (target_id, name, first_name, last_name, email, phone, phone_mobile,
+       role_title, preferred_times, linkedin_url, instagram_url, facebook_url,
+       x_url, website_url, notes, is_primary)
     VALUES (
       ${input.targetId},
-      ${input.name?.trim() || ""},
+      ${name},
+      ${firstName},
+      ${lastName},
       ${input.email?.trim() || null},
       ${input.phone?.trim() || null},
+      ${input.phoneMobile?.trim() || null},
       ${input.roleTitle?.trim() || null},
       ${input.preferredTimes?.trim() || null},
+      ${input.linkedinUrl?.trim() || null},
+      ${input.instagramUrl?.trim() || null},
+      ${input.facebookUrl?.trim() || null},
+      ${input.xUrl?.trim() || null},
+      ${input.websiteUrl?.trim() || null},
+      ${input.notes?.trim() || null},
       ${!!input.isPrimary}
     )
     RETURNING
-      id, target_id AS "targetId", name, email, phone,
+      id, target_id AS "targetId", name,
+      first_name AS "firstName", last_name AS "lastName",
+      email, phone, phone_mobile AS "phoneMobile",
       role_title AS "roleTitle", preferred_times AS "preferredTimes",
+      linkedin_url AS "linkedinUrl", instagram_url AS "instagramUrl",
+      facebook_url AS "facebookUrl", x_url AS "xUrl", website_url AS "websiteUrl",
+      notes,
       COALESCE(is_primary, false) AS "isPrimary",
       created_at AS "createdAt", updated_at AS "updatedAt"
   `;
@@ -4160,14 +4246,7 @@ export const createOutreachContact = async (input: {
 
 export const updateOutreachContact = async (
   id: string,
-  input: {
-    name?: string | null;
-    email?: string | null;
-    phone?: string | null;
-    roleTitle?: string | null;
-    preferredTimes?: string | null;
-    isPrimary?: boolean | null;
-  }
+  input: OutreachContactWrite
 ): Promise<OutreachContact | null> => {
   await ensureMarketingOutreachTable();
   const existing = await getOutreachContact(id);
@@ -4177,26 +4256,48 @@ export const updateOutreachContact = async (
       UPDATE marketing_outreach_contacts SET is_primary = false WHERE target_id = ${existing.targetId}
     `;
   }
+  const firstName =
+    input.firstName !== undefined ? input.firstName?.trim() || null : existing.firstName;
+  const lastName =
+    input.lastName !== undefined ? input.lastName?.trim() || null : existing.lastName;
+  const name = composeOutreachContactName({
+    firstName,
+    lastName,
+    name: input.name !== undefined ? input.name : existing.name
+  });
+  const trimOrKeep = (
+    next: string | null | undefined,
+    prev: string | null
+  ): string | null => (next !== undefined ? next?.trim() || null : prev);
+
   const { rows } = await sql<OutreachContact>`
     UPDATE marketing_outreach_contacts
     SET
-      name = ${input.name?.trim() ?? existing.name},
-      email = ${input.email !== undefined ? input.email?.trim() || null : existing.email},
-      phone = ${input.phone !== undefined ? input.phone?.trim() || null : existing.phone},
-      role_title = ${
-        input.roleTitle !== undefined ? input.roleTitle?.trim() || null : existing.roleTitle
-      },
-      preferred_times = ${
-        input.preferredTimes !== undefined
-          ? input.preferredTimes?.trim() || null
-          : existing.preferredTimes
-      },
+      name = ${name},
+      first_name = ${firstName},
+      last_name = ${lastName},
+      email = ${trimOrKeep(input.email, existing.email)},
+      phone = ${trimOrKeep(input.phone, existing.phone)},
+      phone_mobile = ${trimOrKeep(input.phoneMobile, existing.phoneMobile)},
+      role_title = ${trimOrKeep(input.roleTitle, existing.roleTitle)},
+      preferred_times = ${trimOrKeep(input.preferredTimes, existing.preferredTimes)},
+      linkedin_url = ${trimOrKeep(input.linkedinUrl, existing.linkedinUrl)},
+      instagram_url = ${trimOrKeep(input.instagramUrl, existing.instagramUrl)},
+      facebook_url = ${trimOrKeep(input.facebookUrl, existing.facebookUrl)},
+      x_url = ${trimOrKeep(input.xUrl, existing.xUrl)},
+      website_url = ${trimOrKeep(input.websiteUrl, existing.websiteUrl)},
+      notes = ${trimOrKeep(input.notes, existing.notes)},
       is_primary = ${input.isPrimary !== undefined ? !!input.isPrimary : existing.isPrimary},
       updated_at = now()
     WHERE id = ${id}
     RETURNING
-      id, target_id AS "targetId", name, email, phone,
+      id, target_id AS "targetId", name,
+      first_name AS "firstName", last_name AS "lastName",
+      email, phone, phone_mobile AS "phoneMobile",
       role_title AS "roleTitle", preferred_times AS "preferredTimes",
+      linkedin_url AS "linkedinUrl", instagram_url AS "instagramUrl",
+      facebook_url AS "facebookUrl", x_url AS "xUrl", website_url AS "websiteUrl",
+      notes,
       COALESCE(is_primary, false) AS "isPrimary",
       created_at AS "createdAt", updated_at AS "updatedAt"
   `;

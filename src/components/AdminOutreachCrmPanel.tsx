@@ -26,10 +26,19 @@ type OutreachContact = {
   id: string;
   targetId: string;
   name: string;
+  firstName: string | null;
+  lastName: string | null;
   email: string | null;
   phone: string | null;
+  phoneMobile: string | null;
   roleTitle: string | null;
   preferredTimes: string | null;
+  linkedinUrl: string | null;
+  instagramUrl: string | null;
+  facebookUrl: string | null;
+  xUrl: string | null;
+  websiteUrl: string | null;
+  notes: string | null;
   isPrimary: boolean;
 };
 
@@ -54,6 +63,23 @@ type Props = {
   templates: OutreachEmailTemplate[];
   onClose: () => void;
   onTargetUpdated: (target: OutreachTarget) => void;
+};
+
+const emptyContactForm = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  phoneMobile: "",
+  roleTitle: "",
+  preferredTimes: "",
+  linkedinUrl: "",
+  instagramUrl: "",
+  facebookUrl: "",
+  xUrl: "",
+  websiteUrl: "",
+  notes: "",
+  isPrimary: true
 };
 
 function toDateInput(iso: string | null): string {
@@ -101,14 +127,9 @@ export default function AdminOutreachCrmPanel({
     notes: target.notes || ""
   });
 
-  const [contactForm, setContactForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    roleTitle: "",
-    preferredTimes: "",
-    isPrimary: true
-  });
+  const [contactForm, setContactForm] = useState({ ...emptyContactForm });
+  const [editingContactId, setEditingContactId] = useState<string | null>(null);
+  const [savingContact, setSavingContact] = useState(false);
 
   const [sendForm, setSendForm] = useState({
     contactId: "",
@@ -181,6 +202,8 @@ export default function AdminOutreachCrmPanel({
     const vars = {
       name: selectedContact?.name || selectedContact?.email || "",
       contactName: selectedContact?.name || selectedContact?.email || "",
+      firstName: selectedContact?.firstName || "",
+      lastName: selectedContact?.lastName || "",
       organization: target.organization,
       persona: target.persona || "",
       siteUrl: typeof window !== "undefined" ? window.location.origin : "",
@@ -234,41 +257,81 @@ export default function AdminOutreachCrmPanel({
     }
   };
 
-  const addContact = async () => {
-    if (!contactForm.email.trim() && !contactForm.name.trim()) {
-      setStatus("Add a contact name or email.");
+  const resetContactForm = (isPrimaryDefault = contacts.length === 0) => {
+    setEditingContactId(null);
+    setContactForm({ ...emptyContactForm, isPrimary: isPrimaryDefault });
+  };
+
+  const startEditContact = (c: OutreachContact) => {
+    setEditingContactId(c.id);
+    setContactForm({
+      firstName: c.firstName || "",
+      lastName: c.lastName || "",
+      email: c.email || "",
+      phone: c.phone || "",
+      phoneMobile: c.phoneMobile || "",
+      roleTitle: c.roleTitle || "",
+      preferredTimes: c.preferredTimes || "",
+      linkedinUrl: c.linkedinUrl || "",
+      instagramUrl: c.instagramUrl || "",
+      facebookUrl: c.facebookUrl || "",
+      xUrl: c.xUrl || "",
+      websiteUrl: c.websiteUrl || "",
+      notes: c.notes || "",
+      isPrimary: !!c.isPrimary
+    });
+  };
+
+  const saveContact = async () => {
+    const hasName =
+      contactForm.firstName.trim() ||
+      contactForm.lastName.trim() ||
+      contactForm.email.trim();
+    if (!hasName) {
+      setStatus("Add a first/last name or email.");
       return;
     }
+    setSavingContact(true);
     setStatus(null);
-    const res = await fetch("/api/admin/marketing/outreach/contacts", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        targetId: target.id,
-        name: contactForm.name.trim() || null,
+    try {
+      const payload = {
+        firstName: contactForm.firstName.trim() || null,
+        lastName: contactForm.lastName.trim() || null,
         email: contactForm.email.trim() || null,
         phone: contactForm.phone.trim() || null,
+        phoneMobile: contactForm.phoneMobile.trim() || null,
         roleTitle: contactForm.roleTitle.trim() || null,
         preferredTimes: contactForm.preferredTimes.trim() || null,
+        linkedinUrl: contactForm.linkedinUrl.trim() || null,
+        instagramUrl: contactForm.instagramUrl.trim() || null,
+        facebookUrl: contactForm.facebookUrl.trim() || null,
+        xUrl: contactForm.xUrl.trim() || null,
+        websiteUrl: contactForm.websiteUrl.trim() || null,
+        notes: contactForm.notes.trim() || null,
         isPrimary: contactForm.isPrimary
-      })
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setStatus(data?.error || "Could not add contact.");
-      return;
+      };
+      const res = await fetch("/api/admin/marketing/outreach/contacts", {
+        method: editingContactId ? "PATCH" : "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          editingContactId
+            ? { id: editingContactId, ...payload }
+            : { targetId: target.id, ...payload }
+        )
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStatus(data?.error || "Could not save contact.");
+        return;
+      }
+      const wasEditing = !!editingContactId;
+      resetContactForm(false);
+      setStatus(wasEditing ? "Contact updated." : "Contact added.");
+      await load();
+    } finally {
+      setSavingContact(false);
     }
-    setContactForm({
-      name: "",
-      email: "",
-      phone: "",
-      roleTitle: "",
-      preferredTimes: "",
-      isPrimary: contacts.length === 0
-    });
-    setStatus("Contact added.");
-    await load();
   };
 
   const removeContact = async (c: OutreachContact) => {
@@ -277,6 +340,7 @@ export default function AdminOutreachCrmPanel({
       `/api/admin/marketing/outreach/contacts?id=${encodeURIComponent(c.id)}`,
       { method: "DELETE", credentials: "include" }
     );
+    if (editingContactId === c.id) resetContactForm(false);
     await load();
   };
 
@@ -491,6 +555,10 @@ export default function AdminOutreachCrmPanel({
 
         <div className="card" style={{ background: "#fff" }}>
           <h4 style={{ marginTop: 0, fontSize: 15 }}>Contacts</h4>
+          <p style={{ marginTop: 0, fontSize: 12, color: "#64748b" }}>
+            Full contact records for this target — names, phones, socials, notes. Email send uses
+            contacts with an address.
+          </p>
           {target.contact && contacts.length === 0 ? (
             <p style={{ fontSize: 13, color: "#64748b" }}>
               Legacy emails: {target.contact}{" "}
@@ -504,46 +572,106 @@ export default function AdminOutreachCrmPanel({
               </button>
             </p>
           ) : null}
-          <ul style={{ margin: "0 0 12px", paddingLeft: 18, fontSize: 13 }}>
+          <ul style={{ margin: "0 0 12px", paddingLeft: 0, listStyle: "none", fontSize: 13 }}>
             {contacts.map((c) => (
-              <li key={c.id} style={{ marginBottom: 6 }}>
-                <strong>{c.name || "—"}</strong>
-                {c.isPrimary ? " (primary)" : ""}{" "}
-                {c.email ? <span>{c.email}</span> : <span style={{ color: "#9ca3af" }}>no email</span>}
-                {c.roleTitle ? ` · ${c.roleTitle}` : ""}
-                {c.phone ? ` · ${c.phone}` : ""}
-                <button
-                  type="button"
-                  className="button button-secondary"
-                  style={{ width: "auto", padding: "2px 8px", fontSize: 11, marginLeft: 8 }}
-                  onClick={() => void removeContact(c)}
-                >
-                  Remove
-                </button>
+              <li
+                key={c.id}
+                style={{
+                  marginBottom: 10,
+                  paddingBottom: 10,
+                  borderBottom: "1px solid #e5e7eb"
+                }}
+              >
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "baseline" }}>
+                  <strong>{c.name || "—"}</strong>
+                  {c.isPrimary ? (
+                    <span style={{ fontSize: 11, color: "#0f766e" }}>primary</span>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    style={{ width: "auto", padding: "2px 8px", fontSize: 11 }}
+                    onClick={() => startEditContact(c)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    style={{ width: "auto", padding: "2px 8px", fontSize: 11 }}
+                    onClick={() => void removeContact(c)}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div style={{ color: "#4b5563", marginTop: 2 }}>
+                  {c.email ? <div>{c.email}</div> : <div style={{ color: "#9ca3af" }}>no email</div>}
+                  {c.roleTitle ? <div>{c.roleTitle}</div> : null}
+                  {c.phone || c.phoneMobile ? (
+                    <div>
+                      {[c.phone ? `Work ${c.phone}` : null, c.phoneMobile ? `Mobile ${c.phoneMobile}` : null]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </div>
+                  ) : null}
+                  {[
+                    c.linkedinUrl ? `LinkedIn: ${c.linkedinUrl}` : null,
+                    c.instagramUrl ? `IG: ${c.instagramUrl}` : null,
+                    c.facebookUrl ? `FB: ${c.facebookUrl}` : null,
+                    c.xUrl ? `X: ${c.xUrl}` : null,
+                    c.websiteUrl ? `Web: ${c.websiteUrl}` : null
+                  ]
+                    .filter(Boolean)
+                    .map((line) => (
+                      <div key={line as string} style={{ fontSize: 12, wordBreak: "break-all" }}>
+                        {line}
+                      </div>
+                    ))}
+                  {c.notes ? (
+                    <div style={{ marginTop: 4, whiteSpace: "pre-wrap", color: "#374151" }}>
+                      {c.notes}
+                    </div>
+                  ) : null}
+                </div>
               </li>
             ))}
             {!contacts.length && (
-              <li style={{ color: "#6b7280", listStyle: "none", marginLeft: -18 }}>
-                No structured contacts yet.
-              </li>
+              <li style={{ color: "#6b7280" }}>No structured contacts yet.</li>
             )}
           </ul>
+          <h5 style={{ margin: "0 0 8px", fontSize: 14 }}>
+            {editingContactId ? "Edit contact" : "Add contact"}
+          </h5>
           <div style={{ display: "grid", gap: 8 }}>
-            <input
-              placeholder="Name"
-              value={contactForm.name}
-              onChange={(e) => setContactForm((f) => ({ ...f, name: e.target.value }))}
-            />
+            <div className="grid grid-2" style={{ gap: 8 }}>
+              <input
+                placeholder="First name"
+                value={contactForm.firstName}
+                onChange={(e) => setContactForm((f) => ({ ...f, firstName: e.target.value }))}
+              />
+              <input
+                placeholder="Last name"
+                value={contactForm.lastName}
+                onChange={(e) => setContactForm((f) => ({ ...f, lastName: e.target.value }))}
+              />
+            </div>
             <input
               placeholder="Email"
               value={contactForm.email}
               onChange={(e) => setContactForm((f) => ({ ...f, email: e.target.value }))}
             />
-            <input
-              placeholder="Phone"
-              value={contactForm.phone}
-              onChange={(e) => setContactForm((f) => ({ ...f, phone: e.target.value }))}
-            />
+            <div className="grid grid-2" style={{ gap: 8 }}>
+              <input
+                placeholder="Work / main phone"
+                value={contactForm.phone}
+                onChange={(e) => setContactForm((f) => ({ ...f, phone: e.target.value }))}
+              />
+              <input
+                placeholder="Mobile phone"
+                value={contactForm.phoneMobile}
+                onChange={(e) => setContactForm((f) => ({ ...f, phoneMobile: e.target.value }))}
+              />
+            </div>
             <input
               placeholder="Role / title"
               value={contactForm.roleTitle}
@@ -556,6 +684,38 @@ export default function AdminOutreachCrmPanel({
                 setContactForm((f) => ({ ...f, preferredTimes: e.target.value }))
               }
             />
+            <input
+              placeholder="LinkedIn URL"
+              value={contactForm.linkedinUrl}
+              onChange={(e) => setContactForm((f) => ({ ...f, linkedinUrl: e.target.value }))}
+            />
+            <input
+              placeholder="Instagram URL or @handle"
+              value={contactForm.instagramUrl}
+              onChange={(e) => setContactForm((f) => ({ ...f, instagramUrl: e.target.value }))}
+            />
+            <input
+              placeholder="Facebook URL"
+              value={contactForm.facebookUrl}
+              onChange={(e) => setContactForm((f) => ({ ...f, facebookUrl: e.target.value }))}
+            />
+            <input
+              placeholder="X / Twitter URL or @handle"
+              value={contactForm.xUrl}
+              onChange={(e) => setContactForm((f) => ({ ...f, xUrl: e.target.value }))}
+            />
+            <input
+              placeholder="Website"
+              value={contactForm.websiteUrl}
+              onChange={(e) => setContactForm((f) => ({ ...f, websiteUrl: e.target.value }))}
+            />
+            <textarea
+              placeholder="Contact notes (preferences, history, how you met…)"
+              rows={3}
+              value={contactForm.notes}
+              onChange={(e) => setContactForm((f) => ({ ...f, notes: e.target.value }))}
+              style={{ fontFamily: "inherit", resize: "vertical" }}
+            />
             <label style={{ display: "flex", gap: 8, fontSize: 13 }}>
               <input
                 type="checkbox"
@@ -566,14 +726,31 @@ export default function AdminOutreachCrmPanel({
               />
               Primary contact
             </label>
-            <button
-              type="button"
-              className="button button-secondary"
-              style={{ width: "auto" }}
-              onClick={() => void addContact()}
-            >
-              Add contact
-            </button>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="button"
+                style={{ width: "auto" }}
+                disabled={savingContact}
+                onClick={() => void saveContact()}
+              >
+                {savingContact
+                  ? "Saving…"
+                  : editingContactId
+                    ? "Save contact"
+                    : "Add contact"}
+              </button>
+              {editingContactId ? (
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  style={{ width: "auto" }}
+                  onClick={() => resetContactForm(false)}
+                >
+                  Cancel edit
+                </button>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
@@ -582,7 +759,7 @@ export default function AdminOutreachCrmPanel({
         <h4 style={{ marginTop: 0, fontSize: 15 }}>Send email</h4>
         {target.doNotEmail ? (
           <p style={{ color: "#b91c1c", fontSize: 13 }}>
-            Do-not-email is on for this organization. Clear it under Gather info to send.
+            Do-not-email is on for this target. Clear it under Gather info to send.
           </p>
         ) : (
           <div style={{ display: "grid", gap: 10 }}>

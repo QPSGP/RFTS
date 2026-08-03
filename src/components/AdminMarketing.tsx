@@ -958,7 +958,8 @@ export default function AdminMarketing() {
             <p style={{ color: "#4b5563", marginTop: 0, marginBottom: 12, fontSize: 13 }}>
               Member- and partner-facing copy you edit here. Use <strong>CRM → Send email</strong> to
               merge and send via Resend, or copy subject/body into your mail client. Placeholders:{" "}
-              <code>{"{{name}}"}</code>, <code>{"{{contactName}}"}</code>,{" "}
+              <code>{"{{name}}"}</code>, <code>{"{{firstName}}"}</code>,{" "}
+              <code>{"{{lastName}}"}</code>, <code>{"{{contactName}}"}</code>,{" "}
               <code>{"{{organization}}"}</code>, <code>{"{{siteUrl}}"}</code>.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

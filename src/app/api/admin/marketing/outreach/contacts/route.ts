@@ -17,24 +17,34 @@ const optionalEmail = z
   .nullish()
   .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Invalid email");
 
+const optionalText = (max: number) => z.string().trim().max(max).nullish();
+
+const contactFields = {
+  firstName: optionalText(80),
+  lastName: optionalText(80),
+  name: optionalText(160),
+  email: optionalEmail,
+  phone: optionalText(60),
+  phoneMobile: optionalText(60),
+  roleTitle: optionalText(120),
+  preferredTimes: optionalText(200),
+  linkedinUrl: optionalText(300),
+  instagramUrl: optionalText(300),
+  facebookUrl: optionalText(300),
+  xUrl: optionalText(300),
+  websiteUrl: optionalText(300),
+  notes: optionalText(4000),
+  isPrimary: z.boolean().nullish()
+};
+
 const createSchema = z.object({
   targetId: z.string().uuid(),
-  name: z.string().trim().max(120).nullish(),
-  email: optionalEmail,
-  phone: z.string().trim().max(60).nullish(),
-  roleTitle: z.string().trim().max(120).nullish(),
-  preferredTimes: z.string().trim().max(200).nullish(),
-  isPrimary: z.boolean().nullish()
+  ...contactFields
 });
 
 const updateSchema = z.object({
   id: z.string().uuid(),
-  name: z.string().trim().max(120).nullish(),
-  email: optionalEmail,
-  phone: z.string().trim().max(60).nullish(),
-  roleTitle: z.string().trim().max(120).nullish(),
-  preferredTimes: z.string().trim().max(200).nullish(),
-  isPrimary: z.boolean().nullish()
+  ...contactFields
 });
 
 export async function GET(request: Request) {
@@ -102,6 +112,13 @@ export async function PATCH(request: Request) {
   if (!contact) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
+  await createOutreachActivity({
+    targetId: contact.targetId,
+    contactId: contact.id,
+    kind: "contact_updated",
+    subject: contact.name || contact.email || "Contact updated",
+    createdByEmail: getSessionEmail()
+  });
   return NextResponse.json({ ok: true, contact });
 }
 

@@ -458,14 +458,32 @@ CREATE TABLE IF NOT EXISTS marketing_outreach_contacts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   target_id uuid NOT NULL REFERENCES marketing_outreach_targets(id) ON DELETE CASCADE,
   name text NOT NULL DEFAULT '',
+  first_name text,
+  last_name text,
   email text,
   phone text,
+  phone_mobile text,
   role_title text,
   preferred_times text,
+  linkedin_url text,
+  instagram_url text,
+  facebook_url text,
+  x_url text,
+  website_url text,
+  notes text,
   is_primary boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS first_name text;
+ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS last_name text;
+ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS phone_mobile text;
+ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS linkedin_url text;
+ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS instagram_url text;
+ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS facebook_url text;
+ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS x_url text;
+ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS website_url text;
+ALTER TABLE marketing_outreach_contacts ADD COLUMN IF NOT EXISTS notes text;
 CREATE INDEX IF NOT EXISTS marketing_outreach_contacts_target_idx
   ON marketing_outreach_contacts (target_id);
 
