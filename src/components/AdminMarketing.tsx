@@ -46,6 +46,12 @@ type BlogCadence = {
   latestPublishedAt: string | null;
   latestTitle: string | null;
   totalPosts: number;
+  publishedThisWeek?: number;
+  target?: number;
+  expectedByToday?: number;
+  message?: string;
+  weekStartIso?: string;
+  weekEndIso?: string;
   nextTopic: { label: string; path: string; kind: string };
   signupPath: string;
 };
@@ -658,10 +664,19 @@ export default function AdminMarketing() {
                   marginBottom: 12
                 }}
               >
-                {overview.blogCadence.due
-                  ? `Overdue — ${overview.blogCadence.daysSinceLatest ?? "∞"} days since last post`
-                  : `On track — ${overview.blogCadence.daysSinceLatest ?? 0} day(s) since last post`}
+                {overview.blogCadence.message ||
+                  (overview.blogCadence.due
+                    ? `Late — ${overview.blogCadence.publishedThisWeek ?? "?"}/${overview.blogCadence.target ?? 3} this week`
+                    : `On pace — ${overview.blogCadence.publishedThisWeek ?? "?"}/${overview.blogCadence.target ?? 3} this week`)}
               </div>
+              <p style={{ margin: "0 0 6px" }}>
+                <strong>This week:</strong>{" "}
+                {overview.blogCadence.publishedThisWeek ?? "—"}/
+                {overview.blogCadence.target ?? 3}
+                {overview.blogCadence.weekStartIso
+                  ? ` (${overview.blogCadence.weekStartIso} → ${overview.blogCadence.weekEndIso})`
+                  : ""}
+              </p>
               <p style={{ margin: "0 0 6px" }}>
                 <strong>Latest:</strong> {overview.blogCadence.latestTitle || "—"}{" "}
                 <span style={{ color: "#6b7280" }}>

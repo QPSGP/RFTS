@@ -8,8 +8,8 @@ import { getWelcomeEmailCcRecipients, sendEmail } from "@/lib/email";
 import { getPublicAppUrl } from "@/lib/site-url";
 
 /**
- * Weekly blog cadence reminder (Vercel Cron: Mondays 09:00 UTC).
- * Emails staff when no new blog post in 7+ days and suggests the next topic.
+ * Blog cadence reminder (Vercel Cron: daily 17:00 UTC).
+ * Emails staff when behind the 3-posts-per-week pace and suggests the next topic.
  */
 export async function GET(request: Request) {
   if (!isAuthorizedCronRequest(request)) {
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     ];
     const result = await sendEmail({
       to: recipients,
-      subject: `[RFTS] Weekly blog article due — ${status.nextTopic.label}`,
+      subject: `[RFTS] Blog cadence late — ${status.publishedThisWeek}/${status.target} this week`,
       html: `${html}<p><a href="${appUrl}/blog">Blog</a> · <a href="${appUrl}${status.signupPath}">Signup</a> · <a href="${appUrl}${status.nextTopic.path}">${status.nextTopic.label}</a></p>`,
       text: body,
       skipStaffBcc: true
@@ -47,6 +47,8 @@ export async function GET(request: Request) {
 
   console.info("[cron blog-cadence-reminder]", JSON.stringify({
     due: status.due,
+    publishedThisWeek: status.publishedThisWeek,
+    target: status.target,
     daysSinceLatest: status.daysSinceLatest,
     nextTopic: status.nextTopic.label,
     emailSent
@@ -55,6 +57,8 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ok: true,
     due: status.due,
+    publishedThisWeek: status.publishedThisWeek,
+    target: status.target,
     daysSinceLatest: status.daysSinceLatest,
     nextTopic: status.nextTopic,
     emailSent,

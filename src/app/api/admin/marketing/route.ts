@@ -43,6 +43,12 @@ export async function GET() {
     latestPublishedAt: cadence.latestPublishedAt,
     latestTitle: cadence.latestTitle,
     totalPosts: posts.length,
+    publishedThisWeek: cadence.publishedThisWeek,
+    target: cadence.target,
+    expectedByToday: cadence.expectedByToday,
+    message: cadence.message,
+    weekStartIso: cadence.weekStartIso,
+    weekEndIso: cadence.weekEndIso,
     nextTopic: {
       label: cadence.nextTopic.label,
       path: cadence.nextTopic.path,
