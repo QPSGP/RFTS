@@ -83,14 +83,14 @@ const emptyContactForm = {
   isPrimary: true
 };
 
-const crmSectionsClosed = {
+type CrmSectionKey = "gather" | "contacts" | "send" | "activity";
+
+const crmSectionsClosed: Record<CrmSectionKey, boolean> = {
   gather: false,
   contacts: false,
   send: false,
   activity: false
-} as const;
-
-type CrmSectionKey = keyof typeof crmSectionsClosed;
+};
 
 function toDateInput(iso: string | null): string {
   if (!iso) return "";
