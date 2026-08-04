@@ -23,6 +23,59 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "resilience-meditation-bounce-back-stress-sleep",
+    title: "Physical and psychological resilience: bounce back with guided meditation at night",
+    metaTitle: "Resilience Meditation at Night — Bounce Back From Stress | RFTS Blog",
+    metaDescription:
+      "Build physical and psychological resilience with guided meditation at bedtime and during sleep. Recover from stress, adapt to hard days, and start a free trial.",
+    publishedAt: "2026-08-03",
+    readMinutes: 6,
+    excerpt:
+      "Resilience is not toughness without feeling — it is recovering after hard days. Guided meditation at bedtime and during sleep reinforces calm, adaptability, and mind-body recovery without another daytime chore.",
+    topicSlug: "resilience-meditation",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for physical and psychological resilience usually already know what depletes them: shift work, caregiving, high-stakes jobs, chronic stress, or a string of hard weeks that never quite reset. What they want is not a motivational poster. They want a reliable way to bounce back — body and mind — when the next demand arrives.",
+          "Reach For The Stars supports resilience through guided meditation while you fall asleep and, if you choose two audios per night, again during sleep. Recovery becomes part of bedtime instead of another wellness task competing with your day."
+        ]
+      },
+      {
+        heading: "What resilience practice actually reinforces",
+        paragraphs: [
+          "Resilience is the capacity to recover from stress, adapt to change, and keep functioning without burning out. Research on mindfulness and related practices links regular practice with better stress recovery and more adaptive coping over time — not because one night “fixes” you, but because repetition trains a calmer baseline.",
+          "Nightly goal audios can reinforce themes of calm under pressure, emotional steadiness, physical recovery, and balanced life. Your schedule rotates priorities so resilience sits alongside sleep, stress relief, and health goals instead of living as a one-off track you forget."
+        ]
+      },
+      {
+        heading: "Why bedtime is the right window for hard jobs",
+        paragraphs: [
+          "Front-line caregivers, burned-out professionals, and parents often have no spare hour for a daytime resilience workshop. The only quiet window is late at night — exactly when the nervous system needs a downshift, not another podcast that keeps the mind spinning.",
+          "A fixed Start Session cue helps: intro relaxation music, then your resilience-related recording as you drift, then optional reinforcement about 2.5 hours later while restorative sleep is underway. You train recovery when the body is already in rest mode."
+        ]
+      },
+      {
+        heading: "Consistency beats heroic resets",
+        paragraphs: [
+          "A weekend spa day or a single “reset” retreat can feel good and still leave Monday unchanged. Resilience compounds when the same cue returns nightly: Start Session, then sleep. Skipping for a week and restarting with a new app resets both the habit of practice and the subconscious repetition recovery depends on.",
+          "If your role involves trauma exposure or clinical-level stress, pair nightly audios with professional support. Guided meditation is a recovery layer — not a substitute for therapy, medical care, or workplace trauma protocols when those are needed."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits nurses, EMTs, firefighters, and other first responders; managers and entrepreneurs carrying constant load; caregivers who absorb others’ stress; and anyone rebuilding after burnout who wants steadier bounce-back without a daytime program they cannot keep.",
+          "Explore our resilience meditation page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Steady recovery and inner strength (excerpt)",
+      quote:
+        "You recover now… stress softens and leaves the body… you adapt with calm strength… each night your resilience grows… mind and body restore… you meet tomorrow clearer, steadier, and ready…"
+    }
+  },
+  {
     slug: "overcoming-addiction-guided-meditation-habit-change-sleep",
     title: "Overcoming addiction: guided meditation for habit change while you sleep",
     metaTitle: "Overcoming Addiction — Guided Meditation & Habit Change at Night | RFTS Blog",
