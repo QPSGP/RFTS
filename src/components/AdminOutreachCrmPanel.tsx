@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 import { OUTREACH_INTERESTS } from "@/lib/marketing-reference";
 import { mergeOutreachTemplate } from "@/lib/marketing-reference";
 
@@ -82,6 +83,15 @@ const emptyContactForm = {
   isPrimary: true
 };
 
+const crmSectionsClosed = {
+  gather: false,
+  contacts: false,
+  send: false,
+  activity: false
+} as const;
+
+type CrmSectionKey = keyof typeof crmSectionsClosed;
+
 function toDateInput(iso: string | null): string {
   if (!iso) return "";
   try {
@@ -130,6 +140,11 @@ export default function AdminOutreachCrmPanel({
   const [contactForm, setContactForm] = useState({ ...emptyContactForm });
   const [editingContactId, setEditingContactId] = useState<string | null>(null);
   const [savingContact, setSavingContact] = useState(false);
+  const [openCrmSections, setOpenCrmSections] = useState({ ...crmSectionsClosed });
+
+  const toggleCrmSection = (key: CrmSectionKey) => {
+    setOpenCrmSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   const [sendForm, setSendForm] = useState({
     contactId: "",
@@ -186,6 +201,9 @@ export default function AdminOutreachCrmPanel({
       doNotEmail: !!target.doNotEmail,
       notes: target.notes || ""
     });
+    setOpenCrmSections({ ...crmSectionsClosed });
+    setEditingContactId(null);
+    setContactForm({ ...emptyContactForm, isPrimary: true });
   }, [target]);
 
   const selectedContact = useMemo(
@@ -264,6 +282,7 @@ export default function AdminOutreachCrmPanel({
 
   const startEditContact = (c: OutreachContact) => {
     setEditingContactId(c.id);
+    setOpenCrmSections((prev) => ({ ...prev, contacts: true }));
     setContactForm({
       firstName: c.firstName || "",
       lastName: c.lastName || "",
@@ -470,417 +489,459 @@ export default function AdminOutreachCrmPanel({
         <p style={{ margin: "10px 0 0", fontSize: 13, color: "#6b7280" }}>Loading…</p>
       )}
 
-      <div
-        style={{
-          display: "grid",
-          gap: 16,
-          marginTop: 16,
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))"
-        }}
-      >
-        <div className="card" style={{ background: "#fff" }}>
-          <h4 style={{ marginTop: 0, fontSize: 15 }}>Gather info</h4>
-          <div style={{ display: "grid", gap: 10 }}>
-            <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
-              Interest
-              <select
-                value={crmForm.interest}
-                onChange={(e) => setCrmForm((f) => ({ ...f, interest: e.target.value }))}
-              >
-                <option value="">—</option>
-                {OUTREACH_INTERESTS.map((i) => (
-                  <option key={i} value={i}>
-                    {i}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
-              {target.targetType === "individual" ? "Reach / following" : "Audience size"}
-              <input
-                value={crmForm.audienceSize}
-                onChange={(e) => setCrmForm((f) => ({ ...f, audienceSize: e.target.value }))}
-                placeholder={
-                  target.targetType === "individual"
-                    ? "e.g. newsletter ~5k"
-                    : "e.g. 200 staff"
-                }
-              />
-            </label>
-            <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
-              Decision timeline
-              <input
-                value={crmForm.decisionTimeline}
-                onChange={(e) =>
-                  setCrmForm((f) => ({ ...f, decisionTimeline: e.target.value }))
-                }
-                placeholder="e.g. Q3 review"
-              />
-            </label>
-            <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
-              Follow-up date
-              <input
-                type="date"
-                value={crmForm.followUpAt}
-                onChange={(e) => setCrmForm((f) => ({ ...f, followUpAt: e.target.value }))}
-              />
-            </label>
-            <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
-              <input
-                type="checkbox"
-                checked={crmForm.doNotEmail}
-                onChange={(e) => setCrmForm((f) => ({ ...f, doNotEmail: e.target.checked }))}
-              />
-              Do not email
-            </label>
-            <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
-              Notes
-              <textarea
-                rows={3}
-                value={crmForm.notes}
-                onChange={(e) => setCrmForm((f) => ({ ...f, notes: e.target.value }))}
-              />
-            </label>
-            <button
-              type="button"
-              className="button"
-              style={{ width: "auto" }}
-              disabled={savingCrm}
-              onClick={() => void saveCrmFields()}
-            >
-              {savingCrm ? "Saving…" : "Save CRM fields"}
-            </button>
-          </div>
-        </div>
-
-        <div className="card" style={{ background: "#fff" }}>
-          <h4 style={{ marginTop: 0, fontSize: 15 }}>Contacts</h4>
-          <p style={{ marginTop: 0, fontSize: 12, color: "#64748b" }}>
-            Full contact records for this target — names, phones, socials, notes. Email send uses
-            contacts with an address.
-          </p>
-          {target.contact && contacts.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#64748b" }}>
-              Legacy emails: {target.contact}{" "}
-              <button
-                type="button"
-                className="button button-secondary"
-                style={{ width: "auto", padding: "4px 8px", fontSize: 12, marginLeft: 6 }}
-                onClick={() => void importLegacyEmails()}
-              >
-                Import as contacts
-              </button>
-            </p>
-          ) : null}
-          <ul style={{ margin: "0 0 12px", paddingLeft: 0, listStyle: "none", fontSize: 13 }}>
-            {contacts.map((c) => (
-              <li
-                key={c.id}
-                style={{
-                  marginBottom: 10,
-                  paddingBottom: 10,
-                  borderBottom: "1px solid #e5e7eb"
-                }}
-              >
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "baseline" }}>
-                  <strong>{c.name || "—"}</strong>
-                  {c.isPrimary ? (
-                    <span style={{ fontSize: 11, color: "#0f766e" }}>primary</span>
-                  ) : null}
-                  <button
-                    type="button"
-                    className="button button-secondary"
-                    style={{ width: "auto", padding: "2px 8px", fontSize: 11 }}
-                    onClick={() => startEditContact(c)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    className="button button-secondary"
-                    style={{ width: "auto", padding: "2px 8px", fontSize: 11 }}
-                    onClick={() => void removeContact(c)}
-                  >
-                    Remove
-                  </button>
-                </div>
-                <div style={{ color: "#4b5563", marginTop: 2 }}>
-                  {c.email ? <div>{c.email}</div> : <div style={{ color: "#9ca3af" }}>no email</div>}
-                  {c.roleTitle ? <div>{c.roleTitle}</div> : null}
-                  {c.phone || c.phoneMobile ? (
-                    <div>
-                      {[c.phone ? `Work ${c.phone}` : null, c.phoneMobile ? `Mobile ${c.phoneMobile}` : null]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </div>
-                  ) : null}
-                  {[
-                    c.linkedinUrl ? `LinkedIn: ${c.linkedinUrl}` : null,
-                    c.instagramUrl ? `IG: ${c.instagramUrl}` : null,
-                    c.facebookUrl ? `FB: ${c.facebookUrl}` : null,
-                    c.xUrl ? `X: ${c.xUrl}` : null,
-                    c.websiteUrl ? `Web: ${c.websiteUrl}` : null
-                  ]
-                    .filter(Boolean)
-                    .map((line) => (
-                      <div key={line as string} style={{ fontSize: 12, wordBreak: "break-all" }}>
-                        {line}
-                      </div>
-                    ))}
-                  {c.notes ? (
-                    <div style={{ marginTop: 4, whiteSpace: "pre-wrap", color: "#374151" }}>
-                      {c.notes}
-                    </div>
-                  ) : null}
-                </div>
-              </li>
-            ))}
-            {!contacts.length && (
-              <li style={{ color: "#6b7280" }}>No structured contacts yet.</li>
-            )}
-          </ul>
-          <h5 style={{ margin: "0 0 8px", fontSize: 14 }}>
-            {editingContactId ? "Edit contact" : "Add contact"}
-          </h5>
-          <div style={{ display: "grid", gap: 8 }}>
-            <div className="grid grid-2" style={{ gap: 8 }}>
-              <input
-                placeholder="First name"
-                value={contactForm.firstName}
-                onChange={(e) => setContactForm((f) => ({ ...f, firstName: e.target.value }))}
-              />
-              <input
-                placeholder="Last name"
-                value={contactForm.lastName}
-                onChange={(e) => setContactForm((f) => ({ ...f, lastName: e.target.value }))}
-              />
-            </div>
-            <input
-              placeholder="Email"
-              value={contactForm.email}
-              onChange={(e) => setContactForm((f) => ({ ...f, email: e.target.value }))}
-            />
-            <div className="grid grid-2" style={{ gap: 8 }}>
-              <input
-                placeholder="Work / main phone"
-                value={contactForm.phone}
-                onChange={(e) => setContactForm((f) => ({ ...f, phone: e.target.value }))}
-              />
-              <input
-                placeholder="Mobile phone"
-                value={contactForm.phoneMobile}
-                onChange={(e) => setContactForm((f) => ({ ...f, phoneMobile: e.target.value }))}
-              />
-            </div>
-            <input
-              placeholder="Role / title"
-              value={contactForm.roleTitle}
-              onChange={(e) => setContactForm((f) => ({ ...f, roleTitle: e.target.value }))}
-            />
-            <input
-              placeholder="Best contact times"
-              value={contactForm.preferredTimes}
-              onChange={(e) =>
-                setContactForm((f) => ({ ...f, preferredTimes: e.target.value }))
-              }
-            />
-            <input
-              placeholder="LinkedIn URL"
-              value={contactForm.linkedinUrl}
-              onChange={(e) => setContactForm((f) => ({ ...f, linkedinUrl: e.target.value }))}
-            />
-            <input
-              placeholder="Instagram URL or @handle"
-              value={contactForm.instagramUrl}
-              onChange={(e) => setContactForm((f) => ({ ...f, instagramUrl: e.target.value }))}
-            />
-            <input
-              placeholder="Facebook URL"
-              value={contactForm.facebookUrl}
-              onChange={(e) => setContactForm((f) => ({ ...f, facebookUrl: e.target.value }))}
-            />
-            <input
-              placeholder="X / Twitter URL or @handle"
-              value={contactForm.xUrl}
-              onChange={(e) => setContactForm((f) => ({ ...f, xUrl: e.target.value }))}
-            />
-            <input
-              placeholder="Website"
-              value={contactForm.websiteUrl}
-              onChange={(e) => setContactForm((f) => ({ ...f, websiteUrl: e.target.value }))}
-            />
-            <textarea
-              placeholder="Contact notes (preferences, history, how you met…)"
-              rows={3}
-              value={contactForm.notes}
-              onChange={(e) => setContactForm((f) => ({ ...f, notes: e.target.value }))}
-              style={{ fontFamily: "inherit", resize: "vertical" }}
-            />
-            <label style={{ display: "flex", gap: 8, fontSize: 13 }}>
-              <input
-                type="checkbox"
-                checked={contactForm.isPrimary}
-                onChange={(e) =>
-                  setContactForm((f) => ({ ...f, isPrimary: e.target.checked }))
-                }
-              />
-              Primary contact
-            </label>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
+        <button
+          type="button"
+          className={adminSectionToggleClass(openCrmSections.gather, true)}
+          aria-expanded={openCrmSections.gather}
+          onClick={() => toggleCrmSection("gather")}
+        >
+          Gather info
+          {crmForm.followUpAt ? ` · follow-up ${crmForm.followUpAt}` : ""}
+          {crmForm.doNotEmail ? " · do not email" : ""}
+        </button>
+        {openCrmSections.gather ? (
+          <div className="card" style={{ background: "#fff", margin: 0 }}>
+            <div style={{ display: "grid", gap: 10 }}>
+              <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                Interest
+                <select
+                  value={crmForm.interest}
+                  onChange={(e) => setCrmForm((f) => ({ ...f, interest: e.target.value }))}
+                >
+                  <option value="">—</option>
+                  {OUTREACH_INTERESTS.map((i) => (
+                    <option key={i} value={i}>
+                      {i}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                {target.targetType === "individual" ? "Reach / following" : "Audience size"}
+                <input
+                  value={crmForm.audienceSize}
+                  onChange={(e) => setCrmForm((f) => ({ ...f, audienceSize: e.target.value }))}
+                  placeholder={
+                    target.targetType === "individual"
+                      ? "e.g. newsletter ~5k"
+                      : "e.g. 200 staff"
+                  }
+                />
+              </label>
+              <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                Decision timeline
+                <input
+                  value={crmForm.decisionTimeline}
+                  onChange={(e) =>
+                    setCrmForm((f) => ({ ...f, decisionTimeline: e.target.value }))
+                  }
+                  placeholder="e.g. Q3 review"
+                />
+              </label>
+              <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                Follow-up date
+                <input
+                  type="date"
+                  value={crmForm.followUpAt}
+                  onChange={(e) => setCrmForm((f) => ({ ...f, followUpAt: e.target.value }))}
+                />
+              </label>
+              <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={crmForm.doNotEmail}
+                  onChange={(e) => setCrmForm((f) => ({ ...f, doNotEmail: e.target.checked }))}
+                />
+                Do not email
+              </label>
+              <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                Notes
+                <textarea
+                  rows={3}
+                  value={crmForm.notes}
+                  onChange={(e) => setCrmForm((f) => ({ ...f, notes: e.target.value }))}
+                />
+              </label>
               <button
                 type="button"
                 className="button"
                 style={{ width: "auto" }}
-                disabled={savingContact}
-                onClick={() => void saveContact()}
+                disabled={savingCrm}
+                onClick={() => void saveCrmFields()}
               >
-                {savingContact
-                  ? "Saving…"
-                  : editingContactId
-                    ? "Save contact"
-                    : "Add contact"}
+                {savingCrm ? "Saving…" : "Save CRM fields"}
               </button>
-              {editingContactId ? (
+            </div>
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          className={adminSectionToggleClass(openCrmSections.contacts, true)}
+          aria-expanded={openCrmSections.contacts}
+          onClick={() => toggleCrmSection("contacts")}
+        >
+          Contacts ({contacts.length})
+          {contacts.some((c) => c.email) ? "" : " · add email to send"}
+        </button>
+        {openCrmSections.contacts ? (
+          <div className="card" style={{ background: "#fff", margin: 0 }}>
+            <p style={{ marginTop: 0, fontSize: 12, color: "#64748b" }}>
+              Full contact records — names, phones, socials, notes. Email send uses contacts with an
+              address.
+            </p>
+            {target.contact && contacts.length === 0 ? (
+              <p style={{ fontSize: 13, color: "#64748b" }}>
+                Legacy emails: {target.contact}{" "}
                 <button
                   type="button"
                   className="button button-secondary"
-                  style={{ width: "auto" }}
-                  onClick={() => resetContactForm(false)}
+                  style={{ width: "auto", padding: "4px 8px", fontSize: 12, marginLeft: 6 }}
+                  onClick={() => void importLegacyEmails()}
                 >
-                  Cancel edit
+                  Import as contacts
                 </button>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="card" style={{ background: "#fff", marginTop: 16 }}>
-        <h4 style={{ marginTop: 0, fontSize: 15 }}>Send email</h4>
-        {target.doNotEmail ? (
-          <p style={{ color: "#b91c1c", fontSize: 13 }}>
-            Do-not-email is on for this target. Clear it under Gather info to send.
-          </p>
-        ) : (
-          <div style={{ display: "grid", gap: 10 }}>
-            <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
-              To (contact)
-              <select
-                value={sendForm.contactId}
-                onChange={(e) => setSendForm((f) => ({ ...f, contactId: e.target.value }))}
-              >
-                <option value="">—</option>
-                {contacts
-                  .filter((c) => c.email)
-                  .map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {(c.name || "Contact") + ` <${c.email}>`}
-                    </option>
-                  ))}
-              </select>
-            </label>
-            <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
-              Template
-              <select
-                value={sendForm.templateId}
-                onChange={(e) => applyTemplate(e.target.value)}
-              >
-                <option value="">— custom / blank —</option>
-                {templates.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
-              Subject
+              </p>
+            ) : null}
+            <ul style={{ margin: "0 0 12px", paddingLeft: 0, listStyle: "none", fontSize: 13 }}>
+              {contacts.map((c) => (
+                <li
+                  key={c.id}
+                  style={{
+                    marginBottom: 10,
+                    paddingBottom: 10,
+                    borderBottom: "1px solid #e5e7eb"
+                  }}
+                >
+                  <div
+                    style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "baseline" }}
+                  >
+                    <strong>{c.name || "—"}</strong>
+                    {c.isPrimary ? (
+                      <span style={{ fontSize: 11, color: "#0f766e" }}>primary</span>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      style={{ width: "auto", padding: "2px 8px", fontSize: 11 }}
+                      onClick={() => startEditContact(c)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      style={{ width: "auto", padding: "2px 8px", fontSize: 11 }}
+                      onClick={() => void removeContact(c)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <div style={{ color: "#4b5563", marginTop: 2 }}>
+                    {c.email ? (
+                      <div>{c.email}</div>
+                    ) : (
+                      <div style={{ color: "#9ca3af" }}>no email</div>
+                    )}
+                    {c.roleTitle ? <div>{c.roleTitle}</div> : null}
+                    {c.phone || c.phoneMobile ? (
+                      <div>
+                        {[
+                          c.phone ? `Work ${c.phone}` : null,
+                          c.phoneMobile ? `Mobile ${c.phoneMobile}` : null
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </div>
+                    ) : null}
+                    {[
+                      c.linkedinUrl ? `LinkedIn: ${c.linkedinUrl}` : null,
+                      c.instagramUrl ? `IG: ${c.instagramUrl}` : null,
+                      c.facebookUrl ? `FB: ${c.facebookUrl}` : null,
+                      c.xUrl ? `X: ${c.xUrl}` : null,
+                      c.websiteUrl ? `Web: ${c.websiteUrl}` : null
+                    ]
+                      .filter(Boolean)
+                      .map((line) => (
+                        <div key={line as string} style={{ fontSize: 12, wordBreak: "break-all" }}>
+                          {line}
+                        </div>
+                      ))}
+                    {c.notes ? (
+                      <div style={{ marginTop: 4, whiteSpace: "pre-wrap", color: "#374151" }}>
+                        {c.notes}
+                      </div>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+              {!contacts.length && (
+                <li style={{ color: "#6b7280" }}>No structured contacts yet.</li>
+              )}
+            </ul>
+            <h5 style={{ margin: "0 0 8px", fontSize: 14 }}>
+              {editingContactId ? "Edit contact" : "Add contact"}
+            </h5>
+            <div style={{ display: "grid", gap: 8 }}>
+              <div className="grid grid-2" style={{ gap: 8 }}>
+                <input
+                  placeholder="First name"
+                  value={contactForm.firstName}
+                  onChange={(e) => setContactForm((f) => ({ ...f, firstName: e.target.value }))}
+                />
+                <input
+                  placeholder="Last name"
+                  value={contactForm.lastName}
+                  onChange={(e) => setContactForm((f) => ({ ...f, lastName: e.target.value }))}
+                />
+              </div>
               <input
-                value={sendForm.subject}
-                onChange={(e) => setSendForm((f) => ({ ...f, subject: e.target.value }))}
+                placeholder="Email"
+                value={contactForm.email}
+                onChange={(e) => setContactForm((f) => ({ ...f, email: e.target.value }))}
               />
-            </label>
-            <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
-              Body
-              <textarea
-                rows={8}
-                value={sendForm.bodyText}
-                onChange={(e) => setSendForm((f) => ({ ...f, bodyText: e.target.value }))}
-                style={{ fontFamily: "inherit" }}
-              />
-            </label>
-            <label style={{ display: "grid", gap: 4, fontSize: 13, maxWidth: 220 }}>
-              Set follow-up after send
+              <div className="grid grid-2" style={{ gap: 8 }}>
+                <input
+                  placeholder="Work / main phone"
+                  value={contactForm.phone}
+                  onChange={(e) => setContactForm((f) => ({ ...f, phone: e.target.value }))}
+                />
+                <input
+                  placeholder="Mobile phone"
+                  value={contactForm.phoneMobile}
+                  onChange={(e) => setContactForm((f) => ({ ...f, phoneMobile: e.target.value }))}
+                />
+              </div>
               <input
-                type="date"
-                value={sendForm.followUpAt}
-                onChange={(e) => setSendForm((f) => ({ ...f, followUpAt: e.target.value }))}
+                placeholder="Role / title"
+                value={contactForm.roleTitle}
+                onChange={(e) => setContactForm((f) => ({ ...f, roleTitle: e.target.value }))}
               />
-            </label>
-            <label style={{ display: "flex", gap: 8, fontSize: 13 }}>
               <input
-                type="checkbox"
-                checked={sendForm.markContacted}
+                placeholder="Best contact times"
+                value={contactForm.preferredTimes}
                 onChange={(e) =>
-                  setSendForm((f) => ({ ...f, markContacted: e.target.checked }))
+                  setContactForm((f) => ({ ...f, preferredTimes: e.target.value }))
                 }
               />
-              Mark status Contacted if currently Prospect
-            </label>
-            <button
-              type="button"
-              className="button"
-              style={{ width: "auto" }}
-              disabled={sending}
-              onClick={() => void sendEmail()}
-            >
-              {sending ? "Sending…" : "Send via Resend"}
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className="card" style={{ background: "#fff", marginTop: 16 }}>
-        <h4 style={{ marginTop: 0, fontSize: 15 }}>Activity</h4>
-        <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
-          <input
-            style={{ flex: "1 1 200px" }}
-            placeholder="Add a note or call log…"
-            value={noteText}
-            onChange={(e) => setNoteText(e.target.value)}
-          />
-          <button
-            type="button"
-            className="button button-secondary"
-            style={{ width: "auto" }}
-            onClick={() => void addNote()}
-          >
-            Add note
-          </button>
-        </div>
-        <ul style={{ margin: 0, paddingLeft: 0, listStyle: "none", fontSize: 13 }}>
-          {activities.map((a) => (
-            <li
-              key={a.id}
-              style={{
-                padding: "8px 0",
-                borderBottom: "1px solid #e5e7eb"
-              }}
-            >
-              <div style={{ color: "#6b7280", fontSize: 12 }}>
-                {formatWhen(a.createdAt)}
-                {a.createdByEmail ? ` · ${a.createdByEmail}` : ""} · {a.kind}
+              <input
+                placeholder="LinkedIn URL"
+                value={contactForm.linkedinUrl}
+                onChange={(e) => setContactForm((f) => ({ ...f, linkedinUrl: e.target.value }))}
+              />
+              <input
+                placeholder="Instagram URL or @handle"
+                value={contactForm.instagramUrl}
+                onChange={(e) => setContactForm((f) => ({ ...f, instagramUrl: e.target.value }))}
+              />
+              <input
+                placeholder="Facebook URL"
+                value={contactForm.facebookUrl}
+                onChange={(e) => setContactForm((f) => ({ ...f, facebookUrl: e.target.value }))}
+              />
+              <input
+                placeholder="X / Twitter URL or @handle"
+                value={contactForm.xUrl}
+                onChange={(e) => setContactForm((f) => ({ ...f, xUrl: e.target.value }))}
+              />
+              <input
+                placeholder="Website"
+                value={contactForm.websiteUrl}
+                onChange={(e) => setContactForm((f) => ({ ...f, websiteUrl: e.target.value }))}
+              />
+              <textarea
+                placeholder="Contact notes (preferences, history, how you met…)"
+                rows={3}
+                value={contactForm.notes}
+                onChange={(e) => setContactForm((f) => ({ ...f, notes: e.target.value }))}
+                style={{ fontFamily: "inherit", resize: "vertical" }}
+              />
+              <label style={{ display: "flex", gap: 8, fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={contactForm.isPrimary}
+                  onChange={(e) =>
+                    setContactForm((f) => ({ ...f, isPrimary: e.target.checked }))
+                  }
+                />
+                Primary contact
+              </label>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className="button"
+                  style={{ width: "auto" }}
+                  disabled={savingContact}
+                  onClick={() => void saveContact()}
+                >
+                  {savingContact
+                    ? "Saving…"
+                    : editingContactId
+                      ? "Save contact"
+                      : "Add contact"}
+                </button>
+                {editingContactId ? (
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    style={{ width: "auto" }}
+                    onClick={() => resetContactForm(false)}
+                  >
+                    Cancel edit
+                  </button>
+                ) : null}
               </div>
-              <div style={{ fontWeight: 600 }}>{a.subject || a.kind}</div>
-              {a.bodyPreview ? (
-                <div style={{ color: "#4b5563", whiteSpace: "pre-wrap" }}>{a.bodyPreview}</div>
-              ) : null}
-            </li>
-          ))}
-          {!activities.length && (
-            <li style={{ color: "#6b7280" }}>No activity yet.</li>
-          )}
-        </ul>
+            </div>
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          className={adminSectionToggleClass(openCrmSections.send, true)}
+          aria-expanded={openCrmSections.send}
+          onClick={() => toggleCrmSection("send")}
+        >
+          Send email
+          {target.doNotEmail ? " · blocked" : ""}
+        </button>
+        {openCrmSections.send ? (
+          <div className="card" style={{ background: "#fff", margin: 0 }}>
+            {target.doNotEmail ? (
+              <p style={{ color: "#b91c1c", fontSize: 13, margin: 0 }}>
+                Do-not-email is on for this target. Clear it under Gather info to send.
+              </p>
+            ) : (
+              <div style={{ display: "grid", gap: 10 }}>
+                <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                  To (contact)
+                  <select
+                    value={sendForm.contactId}
+                    onChange={(e) => setSendForm((f) => ({ ...f, contactId: e.target.value }))}
+                  >
+                    <option value="">—</option>
+                    {contacts
+                      .filter((c) => c.email)
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {(c.name || "Contact") + ` <${c.email}>`}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                  Template
+                  <select
+                    value={sendForm.templateId}
+                    onChange={(e) => applyTemplate(e.target.value)}
+                  >
+                    <option value="">— custom / blank —</option>
+                    {templates.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                  Subject
+                  <input
+                    value={sendForm.subject}
+                    onChange={(e) => setSendForm((f) => ({ ...f, subject: e.target.value }))}
+                  />
+                </label>
+                <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                  Body
+                  <textarea
+                    rows={8}
+                    value={sendForm.bodyText}
+                    onChange={(e) => setSendForm((f) => ({ ...f, bodyText: e.target.value }))}
+                    style={{ fontFamily: "inherit" }}
+                  />
+                </label>
+                <label style={{ display: "grid", gap: 4, fontSize: 13, maxWidth: 220 }}>
+                  Set follow-up after send
+                  <input
+                    type="date"
+                    value={sendForm.followUpAt}
+                    onChange={(e) => setSendForm((f) => ({ ...f, followUpAt: e.target.value }))}
+                  />
+                </label>
+                <label style={{ display: "flex", gap: 8, fontSize: 13 }}>
+                  <input
+                    type="checkbox"
+                    checked={sendForm.markContacted}
+                    onChange={(e) =>
+                      setSendForm((f) => ({ ...f, markContacted: e.target.checked }))
+                    }
+                  />
+                  Mark status Contacted if currently Prospect
+                </label>
+                <button
+                  type="button"
+                  className="button"
+                  style={{ width: "auto" }}
+                  disabled={sending}
+                  onClick={() => void sendEmail()}
+                >
+                  {sending ? "Sending…" : "Send via Resend"}
+                </button>
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          className={adminSectionToggleClass(openCrmSections.activity, true)}
+          aria-expanded={openCrmSections.activity}
+          onClick={() => toggleCrmSection("activity")}
+        >
+          Activity ({activities.length})
+        </button>
+        {openCrmSections.activity ? (
+          <div className="card" style={{ background: "#fff", margin: 0 }}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+              <input
+                style={{ flex: "1 1 200px" }}
+                placeholder="Add a note or call log…"
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+              />
+              <button
+                type="button"
+                className="button button-secondary"
+                style={{ width: "auto" }}
+                onClick={() => void addNote()}
+              >
+                Add note
+              </button>
+            </div>
+            <ul style={{ margin: 0, paddingLeft: 0, listStyle: "none", fontSize: 13 }}>
+              {activities.map((a) => (
+                <li
+                  key={a.id}
+                  style={{
+                    padding: "8px 0",
+                    borderBottom: "1px solid #e5e7eb"
+                  }}
+                >
+                  <div style={{ color: "#6b7280", fontSize: 12 }}>
+                    {formatWhen(a.createdAt)}
+                    {a.createdByEmail ? ` · ${a.createdByEmail}` : ""} · {a.kind}
+                  </div>
+                  <div style={{ fontWeight: 600 }}>{a.subject || a.kind}</div>
+                  {a.bodyPreview ? (
+                    <div style={{ color: "#4b5563", whiteSpace: "pre-wrap" }}>{a.bodyPreview}</div>
+                  ) : null}
+                </li>
+              ))}
+              {!activities.length && (
+                <li style={{ color: "#6b7280" }}>No activity yet.</li>
+              )}
+            </ul>
+          </div>
+        ) : null}
       </div>
     </div>
   );
