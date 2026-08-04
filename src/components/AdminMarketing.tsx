@@ -160,6 +160,17 @@ export default function AdminMarketing() {
 
   const [copied, setCopied] = useState<string | null>(null);
 
+  type OutreachSubKey = "addTarget" | "addTemplate" | "savedTemplates";
+  const [openOutreachSubs, setOpenOutreachSubs] = useState<Record<OutreachSubKey, boolean>>({
+    addTarget: false,
+    addTemplate: false,
+    savedTemplates: false
+  });
+
+  const toggleOutreachSub = (key: OutreachSubKey) => {
+    setOpenOutreachSubs((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
   useEffect(() => {
     fetch("/api/admin/marketing", { credentials: "include", cache: "no-store" })
       .then((res) => (res.ok ? res.json() : Promise.reject()))
@@ -296,6 +307,7 @@ export default function AdminMarketing() {
 
   const startEdit = (t: OutreachTarget) => {
     setEditingId(t.id);
+    setOpenOutreachSubs((prev) => ({ ...prev, addTarget: true }));
     setForm({
       targetType: t.targetType === "individual" ? "individual" : "organization",
       organization: t.organization,
@@ -313,7 +325,7 @@ export default function AdminMarketing() {
       doNotEmail: !!t.doNotEmail
     });
     requestAnimationFrame(() => {
-      document.getElementById("marketing-outreach")?.scrollIntoView({
+      document.getElementById("outreach-add-target")?.scrollIntoView({
         behavior: "smooth",
         block: "start"
       });
@@ -418,6 +430,7 @@ export default function AdminMarketing() {
 
   const startEditTemplate = (t: OutreachEmailTemplate) => {
     setEditingTemplateId(t.id);
+    setOpenOutreachSubs((prev) => ({ ...prev, addTemplate: true, savedTemplates: true }));
     setTemplateForm({
       name: t.name,
       subject: t.subject,
@@ -425,7 +438,7 @@ export default function AdminMarketing() {
       purpose: t.purpose ?? ""
     });
     requestAnimationFrame(() => {
-      document.getElementById("outreach-email-templates")?.scrollIntoView({
+      document.getElementById("outreach-add-template")?.scrollIntoView({
         behavior: "smooth",
         block: "start"
       });
@@ -731,12 +744,22 @@ export default function AdminMarketing() {
         <section id="marketing-outreach" style={{ marginBottom: 24 }}>
           <h2 style={{ marginBottom: 12, fontSize: 18 }}>Outreach tracker / CRM</h2>
           <p style={{ color: "#4b5563", marginBottom: 12 }}>
-            Pipeline for organizations and individuals: structured contacts, Resend email send,
-            follow-up dates, and an activity timeline. Open <strong>CRM</strong> on a row to work a
-            target.
+            Pipeline for organizations and individuals. Use the target list below, open{" "}
+            <strong>CRM</strong> on a row to send email, and expand sections only when you need them.
           </p>
 
-          <div className="card" style={{ marginBottom: 16 }}>
+          <div id="outreach-add-target" style={{ marginBottom: 12 }}>
+            <button
+              type="button"
+              className={adminSectionToggleClass(openOutreachSubs.addTarget, true)}
+              aria-expanded={openOutreachSubs.addTarget}
+              onClick={() => toggleOutreachSub("addTarget")}
+            >
+              {openOutreachSubs.addTarget ? "▼" : "▶"}{" "}
+              {editingId ? "Edit target" : "Add target"}
+            </button>
+            {openOutreachSubs.addTarget ? (
+          <div className="card" style={{ marginTop: 10, marginBottom: 16 }}>
             <h3 style={{ marginTop: 0, fontSize: 16 }}>
               {editingId ? "Edit target" : "Add target"}
             </h3>
@@ -952,15 +975,31 @@ export default function AdminMarketing() {
               <p style={{ margin: "10px 0 0", color: "#374151", fontSize: 13 }}>{outreachStatus}</p>
             )}
           </div>
+            ) : null}
+          </div>
 
-          <div id="outreach-email-templates" className="card" style={{ marginBottom: 16 }}>
-            <h3 style={{ marginTop: 0, fontSize: 16 }}>Outreach email templates</h3>
+          <div id="outreach-email-templates" style={{ marginBottom: 12 }}>
+            <button
+              type="button"
+              className={adminSectionToggleClass(openOutreachSubs.addTemplate, true)}
+              aria-expanded={openOutreachSubs.addTemplate}
+              onClick={() => toggleOutreachSub("addTemplate")}
+            >
+              {openOutreachSubs.addTemplate ? "▼" : "▶"}{" "}
+              {editingTemplateId ? "Edit email template" : "Add email template"}
+            </button>
+            {openOutreachSubs.addTemplate ? (
+          <div id="outreach-add-template" className="card" style={{ marginTop: 10, marginBottom: 12 }}>
+            <h3 style={{ marginTop: 0, fontSize: 16 }}>
+              {editingTemplateId ? "Edit email template" : "Add email template"}
+            </h3>
             <p style={{ color: "#4b5563", marginTop: 0, marginBottom: 12, fontSize: 13 }}>
-              Member- and partner-facing copy you edit here. Use <strong>CRM → Send email</strong> to
-              merge and send via Resend, or copy subject/body into your mail client. Placeholders:{" "}
+              Partner / persona outreach copy. Use <strong>CRM → Send email</strong> to merge and send
+              via Resend, or copy into your mail client. Placeholders:{" "}
               <code>{"{{name}}"}</code>, <code>{"{{firstName}}"}</code>,{" "}
               <code>{"{{lastName}}"}</code>, <code>{"{{contactName}}"}</code>,{" "}
-              <code>{"{{organization}}"}</code>, <code>{"{{siteUrl}}"}</code>.
+              <code>{"{{organization}}"}</code>, <code>{"{{persona}}"}</code>,{" "}
+              <code>{"{{siteUrl}}"}</code>.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
@@ -1037,12 +1076,31 @@ export default function AdminMarketing() {
             {templateStatus && (
               <p style={{ margin: "10px 0 0", color: "#374151", fontSize: 13 }}>{templateStatus}</p>
             )}
+          </div>
+            ) : null}
+
+            <button
+              type="button"
+              className={adminSectionToggleClass(openOutreachSubs.savedTemplates, true)}
+              aria-expanded={openOutreachSubs.savedTemplates}
+              onClick={() => toggleOutreachSub("savedTemplates")}
+              style={{ marginTop: 8 }}
+            >
+              {openOutreachSubs.savedTemplates ? "▼" : "▶"} Saved email templates (
+              {templatesLoaded ? templates.length : "…"})
+            </button>
+            {openOutreachSubs.savedTemplates ? (
+          <div className="card" style={{ marginTop: 10, marginBottom: 16 }}>
+            <p style={{ color: "#4b5563", marginTop: 0, marginBottom: 12, fontSize: 13 }}>
+              Persona / partner templates used by <strong>CRM → Send email</strong>. Expand{" "}
+              <strong>Add email template</strong> above to create or edit.
+            </p>
             {!templatesLoaded && (
               <p style={{ margin: "12px 0 0", color: "#6b7280", fontSize: 13 }}>Loading templates…</p>
             )}
             {templatesLoaded && templates.length === 0 && (
               <p style={{ margin: "12px 0 0", color: "#6b7280", fontSize: 13 }}>
-                No templates yet. Add one above or load starters.
+                No templates yet. Expand Add email template and load starters.
               </p>
             )}
             {templates.map((t) => (
@@ -1122,6 +1180,8 @@ export default function AdminMarketing() {
                 </pre>
               </div>
             ))}
+          </div>
+            ) : null}
           </div>
 
           <div

@@ -496,7 +496,7 @@ export default function AdminOutreachCrmPanel({
           aria-expanded={openCrmSections.gather}
           onClick={() => toggleCrmSection("gather")}
         >
-          Gather info
+          {openCrmSections.gather ? "▼" : "▶"} Gather info
           {crmForm.followUpAt ? ` · follow-up ${crmForm.followUpAt}` : ""}
           {crmForm.doNotEmail ? " · do not email" : ""}
         </button>
@@ -582,7 +582,7 @@ export default function AdminOutreachCrmPanel({
           aria-expanded={openCrmSections.contacts}
           onClick={() => toggleCrmSection("contacts")}
         >
-          Contacts ({contacts.length})
+          {openCrmSections.contacts ? "▼" : "▶"} Contacts ({contacts.length})
           {contacts.some((c) => c.email) ? "" : " · add email to send"}
         </button>
         {openCrmSections.contacts ? (
@@ -802,7 +802,7 @@ export default function AdminOutreachCrmPanel({
           aria-expanded={openCrmSections.send}
           onClick={() => toggleCrmSection("send")}
         >
-          Send email
+          {openCrmSections.send ? "▼" : "▶"} Send email
           {target.doNotEmail ? " · blocked" : ""}
         </button>
         {openCrmSections.send ? (
@@ -897,7 +897,7 @@ export default function AdminOutreachCrmPanel({
           aria-expanded={openCrmSections.activity}
           onClick={() => toggleCrmSection("activity")}
         >
-          Activity ({activities.length})
+          {openCrmSections.activity ? "▼" : "▶"} Activity ({activities.length})
         </button>
         {openCrmSections.activity ? (
           <div className="card" style={{ background: "#fff", margin: 0 }}>
