@@ -83,6 +83,8 @@ Personas: `docs/personas.md`
 
 ## Week D — Resilience (Jordan + Alex) — week of 2026-08-03
 
+**Full shoot + paste pack:** `docs/marketing-week-resilience-2026-08-03.md`
+
 Blog: `/blog/resilience-meditation-bounce-back-stress-sleep`  
 Landing: `/resilience-meditation?ref=6051C794`
 
@@ -104,7 +106,7 @@ Landing: `/resilience-meditation?ref=6051C794`
 **CTA:** Link in bio → resilience article  
 
 ### Clip 13 — Burned-out brains need recovery, not another task (20–30s)
-**Hook:** Too drained for “wellness homework”?  
+**Hook:** Too tired for “wellness homework”?  
 **VO:** “If recovery needs another hour in the day, it won’t last. Reach For The Stars schedules resilience themes at bedtime and during sleep.”  
 **CTA:** “14-day free trial”  
 **Link:** signup with `ref=6051C794`
@@ -118,15 +120,19 @@ Landing: `/resilience-meditation?ref=6051C794`
 
 ## Share copy — LinkedIn / Instagram (paste ready)
 
+**Full URLs with ref + UTM:** see `docs/marketing-week-resilience-2026-08-03.md`
+
 **LinkedIn (post):**
 Hard days don’t just need motivation — they need recovery.
 
 New on the Reach For The Stars blog: how guided meditation at bedtime (and during sleep) supports physical and psychological resilience — especially for caregivers, first responders, and burned-out professionals who have no spare daytime hour.
 
-Read: https://reachforthestars.today/blog/resilience-meditation-bounce-back-stress-sleep?ref=6051C794
+Hard shift? Train bounce-back tonight.
+
+https://reachforthestars.today/blog/resilience-meditation-bounce-back-stress-sleep?ref=6051C794&utm_source=linkedin&utm_medium=organic&utm_campaign=resilience-week-d
 
 **Instagram caption:**
-Hard shift? Train bounce-back tonight. 🌙
+Hard shift? Train bounce-back tonight.
 Nightly guided resilience meditations — while you fall asleep and during sleep. No daytime chore.
 Link in bio → resilience article
 #resilience #firstresponders #burnoutrecovery #sleepmeditation #guidedmeditation
