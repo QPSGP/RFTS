@@ -68,7 +68,7 @@ export async function POST(request: Request) {
   const to =
     parsed.data.to?.trim() ||
     process.env.SIGNUP_EMAIL_TEST_TO?.trim() ||
-    "Richard@richardleeweatherman.com";
+    "richard@visimon.app";
   const { welcome, platinumCopyOk, platinumManagedCopy } = welcomeEmailVerification(
     parsed.data.firstName,
     parsed.data.lastName

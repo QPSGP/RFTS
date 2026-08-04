@@ -120,6 +120,12 @@ type MemberActivityLogEntry = {
   createdAt: string;
 };
 
+type MemberStatusFilter = "all" | "active" | "inactive";
+
+function isMemberActive(subscriptionStatus: string | null): boolean {
+  return subscriptionStatus === "active";
+}
+
 export default function AdminDashboardPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [members, setMembers] = useState<MemberRow[]>([]);
@@ -129,6 +135,15 @@ export default function AdminDashboardPage() {
   const [memberActivityLog, setMemberActivityLog] = useState<MemberActivityLogEntry[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "unauthorized">("loading");
   const [openSections, setOpenSections] = useState(dashboardSections);
+  const [memberStatusFilter, setMemberStatusFilter] = useState<MemberStatusFilter>("all");
+
+  const filteredMembers = useMemo(() => {
+    if (memberStatusFilter === "all") return members;
+    if (memberStatusFilter === "active") {
+      return members.filter((m) => isMemberActive(m.subscriptionStatus));
+    }
+    return members.filter((m) => !isMemberActive(m.subscriptionStatus));
+  }, [members, memberStatusFilter]);
 
   const staffRoster = useMemo(
     () =>
@@ -346,6 +361,46 @@ export default function AdminDashboardPage() {
         <p style={{ color: "#4b5563", marginBottom: 12 }}>
           Signups, subscription status, goals, and session usage for all members.
         </p>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 12
+          }}
+        >
+          <label style={{ display: "flex", alignItems: "center", gap: 8, margin: 0 }}>
+            <span style={{ fontSize: 13, color: "#4b5563" }}>Status</span>
+            <select
+              value={memberStatusFilter}
+              onChange={(event) =>
+                setMemberStatusFilter(event.target.value as MemberStatusFilter)
+              }
+              aria-label="Filter members by active or inactive status"
+              style={{
+                padding: "6px 10px",
+                fontSize: 14,
+                border: "1px solid #d1d5db",
+                borderRadius: 6,
+                background: "#fff"
+              }}
+            >
+              <option value="all">All</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </label>
+          <span style={{ fontSize: 12, color: "#64748b" }}>
+            Showing {filteredMembers.length} of {members.length}
+            {memberStatusFilter === "active"
+              ? " (active memberships)"
+              : memberStatusFilter === "inactive"
+                ? " (inactive / canceled / past due / none)"
+                : ""}
+            .
+          </span>
+        </div>
         <p className="admin-table-hint">Swipe sideways for more columns on a small screen.</p>
         <div className="card table-scroll">
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 640, fontSize: 14 }}>
@@ -363,7 +418,7 @@ export default function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {members.map((m) => (
+              {filteredMembers.map((m) => (
                 <tr key={m.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
                   <td style={tdStyle}>
                     {m.firstName || m.lastName
@@ -384,6 +439,11 @@ export default function AdminDashboardPage() {
           </table>
           {members.length === 0 && (
             <p style={{ padding: 24, color: "#6b7280" }}>No members yet.</p>
+          )}
+          {members.length > 0 && filteredMembers.length === 0 && (
+            <p style={{ padding: 24, color: "#6b7280" }}>
+              No {memberStatusFilter} members.
+            </p>
           )}
         </div>
       </section>

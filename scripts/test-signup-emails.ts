@@ -2,7 +2,8 @@
  * Send signup welcome emails (same templates as POST /api/member/onboarding).
  * Does not create a member account.
  *
- *   SIGNUP_EMAIL_TEST_TO=you@example.com npm run test:signup-emails
+ *   npm run test:signup-emails
+ *   SIGNUP_EMAIL_TEST_TO=other@example.com npm run test:signup-emails
  *   SIGNUP_EMAIL_TEST_ALL=1  — also send LGD + therapist/healer/coach follow-ups
  */
 import path from "path";
@@ -18,7 +19,7 @@ import {
 } from "../src/lib/email-templates";
 
 async function main() {
-  const to = process.env.SIGNUP_EMAIL_TEST_TO?.trim();
+  const to = process.env.SIGNUP_EMAIL_TEST_TO?.trim() || "richard@visimon.app";
   if (!to) {
     console.error("Set SIGNUP_EMAIL_TEST_TO (recipient for test sends).");
     process.exit(1);

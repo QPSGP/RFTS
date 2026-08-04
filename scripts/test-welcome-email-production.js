@@ -28,7 +28,7 @@ loadEnvLocal();
 
 const base = (process.argv[2] || "https://reachforthestars.today").replace(/\/$/, "");
 const secret = process.env.CRON_SECRET?.trim();
-const to = process.env.SIGNUP_EMAIL_TEST_TO?.trim() || "Richard@richardleeweatherman.com";
+const to = process.env.SIGNUP_EMAIL_TEST_TO?.trim() || "richard@visimon.app";
 
 if (!secret) {
   console.error("CRON_SECRET missing (set in .env.local or environment).");

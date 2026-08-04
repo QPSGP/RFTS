@@ -106,6 +106,7 @@ Open **Admin → Marketing → Outreach → Due this week**.
 
 Smoke-test Resend to yourself:
 ```bash
-SEED_OUTREACH_SEND_TO=you@email.com npx tsx scripts/seed-outreach-crm-week.ts
+npx tsx scripts/seed-outreach-crm-week.ts
+# defaults smoke send to richard@visimon.app when RESEND_API_KEY is set
 ```
 (Re-run only adds missing targets; send still works if templates exist.)

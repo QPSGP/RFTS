@@ -2,11 +2,11 @@
  * Seed this week's marketing CRM pipeline: persona individuals, partner orgs,
  * contacts, follow-ups, and outreach email templates.
  *
- * Does NOT send live email unless SEED_OUTREACH_SEND_TO is set (your inbox for a CRM smoke send).
+ * Does NOT send live email unless SEED_OUTREACH_SEND_TO is set (defaults to richard@visimon.app).
  *
  * Usage (from rfts-platform):
  *   npx tsx scripts/seed-outreach-crm-week.ts
- *   SEED_OUTREACH_SEND_TO=you@example.com npx tsx scripts/seed-outreach-crm-week.ts
+ *   SEED_OUTREACH_SEND_TO=other@example.com npx tsx scripts/seed-outreach-crm-week.ts
  */
 import path from "path";
 import { config } from "dotenv";
@@ -284,7 +284,7 @@ async function main() {
     console.log(`Added: ${row.organization} (${row.targetType}) → contact ${contact.firstName}`);
   }
 
-  const sendTo = (process.env.SEED_OUTREACH_SEND_TO || "").trim();
+  const sendTo = (process.env.SEED_OUTREACH_SEND_TO || "richard@visimon.app").trim();
   if (sendTo) {
     const templates = await listOutreachEmailTemplates();
     const template =
@@ -292,19 +292,26 @@ async function main() {
       templates.find((t) => t.name.includes("Resilience blog"));
     if (!template) {
       console.warn("No resilience_blog_share template found; skip send.");
+    } else if (!process.env.RESEND_API_KEY) {
+      console.error(
+        `Would send CRM smoke to ${sendTo}, but RESEND_API_KEY is missing in .env.local.`
+      );
+      console.error(
+        "Add RESEND_API_KEY from Vercel, or send from production Admin → CRM (contact may already be set to richard@visimon.app)."
+      );
     } else {
       const siteUrl = getBaseUrl();
       const subject = mergeOutreachTemplate(template.subject, {
-        firstName: "there",
-        contactName: "there",
-        name: "there",
+        firstName: "Richard",
+        contactName: "Richard",
+        name: "Richard",
         siteUrl,
         yourName: "Reach For The Stars"
       });
       const bodyText = mergeOutreachTemplate(template.bodyText, {
-        firstName: "there",
-        contactName: "there",
-        name: "there",
+        firstName: "Richard",
+        contactName: "Richard",
+        name: "Richard",
         siteUrl,
         yourName: "Reach For The Stars"
       });
@@ -324,9 +331,7 @@ async function main() {
       }
     }
   } else {
-    console.log(
-      "No live send (set SEED_OUTREACH_SEND_TO=you@email.com to smoke-test Resend from this script)."
-    );
+    console.log("SEED_OUTREACH_SEND_TO empty — skip send.");
   }
 
   console.log(`Done. Targets added: ${addedTargets}. Contacts added: ${addedContacts}.`);
