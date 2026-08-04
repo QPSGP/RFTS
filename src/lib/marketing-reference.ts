@@ -463,6 +463,68 @@ If useful, I can send a one-page overview and trial options.
 Thank you,
 {{yourName}}
 {{siteUrl}}`
+  },
+  {
+    name: "Resilience blog share (member or prospect)",
+    purpose: "resilience_blog_share",
+    subject: "Hard days need recovery — not another daytime chore",
+    bodyText: `Hello {{firstName}},
+
+I wanted to share a short piece on physical and psychological resilience — how guided meditation at bedtime (and during sleep) helps people bounce back after hard shifts and high-stress weeks.
+
+Read it here:
+{{siteUrl}}/blog/resilience-meditation-bounce-back-stress-sleep
+
+If it resonates, you can try Reach For The Stars free:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Warmly,
+{{yourName}}`
+  },
+  {
+    name: "Affiliate partner — resilience + 25% ongoing",
+    purpose: "affiliate_resilience_partner",
+    subject: "25% ongoing + a resilience tool that fits shift work",
+    bodyText: `Hello {{contactName}},
+
+Quick partnership idea for {{organization}}.
+
+Reach For The Stars gives people guided meditations that run at bedtime and during sleep — resilience, stress relief, and sleep support without another daytime wellness chore. Affiliates earn 25% ongoing for as long as referred members stay subscribed.
+
+Useful pages to share:
+- Affiliates: {{siteUrl}}/affiliates
+- Resilience: {{siteUrl}}/resilience-meditation
+- Stress: {{siteUrl}}/stress-relief
+- Sleep: {{siteUrl}}/sleep-meditation
+
+Happy to set you up with a referral code and sample messaging for {{persona}}.
+
+Would a brief call this week work?
+
+Warmly,
+{{yourName}}
+(800) GOAL NOW (462-5669)
+{{siteUrl}}`
+  },
+  {
+    name: "Sales coach partner intro (Sales Edge)",
+    purpose: "affiliate_sales_edge",
+    subject: "For your sales team: quota calm that trains at night",
+    bodyText: `Hello {{contactName}},
+
+Salespeople don’t need another daytime podcast — they need composure under quota and sleep before the big close.
+
+Reach For The Stars reinforces wealth, resilience, and stress-relief goals while they fall asleep and during sleep. Partners earn 25% ongoing on referred memberships.
+
+Overview: {{siteUrl}}/affiliates
+Wealth angle: {{siteUrl}}/wealth
+Resilience: {{siteUrl}}/resilience-meditation
+
+Open to a short intro call for {{organization}}?
+
+Thank you,
+{{yourName}}
+{{siteUrl}}`
   }
 ];
 export type ReferencePersona = {

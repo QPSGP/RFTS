@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { buildIndexableAudioLandingContent } from "@/lib/audio-landing";
-import { BLOG_POSTS } from "@/lib/blog-posts";
+import { getBlogPostsNewestFirst } from "@/lib/blog-posts";
 import { listLibrary } from "@/lib/db";
 import { PUBLIC_MARKETING_PATHS } from "@/lib/site-routes";
 import { getPublicSiteUrl } from "@/lib/site-url";
@@ -10,18 +10,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = getPublicSiteUrl();
   const library = await listLibrary();
   const audioPages = buildIndexableAudioLandingContent(library);
+  const publishedPosts = getBlogPostsNewestFirst();
 
   const topicDates = Object.fromEntries(
     GOAL_LANDING_PAGES.map((page) => [page.path, "2026-03-19"])
   ) as Record<string, string>;
   const blogDates = Object.fromEntries(
-    BLOG_POSTS.map((post) => [`/blog/${post.slug}`, post.publishedAt])
+    publishedPosts.map((post) => [`/blog/${post.slug}`, post.publishedAt])
   ) as Record<string, string>;
 
   const staticEntries = PUBLIC_MARKETING_PATHS.map((path) => {
     const lastModified =
       path === "/blog"
-        ? BLOG_POSTS[0]?.publishedAt
+        ? publishedPosts[0]?.publishedAt
         : blogDates[path] ?? topicDates[path] ?? "2026-03-18";
 
     return {

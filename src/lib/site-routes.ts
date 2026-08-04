@@ -1,4 +1,4 @@
-import { BLOG_POSTS } from "@/lib/blog-posts";
+import { getBlogPostsNewestFirst } from "@/lib/blog-posts";
 import { GOAL_LANDING_PAGES } from "@/lib/goal-landing-pages";
 import { TOPIC_LANDING_PAGES } from "@/lib/topic-landing-pages";
 
@@ -21,5 +21,5 @@ export const PUBLIC_MARKETING_PATHS = [
   "/blog",
   ...GOAL_LANDING_PAGES.map((page) => page.path),
   ...TOPIC_LANDING_PAGES.map((page) => page.path),
-  ...BLOG_POSTS.map((post) => `/blog/${post.slug}`)
+  ...getBlogPostsNewestFirst().map((post) => `/blog/${post.slug}`)
 ] as const;

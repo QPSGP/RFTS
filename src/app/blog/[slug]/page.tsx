@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import BlogPostView from "@/components/BlogPostView";
 import { findRelatedAudioLandingsForBlogPost } from "@/lib/audio-landing-relations";
-import { BLOG_POSTS, getBlogPost } from "@/lib/blog-posts";
+import { getBlogPost, getBlogPostsNewestFirst } from "@/lib/blog-posts";
 import { listLibrary } from "@/lib/db";
 import { buildMarketingSignupHref } from "@/lib/marketing-signup";
 
 type Props = { params: { slug: string }; searchParams?: { ref?: string } };
 
 export function generateStaticParams() {
-  return BLOG_POSTS.map((post) => ({ slug: post.slug }));
+  return getBlogPostsNewestFirst().map((post) => ({ slug: post.slug }));
 }
 
 export function generateMetadata({ params }: Props): Metadata {

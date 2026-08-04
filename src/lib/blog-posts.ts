@@ -23,6 +23,53 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "balanced-life-highest-potential-guided-meditation-sleep",
+    title:
+      "Balanced life: reach your highest potential — body, mind, spirit, and finances — while you sleep",
+    metaTitle: "Balanced Life Guided Meditation — Highest Potential at Night | RFTS Blog",
+    metaDescription:
+      "Balanced life means highest potential physically, mentally, emotionally, spiritually, and financially. Nightly guided meditation reinforces whole-life growth while you sleep. Free trial.",
+    publishedAt: "2026-08-10",
+    readMinutes: 6,
+    excerpt:
+      "A balanced life is not five separate self-help projects. It is one nightly practice that reinforces your highest potential across body, mind, emotions, spirit — and finances — while you sleep.",
+    goalSlug: "balanced-life",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for a balanced life are often juggling pieces: health goals, stress, spiritual growth, relationships, and the quiet pressure to earn more without becoming someone they do not respect. Daytime programs ask you to pick one lane. Real life rarely works that way.",
+          "Reach For The Stars frames Balanced Life as Terry’s whole-person USP: reach your highest potential physically, mentally, emotionally, spiritually, and financially. Guided meditations play while you fall asleep and, if you choose two audios per night, again during sleep — so growth does not need another hour you do not have."
+        ]
+      },
+      {
+        heading: "Why “financial” belongs in the same sentence as spiritual",
+        paragraphs: [
+          "Many wellness offers stop at calm. Spiritual entrepreneurs, coaches, and mission-driven owners know that starving is not a virtue. When Balanced Life is a prioritized goal, your rotation can include abundance and confidence themes alongside peace, health, and purpose — so income and soul work stop fighting each other in your head.",
+          "That framing is intentional. You are not asked to pretend money does not matter. You are invited to grow as a beacon of success in every area that makes a full life."
+        ]
+      },
+      {
+        heading: "One bedtime cue instead of five apps",
+        paragraphs: [
+          "Willpower fails when the day is already full. A fixed Start Session cue — intro relaxation music, then your Balanced Life and related recordings — builds repetition without a daytime course. Optional reinforcement later in the night meets you during restorative sleep.",
+          "You still choose priorities (up to ten) and reorder them anytime. The schedule rotates so physical, mental, emotional, spiritual, and financial themes return on a predictable cadence instead of disappearing after one inspiring track."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits spiritual entrepreneurs and coaches who want spirit and profit, burned-out professionals who need recovery and direction, and anyone who has tried siloed programs and still felt out of balance. It also supports facilitators who enroll clients with the same whole-life promise.",
+          "Explore our Balanced Life goal page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Highest potential in every area (excerpt)",
+      quote:
+        "You grow whole… body restores… mind clears… emotions settle… spirit deepens… finances open with integrity… each night you move toward your highest potential in every area of life…"
+    }
+  },
+  {
     slug: "resilience-meditation-bounce-back-stress-sleep",
     title: "Physical and psychological resilience: bounce back with guided meditation at night",
     metaTitle: "Resilience Meditation at Night — Bounce Back From Stress | RFTS Blog",
@@ -669,9 +716,17 @@ export const BLOG_POSTS: BlogPost[] = [
 ];
 
 export function getBlogPost(slug: string): BlogPost | undefined {
-  return BLOG_POSTS.find((post) => post.slug === slug);
+  const post = BLOG_POSTS.find((p) => p.slug === slug);
+  if (!post) return undefined;
+  const today = new Date().toISOString().slice(0, 10);
+  if (post.publishedAt > today) return undefined;
+  return post;
 }
 
+/** Published posts only (scheduled future dates stay hidden until publishedAt). */
 export function getBlogPostsNewestFirst(): BlogPost[] {
-  return BLOG_POSTS.slice().sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+  const today = new Date().toISOString().slice(0, 10);
+  return BLOG_POSTS.filter((p) => p.publishedAt <= today).sort((a, b) =>
+    b.publishedAt.localeCompare(a.publishedAt)
+  );
 }
