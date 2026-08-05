@@ -143,7 +143,7 @@ export default function FacilitatorPage() {
       <section className="card section">
         <h2>Featured Facilitator</h2>
         <p style={{ color: "#475569" }}>
-          Learn more about our first Facilitator and her contribution to the
+          Learn more about our founder, first facilitator and her contribution to the
           Reach For The Stars experience.
         </p>
         <a className="button button-secondary" href="/facilitators/terry-brussel-rogers">
