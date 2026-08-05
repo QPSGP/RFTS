@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import MemberRouteActivityLogger from "@/components/MemberRouteActivityLogger";
 import AffiliateRefSync from "@/components/AffiliateRefSync";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import MicrosoftClarity from "@/components/MicrosoftClarity";
 import SiteHeader from "@/components/SiteHeader";
 import { getPublicSiteUrl } from "@/lib/site-url";
@@ -43,6 +44,7 @@ export default function RootLayout({
         )}
         <MemberRouteActivityLogger />
         {children}
+        <GoogleAnalytics />
         <MicrosoftClarity />
         <Analytics />
       </body>

@@ -56,8 +56,9 @@ export default function PrivacyPolicyPage() {
           <h2>Cookies</h2>
           <p>
             We use cookies and similar technologies for authentication, session
-            management, and basic analytics. You can adjust cookie settings in
-            your browser, but some features may not work properly.
+            management, and basic analytics (including Google Analytics and
+            similar tools). You can adjust cookie settings in your browser, but
+            some features may not work properly.
           </p>
         </div>
         <div className="card">
