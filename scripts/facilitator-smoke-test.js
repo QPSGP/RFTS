@@ -8,12 +8,12 @@ const results = [];
 
 function pass(name, detail = "") {
   results.push({ name, ok: true, detail });
-  console.log(`  OK  ${name}${detail ? ` — ${detail}` : ""}`);
+  console.log(`  OK  ${name}${detail ? ` - ${detail}` : ""}`);
 }
 
 function fail(name, detail = "") {
   results.push({ name, ok: false, detail });
-  console.log(`  FAIL ${name}${detail ? ` — ${detail}` : ""}`);
+  console.log(`  FAIL ${name}${detail ? ` - ${detail}` : ""}`);
 }
 
 async function fetchStatus(url, opts = {}) {

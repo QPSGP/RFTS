@@ -95,7 +95,7 @@ type SessionPlayerProps = {
   firstTrack?: SessionTrack | null;
   secondTrack?: SessionTrack | null;
   gapHours: number;
-  /** 2 = full session (first + second after gap); 1 = half session — after first ends, close only; no auto second. */
+  /** 2 = full session (first + second after gap); 1 = half session - after first ends, close only; no auto second. */
   playsPerNight?: 1 | 2;
   autoStart?: boolean;
   /** Called when the member starts a session (for usage analytics). */
@@ -169,7 +169,7 @@ function shouldVerifyAutoplayStalledByPaused(): boolean {
 
 /**
  * Run `play()`; on failure call onNeedTap. On many mobile browsers, `play()` can "succeed" while
- * the element stays paused—re-check after a short delay and prompt if still paused.
+ * the element stays paused-re-check after a short delay and prompt if still paused.
  * Returns a cancel function to clear follow-up timers.
  */
 function startPlaybackWithIOSAutoplayGuard(
@@ -207,8 +207,8 @@ let silentGapLoopDataUriCache: string | null = null;
 
 /**
  * Short looping silence during the first→second gap keeps `<audio>` in a playing state for mobile autoplay handoff.
- * Uses 16-bit signed PCM at zero — correct digital silence. (Older builds used 8-bit WAV with sample bytes left at 0;
- * in unsigned 8-bit WAV silence is 128, so 0 caused DC offset / rhythmic clicks when looping — often heard as a “heartbeat”.)
+ * Uses 16-bit signed PCM at zero - correct digital silence. (Older builds used 8-bit WAV with sample bytes left at 0;
+ * in unsigned 8-bit WAV silence is 128, so 0 caused DC offset / rhythmic clicks when looping - often heard as a “heartbeat”.)
  */
 function getSilentGapLoopDataUri(): string {
   if (silentGapLoopDataUriCache) return silentGapLoopDataUriCache;
@@ -310,7 +310,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
   const lastAttemptAutoplayCancelRef = useRef<(() => void) | null>(null);
   /** Mirrors `queue` state for ended-handler / tap-play (avoids stale closure after gap clears queue). */
   const queueRef = useRef<SessionTrack[]>([]);
-  /** Prep in the current segment already finished — tap play should load the main track, not restart prep. */
+  /** Prep in the current segment already finished - tap play should load the main track, not restart prep. */
   const segmentPrepDoneRef = useRef(false);
   const handlingEndedRef = useRef(false);
 
@@ -393,13 +393,13 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     };
   }, [phase]);
 
-  /** “Now playing” and full transport — not while waiting (unless using silent gap bridge, see `sessionAudioMounted`). */
+  /** “Now playing” and full transport - not while waiting (unless using silent gap bridge, see `sessionAudioMounted`). */
   const showActivePlaybackUi = Boolean(current && (phase === "first" || phase === "second"));
   /** Keep `<audio>` mounted during the inter-half gap: silent loop + same element handoff to second-half prep. */
   const sessionAudioMounted =
     showActivePlaybackUi || (phase === "waiting" && playsPerNight === 2);
 
-  /** Lock screen / Control Center / Android media surface — improves background HTML audio. */
+  /** Lock screen / Control Center / Android media surface - improves background HTML audio. */
   useEffect(() => {
     syncSessionMediaSession({
       phase,
@@ -464,7 +464,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       audio.removeEventListener("play", onPlaybackLogged);
     };
     /* `<audio>` mounts only when `sessionAudioMounted` is true, so a [] effect ran on first
-     * paint with ref still null and never re-ran — session `played_audio` was never logged. */
+     * paint with ref still null and never re-ran - session `played_audio` was never logged. */
   }, [sessionAudioMounted, current?.url, phase, prepAudio?.url]);
 
   useLayoutEffect(() => {
@@ -607,7 +607,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       setMessage("Select goals to build your session lineup.");
       return;
     }
-    /** After first half (gap) or mid–second half — do not restart tonight’s first main. */
+    /** After first half (gap) or mid–second half - do not restart tonight’s first main. */
     const ph = phaseRef.current;
     if (playsPerNight === 2 && secondTrackRef.current && (ph === "waiting" || ph === "second")) {
       playSecond();
@@ -870,7 +870,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
         const minsLate = Math.round((now - due) / 60000);
         logMemberActivity(
           "session_gap",
-          `Diag: second half was ${minsLate}m past schedule when tab became visible — JS timers / silent bridge often stall when the screen is locked (common on Android). Screen wake is requested automatically for the full session on Android when supported; keep listening in Chrome if the second half is late.`
+          `Diag: second half was ${minsLate}m past schedule when tab became visible - JS timers / silent bridge often stall when the screen is locked (common on Android). Screen wake is requested automatically for the full session on Android when supported; keep listening in Chrome if the second half is late.`
         );
       }
       beginSecondAfterGap(trigger);
@@ -883,7 +883,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           : "visibility_hidden"
       );
     };
-    /** bfcache restore / tab wake — long gap timers can be unreliable without this */
+    /** bfcache restore / tab wake - long gap timers can be unreliable without this */
     const onPageShow = () => {
       tryResumeSecondHalf("pageshow");
     };
@@ -1036,7 +1036,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           },
           { once: true }
         );
-        // Immediate attempt — Android often never fires canplaythrough while locked.
+        // Immediate attempt - Android often never fires canplaythrough while locked.
         window.setTimeout(playWhenReady, 120);
       }
       return true;
@@ -1077,7 +1077,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       advanceQueueToNextTrack("ended");
       return;
     }
-    // Last track in queue just ended — close and optionally queue second (only when 2 per night)
+    // Last track in queue just ended - close and optionally queue second (only when 2 per night)
     const hasSecond = !!secondTrackRef.current;
     const ph = phaseRef.current;
     const doSecondAfterGap = playsPerNight === 2 && ph === "first" && hasSecond;
@@ -1152,7 +1152,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       if (nightFullyListened && playsPerNight === 2) {
         setFullNightSessionComplete(true);
       }
-      // Single track (or last of queue) ended — stop and clear so it doesn't repeat; 1 per night = cued for next night
+      // Single track (or last of queue) ended - stop and clear so it doesn't repeat; 1 per night = cued for next night
       const audio = audioRef.current;
       if (audio) {
         audio.pause();
@@ -1227,7 +1227,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     setMessage(
       due
         ? "Your second audio was due but may not have played (common when Android suspends Chrome overnight). Tap Start second audio now to finish tonight’s session."
-        : "Recovered your in-progress night. The second audio is still scheduled — leave this tab open, or tap Start second audio now when you are ready."
+        : "Recovered your in-progress night. The second audio is still scheduled - leave this tab open, or tap Start second audio now when you are ready."
     );
     logMemberActivity(
       "session_gap",
@@ -1236,7 +1236,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("rfts-inter-half-gap"));
     }
-    // When already due after a reload, wait for a tap — Android blocks autoplay without a gesture.
+    // When already due after a reload, wait for a tap - Android blocks autoplay without a gesture.
     if (!due) {
       armInterHalfGapTimers(epoch);
     }
@@ -1288,7 +1288,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
 
   /**
    * If prep→main (or Android skip-intro second half) left the element paused, keep retrying when the
-   * tab wakes — common after lock-screen suspension.
+   * tab wakes - common after lock-screen suspension.
    */
   useEffect(() => {
     if (phase !== "first" && phase !== "second") return;
@@ -1555,7 +1555,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
               <>
                 Your second recording is due now. Tap <strong>Start second audio now</strong> above
                 {recoveredPendingSecond
-                  ? " — we restored this unfinished night after Chrome was suspended or the page was reloaded."
+                  ? " - we restored this unfinished night after Chrome was suspended or the page was reloaded."
                   : ". It can also start automatically if this tab stays active."}
               </>
             ) : (
@@ -1578,7 +1578,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           {coarseMobilePlatform() === "Android" && (
             <p style={{ margin: "10px 0 0", color: "#92400e", fontSize: 13 }}>
               We try to keep screen wake on during this session. If the second recording is late, unlock your phone,
-              open this tab, and tap Start second audio now—some browsers pause timers while the screen is locked.
+              open this tab, and tap Start second audio now-some browsers pause timers while the screen is locked.
               Closing or refreshing this page no longer loses the unfinished night; we will offer to finish it when you return.
             </p>
           )}
@@ -1588,7 +1588,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
             onClick={endSession}
             style={{ marginTop: 14, borderColor: "#64748b", color: "#334155" }}
           >
-            End session — cancel second recording
+            End session - cancel second recording
           </button>
         </div>
       )}
@@ -1639,7 +1639,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           )}
           {phase === "waiting" && playsPerNight === 2 && (
             <p style={{ fontSize: 13, color: "#64748b", marginBottom: 8, marginTop: 0 }}>
-              Silent playback runs until your second audio starts (nothing audible — it keeps the session active on phones).
+              Silent playback runs until your second audio starts (nothing audible - it keeps the session active on phones).
             </p>
           )}
           <audio

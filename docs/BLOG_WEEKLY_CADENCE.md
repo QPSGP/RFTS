@@ -14,13 +14,13 @@
 
 ## How to add an article
 
-1. Run `npm run blog:check-cadence` — shows weekly progress and the **suggested next topic**
+1. Run `npm run blog:check-cadence` - shows weekly progress and the **suggested next topic**
 2. Add a new entry to `src/lib/blog-posts.ts`:
    - `publishedAt` (today)
    - `topicSlug` when the article matches a wellness landing page
    - Sections + `transcriptExcerpt` (existing pattern)
    - Mention the related goal/wellness page in body copy where natural
-3. Deploy — sitemap picks up `/blog/[slug]` automatically
+3. Deploy - sitemap picks up `/blog/[slug]` automatically
 4. Run `npm run blog:check-cadence` again to confirm on track
 
 ## Reminders
@@ -28,7 +28,7 @@
 | Mechanism | What it does |
 |-----------|----------------|
 | `npm run blog:check-cadence` | Local check; exits with error if behind pace |
-| Vercel Cron `GET /api/cron/blog-cadence-reminder` | Daily 17:00 UTC — emails staff **only when late** |
+| Vercel Cron `GET /api/cron/blog-cadence-reminder` | Daily 17:00 UTC - emails staff **only when late** |
 | Admin Marketing overview | Shows current week cadence status |
 | `.cursor/rules/blog-weekly.mdc` | Cursor agents check cadence when working on blog/marketing |
 

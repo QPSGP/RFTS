@@ -39,7 +39,7 @@ export default function RootLayout({
               fontSize: 14
             }}
           >
-            <strong>Stripe demo mode.</strong> Test card: <code style={{ background: "rgba(0,0,0,0.06)", padding: "2px 6px", borderRadius: 4 }}>4242 4242 4242 4242</code> — any future expiry, any 3-digit CVC.
+            <strong>Stripe demo mode.</strong> Test card: <code style={{ background: "rgba(0,0,0,0.06)", padding: "2px 6px", borderRadius: 4 }}>4242 4242 4242 4242</code> - any future expiry, any 3-digit CVC.
           </div>
         )}
         <MemberRouteActivityLogger />

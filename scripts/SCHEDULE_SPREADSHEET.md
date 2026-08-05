@@ -4,14 +4,14 @@ Exports the **same** schedule the app uses for “Tonight’s Audio” (`buildSc
 
 **Gold (platinum):** goal-based rotation. **Platinum Managed:** `member_audio_assignments` order. The export picks the path from the member’s subscription tier.
 
-## Option A — Admin (recommended)
+## Option A - Admin (recommended)
 
 1. Open **Content Console** → [Schedule algorithm (member)](/admin/content#admin-schedule-algorithm).
 2. Enter the **member email**, set **nights (1–732)**, then **Preview in admin** and/or **Download CSV** / **Download HTML**.
 
 Uses the **production** database when you are on the live site.
 
-## Option B — Local CLI
+## Option B - Local CLI
 
 From `rfts-platform` with `POSTGRES_URL` in `.env.local`:
 

@@ -27,7 +27,7 @@ export type ScheduleNight = {
  * - Gold always uses T-18 as the 4th-play special; T-18 inside goal maps → S1F.
  * - Managed with CGMR uses CGMR every 4th; without CGMR uses T-18 and T-18 in playlist → S1F.
  *
- * 1 vs 2 audios per night only changes how the flat sequence is packed into nights —
+ * 1 vs 2 audios per night only changes how the flat sequence is packed into nights -
  * not the sequence order itself.
  */
 type ScheduleInput = {
@@ -154,7 +154,7 @@ const buildReps = (sku: string, playsPerTrack: number): string[] => {
 };
 
 /**
- * Core sequence builder — mirrors processAudios() in sequence-generator.py.
+ * Core sequence builder - mirrors processAudios() in sequence-generator.py.
  * Returns play events plus add/remove annotations keyed by sequence index (1-based play count).
  */
 export const generatePlaySequence = ({
@@ -195,7 +195,7 @@ export const generatePlaySequence = ({
   };
 
   while (rotation.length > 0) {
-    // Insert special every Nth play — does not consume a rotation step.
+    // Insert special every Nth play - does not consume a rotation step.
     if ((sequenceLen + 1) % CGMR_OR_T18_NTH === 0) {
       sequenceLen += 1;
       events.push({
@@ -219,7 +219,7 @@ export const generatePlaySequence = ({
     const finalPlay = entry.reps.length === 0;
     if (finalPlay) {
       rotation.splice(priorIdx, 1);
-      // Do not advance idx — next entry shifts into this slot.
+      // Do not advance idx - next entry shifts into this slot.
     } else {
       rotationIdx = priorIdx + 1;
     }
@@ -423,11 +423,11 @@ export const buildSchedulePreview = ({
     const nightRemovals: string[] = [];
     for (let i = playStartIndex; i <= playEndIndex; i += 1) {
       for (const label of addedByPlay.get(i) || []) {
-        nightAdditions.push(`${label} — joins end of rotation (after ${i} sequence plays)`);
+        nightAdditions.push(`${label} - joins end of rotation (after ${i} sequence plays)`);
       }
       for (const label of removedByPlay.get(i) || []) {
         nightRemovals.push(
-          `${label} — leaves rotation after this night (reps exhausted)`
+          `${label} - leaves rotation after this night (reps exhausted)`
         );
       }
     }

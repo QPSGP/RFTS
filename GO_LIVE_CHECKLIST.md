@@ -8,21 +8,21 @@ Use this while waiting for registrar access. Everything below can be done on the
 
 | Phase | Goal | When |
 |-------|------|------|
-| **1** | **Platform on Vercel** — Postgres, secrets, admin, Blob, schema, preview smoke tests | **No custom DNS** (use `*.vercel.app` URL) |
-| **2** | **Stripe live + email + members** — webhook, billing portal, Resend, checkout, migration | Preview or production host; Resend domain verify needs DNS (Phase 3) for custom `EMAIL_FROM` |
-| **3** | **Production domain (name.com)** — DNS → Vercel, production URLs, Resend domain, final smoke | When name.com access returns |
+| **1** | **Platform on Vercel** - Postgres, secrets, admin, Blob, schema, preview smoke tests | **No custom DNS** (use `*.vercel.app` URL) |
+| **2** | **Stripe live + email + members** - webhook, billing portal, Resend, checkout, migration | Preview or production host; Resend domain verify needs DNS (Phase 3) for custom `EMAIL_FROM` |
+| **3** | **Production domain (name.com)** - DNS → Vercel, production URLs, Resend domain, final smoke | When name.com access returns |
 
 **You were finishing Phase 1 when Cursor froze.** Use the Phase 1 checklist below; when every item is checked, move to Phase 2.
 
 ---
 
-## Phase 1 — Platform on Vercel (finish here)
+## Phase 1 - Platform on Vercel (finish here)
 
 ### Vercel project
 
 - [ ] GitHub repo connected; push to `main` auto-deploys (`npm run push-deploy` from rfts-platform if needed).
 - [ ] Copy env from **`.env.example`** into Vercel → Settings → Environment Variables (**Production**).
-- [ ] **`POSTGRES_URL`** — schema applied (`npm run db:schema` locally against that DB, or run `scripts/schema.sql` in Vercel Postgres Query tab).
+- [ ] **`POSTGRES_URL`** - schema applied (`npm run db:schema` locally against that DB, or run `scripts/schema.sql` in Vercel Postgres Query tab).
 - [ ] **`SESSION_SECRET`** (long random string).
 - [ ] Admin: **`ADMIN_EMAIL`** / **`ADMIN_PASSWORD_HASH`** **or** create first admin at `/admin/setup` on the preview URL.
 
@@ -41,14 +41,14 @@ See **`RESEND.md`**. Full domain verify waits for Phase 3 DNS.
 
 - [ ] Admin login at `https://<your-vercel-app>/admin/setup` or `/login`.
 - [ ] Upload audio, add to library, assign to goal (or managed member).
-- [ ] Member login works (`SESSION_SECRET` set — see `PROJECT_STATUS.md` if cookie issues).
+- [ ] Member login works (`SESSION_SECRET` set - see `PROJECT_STATUS.md` if cookie issues).
 - [ ] Play Options loads for a test member.
 
 **Phase 1 done when:** preview site runs, admin + member flows work, DB and Blob configured. Stripe live checkout and custom-domain email are **Phase 2**.
 
 ---
 
-## Phase 2 — Stripe live, email, member migration
+## Phase 2 - Stripe live, email, member migration
 
 See **`STRIPE_SETUP.md`**, **`docs/STRIPE_GO_LIVE_NOW.md`**, and **`RESEND.md`**.
 
@@ -74,7 +74,7 @@ See **`STRIPE_SETUP.md`**, **`docs/STRIPE_GO_LIVE_NOW.md`**, and **`RESEND.md`**
 
 ---
 
-## Phase 3 — Production domain (name.com)
+## Phase 3 - Production domain (name.com)
 
 **Code is ready** (www → apex redirect, canonical URLs, cookie domain). **You** complete DNS and dashboard steps in **`docs/PHASE3_YOUR_STEPS.md`**.
 

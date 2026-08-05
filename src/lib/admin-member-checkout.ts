@@ -58,7 +58,7 @@ export async function createAdminMemberPaymentLink(opts: {
   tier?: "platinum" | "platinum_managed";
   /** Where Stripe sends the staff user if they abandon Checkout. */
   cancelReturnPath?: string;
-  /** Staff who opened the link — used to restore session after Stripe redirect. */
+  /** Staff who opened the link - used to restore session after Stripe redirect. */
   adminEmail?: string | null;
   /** Facilitator console uses /moderator paths and billing-return. */
   billingConsole?: StaffBillingConsole;
@@ -116,7 +116,7 @@ export async function createAdminMemberPaymentLink(opts: {
       ok: false,
       status: 409,
       error:
-        "This member already has Stripe billing on file. Use Manage billing — do not create a second subscription."
+        "This member already has Stripe billing on file. Use Manage billing - do not create a second subscription."
     };
   }
 

@@ -40,7 +40,7 @@ type MemberRow = {
 };
 
 function formatDate(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   try {
     return new Date(iso).toLocaleDateString(undefined, {
       year: "numeric",
@@ -48,12 +48,12 @@ function formatDate(iso: string | null): string {
       day: "numeric"
     });
   } catch {
-    return "—";
+    return "-";
   }
 }
 
 function formatDateTime(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   try {
     return new Date(iso).toLocaleString(undefined, {
       year: "numeric",
@@ -63,7 +63,7 @@ function formatDateTime(iso: string | null): string {
       minute: "2-digit"
     });
   } catch {
-    return "—";
+    return "-";
   }
 }
 
@@ -151,7 +151,7 @@ export default function AdminDashboardPage() {
         ...admins.map((a) => ({
           id: `admin-${a.id}`,
           role: "Admin" as const,
-          name: [a.firstName, a.lastName].filter(Boolean).join(" ").trim() || "—",
+          name: [a.firstName, a.lastName].filter(Boolean).join(" ").trim() || "-",
           email: a.email,
           status: a.status,
           lastLoginAt: a.lastLoginAt
@@ -427,7 +427,7 @@ export default function AdminDashboardPage() {
                   </td>
                   <td style={tdMutedStyle}>{formatDate(m.createdAt)}</td>
                   <td className="admin-col-optional" style={tdMutedStyle}>{formatDate(m.goalUpdatedAt)}</td>
-                  <td style={tdStyle}>{m.subscriptionStatus ?? "—"}</td>
+                  <td style={tdStyle}>{m.subscriptionStatus ?? "-"}</td>
                   <td className="admin-col-optional" style={tdMutedStyle}>{formatDate(m.currentPeriodEnd)}</td>
                   <td style={tdStyle}>{m.goalCount}</td>
                   <td className="admin-col-optional" style={tdStyle}>{m.playsPerNight}</td>
@@ -479,7 +479,7 @@ export default function AdminDashboardPage() {
                     ) : null}
                   </td>
                   <td style={tdStyle}>{formatMemberActivityAction(entry.action)}</td>
-                  <td className="admin-col-optional" style={tdMutedStyle}>{entry.details ?? "—"}</td>
+                  <td className="admin-col-optional" style={tdMutedStyle}>{entry.details ?? "-"}</td>
                 </tr>
               ))}
             </tbody>

@@ -55,22 +55,22 @@ const DEFAULT_TTS_MODEL = "gpt-4o-mini-tts";
 const BASE_HYPNOTIC_INSTRUCTIONS =
   "You are a professional hypnotherapist recording an overnight Goal Manifestation session. " +
   "Primary goal: induce a calm hypnotic brain state so the listener can relax into sleep and the subconscious can accept the programming. " +
-  "Speak very slowly, smoothly, and continuously — never choppy, never robotic, never bright or salesy. " +
+  "Speak very slowly, smoothly, and continuously - never choppy, never robotic, never bright or salesy. " +
   "Warm peaceful presence. Soft natural breath pauses between phrases and longer gentle pauses between paragraphs. " +
   "Even, soothing volume. Slight downward inflection at ends of suggestions. " +
   "Sound as if sitting quietly beside someone drifting off to sleep.";
 
 const VOICE_TONE_INSTRUCTIONS: Record<string, string> = {
   terry:
-    "Feminine presentation with warm signature authority — trusted Success Center guide, holistic and peaceful, never stern.",
+    "Feminine presentation with warm signature authority - trusted Success Center guide, holistic and peaceful, never stern.",
   associate_warm:
-    "Soft nurturing feminine presentation — caring, motherly-calm, tender without baby-talk.",
+    "Soft nurturing feminine presentation - caring, motherly-calm, tender without baby-talk.",
   associate_clear:
-    "Neutral professional presentation — clear diction at a hypnotic pace, composed and reassuring, not crisp or corporate.",
+    "Neutral professional presentation - clear diction at a hypnotic pace, composed and reassuring, not crisp or corporate.",
   associate_deep:
-    "Masculine deeper resonant presentation — low peaceful chest resonance, grounded and sleep-deepening, never booming.",
+    "Masculine deeper resonant presentation - low peaceful chest resonance, grounded and sleep-deepening, never booming.",
   member_own:
-    "Match the member’s natural speaking identity as closely as possible, but only in a calm peaceful hypnotic state — " +
+    "Match the member’s natural speaking identity as closely as possible, but only in a calm peaceful hypnotic state - " +
     "as they would sound when relaxed and guiding themselves gently into sleep. Soften everyday speech; no daytime energy."
 };
 
@@ -202,7 +202,7 @@ async function synthesizeOpenAiSpeech(
     const input = chunks[i];
     const continuity =
       chunks.length > 1
-        ? ` This is part ${i + 1} of ${chunks.length} of one continuous overnight session — keep the same hypnotic voice, pace, and energy with no restart brightness.`
+        ? ` This is part ${i + 1} of ${chunks.length} of one continuous overnight session - keep the same hypnotic voice, pace, and energy with no restart brightness.`
         : "";
     const body: Record<string, unknown> = {
       model,
@@ -243,7 +243,7 @@ function bedLabel(bedId: string | null | undefined): string {
 
 function buildCgmrTitle(firstName: string | null | undefined, memberEmail: string): string {
   const name = (firstName || "").trim() || memberEmail.split("@")[0] || "Member";
-  return `CGMR — ${name}`;
+  return `CGMR - ${name}`;
 }
 
 function buildCgmrDescription(input: {
@@ -303,7 +303,7 @@ async function resolveAudioUrl(input: {
 
   const script = (input.scriptOverride || input.intake.scriptDraftText || "").trim();
   if (!script) {
-    throw Object.assign(new Error("Script draft is empty — save a script before generating audio."), {
+    throw Object.assign(new Error("Script draft is empty - save a script before generating audio."), {
       status: 400
     });
   }

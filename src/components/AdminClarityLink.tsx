@@ -36,7 +36,7 @@ export default function AdminClarityLink({ variant = "button" }: AdminClarityLin
       target="_blank"
       rel="noopener noreferrer"
       style={{ padding: "8px 12px", fontSize: 13 }}
-      title="Microsoft Clarity — RFTS Production"
+      title="Microsoft Clarity - RFTS Production"
     >
       Clarity
     </a>

@@ -1,4 +1,4 @@
-# Library content & audio — needs fix
+# Library content & audio - needs fix
 
 Manual backlog for the Wednesday tech brief (section B). Remove or strike items when verified fixed. Add new issues here (or ask the agent to add them).
 

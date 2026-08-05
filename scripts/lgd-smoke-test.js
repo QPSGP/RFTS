@@ -1,5 +1,5 @@
 /**
- * Life Guidance Discovery (LGD) smoke tests — no credentials required.
+ * Life Guidance Discovery (LGD) smoke tests - no credentials required.
  * Usage: node scripts/lgd-smoke-test.js [baseUrl]
  *
  * Three checks:
@@ -13,12 +13,12 @@ const results = [];
 
 function pass(name, detail = "") {
   results.push({ name, ok: true, detail });
-  console.log(`  OK  ${name}${detail ? ` — ${detail}` : ""}`);
+  console.log(`  OK  ${name}${detail ? ` - ${detail}` : ""}`);
 }
 
 function fail(name, detail = "") {
   results.push({ name, ok: false, detail });
-  console.log(`  FAIL ${name}${detail ? ` — ${detail}` : ""}`);
+  console.log(`  FAIL ${name}${detail ? ` - ${detail}` : ""}`);
 }
 
 async function fetchStatus(url, opts = {}) {
@@ -33,7 +33,7 @@ async function fetchStatus(url, opts = {}) {
   return { res, text, json };
 }
 
-/** 1 — Terry facilitator profile carries Seven Keys uniqueness copy. */
+/** 1 - Terry facilitator profile carries Seven Keys uniqueness copy. */
 async function smokeTerrySevenKeysPage() {
   console.log("\n1) Terry facilitator / Seven Keys page");
   const { res, text } = await fetchStatus(`${BASE}/facilitators/terry-brussel-rogers`);
@@ -56,7 +56,7 @@ async function smokeTerrySevenKeysPage() {
   }
 }
 
-/** 2 — LGD APIs reject unauthenticated callers. */
+/** 2 - LGD APIs reject unauthenticated callers. */
 async function smokeLgdApiGuards() {
   console.log("\n2) LGD API auth guards");
   const checks = [
@@ -92,7 +92,7 @@ async function smokeLgdApiGuards() {
 }
 
 /**
- * 3 — LGD HTML surfaces respond sanely.
+ * 3 - LGD HTML surfaces respond sanely.
  * Public LGD may redirect home when LGD_ADMIN_ONLY; member/admin require login.
  */
 async function smokeLgdPageSurfaces() {

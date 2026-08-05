@@ -70,7 +70,7 @@ export default function AdminSitePages() {
     <div className="card">
       <h2 style={{ marginTop: 0 }}>Site &amp; landing pages</h2>
       <p style={{ color: "#64748b", marginBottom: 8 }}>
-        {data.total} URLs — marketing, goals, wellness, blog, and audio track landings. Open
+        {data.total} URLs - marketing, goals, wellness, blog, and audio track landings. Open
         links to preview; audio landings are not on the public menu yet.
       </p>
       {data.audioLandingNote && (

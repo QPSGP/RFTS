@@ -104,7 +104,7 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
       setReferralCopied(true);
       window.setTimeout(() => setReferralCopied(false), 2500);
     } catch {
-      setCopyMessage("Could not copy — select and copy the link below.");
+      setCopyMessage("Could not copy - select and copy the link below.");
       setReferralCopied(false);
     }
   }, [affiliate?.referralUrl]);
@@ -193,7 +193,7 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
         <div style={{ marginTop: 16 }}>
           <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
             Share Reach For The Stars and earn <strong>25% ongoing</strong> for each member who
-            subscribes through your link. Every member receives an affiliate number — use yours to
+            subscribes through your link. Every member receives an affiliate number - use yours to
             help others discover the program.
           </p>
           <p style={{ margin: "0 0 4px", fontSize: 15 }}>
@@ -255,11 +255,11 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
               <strong>Pending commission balance:</strong>{" "}
               {formatUsdFromCents(affiliate.pendingBalanceCents ?? 0)}
               {affiliate.readyForPayout ? (
-                <span style={{ color: "#059669" }}> — ready for payout</span>
+                <span style={{ color: "#059669" }}> - ready for payout</span>
               ) : (
                 <span>
                   {" "}
-                  — minimum payout is ${affiliate.thresholdUsd ?? 25}
+                  - minimum payout is ${affiliate.thresholdUsd ?? 25}
                 </span>
               )}
             </p>
@@ -279,7 +279,7 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
             </p>
             {connectReady ? (
               <p style={{ margin: "0 0 12px", fontSize: 14, color: "#059669" }}>
-                Stripe Connect is active — eligible payouts can be sent automatically.
+                Stripe Connect is active - eligible payouts can be sent automatically.
               </p>
             ) : connectStarted ? (
               <p style={{ margin: "0 0 12px", fontSize: 14, color: "#92400e" }}>
@@ -329,7 +329,7 @@ export default function MemberAffiliateSection({ affiliate, onPayoutSaved }: Pro
             {hasPayoutPrefs && (
               <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
                 Current: {formatAffiliatePayoutMethodLabel(affiliate.payoutMethod)}
-                {affiliate.payoutDetail ? ` — ${affiliate.payoutDetail}` : ""}
+                {affiliate.payoutDetail ? ` - ${affiliate.payoutDetail}` : ""}
               </p>
             )}
             <form onSubmit={savePayout} className="grid" style={{ gap: 10 }}>

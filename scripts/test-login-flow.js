@@ -13,7 +13,7 @@ async function main() {
   console.log("Testing login flow at", baseUrl);
 
   if (!testEmail || !testPassword) {
-    console.log("No LOGIN_TEST_EMAIL/LOGIN_TEST_PASSWORD set — testing bad login only.");
+    console.log("No LOGIN_TEST_EMAIL/LOGIN_TEST_PASSWORD set - testing bad login only.");
     const badRes = await fetch(`${baseUrl}/api/user/login`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },

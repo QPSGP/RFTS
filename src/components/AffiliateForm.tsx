@@ -46,7 +46,7 @@ export default function AffiliateForm() {
     <div className="card">
       <h2>Apply to the Affiliate Program</h2>
       <p style={{ fontSize: 14, color: "#4b5563", marginBottom: 12 }}>
-        Already a member? Your affiliate number and referral link are in My Profile — you do not
+        Already a member? Your affiliate number and referral link are in My Profile - you do not
         need to apply here. This form is for non-members who want affiliate payout setup.
       </p>
       <p style={{ fontSize: 13, color: "#4b5563", marginBottom: 12 }}>

@@ -466,7 +466,7 @@ export default function AdminOutreachCrmPanel({
         }}
       >
         <div>
-          <h3 style={{ margin: 0, fontSize: 17 }}>CRM — {target.organization}</h3>
+          <h3 style={{ margin: 0, fontSize: 17 }}>CRM - {target.organization}</h3>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: "#475569" }}>
             {target.targetType === "individual" ? "Individual" : "Organization"} · contacts, send
             email (Resend), follow-ups, and activity timeline.
@@ -509,7 +509,7 @@ export default function AdminOutreachCrmPanel({
                   value={crmForm.interest}
                   onChange={(e) => setCrmForm((f) => ({ ...f, interest: e.target.value }))}
                 >
-                  <option value="">—</option>
+                  <option value="">-</option>
                   {OUTREACH_INTERESTS.map((i) => (
                     <option key={i} value={i}>
                       {i}
@@ -588,7 +588,7 @@ export default function AdminOutreachCrmPanel({
         {openCrmSections.contacts ? (
           <div className="card" style={{ background: "#fff", margin: 0 }}>
             <p style={{ marginTop: 0, fontSize: 12, color: "#64748b" }}>
-              Full contact records — names, phones, socials, notes. Email send uses contacts with an
+              Full contact records - names, phones, socials, notes. Email send uses contacts with an
               address.
             </p>
             {target.contact && contacts.length === 0 ? (
@@ -617,7 +617,7 @@ export default function AdminOutreachCrmPanel({
                   <div
                     style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "baseline" }}
                   >
-                    <strong>{c.name || "—"}</strong>
+                    <strong>{c.name || "-"}</strong>
                     {c.isPrimary ? (
                       <span style={{ fontSize: 11, color: "#0f766e" }}>primary</span>
                     ) : null}
@@ -819,7 +819,7 @@ export default function AdminOutreachCrmPanel({
                     value={sendForm.contactId}
                     onChange={(e) => setSendForm((f) => ({ ...f, contactId: e.target.value }))}
                   >
-                    <option value="">—</option>
+                    <option value="">-</option>
                     {contacts
                       .filter((c) => c.email)
                       .map((c) => (
@@ -835,7 +835,7 @@ export default function AdminOutreachCrmPanel({
                     value={sendForm.templateId}
                     onChange={(e) => applyTemplate(e.target.value)}
                   >
-                    <option value="">— custom / blank —</option>
+                    <option value="">- custom / blank -</option>
                     {templates.map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.name}

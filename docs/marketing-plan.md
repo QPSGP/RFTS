@@ -7,14 +7,14 @@ Overview
 Positioning
 - Accessible, calming audio experiences for real-life stress and recovery.
 - Emphasize evidence-informed guidance, ease of use, and trusted voices.
-- **USP (Terry / Success Center):** help people reach their highest potential physically, mentally, emotionally, spiritually, **and financially** — the financial piece is deliberate.
+- **USP (Terry / Success Center):** help people reach their highest potential physically, mentally, emotionally, spiritually, **and financially** - the financial piece is deliberate.
 - Nightly practice while falling asleep and during sleep (no extra daytime chore).
 
 Target Segments
 - Burnout and stress (ages 25-45).
 - First responders and healthcare workers.
 - Parents and caregivers seeking sleep and regulation support.
-- **Spiritual entrepreneurs** (coaches, hypnotists, healers, owners): spirit + profit, typically ~$65K+ income, want ~50%+ lift — see Persona 4 in `docs/personas.md`.
+- **Spiritual entrepreneurs** (coaches, hypnotists, healers, owners): spirit + profit, typically ~$65K+ income, want ~50%+ lift - see Persona 4 in `docs/personas.md`.
 - Secondary: students, remote workers, illness recovery.
 
 Ideal commercial client (from Barnes/Brussel Session 2)
@@ -76,10 +76,10 @@ Analytics and KPIs
 
 90-Day Plan
 Weeks 1-2
-- Define personas — **done:** `docs/personas.md` (Alex, Jordan, Sam, Chris + Ideal client / USP)
-- Build 3 landing pages (sleep, stress, burnout) — **done:** `/sleep-meditation`, `/stress-relief`, `/burnout-recovery`
+- Define personas - **done:** `docs/personas.md` (Alex, Jordan, Sam, Chris + Ideal client / USP)
+- Build 3 landing pages (sleep, stress, burnout) - **done:** `/sleep-meditation`, `/stress-relief`, `/burnout-recovery`
 - Set up analytics events and funnels.
-- Design affiliate program and materials — **done:** public `/affiliates` + My Profile share links; short-form scripts in `docs/short-form-clips.md`
+- Design affiliate program and materials - **done:** public `/affiliates` + My Profile share links; short-form scripts in `docs/short-form-clips.md`
 
 Weeks 3-6
 - Publish 15-20 short-form pieces.
@@ -97,4 +97,4 @@ Affiliate and Moderator Program
 - Onboarding pack: tone, content briefs, brand guidelines.
 - Affiliate portal: tracking links and coupon codes.
 - Monthly review: active affiliates, conversion, retention.
-- Content licensing terms for creators — live at `/creator-content-license`; required on facilitator audio upload.
+- Content licensing terms for creators - live at `/creator-content-license`; required on facilitator audio upload.

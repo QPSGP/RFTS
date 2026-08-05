@@ -67,7 +67,7 @@ function makeBed(kind) {
         Math.sin(2 * Math.PI * 261.6 * t) * 0.3 +
         Math.sin(2 * Math.PI * 349.2 * t) * 0.15;
     } else {
-      // neutral_music — soft drone
+      // neutral_music - soft drone
       v =
         Math.sin(2 * Math.PI * 196 * t) * 0.35 +
         Math.sin(2 * Math.PI * 293.7 * t) * 0.28 +
@@ -90,8 +90,8 @@ fs.mkdirSync(outDir, { recursive: true });
 for (const id of beds) {
   const wavPath = path.join(outDir, `${id}.wav`);
   writeWav(wavPath, makeBed(id));
-  // Also copy as .mp3 extension is wrong for format — write .wav and symlink-style duplicate
+  // Also copy as .mp3 extension is wrong for format - write .wav and symlink-style duplicate
   // App will use .wav paths. Keep a note file.
   console.log("Wrote", wavPath);
 }
-console.log("Done. Placeholder beds are 20s soft tones — replace with production audio when ready.");
+console.log("Done. Placeholder beds are 20s soft tones - replace with production audio when ready.");

@@ -101,7 +101,7 @@ export async function GET() {
   }
   const memberProfile = await getMemberProfileByUserId(user.id);
   let intake = await getLatestLgdIntakeForUser(user.id);
-  // Do not auto-create unpaid drafts — member pays first (or opens after payment webhook).
+  // Do not auto-create unpaid drafts - member pays first (or opens after payment webhook).
   const price = getLgdPriceDisplay();
   return NextResponse.json({
     intake: intake ? serializeIntake(intake) : null,
@@ -109,7 +109,7 @@ export async function GET() {
     hadLgdSession: memberProfile?.hadLgdSession ?? false,
     flags,
     priceLabel: price.label,
-    /** No intake yet — pay to create a paid draft, then fill. */
+    /** No intake yet - pay to create a paid draft, then fill. */
     needsCheckoutToStart: !intake
   });
 }
@@ -260,7 +260,7 @@ export async function POST(request: Request) {
     if (latest?.status === "draft" && !latest.paidAt) {
       return NextResponse.json({
         intake: serializeIntake(latest),
-        message: "You already have an unpaid draft — complete payment to continue."
+        message: "You already have an unpaid draft - complete payment to continue."
       });
     }
     if (latest?.status === "draft" && latest.paidAt) {

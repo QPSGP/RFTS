@@ -1,4 +1,4 @@
-# Resend email — setup reference
+# Resend email - setup reference
 
 When the user asks for **“Resend” info** or **Resend email setup**, use this file (and `README.md` / `.env.example` for exact variable names). Summarize the points below for them.
 
@@ -21,12 +21,12 @@ Set the same variables on **Vercel** → Project → Settings → Environment Va
 
 ## Flows covered (all use `sendEmail` / templates in code)
 
-- **Forgot password** — `POST /api/member/forgot-password`; content from `getForgotPasswordEmailContent`.
-- **Tech support / report acknowledgment** — Member confirmation after `POST /api/member/report-issue`; technical/support categories get appropriate subject/copy via `getReportIssueConfirmationContent`.
-- **Subscription active (auto-respond after checkout)** — Stripe `checkout.session.completed` for `platinum` / `platinum_managed`; `getSubscriptionActiveEmailContent`.
-- **Welcome** — Onboarding route when member registers.
-- **Life Guidance (LGD)** — Onboarding or profile when LGD checkbox is newly checked.
-- **Build Practice (therapist/healer/coach)** — Onboarding or profile when that checkbox is newly checked.
+- **Forgot password** - `POST /api/member/forgot-password`; content from `getForgotPasswordEmailContent`.
+- **Tech support / report acknowledgment** - Member confirmation after `POST /api/member/report-issue`; technical/support categories get appropriate subject/copy via `getReportIssueConfirmationContent`.
+- **Subscription active (auto-respond after checkout)** - Stripe `checkout.session.completed` for `platinum` / `platinum_managed`; `getSubscriptionActiveEmailContent`.
+- **Welcome** - Onboarding route when member registers.
+- **Life Guidance (LGD)** - Onboarding or profile when LGD checkbox is newly checked.
+- **Build Practice (therapist/healer/coach)** - Onboarding or profile when that checkbox is newly checked.
 
 **Staff copies:** Set `EMAIL_STAFF_BCC` to Terry and Richard’s real addresses. Internal report emails still go to `REPORT_ISSUE_EMAIL`; BCC adds Terry without duplicating the primary recipient when Richard is `to`.
 
@@ -38,6 +38,6 @@ Set the same variables on **Vercel** → Project → Settings → Environment Va
 
 ## Key files
 
-- `src/lib/email.ts` — `sendEmail()`, staff BCC parsing, Resend client.
-- `src/lib/email-templates.ts` — HTML/text bodies and subjects.
+- `src/lib/email.ts` - `sendEmail()`, staff BCC parsing, Resend client.
+- `src/lib/email-templates.ts` - HTML/text bodies and subjects.
 - `src/app/api/member/forgot-password/route.ts`, `report-issue/route.ts`, onboarding, profile PATCH, `src/app/api/webhooks/stripe/route.ts`.

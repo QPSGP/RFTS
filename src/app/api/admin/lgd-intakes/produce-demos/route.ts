@@ -4,7 +4,7 @@ import { isAdminSession } from "@/lib/auth";
 import { getLibraryItem, updateLibraryItem } from "@/lib/db";
 import { isOpenAiTtsConfigured, produceLgdCgmrForIntake } from "@/lib/lgd-cgmr-produce";
 
-/** Three long TTS jobs — allow up to 5 minutes on supported plans. */
+/** Three long TTS jobs - allow up to 5 minutes on supported plans. */
 export const maxDuration = 300;
 
 const DEMO_SPECS = [
@@ -113,10 +113,10 @@ export async function POST() {
       );
       const titlePrefix =
         spec.voiceId === "terry"
-          ? "Demo CGMR — Terry voice"
+          ? "Demo CGMR - Terry voice"
           : spec.voiceId === "associate_warm"
-            ? "Demo CGMR — Nurturing voice"
-            : "Demo CGMR — Deep resonant voice";
+            ? "Demo CGMR - Nurturing voice"
+            : "Demo CGMR - Deep resonant voice";
       await updateLibraryItem({
         id: item.id,
         title: `${titlePrefix} (${spec.email.split("@")[0]})`,

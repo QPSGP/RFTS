@@ -74,7 +74,7 @@ export default function MemberListenProgress() {
         <div>
           <h3 style={{ marginTop: 0, marginBottom: 6 }}>Your listening progress</h3>
           <p style={{ margin: 0, color: "#4b5563", fontSize: 14 }}>
-            Audios you&apos;ve started and finished — including how many full listens each has.
+            Audios you&apos;ve started and finished - including how many full listens each has.
           </p>
         </div>
         <button
@@ -127,11 +127,11 @@ export default function MemberListenProgress() {
           {open ? (
             <>
               <p style={{ marginTop: 12, fontSize: 13, color: "#64748b" }}>
-                Full list of each audio below — counts update when an audio finishes playing.
+                Full list of each audio below - counts update when an audio finishes playing.
               </p>
               {report.tracks.length === 0 ? (
                 <p style={{ marginTop: 14, color: "#64748b" }}>
-                  No listens recorded yet. Start a session or play from the library — when an audio
+                  No listens recorded yet. Start a session or play from the library - when an audio
                   finishes, it will show here as completed.
                 </p>
               ) : (

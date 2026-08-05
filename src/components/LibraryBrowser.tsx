@@ -54,7 +54,7 @@ export default function LibraryBrowser({ interests, library }: LibraryBrowserPro
   const showSkuToMember = (item: LibraryItem) =>
     !!item.skuCode && !item.skuCode.toUpperCase().startsWith("MU");
   const displayTitle = (item: LibraryItem) =>
-    showSkuToMember(item) && item.skuCode ? `${item.skuCode} — ${item.title}` : item.title;
+    showSkuToMember(item) && item.skuCode ? `${item.skuCode} - ${item.title}` : item.title;
 
   const canAccessAdult = adultConsent && hasVerifiedAge;
   const interestNameById = useMemo(() => buildInterestNameMap(interests), [interests]);

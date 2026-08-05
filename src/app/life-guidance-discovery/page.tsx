@@ -6,7 +6,7 @@ import { getLgdPriceDisplay, getPublicLgdOfferEnabled } from "@/lib/lgd-access";
 export const metadata = {
   title: "Life Guidance Discovery | Reach For The Stars",
   description:
-    "Discover where you are, where you want to go, and how to get there — then receive a customized Goal Manifestation audio designed for you."
+    "Discover where you are, where you want to go, and how to get there - then receive a customized Goal Manifestation audio designed for you."
 };
 
 export default async function LifeGuidanceDiscoveryPage() {
@@ -22,7 +22,7 @@ export default async function LifeGuidanceDiscoveryPage() {
         <span className="pill">Life Guidance Discovery</span>
         <h1>Life Guidance Discovery</h1>
         <p>
-          A structured path to clarify where you are, where you want to go, and how you get there —
+          A structured path to clarify where you are, where you want to go, and how you get there -
           so your facilitator can craft a customized Goal Manifestation recording in your words.
         </p>
         <div className="cta-row" style={{ marginTop: 16, flexWrap: "wrap", gap: 12 }}>
@@ -36,7 +36,7 @@ export default async function LifeGuidanceDiscoveryPage() {
         {price.label ? (
           <p style={{ marginTop: 12, color: "#64748b", fontSize: 14 }}>
             Customized Goal Manifestation packaging from {price.label} (live session pricing may
-            differ — see follow-up email or call 800-GOAL-NOW).
+            differ - see follow-up email or call 800-GOAL-NOW).
           </p>
         ) : null}
       </section>
@@ -55,7 +55,7 @@ export default async function LifeGuidanceDiscoveryPage() {
             <h3>Where you are</h3>
             <p>
               Map life areas, occupying beliefs, gratitude, and the struggle that matters most this
-              season — without losing your exact language.
+              season - without losing your exact language.
             </p>
           </div>
           <div className="card">
@@ -88,7 +88,7 @@ export default async function LifeGuidanceDiscoveryPage() {
               want a full consultation and collaborative script design.
             </p>
             <p style={{ marginBottom: 0 }}>
-              Call <strong>800-GOAL-NOW (800-462-5669)</strong> or note interest when you sign up —
+              Call <strong>800-GOAL-NOW (800-462-5669)</strong> or note interest when you sign up -
               we will follow up.
             </p>
           </div>

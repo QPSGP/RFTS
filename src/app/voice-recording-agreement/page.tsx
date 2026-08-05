@@ -15,7 +15,7 @@ export default function VoiceRecordingAgreementPage() {
         <p>
           This agreement covers recording your voice on your own device for a customized Goal
           Manifestation audio (“My own voice”), and how Reach For The Stars / Success Center, Inc.
-          may store, use, and — with your permission — export that recording.
+          may store, use, and - with your permission - export that recording.
         </p>
       </section>
 
@@ -79,7 +79,7 @@ export default function VoiceRecordingAgreementPage() {
             You may withdraw future recording consent by writing to customer service. Withdrawal does
             not require deletion of a finished audio already in your schedule unless you request
             retirement of that track. We may decline or pause production if a recording is unusable
-            or consent is unclear — in that case we will offer a professional voice option instead.
+            or consent is unclear - in that case we will offer a professional voice option instead.
           </p>
 
           <h2>8. Contact</h2>

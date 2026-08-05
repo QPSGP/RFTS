@@ -28,11 +28,11 @@ type Props = {
 
 function voiceLabel(voiceId: string | null): string {
   if (voiceId === "member_own") return "Member’s own voice";
-  return LGD_PROFESSIONAL_VOICES.find((v) => v.id === voiceId)?.label || voiceId || "—";
+  return LGD_PROFESSIONAL_VOICES.find((v) => v.id === voiceId)?.label || voiceId || "-";
 }
 
 function bedLabel(bedId: string | null): string {
-  return LGD_FREQUENCY_BEDS.find((b) => b.id === bedId)?.label || bedId || "—";
+  return LGD_FREQUENCY_BEDS.find((b) => b.id === bedId)?.label || bedId || "-";
 }
 
 export default function LgdCgmrProducePanel({
@@ -139,7 +139,7 @@ export default function LgdCgmrProducePanel({
         multipart: useMultipart
       });
       setAudioUrl(blob.url);
-      setMessage("File uploaded — click “Assign to playlist” to add it as their CGMR.");
+      setMessage("File uploaded - click “Assign to playlist” to add it as their CGMR.");
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Upload failed.");
     } finally {
@@ -159,7 +159,7 @@ export default function LgdCgmrProducePanel({
     >
       <h3 style={{ margin: 0, fontSize: 17 }}>Produce CGMR → member playlist</h3>
       <p style={{ margin: 0, fontSize: 14, color: "#4b5563" }}>
-        Generate a sleep-hypnotic reading of the script (slow, smooth, continuous — not choppy),
+        Generate a sleep-hypnotic reading of the script (slow, smooth, continuous - not choppy),
         using the member’s voice color and bed, then add it as their personalized CGMR night slot.
       </p>
       <p style={{ margin: 0, fontSize: 14 }}>
@@ -194,7 +194,7 @@ export default function LgdCgmrProducePanel({
         </button>
         {!aiAvailable && (
           <span style={{ fontSize: 13, color: "#92400e" }}>
-            AI generate needs OPENAI_API_KEY on Vercel — or upload a studio file below.
+            AI generate needs OPENAI_API_KEY on Vercel - or upload a studio file below.
           </span>
         )}
       </div>

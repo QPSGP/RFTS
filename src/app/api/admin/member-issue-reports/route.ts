@@ -244,7 +244,7 @@ export async function PATCH(request: Request) {
 
   const wasTerminal = previous.status === "resolved" || previous.status === "closed";
   const isTerminal = parsed.data.status === "resolved" || parsed.data.status === "closed";
-  /** First time moving to resolved or closed — email member once (not for admin-filed internal tickets). */
+  /** First time moving to resolved or closed - email member once (not for admin-filed internal tickets). */
   const shouldNotifyMember =
     isTerminal && !wasTerminal && !isAdminFiledIssueReport(previous);
   let resolutionEmailSent: boolean | undefined;

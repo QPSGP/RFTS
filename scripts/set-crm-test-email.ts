@@ -53,7 +53,7 @@ async function main() {
   console.log(`Updated ${target.organization} / ${updated?.name} → ${TEST_EMAIL}`);
   console.log("Next: Admin → Marketing → Outreach → Due this week → CRM on that row → Send email.");
   if (!process.env.RESEND_API_KEY) {
-    console.log("Local RESEND_API_KEY missing — send from production Admin UI (or add key to .env.local).");
+    console.log("Local RESEND_API_KEY missing - send from production Admin UI (or add key to .env.local).");
   }
 }
 

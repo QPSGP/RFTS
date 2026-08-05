@@ -55,10 +55,10 @@ export default function PlaySecondRecordingCta() {
         borderColor: "#e2e8f0"
       }}
     >
-      <h3 style={{ marginTop: 0, marginBottom: 8 }}>Play Options — second audio tonight</h3>
+      <h3 style={{ marginTop: 0, marginBottom: 8 }}>Play Options - second audio tonight</h3>
       <p style={{ color: "#475569", marginTop: 0, marginBottom: 8 }}>
         This opens your <strong>nightly session</strong> on Play Options (not the library player above).{" "}
-        <strong>{secondTitle}</strong> — same intro relaxation music as your session, then this goal audio.
+        <strong>{secondTitle}</strong> - same intro relaxation music as your session, then this goal audio.
       </p>
       <a
         className="button button-secondary"

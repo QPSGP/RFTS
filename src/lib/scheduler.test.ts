@@ -22,7 +22,7 @@ const baseSettings: PlaybackSettings = {
   fallbackTrackId: "T18"
 };
 
-describe("generatePlaySequence — core rotation (20260727)", () => {
+describe("generatePlaySequence - core rotation (20260727)", () => {
   it("inserts special every 4th play without consuming rotation", () => {
     const events = generatePlaySequence({
       audioPlays: [
@@ -49,8 +49,8 @@ describe("generatePlaySequence — core rotation (20260727)", () => {
       initialTracks: 2
     });
     const plays = events.filter((e) => e.kind === "play").map((e) => (e as { sku: string }).sku);
-    // X, Y, X, T18, Y, X, Y — duplicates of X after X suppressed when they would be consecutive
-    // Walkthrough: X, Y, X, T18, Y, (X after Y ok), (Y after X ok) — no consecutive dups in this set
+    // X, Y, X, T18, Y, X, Y - duplicates of X after X suppressed when they would be consecutive
+    // Walkthrough: X, Y, X, T18, Y, (X after Y ok), (Y after X ok) - no consecutive dups in this set
     expect(plays[0]).toBe("X");
     expect(plays[1]).toBe("Y");
     // No two identical SKUs back-to-back except via special handling
@@ -80,7 +80,7 @@ describe("generatePlaySequence — core rotation (20260727)", () => {
   });
 });
 
-describe("buildSchedulePreview — managed assigned order (20260727)", () => {
+describe("buildSchedulePreview - managed assigned order (20260727)", () => {
   const t18 = mk("t18", "T-18 Abundance", "T18");
   const t26 = mk("t26", "T-26", "T26");
   const t36 = mk("t36", "T-36", "T36");
@@ -139,7 +139,7 @@ describe("buildSchedulePreview — managed assigned order (20260727)", () => {
   });
 });
 
-describe("buildSchedulePreview — gold / goal-based (20260727)", () => {
+describe("buildSchedulePreview - gold / goal-based (20260727)", () => {
   const t18 = mk("t18", "T-18", "T18");
   const s1f = mk("s1f", "S-1F", "S1F");
   const s1b = mk("s1b", "S-1B", "S1B");
@@ -290,7 +290,7 @@ function strip(sku: string | undefined): string {
   return (sku || "").replace(/-/g, "").toUpperCase();
 }
 
-describe("buildSchedulePreview — 1 vs 2 per night packs the same sequence", () => {
+describe("buildSchedulePreview - 1 vs 2 per night packs the same sequence", () => {
   const t18 = mk("t18", "T-18", "T18");
   const a = mk("a", "A", "A1");
   const b = mk("b", "B", "B1");

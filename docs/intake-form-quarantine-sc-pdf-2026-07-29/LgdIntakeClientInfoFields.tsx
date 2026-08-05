@@ -47,7 +47,7 @@ export default function LgdIntakeClientInfoFields({
     <div className="grid" style={{ gap: 16 }}>
       <p style={{ marginTop: 0, color: "#475569" }}>
         From the Success Center Client Information Intake Form (pages 2–4). This information is never
-        sold or shared — it is only for developing your Success Plan and session brief. Clinical
+        sold or shared - it is only for developing your Success Plan and session brief. Clinical
         fields help your facilitator work safely alongside any care you already receive.
       </p>
 
@@ -604,7 +604,7 @@ export default function LgdIntakeClientInfoFields({
             style={{ marginTop: 3 }}
           />
           <span>
-            <strong>Agreement*</strong> — I accept the missed-appointment policy above
+            <strong>Agreement*</strong> - I accept the missed-appointment policy above
           </span>
         </label>
         <label style={{ display: "grid", gap: 6, maxWidth: 220 }}>

@@ -1,5 +1,5 @@
 /**
- * Media Session API for Play Options session player — lock screen / Control Center / Android
+ * Media Session API for Play Options session player - lock screen / Control Center / Android
  * notification integration (similar to NPR-style web audio). Improves OS treatment of background
  * HTML audio; does not guarantee the tab will never be suspended.
  */
@@ -72,16 +72,16 @@ export function syncSessionMediaSession(p: SyncSessionMediaSessionParams): void 
   let album = ALBUM;
 
   if (p.phase === "waiting" && p.playsPerNight === 2) {
-    title = `Between recordings — next in ${formatGapCountdown(Math.max(0, p.remainingSeconds))}`;
+    title = `Between recordings - next in ${formatGapCountdown(Math.max(0, p.remainingSeconds))}`;
     album = `${ALBUM} · ${p.gapHours}h gap`;
   } else if (p.current) {
     const isPrep = !!(p.prep && p.current.url === p.prep.url);
     if (isPrep) {
-      title = `${INTRO_RELAXATION_MUSIC_LABEL} — ${displayTitle(p.current)}`;
+      title = `${INTRO_RELAXATION_MUSIC_LABEL} - ${displayTitle(p.current)}`;
     } else if (p.phase === "second") {
-      title = `Second recording — ${displayTitle(p.current)}`;
+      title = `Second recording - ${displayTitle(p.current)}`;
     } else {
-      title = `First recording — ${displayTitle(p.current)}`;
+      title = `First recording - ${displayTitle(p.current)}`;
     }
   } else {
     title = "Reach For The Stars session";
@@ -165,7 +165,7 @@ export function clearSessionMediaSession(): void {
 export type SessionMediaActionHandlers = {
   onPlay: () => void;
   onPause: () => void;
-  /** Lock-screen / headset “stop” — end session. */
+  /** Lock-screen / headset “stop” - end session. */
   onStop: () => void;
 };
 

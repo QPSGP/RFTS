@@ -55,9 +55,9 @@ async function main() {
 
   const url = json.url || "";
   if (url.includes("checkout.stripe.com")) {
-    console.log("\nRESULT: Stripe Checkout URL returned — live/test checkout path OK");
+    console.log("\nRESULT: Stripe Checkout URL returned - live/test checkout path OK");
   } else if (url === "/play-options" || url.endsWith("/play-options")) {
-    console.log("\nRESULT: Skipped Stripe — went straight to play-options (DEMO_SKIP or demo mode)");
+    console.log("\nRESULT: Skipped Stripe - went straight to play-options (DEMO_SKIP or demo mode)");
   } else if (url.includes("billing.stripe.com")) {
     console.log("\nRESULT: Billing portal URL returned");
   } else {

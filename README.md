@@ -49,8 +49,8 @@ The same `sendEmail()` helper in `src/lib/email.ts` is used for member password 
    RESEND_API_KEY=re_xxxxxxxxxxxx
    ```
 4. Optional: set `EMAIL_FROM` (e.g. `Reach For The Stars <noreply@yourdomain.com>`) and `NEXT_PUBLIC_APP_URL` (e.g. `https://your-app.vercel.app`) for production.
-5. Optional: `WELCOME_EMAIL_CC` — comma-separated addresses **CC’d on the new-member welcome, Life Guidance Discovery follow-up, and therapist/healer/coach (Build Practice) follow-up** (onboarding or when the member first enables those interests in profile). If unset, defaults to `terry_bg@msn.com` and `Richard@richardleeweatherman.com`. Those sends skip `EMAIL_STAFF_BCC` so Terry and Richard are not duplicated.
-6. Optional: `EMAIL_STAFF_BCC` — comma-separated emails to BCC on other automated member emails (password reset, Life Guidance / Build Practice flows, report confirmations, subscription-active after Stripe checkout). Internal “report an issue” messages still go to `REPORT_ISSUE_EMAIL`.
+5. Optional: `WELCOME_EMAIL_CC` - comma-separated addresses **CC’d on the new-member welcome, Life Guidance Discovery follow-up, and therapist/healer/coach (Build Practice) follow-up** (onboarding or when the member first enables those interests in profile). If unset, defaults to `terry_bg@msn.com` and `Richard@richardleeweatherman.com`. Those sends skip `EMAIL_STAFF_BCC` so Terry and Richard are not duplicated.
+6. Optional: `EMAIL_STAFF_BCC` - comma-separated emails to BCC on other automated member emails (password reset, Life Guidance / Build Practice flows, report confirmations, subscription-active after Stripe checkout). Internal “report an issue” messages still go to `REPORT_ISSUE_EMAIL`.
 7. Restart the dev server so the new vars are picked up.
 
 ### Email on Vercel (deployments)

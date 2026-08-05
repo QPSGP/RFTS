@@ -240,7 +240,7 @@ export async function POST(request: Request) {
   }
   if (answers.crisisFlag) {
     return NextResponse.json(
-      { error: "Crisis flag set — do not auto-submit; handle with a human facilitator." },
+      { error: "Crisis flag set - do not auto-submit; handle with a human facilitator." },
       { status: 400 }
     );
   }

@@ -22,7 +22,7 @@
 
 ---
 
-## Before you start — checklist
+## Before you start - checklist
 
 - [ ] DNS points `reachforthestars.today` to the **new** Vercel app (you did this).
 - [ ] You can log in to [Stripe Dashboard](https://dashboard.stripe.com) (same account the old app used).
@@ -31,7 +31,7 @@
 
 ---
 
-## Part A — Switch Stripe to Live mode
+## Part A - Switch Stripe to Live mode
 
 1. Open https://dashboard.stripe.com
 2. Look at the top-right corner for a toggle: **Test mode** / **Live mode**.
@@ -42,7 +42,7 @@
 
 ---
 
-## Part B — Disable old webhooks (old app is going away)
+## Part B - Disable old webhooks (old app is going away)
 
 These URLs belong to the **old** apps. They must **not** be the only webhooks once the new site is live.
 
@@ -63,13 +63,13 @@ These URLs belong to the **old** apps. They must **not** be the only webhooks on
 4. For **universe-production**:
    - Should already be **Disabled**. Leave it disabled (or delete later).
 
-5. Do **not** disable your entire Stripe account — only these **old endpoints**.
+5. Do **not** disable your entire Stripe account - only these **old endpoints**.
 
 You will add a **new** endpoint in Part E.
 
 ---
 
-## Part C — Turn on Customer Billing Portal
+## Part C - Turn on Customer Billing Portal
 
 Members use this when they click **Manage billing** on the new site.
 
@@ -85,7 +85,7 @@ Members use this when they click **Manage billing** on the new site.
 
 ---
 
-## Part D — Confirm your two membership prices (Products)
+## Part D - Confirm your two membership prices (Products)
 
 New signups use two plans:
 
@@ -100,8 +100,8 @@ New signups use two plans:
    https://dashboard.stripe.com/products
 2. Open your **Gold / $19.95** product (name may vary).
 3. On the product page, find **Pricing** section.
-4. Copy the **Price ID** — it must start with `price_` (example: `price_1ABC…`).  
-   **Do not** copy **Product ID** (`prod_…`) — Checkout needs `price_`.
+4. Copy the **Price ID** - it must start with `price_` (example: `price_1ABC…`).  
+   **Do not** copy **Product ID** (`prod_…`) - Checkout needs `price_`.
 5. Repeat for **Platinum Managed / $39.95** → copy its `price_…` ID.
 
 Write them down:
@@ -115,21 +115,21 @@ Platinum $39.95 → price_________________
 
 1. Open `https://reachforthestars.today/admin` and log in.
 2. Go to **Content** (or **Admin Content**) → **Subscription Plans**.
-3. Find the row **Gold** — paste the Gold `price_…` into **Stripe Price ID**.
-4. Find **Platinum Managed** — paste the Platinum `price_…` ID.
+3. Find the row **Gold** - paste the Gold `price_…` into **Stripe Price ID**.
+4. Find **Platinum Managed** - paste the Platinum `price_…` ID.
 5. Click **Save Plans**.
 
 ---
 
-## Part E — Add the NEW webhook (critical)
+## Part E - Add the NEW webhook (critical)
 
 This connects Stripe to the **new** website.
 
 ### E1. Create the endpoint
 
 1. **Developers** → **Webhooks** → **Add endpoint**  
-   (Stripe may say **Add destination** — same idea.)
-2. **Endpoint URL** — copy/paste exactly:
+   (Stripe may say **Add destination** - same idea.)
+2. **Endpoint URL** - copy/paste exactly:
 
    ```
    https://reachforthestars.today/api/webhooks/stripe
@@ -166,11 +166,11 @@ On the same endpoint page:
 2. Pick **checkout.session.completed**.
 3. Click **Send**.
 
-You might see **400** on the test — that can be normal for fake data. After Vercel is configured (Part F), real checkouts should show **200**.
+You might see **400** on the test - that can be normal for fake data. After Vercel is configured (Part F), real checkouts should show **200**.
 
 ---
 
-## Part F — Put Stripe secrets on Vercel
+## Part F - Put Stripe secrets on Vercel
 
 ### F1. Get your Live Secret Key
 
@@ -178,7 +178,7 @@ You might see **400** on the test — that can be normal for fake data. After Ve
    https://dashboard.stripe.com/apikeys
 2. Under **Standard keys**, find **Secret key**.
 3. Click **Reveal live key**.
-4. Copy — starts with `sk_live_`.
+4. Copy - starts with `sk_live_`.
 
 > Never paste `sk_live_` in email, chat, or GitHub. Only Vercel env vars.
 
@@ -218,7 +218,7 @@ Env vars do not apply to the running site until you redeploy.
 
 ---
 
-## Part G — Link existing paying members (no double billing)
+## Part G - Link existing paying members (no double billing)
 
 Do this for **each person who already paid on the old app** and still has an active Stripe subscription.
 
@@ -233,7 +233,7 @@ Do this for **each person who already paid on the old app** and still has an act
 
 On the customer page:
 
-1. Near the top: **Customer ID** → `cus_XXXXX` — copy it.
+1. Near the top: **Customer ID** → `cus_XXXXX` - copy it.
 2. Scroll to **Subscriptions** section.
 3. Click the active subscription.
 4. Copy **Subscription ID** → `sub_XXXXX`.
@@ -241,7 +241,7 @@ On the customer page:
 
 ### G3. Create or find them on the new RFTS site
 
-**Option A — Admin creates the account (recommended)**
+**Option A - Admin creates the account (recommended)**
 
 1. RFTS Admin → **Members** → create member with the **same email** as Stripe.
 2. Set tier:
@@ -249,7 +249,7 @@ On the customer page:
    - Platinum Managed $39.95 → **Platinum Managed Member**
 3. Set subscription status → **active**.
 
-**Option B — They already signed up on new site**
+**Option B - They already signed up on new site**
 
 Skip create; use their existing account. Email must **match** Stripe exactly.
 
@@ -267,7 +267,7 @@ Skip create; use their existing account. Email must **match** Stripe exactly.
 - If new account: send them **Forgot password** at `/member/forgot-password` or set password via admin flow.
 - They log in at `https://reachforthestars.today/member/login`.
 - **Play Options** should load (not “Subscription required”).
-- **Manage billing** should open Stripe portal — **not** a new Checkout page.
+- **Manage billing** should open Stripe portal - **not** a new Checkout page.
 
 ### G6. Do NOT do this for migrated members
 
@@ -278,20 +278,20 @@ Repeat G1–G5 for each paying member.
 
 ---
 
-## Part H — Test a brand-new signup (live)
+## Part H - Test a brand-new signup (live)
 
 Use this after Parts A–F are done.
 
 1. Open `https://reachforthestars.today/signup/step-1-subscription-selection`
 2. Complete all steps with a **new email** you have not used before (or `yourname+test1@gmail.com`).
-3. On payment step you should see **Continue to Stripe Payment** — **not** “Skip Payment” (unless you are still in demo mode).
+3. On payment step you should see **Continue to Stripe Payment** - **not** “Skip Payment” (unless you are still in demo mode).
 4. Complete Stripe Checkout with a real card (you can cancel later in portal).
 5. After payment you should land on **Play Options** with active access.
 6. Check Stripe → **Developers** → **Webhooks** → your new endpoint → **Event deliveries** → latest event should be **200**.
 
 ---
 
-## Part I — Shut down old app (after migration)
+## Part I - Shut down old app (after migration)
 
 | Item | Action |
 |------|--------|
@@ -316,7 +316,7 @@ Use this after Parts A–F are done.
 
 ---
 
-## Quick reference — URLs and IDs
+## Quick reference - URLs and IDs
 
 | Item | Value |
 |------|--------|

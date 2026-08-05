@@ -53,7 +53,7 @@ export default async function HomePage() {
         <span className="pill">Reach For The Stars</span>
         <h1>Imagine … The Best You</h1>
         <p>
-          Overcome present challenges and grow your goals while falling asleep and during sleep —
+          Overcome present challenges and grow your goals while falling asleep and during sleep -
           personalized guided meditations, nightly.
         </p>
         {showSignupCta && (
@@ -113,7 +113,7 @@ export default async function HomePage() {
       </section>
 
       {showSignupCta && (
-        <LandingTrialCtaBand body="Ready when you are — start your 14-day free trial and build a nightly practice that works while you sleep." />
+        <LandingTrialCtaBand body="Ready when you are - start your 14-day free trial and build a nightly practice that works while you sleep." />
       )}
 
       <section className="section">

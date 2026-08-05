@@ -76,7 +76,7 @@ export default async function GoalLandingPage({
       {showSignupCta && (
         <LandingTrialCtaBand
           signupHref={signupHref}
-          body={`Set ${content.label.toLowerCase()} among your goals and listen while you sleep — try Reach For The Stars free for 14 days.`}
+          body={`Set ${content.label.toLowerCase()} among your goals and listen while you sleep - try Reach For The Stars free for 14 days.`}
         />
       )}
 
@@ -90,7 +90,7 @@ export default async function GoalLandingPage({
           <span className="eyebrow">Nightly program</span>
           <h2 className="section-title">How Reach For The Stars works</h2>
           <p className="section-subtitle">
-            Personalized audios scheduled each night — intro relaxation music, goal recordings, and optional
+            Personalized audios scheduled each night - intro relaxation music, goal recordings, and optional
             second plays while you sleep.
           </p>
         </div>

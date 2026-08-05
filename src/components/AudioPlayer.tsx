@@ -130,7 +130,7 @@ export default function AudioPlayer({
       const src = audio.currentSrc || audio.src || "";
       const onPrep = !!prepAudioUrl && src.includes("prep=1");
       const label = onPrep ? "Starting music" : libraryActivityLogLabel(skuCode, title);
-      logMemberPlayedAudio(`Library — ${label}`);
+      logMemberPlayedAudio(`Library - ${label}`);
     };
 
     audio.addEventListener("play", handlePlay);
@@ -223,7 +223,7 @@ export default function AudioPlayer({
       }
       const label =
         prepAudioUrl && isPlayingPrepRef.current ? "Starting music" : libraryActivityLogLabel(skuCode, title);
-      logMemberAudioOutcome(`Library — ${label} | completed full listen`);
+      logMemberAudioOutcome(`Library - ${label} | completed full listen`);
       if (!(prepAudioUrl && isPlayingPrepRef.current)) {
         const display = libraryDisplayHeading(skuCode, title);
         setListenCompleteNotice(`Finished playing: ${display}`);
@@ -250,7 +250,7 @@ export default function AudioPlayer({
       if (audio.currentTime < 1) return;
       const label =
         prepAudioUrl && isPlayingPrepRef.current ? "Starting music" : libraryActivityLogLabel(skuCode, title);
-      logMemberAudioOutcome(`Library — ${label} | resumed from where they left off`);
+      logMemberAudioOutcome(`Library - ${label} | resumed from where they left off`);
     };
     audio.addEventListener("pause", onPause);
     audio.addEventListener("play", onPlay);
@@ -278,7 +278,7 @@ export default function AudioPlayer({
       const now = audio.currentTime;
       if (now <= prev + 3.5) return;
       if (now < 2) return;
-      logMemberAudioOutcome(`Library — ${label} | ${MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER}`);
+      logMemberAudioOutcome(`Library - ${label} | ${MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER}`);
     };
     audio.addEventListener("timeupdate", onTimeUpdate);
     audio.addEventListener("loadedmetadata", onLoadedMetadata);
@@ -310,7 +310,7 @@ export default function AudioPlayer({
       }
       if (incomplete) {
         logMemberAudioOutcome(
-          `Library — ${label} | stopped before end (did not complete)`
+          `Library - ${label} | stopped before end (did not complete)`
         );
       }
     }
@@ -346,7 +346,7 @@ export default function AudioPlayer({
     if (!audio) return;
     const label = prepAudioUrl && isPlayingPrep ? "Starting music" : libraryActivityLogLabel(skuCode, title);
     suppressResumeForRestartRef.current = true;
-    logMemberAudioOutcome(`Library — ${label} | restarted from the beginning`);
+    logMemberAudioOutcome(`Library - ${label} | restarted from the beginning`);
     libraryStoppedRef.current = false;
     if (prepAudioUrl) {
       setIsPlayingPrep(true);
@@ -391,7 +391,7 @@ export default function AudioPlayer({
           </p>
           {prepAudioUrl && isPlayingPrep && (
             <p style={{ color: "#6b7280", fontSize: 13, marginTop: 4, marginBottom: 0 }}>
-              Starting Music — your selected audio will play next.
+              Starting Music - your selected audio will play next.
             </p>
           )}
           {listenCompleteNotice && (

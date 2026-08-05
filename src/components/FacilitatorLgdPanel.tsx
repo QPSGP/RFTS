@@ -231,24 +231,24 @@ export default function FacilitatorLgdPanel() {
           border: "1px solid #99f6e4"
         }}
       >
-        <h3 style={{ marginTop: 0 }}>Seven Keys — what makes this facilitation unique</h3>
+        <h3 style={{ marginTop: 0 }}>Seven Keys - what makes this facilitation unique</h3>
         <p style={{ color: "#334155", marginTop: 0 }}>
           Reach For The Stars LGD follows{" "}
           <strong>Terry Brussel-Rogers’ Seven Keys to Self-Actualization</strong>: a systematic
-          self-hypnosis path she pioneered through Success Center — not generic goal coaching.
+          self-hypnosis path she pioneered through Success Center - not generic goal coaching.
           Bronze (self-hypnosis) is always first; the other Keys become a customized roadmap from
           the member’s challenges to CGMR + supporting sessions.
         </p>
         <ul style={{ margin: "0 0 8px", paddingLeft: 18, color: "#475569", fontSize: 14 }}>
           {LGD_SEVEN_KEYS.map((k) => (
             <li key={k.id}>
-              <strong>{k.metal}</strong> — {k.label}
+              <strong>{k.metal}</strong> - {k.label}
             </li>
           ))}
         </ul>
         <p style={{ fontSize: 14, color: "#0f766e", marginBottom: 0 }}>
           Your edge as a facilitator: you review their Key order + priority challenges, then shape
-          the Goal Manifestation script and library path the way Terry’s live LGDR does — overview
+          the Goal Manifestation script and library path the way Terry’s live LGDR does - overview
           (CGMR) plus Keys that implement.
         </p>
         <p style={{ fontSize: 13, margin: "10px 0 0" }}>
@@ -410,7 +410,7 @@ export default function FacilitatorLgdPanel() {
                     <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#475569" }}>
                       {[...selected.editHistory!].reverse().slice(0, 20).map((ev, i) => (
                         <li key={`${ev.at}-${i}`}>
-                          {new Date(ev.at).toLocaleString()} — <strong>{ev.byRole}</strong>{" "}
+                          {new Date(ev.at).toLocaleString()} - <strong>{ev.byRole}</strong>{" "}
                           {ev.byName || ev.byEmail}: {ev.action.replace(/_/g, " ")}
                           {ev.note ? ` (${ev.note})` : ""}
                         </li>
@@ -445,14 +445,14 @@ export default function FacilitatorLgdPanel() {
                   <p>
                     <strong>Live sessions interest:</strong>{" "}
                     {selected.answers.wantsLiveLgdSessions ? (
-                      <span style={{ color: "#0f766e", fontWeight: 600 }}>Yes — follow up</span>
+                      <span style={{ color: "#0f766e", fontWeight: 600 }}>Yes - follow up</span>
                     ) : (
                       "Not requested"
                     )}
                   </p>
                   <p>
                     <strong>Primary struggle:</strong>{" "}
-                    {selected.answers.primaryStruggle || "—"}
+                    {selected.answers.primaryStruggle || "-"}
                   </p>
                   {prioritizedLgdChallenges(selected.answers).length > 0 ? (
                     <>
@@ -472,7 +472,7 @@ export default function FacilitatorLgdPanel() {
                   <ol style={{ marginTop: 0 }}>
                     {orderedLgdSevenKeys(selected.answers).map((k) => (
                       <li key={k.id}>
-                        {k.metal} — {k.label}
+                        {k.metal} - {k.label}
                       </li>
                     ))}
                   </ol>
@@ -492,21 +492,21 @@ export default function FacilitatorLgdPanel() {
                   ) : null}
                   <p>
                     <strong>Top outcomes:</strong>{" "}
-                    {selected.answers.topOutcomes.join("; ") || "—"}
+                    {selected.answers.topOutcomes.join("; ") || "-"}
                   </p>
                   <p>
                     <strong>Identity statements:</strong>{" "}
-                    {selected.answers.identityStatements.join("; ") || "—"}
+                    {selected.answers.identityStatements.join("; ") || "-"}
                   </p>
                   <p>
-                    <strong>Blocks:</strong> {selected.answers.blocks.join("; ") || "—"}
+                    <strong>Blocks:</strong> {selected.answers.blocks.join("; ") || "-"}
                   </p>
                   <p>
-                    <strong>Strengths:</strong> {selected.answers.strengths.join("; ") || "—"}
+                    <strong>Strengths:</strong> {selected.answers.strengths.join("; ") || "-"}
                   </p>
                   <p>
                     <strong>Questions for facilitator:</strong>{" "}
-                    {selected.answers.questionsForFacilitator || "—"}
+                    {selected.answers.questionsForFacilitator || "-"}
                   </p>
                   <p>
                     <strong>Life area scores:</strong>
@@ -514,7 +514,7 @@ export default function FacilitatorLgdPanel() {
                   <ul style={{ marginTop: 4 }}>
                     {LGD_LIFE_AREAS.map((area) => (
                       <li key={area.id}>
-                        {area.label}: {selected.answers.lifeAreaScores[area.id] ?? "—"}
+                        {area.label}: {selected.answers.lifeAreaScores[area.id] ?? "-"}
                       </li>
                     ))}
                   </ul>
@@ -555,7 +555,7 @@ export default function FacilitatorLgdPanel() {
                     });
                     void navigator.clipboard.writeText(packet).then(
                       () => setMessage("Production packet copied to clipboard."),
-                      () => setMessage("Could not copy packet — select script text manually.")
+                      () => setMessage("Could not copy packet - select script text manually.")
                     );
                   }}
                 >

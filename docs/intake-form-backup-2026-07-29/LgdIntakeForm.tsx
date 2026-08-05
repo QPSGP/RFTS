@@ -214,7 +214,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
     }
     setMessage(
       data.needsCheckout
-        ? "New intake created — complete payment to fill it out."
+        ? "New intake created - complete payment to fill it out."
         : data.message || "Intake ready."
     );
     setReloadKey((k) => k + 1);
@@ -330,7 +330,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
   const moveSevenKey = (fromIndex: number, toIndex: number) => {
     setAnswers((prev) => {
       const current = normalizeSevenKeysOrder(prev.sevenKeysOrder);
-      // Index 0 is Bronze — locked.
+      // Index 0 is Bronze - locked.
       if (fromIndex <= 0 || toIndex <= 0) return prev;
       if (toIndex >= current.length) return prev;
       const next = [...current];
@@ -367,7 +367,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
       );
     }
     if (answers.crisisFlag) {
-      blockers.push("Section A: crisis flag is checked — clear it or handle with a human facilitator.");
+      blockers.push("Section A: crisis flag is checked - clear it or handle with a human facilitator.");
     }
     const completePairs = answers.beliefTransformations.filter(
       (p) => p.limitingText.trim() && p.growthText.trim()
@@ -681,7 +681,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
         </div>
       ) : null}
       {paidAt && intakeStatus === "draft" && !isAdminMode ? (
-        <p style={{ fontSize: 13, color: "#065f46" }}>Payment received — complete sections A–F and submit.</p>
+        <p style={{ fontSize: 13, color: "#065f46" }}>Payment received - complete sections A–F and submit.</p>
       ) : null}
       <div className="stepper" style={{ marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
         {LGD_INTAKE_SECTIONS.map((s, i) => (
@@ -711,7 +711,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
           <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#475569" }}>
             {[...editHistory].reverse().slice(0, 20).map((ev, i) => (
               <li key={`${ev.at}-${i}`}>
-                {new Date(ev.at).toLocaleString()} — <strong>{ev.byRole}</strong>{" "}
+                {new Date(ev.at).toLocaleString()} - <strong>{ev.byRole}</strong>{" "}
                 {ev.byName || ev.byEmail}: {ev.action.replace(/_/g, " ")}
                 {ev.note ? ` (${ev.note})` : ""}
               </li>
@@ -737,7 +737,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
 
       <div className="card" style={{ marginBottom: 16 }}>
         <h2 style={{ marginTop: 0 }}>
-          Section {section.id} — {section.title}
+          Section {section.id} - {section.title}
         </h2>
 
         {section.id === "A" && (
@@ -746,7 +746,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
               <strong>How would you like your subconscious programmed?</strong>
             </p>
             <p style={{ marginTop: 0, color: "#475569" }}>
-              Choose all that apply. We use this — with your goals and belief changes — to draft
+              Choose all that apply. We use this - with your goals and belief changes - to draft
               what you need to hear so you can grow, expand, and thrive.
             </p>
             <div style={{ display: "grid", gap: 8 }}>
@@ -802,7 +802,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
                 style={{ marginTop: 3 }}
               />
               <span>
-                I am in crisis or need urgent safety support (do not auto-generate a script — please
+                I am in crisis or need urgent safety support (do not auto-generate a script - please
                 contact a person / emergency services).
               </span>
             </label>
@@ -836,7 +836,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
               </p>
               <p style={{ color: "#475569", marginTop: 0 }}>
                 Select beliefs that are harmful or holding you back. For each one, choose (or write)
-                the growth belief you want installed instead — what helps you grow, expand, and
+                the growth belief you want installed instead - what helps you grow, expand, and
                 thrive.
               </p>
               <div style={{ display: "grid", gap: 8 }}>
@@ -888,7 +888,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
             {answers.beliefTransformations.length > 0 ? (
               <div style={{ display: "grid", gap: 14 }}>
                 <p style={{ margin: 0, fontWeight: 600 }}>
-                  For each selected belief — what should replace it?
+                  For each selected belief - what should replace it?
                 </p>
                 {answers.beliefTransformations.map((pair, index) => (
                   <div
@@ -972,7 +972,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
             {LGD_LIFE_AREAS.map((area) => (
               <label key={area.id} style={{ display: "grid", gap: 6 }}>
                 <span>
-                  {area.label}: <strong>{answers.lifeAreaScores[area.id] ?? "—"}</strong>
+                  {area.label}: <strong>{answers.lifeAreaScores[area.id] ?? "-"}</strong>
                 </span>
                 <input
                   type="range"
@@ -990,7 +990,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
               <p style={{ marginTop: 0, fontSize: 17, fontWeight: 600 }}>Challenges checklist</p>
               <p style={{ color: "#475569", marginTop: 0 }}>
                 Check what applies. Then rank up to 10 priorities below (1 = most important). This
-                helps your facilitator prepare — it is not a medical assessment.
+                helps your facilitator prepare - it is not a medical assessment.
               </p>
               {LGD_CHALLENGE_CATEGORIES.map((cat) => (
                 <div key={cat.id} style={{ marginBottom: 14 }}>
@@ -1030,7 +1030,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
             {answers.challengeIds.length > 0 ? (
               <div>
                 <p style={{ marginTop: 0, fontWeight: 600 }}>
-                  Priority order (up to 10) — #1 is highest
+                  Priority order (up to 10) - #1 is highest
                 </p>
                 {rankedChallenges.length === 0 ? (
                   <p style={{ color: "#64748b", fontSize: 14 }}>
@@ -1091,7 +1091,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
                 {editable && checkedNotPrioritized.length > 0 && answers.challengePriority.length < 10 ? (
                   <div style={{ marginTop: 10 }}>
                     <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 6px" }}>
-                      Checked but not in top 10 — add if space:
+                      Checked but not in top 10 - add if space:
                     </p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                       {checkedNotPrioritized.map((id) => (
@@ -1138,7 +1138,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
           <div className="grid" style={{ gap: 16 }}>
             <p style={{ marginTop: 0, fontSize: 17, fontWeight: 600 }}>Goal horizons</p>
             <p style={{ color: "#475569", marginTop: 0 }}>
-              From the Success Center intake — short arcs and your North Star. Sensory top-3
+              From the Success Center intake - short arcs and your North Star. Sensory top-3
               outcomes and identity statements below still drive the CGMR script.
             </p>
             <label style={{ display: "grid", gap: 6 }}>
@@ -1185,7 +1185,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
             </label>
             <hr style={{ border: 0, borderTop: "1px solid #e5e7eb", margin: "4px 0" }} />
             <label style={{ display: "grid", gap: 6 }}>
-              Top 3 outcomes in your words (one per line) — sensory and specific
+              Top 3 outcomes in your words (one per line) - sensory and specific
               <textarea
                 disabled={!editable}
                 rows={4}
@@ -1195,7 +1195,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
               />
             </label>
             <label style={{ display: "grid", gap: 6 }}>
-              Identity statements (one per line, up to 7) — “I am becoming…” / “I am now…”
+              Identity statements (one per line, up to 7) - “I am becoming…” / “I am now…”
               <textarea
                 disabled={!editable}
                 rows={5}
@@ -1208,12 +1208,12 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
             </label>
             <div>
               <p style={{ marginBottom: 8 }}>
-                Align with RFTS goals (up to 10). Order matters — #1 is highest priority.
+                Align with RFTS goals (up to 10). Order matters - #1 is highest priority.
               </p>
               {orderedSelectedGoals.length > 0 ? (
                 <div style={{ marginBottom: 16 }}>
                   <p style={{ margin: "0 0 8px", fontWeight: 600 }}>
-                    Selected goals ({orderedSelectedGoals.length}) — priority order
+                    Selected goals ({orderedSelectedGoals.length}) - priority order
                   </p>
                   <div className="goal-stack" style={{ display: "grid", gap: 8 }}>
                     {orderedSelectedGoals.map((goal, index) => (
@@ -1334,7 +1334,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
               <p style={{ color: "#475569", marginTop: 0 }}>
                 Terry Brussel-Rogers’ systematic path from problem resolution to self-actualization.
                 The <strong>Bronze Key is always #1</strong> (self-hypnosis foundation). Check other
-                Keys that apply, then rank them — leave blank any that do not apply.
+                Keys that apply, then rank them - leave blank any that do not apply.
               </p>
               <div
                 style={{
@@ -1345,7 +1345,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
                   marginBottom: 12
                 }}
               >
-                <strong>#1 Bronze — Auto-suggestion &amp; self-hypnosis</strong>
+                <strong>#1 Bronze - Auto-suggestion &amp; self-hypnosis</strong>
                 <p style={{ margin: "6px 0 0", fontSize: 14, color: "#334155" }}>
                   {LGD_SEVEN_KEYS[0].summary}
                 </p>
@@ -1381,7 +1381,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
                           {rank ? `#${rank} ` : ""}
                           {key.metal}
                         </strong>{" "}
-                        — {key.label}
+                        - {key.label}
                         <span
                           style={{
                             display: "block",
@@ -1416,7 +1416,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
                       >
                         <strong style={{ minWidth: 28 }}>#{row.rank}</strong>
                         <span style={{ flex: "1 1 180px" }}>
-                          {row.metal} — {row.label}
+                          {row.metal} - {row.label}
                         </span>
                         {editable && index > 0 ? (
                           <span style={{ display: "flex", gap: 6 }}>
@@ -1481,7 +1481,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
               />
             </label>
             <label style={{ display: "grid", gap: 6 }}>
-              Will to learn (1–5): <strong>{answers.willToLearn ?? "—"}</strong>
+              Will to learn (1–5): <strong>{answers.willToLearn ?? "-"}</strong>
               <input
                 type="range"
                 min={1}
@@ -1492,7 +1492,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
               />
             </label>
             <label style={{ display: "grid", gap: 6 }}>
-              Belief I can learn (1–5): <strong>{answers.beliefCanLearn ?? "—"}</strong>
+              Belief I can learn (1–5): <strong>{answers.beliefCanLearn ?? "-"}</strong>
               <input
                 type="range"
                 min={1}
@@ -1508,7 +1508,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
         {section.id === "E" && (
           <div className="grid" style={{ gap: 16 }}>
             <label style={{ display: "grid", gap: 6 }}>
-              Preferred metaphors (one per line) — ocean, mountain, light, business, faith…
+              Preferred metaphors (one per line) - ocean, mountain, light, business, faith…
               <textarea
                 disabled={!editable}
                 rows={3}
@@ -1550,7 +1550,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
                 }
               >
                 <option value="">Select…</option>
-                <option value="yes">Yes — welcome</option>
+                <option value="yes">Yes - welcome</option>
                 <option value="minimal">Minimal</option>
                 <option value="none">None</option>
               </select>
@@ -1596,7 +1596,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
                           onChange={() => patchAnswers({ voiceId: voice.id, ownVoiceConsent: false })}
                         />
                         <span>
-                          <strong>{voice.label}</strong> — {voice.description}
+                          <strong>{voice.label}</strong> - {voice.description}
                         </span>
                       </label>
                     ))
@@ -1616,9 +1616,9 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
                         }
                       />
                       <span>
-                        <strong>My own voice</strong> — your voice in a calm, peaceful hypnotic
+                        <strong>My own voice</strong> - your voice in a calm, peaceful hypnotic
                         state (record a slow relaxed sample so AI/studio can match how you sound
-                        when guiding yourself into sleep — not daytime speech)
+                        when guiding yourself into sleep - not daytime speech)
                       </span>
                     </label>
                     {answers.voiceId === "member_own" ? (
@@ -1686,7 +1686,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
                 >
                   {LGD_FREQUENCY_BEDS.map((bed) => (
                     <option key={bed.id} value={bed.id}>
-                      {bed.label} — {bed.intent}
+                      {bed.label} - {bed.intent}
                     </option>
                   ))}
                 </select>
@@ -1731,7 +1731,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
                 <span style={{ display: "block", fontSize: 14, color: "#475569", marginTop: 4 }}>
                   Check this if you want a facilitator (such as Terry Brussel-Rogers or an assigned
                   associate) to follow up about phone, Zoom, or in-person sessions and your Seven
-                  Keys path — not only the electronic intake and CGMR.
+                  Keys path - not only the electronic intake and CGMR.
                 </span>
               </span>
             </label>
@@ -1775,7 +1775,7 @@ export default function LgdIntakeForm({ interests, adminMemberEmail, onAdminSave
               </div>
             ) : editable ? (
               <p style={{ color: "#065f46", marginBottom: 0 }}>
-                Ready to submit — click <strong>Submit intake</strong> below.
+                Ready to submit - click <strong>Submit intake</strong> below.
               </p>
             ) : null}
           </div>

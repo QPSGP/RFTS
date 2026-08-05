@@ -490,7 +490,7 @@ export default function PlayOptionsPage() {
           <div className="card">
             <h3>Life Guidance Discovery</h3>
             <p>
-              Structured intake for your Goal Manifestation audio — session brief and script draft.
+              Structured intake for your Goal Manifestation audio - session brief and script draft.
             </p>
             <a className="button button-secondary" href="/member/lgd">
               Open LGD intake

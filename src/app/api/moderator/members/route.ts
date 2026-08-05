@@ -128,7 +128,7 @@ export async function POST(request: Request) {
     parsed.data.status === "active" ? "Active" : "Inactive (billing not started)";
   const billingNote =
     parsed.data.status === "active"
-      ? "Your membership is active — you can sign in and use the member console."
+      ? "Your membership is active - you can sign in and use the member console."
       : "Your account is inactive until billing is set up. Your facilitator or our team will help you activate membership.";
 
   const loginUrl = `${getBaseUrl()}/member/login`;
@@ -164,6 +164,6 @@ export async function POST(request: Request) {
     assignedExisting: false,
     message: emailResult.ok
       ? "Member created, assigned to you, and welcome email sent."
-      : "Member created and assigned. Welcome email could not be sent — share login details manually."
+      : "Member created and assigned. Welcome email could not be sent - share login details manually."
   });
 }

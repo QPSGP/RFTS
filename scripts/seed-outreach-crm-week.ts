@@ -72,7 +72,7 @@ async function main() {
       organization: "Riley Chen",
       targetType: "individual",
       category: "Individuals & influencers",
-      persona: "Riley — Single Seeking a Match",
+      persona: "Riley - Single Seeking a Match",
       entryPath: "Direct",
       interest: "Personal membership",
       audienceSize: "Newsletter ~4k",
@@ -95,7 +95,7 @@ async function main() {
       organization: "Morgan Okonkwo",
       targetType: "individual",
       category: "Individuals & influencers",
-      persona: "Morgan — High-Pressure Sales Professional",
+      persona: "Morgan - High-Pressure Sales Professional",
       entryPath: "Affiliate",
       interest: "Affiliate partnership",
       audienceSize: "AE book ~80 accounts",
@@ -118,13 +118,13 @@ async function main() {
       organization: "Taylor Nguyen",
       targetType: "individual",
       category: "Individuals & influencers",
-      persona: "Taylor — Exam-Bound Professional",
+      persona: "Taylor - Exam-Bound Professional",
       entryPath: "Direct",
       interest: "Personal membership",
       audienceSize: "Study cohort ~25",
       decisionTimeline: "NCLEX window in 6 weeks",
       followUpDays: 4,
-      notes: "Exam Calm pack — seasonal urgency.",
+      notes: "Exam Calm pack - seasonal urgency.",
       contact: {
         firstName: "Taylor",
         lastName: "Nguyen",
@@ -141,7 +141,7 @@ async function main() {
       organization: "Casey Brooks",
       targetType: "individual",
       category: "Individuals & influencers",
-      persona: "Casey — Working Actor / Performer",
+      persona: "Casey - Working Actor / Performer",
       entryPath: "Direct",
       interest: "Personal membership",
       audienceSize: "Workshop list ~200",
@@ -164,13 +164,13 @@ async function main() {
       organization: "Metro Fire Peer Support & Wellness Unit",
       targetType: "organization",
       category: "First responders & public safety",
-      persona: "Jordan — Front-Line Caregiver",
+      persona: "Jordan - Front-Line Caregiver",
       entryPath: "Affiliate",
       interest: "Wellness program for staff",
       audienceSize: "~180 sworn + civilian",
       decisionTimeline: "Wellness committee next month",
       followUpDays: 2,
-      notes: "Partner outreach — resilience + sleep + 25% affiliate. Week of 2026-08-03.",
+      notes: "Partner outreach - resilience + sleep + 25% affiliate. Week of 2026-08-03.",
       contact: {
         firstName: "Dana",
         lastName: "Ruiz",
@@ -187,13 +187,13 @@ async function main() {
       organization: "Apex Sales Leadership Coaching",
       targetType: "organization",
       category: "Corporate & high-stress professions",
-      persona: "Morgan — High-Pressure Sales Professional",
+      persona: "Morgan - High-Pressure Sales Professional",
       entryPath: "Affiliate",
       interest: "Affiliate partnership",
       audienceSize: "Client AEs ~400",
       decisionTimeline: "Q4 curriculum refresh",
       followUpDays: 3,
-      notes: "Sales Edge partner — 25% ongoing.",
+      notes: "Sales Edge partner - 25% ongoing.",
       contact: {
         firstName: "Chris",
         lastName: "Patel",
@@ -210,13 +210,13 @@ async function main() {
       organization: "Harbor Group Therapy Practice",
       targetType: "organization",
       category: "Mental & behavioral health providers",
-      persona: "Alex — Burned-Out Professional",
+      persona: "Alex - Burned-Out Professional",
       entryPath: "Affiliate",
       interest: "Affiliate partnership",
       audienceSize: "12 clinicians",
       decisionTimeline: "Partner review this quarter",
       followUpDays: 4,
-      notes: "Therapist affiliate — stress/sleep/resilience for clients.",
+      notes: "Therapist affiliate - stress/sleep/resilience for clients.",
       contact: {
         firstName: "Jordan",
         lastName: "Ellis",
@@ -275,7 +275,7 @@ async function main() {
       targetId: target.id,
       contactId: contact.id,
       kind: "note",
-      subject: "Week pipeline seed — ready for real email",
+      subject: "Week pipeline seed - ready for real email",
       bodyPreview:
         "CRM card created with follow-up this week. Add a real email on the contact, open CRM → Send email, pick Partner / resilience template, send via Resend.",
       createdByEmail: "seed-outreach-crm-week"
@@ -331,7 +331,7 @@ async function main() {
       }
     }
   } else {
-    console.log("SEED_OUTREACH_SEND_TO empty — skip send.");
+    console.log("SEED_OUTREACH_SEND_TO empty - skip send.");
   }
 
   console.log(`Done. Targets added: ${addedTargets}. Contacts added: ${addedContacts}.`);

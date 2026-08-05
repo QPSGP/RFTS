@@ -1,32 +1,32 @@
 /** Research sources for meditation benefits (index 0 = source 1 in citations). */
 export const MEDITATION_SOURCES = [
   {
-    title: "De Gruyter — mindfulness and health research review",
+    title: "De Gruyter - mindfulness and health research review",
     href: "https://www.degruyter.com/document/doi/10.1515/hmbci-2013-0056/html"
   },
   {
-    title: "Harvard Health — what meditation can do for your mind, mood, and health",
+    title: "Harvard Health - what meditation can do for your mind, mood, and health",
     href: "https://www.health.harvard.edu/staying-healthy/what-meditation-can-do-for-your-mind-mood-and-health-"
   },
   {
-    title: "UC Davis Health — 10 health benefits of meditation",
+    title: "UC Davis Health - 10 health benefits of meditation",
     href: "https://health.ucdavis.edu/health-news/newsroom/10-health-benefits-of-meditation/2019/07"
   },
   {
-    title: "Mayo Clinic — meditation overview and health benefits",
+    title: "Mayo Clinic - meditation overview and health benefits",
     href: "https://www.mayoclinic.org/tests-procedures/meditation/about/pac-20385120"
   },
   {
-    title: "Columbia University — how meditation can help you focus",
+    title: "Columbia University - how meditation can help you focus",
     href: "https://sps.columbia.edu/news/how-meditation-can-help-you-focus"
   },
   {
-    title: "Harvard Gazette — eight weeks to a better brain (MGH/Harvard study)",
+    title: "Harvard Gazette - eight weeks to a better brain (MGH/Harvard study)",
     href: "https://news.harvard.edu/gazette/story/2011/01/eight-weeks-to-a-better-brain/"
   }
 ] as const;
 
-/** Homepage benefits and footer wellness links — paths map to existing or new landing pages. */
+/** Homepage benefits and footer wellness links - paths map to existing or new landing pages. */
 export const WELLNESS_BENEFIT_LINKS: {
   label: string;
   path: string;
@@ -45,7 +45,7 @@ export const WELLNESS_BENEFIT_LINKS: {
   { label: "Greater Self-Awareness", path: "/self-awareness", sourceIndex: 3 }
 ];
 
-/** Science page “Evidence-backed outcomes” — same Learn How pattern as Home benefits. */
+/** Science page “Evidence-backed outcomes” - same Learn How pattern as Home benefits. */
 export const SCIENCE_OUTCOME_LINKS: { label: string; path: string }[] = [
   { label: "Reduced stress and anxiety", path: "/stress-relief" },
   { label: "Better sleep quality", path: "/sleep-meditation" },

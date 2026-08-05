@@ -14,6 +14,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      # Smoke scripts use only Node fetch — no node_modules required.
+      # Smoke scripts use only Node fetch - no node_modules required.
       - run: node scripts/facilitator-smoke-test.js https://reachforthestars.today
       - run: node scripts/production-smoke-test.js https://reachforthestars.today

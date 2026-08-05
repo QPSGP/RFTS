@@ -21,7 +21,7 @@ const MANAGED_USER = {
   playsPerNight: 2
 };
 
-/** Valid UUIDs — API route validates POST bodies with z.string().uuid(). */
+/** Valid UUIDs - API route validates POST bodies with z.string().uuid(). */
 const LIB_ALPHA = {
   id: "11111111-1111-4111-8111-111111111111",
   title: "Alpha Track",

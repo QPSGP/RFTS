@@ -36,18 +36,18 @@ const GOAL_DETAILS: Record<
     title: "Guided meditation for health and healthy longevity",
     metaTitle: "Guided Meditation for Health & Longevity | Reach For The Stars",
     metaDescription:
-      "Personalized guided meditations for health, energy, sleep, and pain comfort — scheduled nightly while you fall asleep and during sleep.",
+      "Personalized guided meditations for health, energy, sleep, and pain comfort - scheduled nightly while you fall asleep and during sleep.",
     heroLead:
-      "Reach For The Stars rotates goal-based audios so your subconscious receives health-focused messages each night — healthy longevity, vibrant energy, and the body you want to delight in.",
+      "Reach For The Stars rotates goal-based audios so your subconscious receives health-focused messages each night - healthy longevity, vibrant energy, and the body you want to delight in.",
     eyebrow: "Physical wellbeing",
     sectionTitle: "Nightly audios for your health goals",
     sectionSubtitle:
-      "Select health-related priorities and hear guided meditations in rotation — intro relaxation music at bedtime, reinforcement during sleep.",
+      "Select health-related priorities and hear guided meditations in rotation - intro relaxation music at bedtime, reinforcement during sleep.",
     howItHelps: [
       {
         title: "Holistic health focus",
         body:
-          "Health goals in your rotation can include rest, resilience, pain comfort, and vitality — aligned with what you prioritize most."
+          "Health goals in your rotation can include rest, resilience, pain comfort, and vitality - aligned with what you prioritize most."
       },
       {
         title: "Sleep supports recovery",
@@ -85,7 +85,7 @@ const GOAL_DETAILS: Record<
       {
         title: "Prosperity in rotation",
         body:
-          "Wealth and success goals play on a structured schedule — not one recording on repeat, but intentional reinforcement over time."
+          "Wealth and success goals play on a structured schedule - not one recording on repeat, but intentional reinforcement over time."
       },
       {
         title: "Subconscious priming",
@@ -100,7 +100,7 @@ const GOAL_DETAILS: Record<
     ],
     nightlySteps: [
       { title: "Set wealth goals", body: "Include abundance, success, and related priorities in your top ten." },
-      { title: "Listen nightly", body: "One or two audios per night — default is two for deeper reinforcement." },
+      { title: "Listen nightly", body: "One or two audios per night - default is two for deeper reinforcement." },
       { title: "Track momentum", body: "Members notice shifts in confidence and follow-through over weeks." }
     ],
     relatedSlugs: ["inspiration", "health", "relationship"]
@@ -115,12 +115,12 @@ const GOAL_DETAILS: Record<
     eyebrow: "Love & connection",
     sectionTitle: "Nightly reinforcement for relationship goals",
     sectionSubtitle:
-      "Relationship priorities play in rotation with your other goals — consistent, personalized, and effortless at bedtime.",
+      "Relationship priorities play in rotation with your other goals - consistent, personalized, and effortless at bedtime.",
     howItHelps: [
       {
         title: "Emotional openness",
         body:
-          "Guided messages can reinforce patience, warmth, and confidence — qualities that support healthier connection."
+          "Guided messages can reinforce patience, warmth, and confidence - qualities that support healthier connection."
       },
       {
         title: "Aligned with your priorities",
@@ -130,7 +130,7 @@ const GOAL_DETAILS: Record<
       {
         title: "Calm at night",
         body:
-          "Bedtime relaxation reduces reactivity and worry — a better foundation for how you show up with others."
+          "Bedtime relaxation reduces reactivity and worry - a better foundation for how you show up with others."
       }
     ],
     nightlySteps: [
@@ -146,7 +146,7 @@ const GOAL_DETAILS: Record<
     metaDescription:
       "Improve memory and focus with personalized guided meditations at night. Brain training and mental clarity while you sleep.",
     heroLead:
-      "The memory and mental focus you want now and lifelong — Reach For The Stars reinforces learning and clarity through goal-based audios scheduled each night.",
+      "The memory and mental focus you want now and lifelong - Reach For The Stars reinforces learning and clarity through goal-based audios scheduled each night.",
     eyebrow: "Memory & focus",
     sectionTitle: "Mental excellence through nightly repetition",
     sectionSubtitle:
@@ -165,7 +165,7 @@ const GOAL_DETAILS: Record<
       {
         title: "Structured habit",
         body:
-          "No playlist to maintain — press Start Session and your personalized rotation handles the rest."
+          "No playlist to maintain - press Start Session and your personalized rotation handles the rest."
       }
     ],
     nightlySteps: [
@@ -179,9 +179,9 @@ const GOAL_DETAILS: Record<
     title: "Guided meditation for inspiration and creativity",
     metaTitle: "Guided Meditation for Inspiration & Creativity | Reach For The Stars",
     metaDescription:
-      "Access inspiration at will with guided meditations for creative and entrepreneurial goals — personalized audios each night.",
+      "Access inspiration at will with guided meditations for creative and entrepreneurial goals - personalized audios each night.",
     heroLead:
-      "Inspiration at will for creative and entrepreneurial endeavors — Reach For The Stars schedules inspiration-focused guided meditations so motivation reaches your subconscious nightly.",
+      "Inspiration at will for creative and entrepreneurial endeavors - Reach For The Stars schedules inspiration-focused guided meditations so motivation reaches your subconscious nightly.",
     eyebrow: "Creativity & drive",
     sectionTitle: "Unlock inspiration on a nightly schedule",
     sectionSubtitle:
@@ -190,7 +190,7 @@ const GOAL_DETAILS: Record<
       {
         title: "Creative priming",
         body:
-          "Guided audios reinforce openness, motivation, and follow-through — especially valuable before sleep clears mental clutter."
+          "Guided audios reinforce openness, motivation, and follow-through - especially valuable before sleep clears mental clutter."
       },
       {
         title: "Entrepreneurial focus",
@@ -216,7 +216,7 @@ const GOAL_DETAILS: Record<
     metaDescription:
       "Deepen spirituality with personalized guided meditations at night. Greater connection, peace, and inner alignment while you sleep.",
     heroLead:
-      "A greater connection with your spirituality — Reach For The Stars rotates spirit-focused guided meditations so inner alignment is reinforced each night.",
+      "A greater connection with your spirituality - Reach For The Stars rotates spirit-focused guided meditations so inner alignment is reinforced each night.",
     eyebrow: "Inner life",
     sectionTitle: "Spiritual growth through nightly practice",
     sectionSubtitle:
@@ -247,7 +247,7 @@ const GOAL_DETAILS: Record<
   },
   "overcoming-addiction": {
     title: "Guided meditation for overcoming addiction and habit change",
-    metaTitle: "Overcoming Addiction — Guided Meditation & Habit Change | Reach For The Stars",
+    metaTitle: "Overcoming Addiction - Guided Meditation & Habit Change | Reach For The Stars",
     metaDescription:
       "Support freedom from smoking, overeating, and unwanted habits with personalized guided meditations each night while you sleep.",
     heroLead:
@@ -255,12 +255,12 @@ const GOAL_DETAILS: Record<
     eyebrow: "Habit freedom",
     sectionTitle: "Nightly audios for overcoming addiction goals",
     sectionSubtitle:
-      "Smoking cessation, overeating, and other habit goals play in rotation — intro relaxation music at bedtime, reinforcement during sleep.",
+      "Smoking cessation, overeating, and other habit goals play in rotation - intro relaxation music at bedtime, reinforcement during sleep.",
     howItHelps: [
       {
         title: "Replace old patterns",
         body:
-          "Goal-based audios reinforce the intentions you choose — calm, control, and balanced living instead of automatic habits."
+          "Goal-based audios reinforce the intentions you choose - calm, control, and balanced living instead of automatic habits."
       },
       {
         title: "Bedtime priming",
@@ -286,20 +286,20 @@ const GOAL_DETAILS: Record<
   "balanced-life": {
     title:
       "Guided meditation to reach your highest potential in areas: physical, mental, emotional, spiritual, as well as financial.",
-    metaTitle: "Balanced Life — Reach Your Highest Potential | Reach For The Stars",
+    metaTitle: "Balanced Life - Reach Your Highest Potential | Reach For The Stars",
     metaDescription:
-      "Reach your highest potential in areas physical, mental, emotional and spiritual as well as financial — with personalized guided meditations each night while you sleep.",
+      "Reach your highest potential in areas physical, mental, emotional and spiritual as well as financial - with personalized guided meditations each night while you sleep.",
     heroLead:
       "Reach your highest potential in areas physical, mental, emotional and spiritual as well as financial! Reach For The Stars rotates balanced-life goals so your subconscious hears supportive messages while you fall asleep and during sleep.",
     eyebrow: "Balanced living",
     sectionTitle: "Nightly audios for balanced life goals",
     sectionSubtitle:
-      "Grow across body, mind, emotions, spirit, and finances — on a schedule that runs each night without another daytime chore.",
+      "Grow across body, mind, emotions, spirit, and finances - on a schedule that runs each night without another daytime chore.",
     howItHelps: [
       {
         title: "Whole-life potential",
         body:
-          "Balanced Life goals support your highest potential across physical, mental, emotional, spiritual, and financial areas — not just one habit or one part of life at a time."
+          "Balanced Life goals support your highest potential across physical, mental, emotional, spiritual, and financial areas - not just one habit or one part of life at a time."
       },
       {
         title: "Nightly reinforcement",

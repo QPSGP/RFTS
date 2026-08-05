@@ -139,11 +139,11 @@ export default function AffiliatePayoutAdmin() {
                   Pending balance:{" "}
                   <strong>{formatUsdFromCents(row.pendingBalanceCents)}</strong>
                   {row.readyForPayout ? (
-                    <span style={{ color: "#059669" }}> — ready for payout</span>
+                    <span style={{ color: "#059669" }}> - ready for payout</span>
                   ) : (
                     <span style={{ color: "#6b7280" }}>
                       {" "}
-                      — below ${row.thresholdUsd} minimum
+                      - below ${row.thresholdUsd} minimum
                     </span>
                   )}
                 </p>

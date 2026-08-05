@@ -136,7 +136,7 @@ export default function AdminModerators() {
     [moderators]
   );
 
-  /** Only facilitators with an active login account — matches Active Facilitators list. */
+  /** Only facilitators with an active login account - matches Active Facilitators list. */
   const featuredFacilitatorProfiles = useMemo(
     () =>
       approvedApplications.filter((app) =>
@@ -548,7 +548,7 @@ export default function AdminModerators() {
       <h2>Facilitator Admin</h2>
       <p style={{ color: "#4b5563" }}>
         Approve applications, assign members, and manage facilitator profiles and co-creation
-        submissions. Open a section below — only one stays open at a time.
+        submissions. Open a section below - only one stays open at a time.
       </p>
 
       <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
@@ -558,7 +558,7 @@ export default function AdminModerators() {
           aria-expanded={facilitatorSectionIsOpen("libraryHygiene")}
           onClick={() => toggleFacilitatorSection("libraryHygiene")}
         >
-          Facilitator library — Private / All ({facilitatorTracks.length})
+          Facilitator library - Private / All ({facilitatorTracks.length})
         </button>
         {facilitatorSectionIsOpen("libraryHygiene") && (
           <div className="card" style={{ marginTop: 4 }}>
@@ -653,7 +653,7 @@ export default function AdminModerators() {
                   Enter member emails from <strong>Members Section</strong> (comma-separated).
                 </li>
                 <li>
-                  Click <strong>Save member assignments</strong> — not Save profile (profile is for
+                  Click <strong>Save member assignments</strong> - not Save profile (profile is for
                   the public spotlight page only).
                 </li>
               </ol>
@@ -662,7 +662,7 @@ export default function AdminModerators() {
                 <code>/moderator/console</code> after they log in at <code>/login</code>.
               </p>
             </div>
-            <h3 style={{ marginTop: 0 }}>Active Facilitators — assign members here</h3>
+            <h3 style={{ marginTop: 0 }}>Active Facilitators - assign members here</h3>
         {moderators.length === 0 ? (
           <p>No facilitators yet. Approve a pending application first.</p>
         ) : (
@@ -696,7 +696,7 @@ export default function AdminModerators() {
                     <p style={{ fontSize: 13, color: "#047857", marginTop: 0 }}>
                       Enter member emails from <strong>Members Section</strong> (comma-separated).
                       Currently assigned: <strong>{assignedCount}</strong>
-                      {assignedCount > 0 ? ` — ${assignedList}` : " — none yet"}
+                      {assignedCount > 0 ? ` - ${assignedList}` : " - none yet"}
                     </p>
                     <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>
                       Member emails
@@ -760,7 +760,7 @@ export default function AdminModerators() {
                   <div className="card" style={{ marginTop: 12, background: "#f8fafc" }}>
                     <h4 style={{ marginTop: 0 }}>Public profile &amp; login identity</h4>
                     <p style={{ fontSize: 13, color: "#475569", marginTop: 0 }}>
-                      Spotlight page fields — separate from member assignments above.
+                      Spotlight page fields - separate from member assignments above.
                     </p>
                     {app ? (
                       <>
@@ -810,7 +810,7 @@ export default function AdminModerators() {
         <h3 style={{ marginTop: 0 }}>Featured Facilitator Profiles</h3>
         <p style={{ color: "#4b5563" }}>
           Spotlight pages use the profile slug below. Only active facilitators appear here (same
-          as <strong>Active Facilitators</strong>). Edit profiles in Active Facilitators — save
+          as <strong>Active Facilitators</strong>). Edit profiles in Active Facilitators - save
           updates the public page and login account together.
         </p>
         <div className="grid">
@@ -860,7 +860,7 @@ export default function AdminModerators() {
           <div className="card" style={{ marginTop: 4 }}>
         <h3 style={{ marginTop: 0 }}>Facilitator Applications (pending / declined)</h3>
         <p style={{ color: "#6b7280" }}>
-          When approving a new facilitator, you can assign member emails here too — or assign later
+          When approving a new facilitator, you can assign member emails here too - or assign later
           in <strong>Active Facilitators</strong>.
         </p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>

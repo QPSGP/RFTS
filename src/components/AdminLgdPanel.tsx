@@ -427,7 +427,7 @@ export default function AdminLgdPanel({ onEditForm, onCloseForm, registerRefresh
                   <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#475569" }}>
                     {[...selected.editHistory!].reverse().slice(0, 20).map((ev, i) => (
                       <li key={`${ev.at}-${i}`}>
-                        {new Date(ev.at).toLocaleString()} — <strong>{ev.byRole}</strong>{" "}
+                        {new Date(ev.at).toLocaleString()} - <strong>{ev.byRole}</strong>{" "}
                         {ev.byName || ev.byEmail}: {ev.action.replace(/_/g, " ")}
                         {ev.note ? ` (${ev.note})` : ""}
                       </li>
@@ -456,13 +456,13 @@ export default function AdminLgdPanel({ onEditForm, onCloseForm, registerRefresh
                   <p>
                     <strong>Live sessions interest:</strong>{" "}
                     {selected.answers.wantsLiveLgdSessions ? (
-                      <span style={{ color: "#0f766e", fontWeight: 600 }}>Yes — follow up</span>
+                      <span style={{ color: "#0f766e", fontWeight: 600 }}>Yes - follow up</span>
                     ) : (
                       "Not requested"
                     )}
                   </p>
                   <p>
-                    <strong>Struggle:</strong> {selected.answers.primaryStruggle || "—"}
+                    <strong>Struggle:</strong> {selected.answers.primaryStruggle || "-"}
                   </p>
                   {prioritizedLgdChallenges(selected.answers).length > 0 ? (
                     <>
@@ -482,7 +482,7 @@ export default function AdminLgdPanel({ onEditForm, onCloseForm, registerRefresh
                   <ol style={{ marginTop: 0 }}>
                     {orderedLgdSevenKeys(selected.answers).map((k) => (
                       <li key={k.id}>
-                        {k.metal} — {k.label}
+                        {k.metal} - {k.label}
                       </li>
                     ))}
                   </ol>
@@ -501,16 +501,16 @@ export default function AdminLgdPanel({ onEditForm, onCloseForm, registerRefresh
                     </>
                   ) : null}
                   <p>
-                    <strong>Outcomes:</strong> {selected.answers.topOutcomes.join("; ") || "—"}
+                    <strong>Outcomes:</strong> {selected.answers.topOutcomes.join("; ") || "-"}
                   </p>
                   <p>
                     <strong>Identity:</strong>{" "}
-                    {selected.answers.identityStatements.join("; ") || "—"}
+                    {selected.answers.identityStatements.join("; ") || "-"}
                   </p>
                   <ul>
                     {LGD_LIFE_AREAS.map((a) => (
                       <li key={a.id}>
-                        {a.label}: {selected.answers.lifeAreaScores[a.id] ?? "—"}
+                        {a.label}: {selected.answers.lifeAreaScores[a.id] ?? "-"}
                       </li>
                     ))}
                   </ul>

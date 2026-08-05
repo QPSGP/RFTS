@@ -38,7 +38,7 @@ export default function PlayOptionsAndroidTips({
         <li>Use <strong>Chrome</strong> (not an in-app browser from email or social apps).</li>
         <li>Tap <strong>Start Session</strong> on this page and let the first audio finish completely.</li>
         <li>Tap <strong>Enable Screen Wake</strong> above if it is not already on.</li>
-        <li>Leave this <strong>Reach For The Stars tab open</strong> — do not close Chrome overnight.</li>
+        <li>Leave this <strong>Reach For The Stars tab open</strong> - do not close Chrome overnight.</li>
         {playsPerNight === 2 && (
           <>
             <li>
@@ -53,7 +53,7 @@ export default function PlayOptionsAndroidTips({
             <li>
               If you reopen Play Options in the morning and the second audio never played, look for{" "}
               <strong>Second audio ready to finish</strong> and tap <strong>Start second audio now</strong>
-              — we save that unfinished night so a killed Chrome tab does not lose it.
+              - we save that unfinished night so a killed Chrome tab does not lose it.
             </li>
             <li>
               Turn off <strong>battery saver</strong> for Chrome, or keep your phone plugged in while
@@ -67,7 +67,7 @@ export default function PlayOptionsAndroidTips({
           </>
         )}
         <li>
-          If you only hear intro music and not the goal audio, unlock and tap <strong>Play</strong> —
+          If you only hear intro music and not the goal audio, unlock and tap <strong>Play</strong> -
           the goal track should continue.
         </li>
       </ul>

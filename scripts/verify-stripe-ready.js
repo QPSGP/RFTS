@@ -44,7 +44,7 @@ function checkPriceId(id, planId) {
     return { ok: false, msg: `${planId}: empty price_id` };
   }
   if (id.startsWith("prod_")) {
-    return { ok: false, msg: `${planId}: ${id} is a Product ID — use Price ID (price_…)` };
+    return { ok: false, msg: `${planId}: ${id} is a Product ID - use Price ID (price_…)` };
   }
   if (!id.startsWith("price_")) {
     return { ok: false, msg: `${planId}: ${id} does not look like price_…` };
@@ -56,25 +56,25 @@ async function main() {
   console.log("Stripe go-live verification\n");
 
   const key = checkKey();
-  console.log("STRIPE_SECRET_KEY:", key.ok ? `OK (${key.msg})` : `FAIL — ${key.msg}`);
+  console.log("STRIPE_SECRET_KEY:", key.ok ? `OK (${key.msg})` : `FAIL - ${key.msg}`);
 
   const wh = checkWebhook();
-  console.log("STRIPE_WEBHOOK_SECRET:", wh.ok ? "OK" : `WARN — ${wh.msg}`);
+  console.log("STRIPE_WEBHOOK_SECRET:", wh.ok ? "OK" : `WARN - ${wh.msg}`);
 
   const skip = checkDemoSkip();
-  console.log("DEMO_SKIP_STRIPE:", skip.ok ? "OK (off)" : `FAIL — ${skip.msg}`);
+  console.log("DEMO_SKIP_STRIPE:", skip.ok ? "OK (off)" : `FAIL - ${skip.msg}`);
 
   if (key.ok) {
     const pub = checkPublicMode(key.live);
     console.log(
       "NEXT_PUBLIC_STRIPE_MODE:",
-      pub.ok ? `OK (${pub.msg})` : `FAIL — ${pub.msg}`
+      pub.ok ? `OK (${pub.msg})` : `FAIL - ${pub.msg}`
     );
   }
 
   const url = process.env.POSTGRES_URL;
   if (!url) {
-    console.log("\nPOSTGRES_URL: missing — cannot check plan price IDs");
+    console.log("\nPOSTGRES_URL: missing - cannot check plan price IDs");
     process.exit(key.ok && skip.ok ? 0 : 1);
   }
 
@@ -89,14 +89,14 @@ async function main() {
   for (const planId of SIGNUP_PLANS) {
     const row = rows.find((r) => r.id === planId);
     if (!row) {
-      console.log(`  ${planId}: FAIL — row missing in subscription_plans`);
+      console.log(`  ${planId}: FAIL - row missing in subscription_plans`);
       plansOk = false;
       continue;
     }
     const pid = checkPriceId(row.price_id, planId);
     console.log(
       `  ${planId} (${row.name}):`,
-      pid.ok ? `OK ${pid.msg}, trial ${row.trial_days}d` : `FAIL — ${pid.msg}`
+      pid.ok ? `OK ${pid.msg}, trial ${row.trial_days}d` : `FAIL - ${pid.msg}`
     );
     if (!pid.ok) plansOk = false;
   }
@@ -106,7 +106,7 @@ async function main() {
     console.log("\nOther plan rows (not used for current signup):");
     for (const row of legacy) {
       const pid = checkPriceId(row.price_id, row.id);
-      console.log(`  ${row.id}:`, pid.ok ? pid.msg : `WARN — ${pid.msg}`);
+      console.log(`  ${row.id}:`, pid.ok ? pid.msg : `WARN - ${pid.msg}`);
     }
   }
 

@@ -31,7 +31,7 @@ When the user asks for **Resend** info, **Resend setup**, or **email env / BCC /
 
 After any code corrections or feature changes:
 
-1. **Run tests before pushing** — from `rfts-platform`, run `npm test` and fix failures. Do not push if tests fail.
+1. **Run tests before pushing** - from `rfts-platform`, run `npm test` and fix failures. Do not push if tests fail.
 2. For non-trivial UI or build-sensitive changes, also run `npm run build` and fix compile/type errors before push.
 3. **Then** stage, commit with a clear message, and `git push origin main`. Do not wait for the user to ask to push, but **do not skip the test run** to save time.
 

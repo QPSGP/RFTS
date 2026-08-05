@@ -1,7 +1,7 @@
 import Script from "next/script";
 import { GA_MEASUREMENT_ID, isGoogleAnalyticsEnabled } from "@/lib/google-analytics";
 
-/** Injects Google Analytics 4 (gtag.js). Async / afterInteractive — does not block rendering. */
+/** Injects Google Analytics 4 (gtag.js). Async / afterInteractive - does not block rendering. */
 export default function GoogleAnalytics() {
   if (!isGoogleAnalyticsEnabled()) return null;
 

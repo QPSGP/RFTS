@@ -43,7 +43,7 @@ async function main() {
     if (!rule) continue;
     const template = byPurpose(rule.purpose);
     if (!template) {
-      console.warn(`No template for ${rule.purpose} — skip ${target.organization}`);
+      console.warn(`No template for ${rule.purpose} - skip ${target.organization}`);
       continue;
     }
     const contacts = await listOutreachContacts(target.id);

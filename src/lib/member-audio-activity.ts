@@ -35,7 +35,7 @@ function postActivity(
 }
 
 /**
- * General member activity POST (e.g. playback completed / stopped). No dedupe — each outcome is a row.
+ * General member activity POST (e.g. playback completed / stopped). No dedupe - each outcome is a row.
  */
 export function logMemberActivity(action: string, details: string): void {
   if (typeof window === "undefined") return;

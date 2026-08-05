@@ -16,7 +16,7 @@ export function BenefitLearnHowLink({ label, path }: { label: string; path: stri
         color: "inherit",
         transition: "border-color 0.15s ease, box-shadow 0.15s ease"
       }}
-      aria-label={`${label} — Learn How`}
+      aria-label={`${label} - Learn How`}
     >
       {label} <span className="learn-how-link">Learn How</span>
     </a>

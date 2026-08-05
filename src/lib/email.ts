@@ -20,7 +20,7 @@ export type SendEmailOptions = {
   skipStaffBcc?: boolean;
 };
 
-/** Optional member context — smoke-test signups do not CC Terry/staff. */
+/** Optional member context - smoke-test signups do not CC Terry/staff. */
 export type WelcomeEmailCcContext = {
   memberEmail?: string;
   firstName?: string | null;

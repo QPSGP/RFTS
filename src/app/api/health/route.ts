@@ -28,7 +28,7 @@ export async function GET() {
       stripeMode: process.env.STRIPE_MODE?.trim() || null,
       publicStripeMode: process.env.NEXT_PUBLIC_STRIPE_MODE?.trim() || null,
       demoSkipStripe: process.env.DEMO_SKIP_STRIPE === "true",
-      /** Names only — shows which STRIPE* keys the server actually received from Vercel */
+      /** Names only - shows which STRIPE* keys the server actually received from Vercel */
       envKeysPresent: stripeEnvKeys,
       postgresConfigured: !!process.env.POSTGRES_URL?.trim()
     }

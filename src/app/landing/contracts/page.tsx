@@ -5,7 +5,7 @@ import SiteFooter from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title: "Your Contract With the Universe Is Fiction | Reach For The Stars",
   description:
-    "Universe contracts and manifestation agreements sound powerful — and chances are they are fictional. Build real change with nightly goal-based sessions instead."
+    "Universe contracts and manifestation agreements sound powerful - and chances are they are fictional. Build real change with nightly goal-based sessions instead."
 };
 
 const SIGNUP_HREF = "/signup/step-1-subscription-selection";
@@ -18,7 +18,7 @@ export default function ContractsLandingPage() {
         <h1>If your “contract with the universe” were real, it would already be working.</h1>
         <p>
           Manifestation contracts, cosmic agreements, and signed wish lists feel
-          meaningful — and chances are they are fictional. Paper does not bind
+          meaningful - and chances are they are fictional. Paper does not bind
           reality. Practice does.
         </p>
         <div className="cta-row hero-cta" style={{ marginTop: 20 }}>
@@ -46,7 +46,7 @@ export default function ContractsLandingPage() {
             <ul className="list">
               <li>
                 <span>•</span>
-                <span>Sound legal, spiritual, or official — with no second party that can perform.</span>
+                <span>Sound legal, spiritual, or official - with no second party that can perform.</span>
               </li>
               <li>
                 <span>•</span>
@@ -63,7 +63,7 @@ export default function ContractsLandingPage() {
             <ul className="list">
               <li>
                 <span>•</span>
-                <span>Clear goals, ordered by priority — not vague cosmic clauses.</span>
+                <span>Clear goals, ordered by priority - not vague cosmic clauses.</span>
               </li>
               <li>
                 <span>•</span>
@@ -93,13 +93,13 @@ export default function ContractsLandingPage() {
             <h3>1. Name the goals</h3>
             <p>
               Health, wealth, relationships, memory, inspiration, spirituality,
-              balance — prioritize what you actually want.
+              balance - prioritize what you actually want.
             </p>
           </div>
           <div className="card">
             <h3>2. Start your session</h3>
             <p>
-              Press Start Session. Prep audio, then your first goal recording —
+              Press Start Session. Prep audio, then your first goal recording -
               built for the window as you drift off.
             </p>
           </div>
@@ -113,7 +113,7 @@ export default function ContractsLandingPage() {
         </div>
         <div className="cta-row" style={{ marginTop: 24, justifyContent: "center" }}>
           <a className="button" href={SIGNUP_HREF}>
-            Start Your Journey — 14 Day Free Trial
+            Start Your Journey - 14 Day Free Trial
           </a>
           <a className="button button-secondary" href="/science">
             Read the science
@@ -128,7 +128,7 @@ export default function ContractsLandingPage() {
           </h2>
           <p className="section-subtitle" style={{ margin: "0 auto 20px", maxWidth: 560 }}>
             Your subconscious needs clear goals and repeated guidance. That is
-            what Reach For The Stars is built to deliver — every night you listen.
+            what Reach For The Stars is built to deliver - every night you listen.
           </p>
           <a className="button" href={SIGNUP_HREF}>
             Begin membership

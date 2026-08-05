@@ -37,7 +37,7 @@ type ScreenWakeToggleProps = {
 export default function ScreenWakeToggle({
   title = "Keep Screen Awake",
   description =
-    "When you start a session, we try to turn on screen wake automatically in Chrome, Safari, and Edge on phones and tablets. If it does not turn on, tap Enable Screen Wake while this page is visible. Your choice is saved to your account and remembered on this device. Screen wake helps the app stay active but may not stop sleep while your phone is locked—unlock and tap Play if the second recording is late. Firefox and some browsers may not support screen wake."
+    "When you start a session, we try to turn on screen wake automatically in Chrome, Safari, and Edge on phones and tablets. If it does not turn on, tap Enable Screen Wake while this page is visible. Your choice is saved to your account and remembered on this device. Screen wake helps the app stay active but may not stop sleep while your phone is locked-unlock and tap Play if the second recording is late. Firefox and some browsers may not support screen wake."
 }: ScreenWakeToggleProps) {
   const [wakeLockSupported, setWakeLockSupported] = useState(true);
   const [wakeLockActive, setWakeLockActive] = useState(false);

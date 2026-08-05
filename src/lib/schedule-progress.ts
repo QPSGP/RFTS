@@ -13,7 +13,7 @@ export const SCHEDULE_PROGRESS_MODEL_MAIN_AUDIOS = 1;
 
 /**
  * Main goal audios finished (stored in `completed_schedule_nights` when model = 1).
- * Same count whether the member uses 1 or 2 audios per night — switching mode does not change position.
+ * Same count whether the member uses 1 or 2 audios per night - switching mode does not change position.
  */
 export function completedMainAudiosPlayed(storedCompleted: number): number {
   return Math.max(0, Math.floor(storedCompleted));
@@ -30,7 +30,7 @@ export function legacyStoredProgressToMainAudios(
   return Math.min(SCHEDULE_MAX_MAIN_AUDIOS, n * 2);
 }
 
-/** @deprecated Use completedMainAudiosPlayed — kept for callers passing playsPerNight (ignored). */
+/** @deprecated Use completedMainAudiosPlayed - kept for callers passing playsPerNight (ignored). */
 export function completedNightsToMainPlaysDone(
   completedScheduleNights: number,
   _playsPerNight?: PlaysPerNightSetting

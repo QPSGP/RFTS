@@ -78,7 +78,7 @@ DEMO_SKIP_STRIPE=true   # when true: all signups skip Stripe and go straight to 
 
 ## Go-live: link old-system Stripe customers (no double charge)
 
-**Step-by-step (non-expert):** `docs/STRIPE_STEP_BY_STEP.md` — Parts B–G cover webhooks, Vercel, and linking each member.
+**Step-by-step (non-expert):** `docs/STRIPE_STEP_BY_STEP.md` - Parts B–G cover webhooks, Vercel, and linking each member.
 
 Use this when members already pay in **Stripe** on the legacy site and you are moving them to this platform **without** a second subscription or lost cards.
 
@@ -94,7 +94,7 @@ Use this when members already pay in **Stripe** on the legacy site and you are m
 
 1. **Live Stripe keys** on Vercel: `STRIPE_SECRET_KEY=sk_live_…` (not test).
 2. **Webhook** on production: `https://reachforthestars.today/api/webhooks/stripe`, event `checkout.session.completed`, `STRIPE_WEBHOOK_SECRET` set.
-3. **Billing Portal** enabled: [Stripe Dashboard → Settings → Billing → Customer portal](https://dashboard.stripe.com/settings/billing/portal) — Save. Members use this to update card, cancel, view invoices.
+3. **Billing Portal** enabled: [Stripe Dashboard → Settings → Billing → Customer portal](https://dashboard.stripe.com/settings/billing/portal) - Save. Members use this to update card, cancel, view invoices.
 4. **Price IDs** in Admin → Content → Subscription Plans match your **live** Stripe prices (`price_…` for Gold and Platinum Managed).
 5. Turn off **`DEMO_SKIP_STRIPE`** in production (unset or `false`).
 
@@ -107,11 +107,11 @@ For each paying member from the old system:
 | 1 | In **Stripe Dashboard → Customers**, find the customer by **email** (same email they will use on the new site). |
 | 2 | Open the customer → copy **Customer ID** (`cus_…`). |
 | 3 | Under **Subscriptions**, copy the active **Subscription ID** (`sub_…`). Confirm status is `active` or `trialing`. |
-| 4 | In the **new platform**, create or confirm their **user account** with that **same email** (admin create, or they sign up through step 1–2 only — see below). |
+| 4 | In the **new platform**, create or confirm their **user account** with that **same email** (admin create, or they sign up through step 1–2 only - see below). |
 | 5 | Set **tier** and **status** in Admin → Members (Gold = `platinum`, Managed = `platinum_managed`, status **active**). |
 | 6 | **Link Stripe IDs** in the database (see SQL below). |
 | 7 | **Do not** send them through Stripe Checkout again. They should use **Manage billing** (profile / portal) only. |
-| 8 | Have them log in at `/member/login` and open Play Options — they should see an **active** membership. |
+| 8 | Have them log in at `/member/login` and open Play Options - they should see an **active** membership. |
 
 **Do not** run Checkout for migrated members. That could create a **second** subscription unless IDs are already linked (the app returns 409 / opens portal when IDs exist).
 
@@ -156,16 +156,16 @@ WHERE lower(u.email) = lower('member@example.com');
 
 ### Signup path for migrated members (avoid duplicate account + duplicate sub)
 
-**Option A — Admin-led (safest for bulk migration)**  
+**Option A - Admin-led (safest for bulk migration)**  
 Admin creates the member, sets tier/status active, links Stripe IDs via SQL. Member uses **Forgot password** to set a password and logs in.
 
-**Option B — Member signs up on new site**  
+**Option B - Member signs up on new site**  
 If they complete **full signup including Stripe Checkout** before IDs are linked, they may get a **second** subscription. Prefer Option A, or link Stripe IDs **before** they pay, or have them stop at personal details and contact support.
 
 ### After migration checklist
 
 - [ ] Member logs in; Play Options loads (not “Subscription required”).
-- [ ] **Manage billing** opens Stripe portal (once profile billing UI is live — see below).
+- [ ] **Manage billing** opens Stripe portal (once profile billing UI is live - see below).
 - [ ] No second `sub_…` for the same email in Stripe Dashboard.
 - [ ] Webhook + welcome / subscription-active emails work for **new** checkouts only.
 
@@ -185,7 +185,7 @@ If they complete **full signup including Stripe Checkout** before IDs are linked
 ### Optional next
 
 1. **Admin → Members**  
-   - Paste `stripe_customer_id` and `stripe_subscription_id` in section **3. Membership** (implemented — no raw SQL required for routine migration).
+   - Paste `stripe_customer_id` and `stripe_subscription_id` in section **3. Membership** (implemented - no raw SQL required for routine migration).
 
 2. **Onboarding copy**  
    - Step 3 can mention profile billing for card updates after signup.

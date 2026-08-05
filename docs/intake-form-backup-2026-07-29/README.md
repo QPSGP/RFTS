@@ -1,4 +1,4 @@
-# Intake form backup — 2026-07-29
+# Intake form backup - 2026-07-29
 
 Snapshot of the electronic LGD intake that is the **live / active** process (sections A–F).
 

@@ -48,11 +48,11 @@ export default function FacilitatorPage() {
         <span className="pill">Facilitator Program</span>
         <h1>Add more value for your Clients by using the Reach for the Stars System.</h1>
         <p>
-          Facilitators are practitioners who use Reach For The Stars with their clients—whether
+          Facilitators are practitioners who use Reach For The Stars with their clients-whether
           by referring them to the platform or by actively managing their journey. You get
           access to our audio library, the ability to add your own recordings for your clients,
           and ongoing affiliate benefits for everyone you bring in. When you manage a client,
-          you earn an additional 25% on top of your affiliate share—and if you later step
+          you earn an additional 25% on top of your affiliate share-and if you later step
           back from managing, you keep the affiliate 25% for as long as they stay.
         </p>
       </section>
@@ -71,7 +71,7 @@ export default function FacilitatorPage() {
             <p>
               If you simply refer clients to Reach For The Stars, you are an affiliate:
               you earn 25% ongoing for every referred member who stays subscribed. No
-              management required—your referral link does the work.
+              management required-your referral link does the work.
             </p>
           </div>
           <div className="card">
@@ -80,7 +80,7 @@ export default function FacilitatorPage() {
               When you manage clients on the platform, you are both facilitator and
               affiliate. You curate their experience using our library, add your own
               audios for them, and earn your affiliate 25% plus an additional 25% for
-              managing them—so you are rewarded for both bringing them in and guiding
+              managing them-so you are rewarded for both bringing them in and guiding
               their journey.
             </p>
           </div>
@@ -89,7 +89,7 @@ export default function FacilitatorPage() {
             <p>
               If you stop managing clients, you remain an affiliate for everyone you
               referred. Your ongoing 25% share continues for as long as those members
-              stay—so your initial work keeps supporting your practice and your income.
+              stay-so your initial work keeps supporting your practice and your income.
             </p>
           </div>
         </div>
@@ -104,8 +104,8 @@ export default function FacilitatorPage() {
           <div className="card">
             <h3>Our Audio Library</h3>
             <p>
-              Use the full Reach For The Stars library—goal-based sessions, sleep and
-              recovery tracks, and vetted content—as the foundation for your clients&apos;
+              Use the full Reach For The Stars library-goal-based sessions, sleep and
+              recovery tracks, and vetted content-as the foundation for your clients&apos;
               experience.
             </p>
           </div>
@@ -113,7 +113,7 @@ export default function FacilitatorPage() {
             <h3>Your Own Audios for Your Clients</h3>
             <p>
               Add personalized or custom recordings for the clients you manage. Your
-              voice, your methods, integrated into their journey alongside our library—so
+              voice, your methods, integrated into their journey alongside our library-so
               they get one cohesive, professional experience.
             </p>
           </div>
@@ -126,7 +126,7 @@ export default function FacilitatorPage() {
           <div className="stack">
             <p>Extend your reach with a platform built for transformation and growth.</p>
             <p>Earn 25% ongoing on every member you refer; add an extra 25% when you manage them.</p>
-            <p>Keep earning even if you stop managing—your affiliate 25% stays for those you brought in.</p>
+            <p>Keep earning even if you stop managing-your affiliate 25% stays for those you brought in.</p>
             <p>Strengthen client outcomes with our library plus your own content.</p>
           </div>
         </div>
@@ -134,7 +134,7 @@ export default function FacilitatorPage() {
           <h3>Who It&apos;s For</h3>
           <p>
             Coaches, hypnotherapists, wellness practitioners, and therapists who want to
-            offer guided audio as part of their practice—with a simple referral path, full
+            offer guided audio as part of their practice-with a simple referral path, full
             management options, and lasting affiliate rewards.
           </p>
         </div>
@@ -155,7 +155,7 @@ export default function FacilitatorPage() {
         <h2>Apply to Become a Facilitator</h2>
         <p style={{ color: "#475569" }}>
           Tell us about your practice and how you plan to use Reach For The Stars with
-          your clients—whether you intend to refer, manage, or both. Applications are
+          your clients-whether you intend to refer, manage, or both. Applications are
           reviewed by our team; approved facilitators get access to the platform and
           affiliate terms. If you plan to upload your own recordings, review our{" "}
           <a href="/creator-content-license">Creator Content License Agreement</a>.

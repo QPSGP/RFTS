@@ -1,0 +1,23 @@
+---
+description: Never use em dashes; use regular ASCII hyphens instead.
+alwaysApply: true
+---
+
+# No em dashes
+
+Do not use the em dash character (U+2014) in code, UI copy, docs, emails, comments, commit messages, or chat replies.
+
+Use a regular hyphen-minus (`-`) instead.
+
+```text
+Bad:  Start Your Journey [em dash] 14 Day Free Trial
+Good: Start Your Journey - 14 Day Free Trial
+
+Bad:  Hard days need recovery [em dash] not another chore
+Good: Hard days need recovery - not another chore
+
+Bad:  return "[em dash]"
+Good: return "-"
+```
+
+Prefer ASCII hyphens for ranges and labels too when writing new copy (`1-5`, `A-Z`, `SKU - Title`). Do not introduce en dashes (U+2013) as a substitute for em dashes.

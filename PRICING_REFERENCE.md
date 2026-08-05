@@ -4,7 +4,7 @@ Research on comparable membership services, how RFTS compares, and recommended p
 
 ---
 
-## 1. Comparable Services — Monthly Pricing
+## 1. Comparable Services - Monthly Pricing
 
 | Service | Monthly | Annual (effective/month) | Notes |
 |--------|---------|---------------------------|--------|
@@ -51,7 +51,7 @@ RFTS sits **between** generic apps (Headspace/Calm) and high-touch personal deve
 
 ## 4. Affiliate Recommendations
 
-- **Current rate:** **25% ongoing** — affiliates earn 25% of subscription revenue for as long as the referred member stays subscribed.
+- **Current rate:** **25% ongoing** - affiliates earn 25% of subscription revenue for as long as the referred member stays subscribed.
 - **Benchmarks:** Insight Timer ~50% of first year; others 25–45% one-time or 10–30% recurring.
 - **Operational:** Monthly payout; minimum threshold **$25 through launch period** (default through June 18, 2027), then **$50**; cookie 30–60 days. Set `NEXT_PUBLIC_AFFILIATE_PAYOUT_LAUNCH_END` to adjust launch end date.
 
@@ -60,12 +60,12 @@ RFTS sits **between** generic apps (Headspace/Calm) and high-touch personal deve
 ## 5. Facilitator Recommendations
 
 - **Benchmarks:** Coach/facilitator revenue share on platforms often **20–30%**; some niches 15–25%.
-- **Current structure:** Facilitators who refer are affiliates (25% ongoing). When they **manage** a client, they earn an **additional 25%** on top of that—so 25% affiliate + 25% management = **50% total** for managed clients. If they stop managing, they keep the 25% affiliate share for those they brought in.
+- **Current structure:** Facilitators who refer are affiliates (25% ongoing). When they **manage** a client, they earn an **additional 25%** on top of that-so 25% affiliate + 25% management = **50% total** for managed clients. If they stop managing, they keep the 25% affiliate share for those they brought in.
 - **Operational:** Monthly payout; clear rules for “facilitator-attributed and managed” members (link, tag, or CGMR assignment).
 
 ---
 
-## 6. Summary — Quick Reference
+## 6. Summary - Quick Reference
 
 | Element | Recommendation |
 |--------|-----------------|
@@ -80,7 +80,7 @@ RFTS sits **between** generic apps (Headspace/Calm) and high-touch personal deve
 ## 7. Where This Lives in the Codebase
 
 - **Subscription plans / Stripe:** Admin → Subscriptions; create prices in Stripe (e.g. $19.99/month, $149/year) and set `priceId` on plans.
-- **Defaults:** `src/lib/content-seed.ts` — `defaultSubscriptionPlans` (e.g. `trialDays`, plan `id`); actual amounts are in Stripe.
+- **Defaults:** `src/lib/content-seed.ts` - `defaultSubscriptionPlans` (e.g. `trialDays`, plan `id`); actual amounts are in Stripe.
 - **Affiliate / facilitator payouts:** Implement or adjust in admin and payout logic (percentages and attribution rules).
 
 ---

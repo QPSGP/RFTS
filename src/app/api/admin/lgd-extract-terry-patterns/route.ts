@@ -91,7 +91,7 @@ export async function POST(request: Request) {
       AND audio_url IS NOT NULL
       AND audio_url <> ''
       AND title NOT ILIKE 'Demo%'
-      AND title NOT ILIKE 'CGMR —%'
+      AND title NOT ILIKE 'CGMR -%'
     ORDER BY
       CASE
         WHEN title ILIKE '%WEATHERMAN%' THEN 0

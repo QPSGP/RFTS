@@ -4,7 +4,7 @@
  *
  *   npm run test:signup-emails
  *   SIGNUP_EMAIL_TEST_TO=other@example.com npm run test:signup-emails
- *   SIGNUP_EMAIL_TEST_ALL=1  — also send LGD + therapist/healer/coach follow-ups
+ *   SIGNUP_EMAIL_TEST_ALL=1  - also send LGD + therapist/healer/coach follow-ups
  */
 import path from "path";
 import { config } from "dotenv";
@@ -53,7 +53,7 @@ async function main() {
     text: welcome.text,
     skipStaffBcc: true
   });
-  console.log("Welcome:", welcomeResult.ok ? "OK" : `FAIL — ${welcomeResult.error}`);
+  console.log("Welcome:", welcomeResult.ok ? "OK" : `FAIL - ${welcomeResult.error}`);
   if (!welcomeResult.ok) anyFailed = true;
 
   if (sendAll) {
@@ -66,7 +66,7 @@ async function main() {
       text: lgd.text,
       skipStaffBcc: true
     });
-    console.log("LGD interest:", lgdResult.ok ? "OK" : `FAIL — ${lgdResult.error}`);
+    console.log("LGD interest:", lgdResult.ok ? "OK" : `FAIL - ${lgdResult.error}`);
     if (!lgdResult.ok) anyFailed = true;
 
     const thc = getTherapistHealerCoachEmailContent(firstName);
@@ -78,7 +78,7 @@ async function main() {
       text: thc.text,
       skipStaffBcc: true
     });
-    console.log("Therapist/healer/coach:", thcResult.ok ? "OK" : `FAIL — ${thcResult.error}`);
+    console.log("Therapist/healer/coach:", thcResult.ok ? "OK" : `FAIL - ${thcResult.error}`);
     if (!thcResult.ok) anyFailed = true;
   }
 

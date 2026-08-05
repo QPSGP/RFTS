@@ -1,6 +1,6 @@
-# Quarantined intake — Success Center PDF alignment (do not use)
+# Quarantined intake - Success Center PDF alignment (do not use)
 
-**Status: CONTAINED — not wired into the live app.**
+**Status: CONTAINED - not wired into the live app.**
 
 ## Why
 
@@ -24,4 +24,4 @@ The active intake remains the pre-PDF RFTS electronic LGD form (sections A–F) 
 | `LgdIntakeClientInfoFields.tsx` | Personal & clinical fields UI |
 | `LGD_ELECTRONIC_INTAKE.md` | Design notes for the PDF-aligned flow |
 
-Paper source (still in repo for record): `docs/Client_Intake_Form_fillable.pdf` — **not** for active product use under revoked consent.
+Paper source (still in repo for record): `docs/Client_Intake_Form_fillable.pdf` - **not** for active product use under revoked consent.

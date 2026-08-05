@@ -157,7 +157,7 @@ export default function AdminAdmins() {
       <h2>Administrators</h2>
       <p style={{ color: "#64748b", marginBottom: 16 }}>
         Only the <strong>first</strong> administrator (primary) can manage other admins: create accounts, set
-        names, and reset passwords. Passwords cannot be viewed—set a new one when needed.
+        names, and reset passwords. Passwords cannot be viewed-set a new one when needed.
       </p>
       <form onSubmit={create} className="grid" style={{ maxWidth: 480, marginBottom: 24 }}>
         <h3 style={{ margin: "0 0 8px", fontSize: 16 }}>Create admin</h3>

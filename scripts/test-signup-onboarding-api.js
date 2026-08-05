@@ -1,6 +1,6 @@
 /**
  * End-to-end signup email test against production (or any base URL).
- * Creates a real member account — use a disposable email and delete via admin if needed.
+ * Creates a real member account - use a disposable email and delete via admin if needed.
  *
  *   node scripts/test-signup-onboarding-api.js https://reachforthestars.today
  */
@@ -60,12 +60,12 @@ async function main() {
   console.log("response:", JSON.stringify(json, null, 2));
 
   if (res.status === 409) {
-    console.log("\nMember already exists — set SIGNUP_TEST_EMAIL to a fresh address.");
+    console.log("\nMember already exists - set SIGNUP_TEST_EMAIL to a fresh address.");
     process.exit(1);
   }
 
   if (res.status !== 200) {
-    console.log("\nOnboarding failed — emails may not have been sent.");
+    console.log("\nOnboarding failed - emails may not have been sent.");
     process.exit(1);
   }
 

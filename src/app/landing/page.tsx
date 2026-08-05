@@ -25,7 +25,7 @@ export default function LandingHubPage() {
             <h3 style={{ marginTop: 12 }}>Fictional contracts</h3>
             <p>
               Challenges “contracts with the universe” and other manifestation
-              agreements as fiction — then offers a 14-night practice test.
+              agreements as fiction - then offers a 14-night practice test.
             </p>
             <p style={{ marginBottom: 0, color: "#0f766e", fontWeight: 600 }}>
               /landing/contracts →

@@ -107,7 +107,7 @@ export async function GET(request: Request) {
   /**
    * "Special" slot (every 4th session): CGMR assigned to this member, else global playback CGMR or fallback (e.g. T-18).
    * For Platinum Managed with an assigned-audio list, do NOT treat the first library row that has their email on
-   * allowedUserEmails as special — that was stealing the slot from T-18 when they had no CGMR.
+   * allowedUserEmails as special - that was stealing the slot from T-18 when they had no CGMR.
    */
   const cgmrForMember =
     filteredLibrary.find(

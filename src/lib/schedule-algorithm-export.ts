@@ -249,7 +249,7 @@ export function buildMemberExportHtmlString(result: ScheduleAlgorithmMemberResul
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>Schedule — ${escapeHtmlForDoc(email)}</title>
+  <title>Schedule - ${escapeHtmlForDoc(email)}</title>
   <style>
     body { font-family: Calibri, Segoe UI, sans-serif; margin: 16px; }
     table { border-collapse: collapse; font-size: 12px; }

@@ -28,7 +28,7 @@ async function main() {
   }
   const cookie = setCookie.split(";")[0].trim();
 
-  const libraryLine = "Library — smoke test track (verify-member-activity-post)";
+  const libraryLine = "Library - smoke test track (verify-member-activity-post)";
   const playOptionsLine = "Play Options - First: verify play-options title (smoke)";
 
   for (const [label, details] of [

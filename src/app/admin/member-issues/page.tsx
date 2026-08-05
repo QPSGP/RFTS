@@ -347,7 +347,7 @@ export default function AdminMemberIssuesPage() {
     }
     let msg = "Saved.";
     if (data.adminFiled === true && (d.status === "resolved" || d.status === "closed")) {
-      msg += " Internal admin ticket — no member email sent.";
+      msg += " Internal admin ticket - no member email sent.";
     } else if (data.resolutionEmailSent === true) {
       msg += " Member was emailed about the report status (resolved or closed).";
     } else if (data.resolutionEmailSent === false) {
@@ -514,7 +514,7 @@ export default function AdminMemberIssuesPage() {
           <p style={{ margin: 0, color: "#6b7280" }}>
             {filter === "all"
               ? dbWarning
-                ? "Issue reports could not be loaded — see the database message above."
+                ? "Issue reports could not be loaded - see the database message above."
                 : "No reports stored yet. Members can submit from Report an issue; admins can use File an issue above."
               : "No reports match this filter."}
           </p>
@@ -537,7 +537,7 @@ export default function AdminMemberIssuesPage() {
                         {r.memberEmail}
                         {isAdminFiled(r) ? " · Admin (internal)" : " · Member"}
                       </span>
-                      <span>Category: {r.category || "—"}</span>
+                      <span>Category: {r.category || "-"}</span>
                     </div>
                     <IssueMessagePanel
                       report={r}
@@ -594,7 +594,7 @@ export default function AdminMemberIssuesPage() {
                           <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>Member</div>
                         )}
                       </td>
-                      <td style={{ padding: "10px 8px", color: "#4b5563" }}>{r.category || "—"}</td>
+                      <td style={{ padding: "10px 8px", color: "#4b5563" }}>{r.category || "-"}</td>
                       <td style={{ padding: "10px 8px" }}>
                         <strong>{r.subject}</strong>
                         <IssueMessagePanel

@@ -155,7 +155,7 @@ export default function ScheduleAlgorithmTool({
       <div style={{ display: "grid", gap: 12, maxWidth: 480, marginTop: 12 }}>
         {emailLocked ? (
           <p style={{ margin: 0, fontSize: 14 }}>
-            <strong>Member:</strong> {effectiveEmail || "—"}
+            <strong>Member:</strong> {effectiveEmail || "-"}
           </p>
         ) : (
           <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -216,7 +216,7 @@ export default function ScheduleAlgorithmTool({
       {preview && (
         <div style={{ marginTop: 20 }}>
           <p style={{ fontSize: 14, color: "#374151", marginBottom: 8 }}>
-            <strong>{preview.label}</strong> — tier: {preview.subscriptionTier ?? "—"} · {preview.playsPerNight}{" "}
+            <strong>{preview.label}</strong> - tier: {preview.subscriptionTier ?? "-"} · {preview.playsPerNight}{" "}
             main play(s) per night · {preview.maxN} nights · {preview.goalsCount} goal(s) ·{" "}
             {preview.assignedAudioCount} assigned track(s).{" "}
             <span style={{ color: "#6b7280" }}>Yellow = rotation change that night.</span>

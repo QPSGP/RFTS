@@ -414,7 +414,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
     try {
       const url = await uploadAudioFileToBlob(file);
       setUploadAudioStatus(
-        `Uploaded: ${file.name}. Title, SKU, and description were filled in Step 2 when available — review and click Add Audio.`
+        `Uploaded: ${file.name}. Title, SKU, and description were filled in Step 2 when available - review and click Add Audio.`
       );
       await fillAddFormFromUpload(file.name, url);
       if (fileInput) fileInput.value = "";
@@ -491,7 +491,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
         fileName: file.name
       });
       setEditAudioStatus(
-        `Uploaded: ${file.name}. Audio URL and file name were updated — click Save to keep changes.`
+        `Uploaded: ${file.name}. Audio URL and file name were updated - click Save to keep changes.`
       );
       if (fileInput) fileInput.value = "";
     } catch (e) {
@@ -735,7 +735,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                       </label>
                     </div>
                     <div className="admin-goal-audio-slots">
-                      <label>Audio files — play order follows A → B → C in the nightly cycle</label>
+                      <label>Audio files - play order follows A → B → C in the nightly cycle</label>
                       <div className="grid grid-3" style={{ gap: 12 }}>
                         <div>
                           <label style={{ fontSize: 12, fontWeight: 600 }}>A (1st in play cycle)</label>
@@ -744,10 +744,10 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                             onChange={(e) => setGoalAudioA(e.target.value)}
                             style={inputStyle}
                           >
-                            <option value="">— None —</option>
+                            <option value="">- None -</option>
                             {sortedLibrary.map((item) => (
                               <option key={item.id} value={item.id}>
-                                {item.skuCode || "—"} {item.title}
+                                {item.skuCode || "-"} {item.title}
                               </option>
                             ))}
                           </select>
@@ -759,10 +759,10 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                             onChange={(e) => setGoalAudioB(e.target.value)}
                             style={inputStyle}
                           >
-                            <option value="">— None —</option>
+                            <option value="">- None -</option>
                             {sortedLibrary.map((item) => (
                               <option key={item.id} value={item.id}>
-                                {item.skuCode || "—"} {item.title}
+                                {item.skuCode || "-"} {item.title}
                               </option>
                             ))}
                           </select>
@@ -774,10 +774,10 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                             onChange={(e) => setGoalAudioC(e.target.value)}
                             style={inputStyle}
                           >
-                            <option value="">— None —</option>
+                            <option value="">- None -</option>
                             {sortedLibrary.map((item) => (
                               <option key={item.id} value={item.id}>
-                                {item.skuCode || "—"} {item.title}
+                                {item.skuCode || "-"} {item.title}
                               </option>
                             ))}
                           </select>
@@ -1138,7 +1138,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
           <label style={{ fontSize: 13, fontWeight: 600 }}>Allowed member emails (optional)</label>
           <input
             name="allowedUserEmails"
-            placeholder="email@example.com, other@example.com — limits who can hear this track"
+            placeholder="email@example.com, other@example.com - limits who can hear this track"
             style={inputStyle}
           />
           <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center" }}>
@@ -1151,7 +1151,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
               Build Practice (adds Special category)
             </label>
           </div>
-          <label style={{ fontSize: 13, fontWeight: 600 }}>Attach goals (optional — Ctrl/Cmd+click for several)</label>
+          <label style={{ fontSize: 13, fontWeight: 600 }}>Attach goals (optional - Ctrl/Cmd+click for several)</label>
           <select name="interestIds" multiple style={{ ...inputStyle, minHeight: 120 }}>
             {interestOptions.map((interest) => (
               <option key={interest.value} value={interest.value}>
@@ -1292,7 +1292,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                       </>
                     ) : (
                       <p style={{ marginTop: 8, marginBottom: 0, fontSize: 12, color: "#6b7280" }}>
-                        No audio URL yet — upload a file or paste a URL below, then click <strong>Save</strong>.
+                        No audio URL yet - upload a file or paste a URL below, then click <strong>Save</strong>.
                       </p>
                     )}
                   </div>
@@ -1414,7 +1414,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                   />
                   {editDraft.moderatorId ? (
                     <p style={{ fontSize: 12, color: "#78350f", margin: "0 0 8px" }}>
-                      Facilitator-uploaded track — private to allowed members until included in the general library.
+                      Facilitator-uploaded track - private to allowed members until included in the general library.
                     </p>
                   ) : null}
                   <label style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
@@ -1530,7 +1530,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                   {item.audioUrl ? (
                     <div style={{ marginTop: 12, marginBottom: 12 }}>
                       <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 600, color: "#374151" }}>
-                        Play preview (admin — same stream as members)
+                        Play preview (admin - same stream as members)
                       </p>
                       <AdminAudioPreview
                         src={`/api/stream/audio?id=${encodeURIComponent(item.id)}`}
@@ -1540,7 +1540,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
                     </div>
                   ) : (
                     <p style={{ marginTop: 10, marginBottom: 0, fontSize: 14, color: "#6b7280" }}>
-                      No audio URL yet — complete Step 1 or edit this item to add audio, then preview here.
+                      No audio URL yet - complete Step 1 or edit this item to add audio, then preview here.
                     </p>
                   )}
                   <p>{item.description || "Description pending."}</p>

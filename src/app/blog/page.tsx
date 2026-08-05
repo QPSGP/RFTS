@@ -5,7 +5,7 @@ import { getBlogPostsNewestFirst } from "@/lib/blog-posts";
 import { getTopicLandingPage } from "@/lib/topic-landing-pages";
 
 export const metadata: Metadata = {
-  title: "Wellness Blog — Sleep, Stress, Pain & Memory | Reach For The Stars",
+  title: "Wellness Blog - Sleep, Stress, Pain & Memory | Reach For The Stars",
   description:
     "Articles and guided-audio transcript excerpts on sleep meditation, stress relief, pain comfort, memory, and burnout recovery.",
   openGraph: {
@@ -35,7 +35,7 @@ export default function BlogPage() {
         <span className="pill">Blog</span>
         <h1>Wellness articles &amp; session excerpts</h1>
         <p>
-          Practical guides on sleep, stress relief, pain comfort, memory, and burnout — with
+          Practical guides on sleep, stress relief, pain comfort, memory, and burnout - with
           transcript excerpts from guided audios. Each article links to our wellness topic pages
           when relevant.
         </p>

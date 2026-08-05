@@ -1,6 +1,6 @@
-# Stripe go-live — connect production billing
+# Stripe go-live - connect production billing
 
-**New to Stripe?** Start with **`docs/STRIPE_STEP_BY_STEP.md`** — full click-by-click instructions.
+**New to Stripe?** Start with **`docs/STRIPE_STEP_BY_STEP.md`** - full click-by-click instructions.
 
 Complete these steps in order. The app code is ready; you configure Stripe and Vercel.
 
@@ -42,7 +42,7 @@ Copy each **Price ID** (`price_…`) from Stripe → Products.
 
 ---
 
-## 2. RFTS Admin — Price IDs
+## 2. RFTS Admin - Price IDs
 
 1. Log in → **Admin** → **Content** → **Subscription Plans**
 2. For **Gold** (`platinum` row): paste live **Gold** Price ID (`price_…` for $19.95/mo)
@@ -59,7 +59,7 @@ Each signup plan must use `price_…` (not `prod_…`).
 
 ---
 
-## 3. Vercel — environment variables (Production)
+## 3. Vercel - environment variables (Production)
 
 **Settings → Environment Variables → Production**
 
@@ -69,7 +69,7 @@ Each signup plan must use `price_…` (not `prod_…`).
 | `STRIPE_WEBHOOK_SECRET` | `whsec_…` from step 1 |
 | `NEXT_PUBLIC_STRIPE_MODE` | `live` |
 | `STRIPE_MODE` | `live` (optional; auto-detected from key) |
-| **Remove or set false** | `DEMO_SKIP_STRIPE` — must **not** be `true` in production |
+| **Remove or set false** | `DEMO_SKIP_STRIPE` - must **not** be `true` in production |
 
 Keep existing: `POSTGRES_URL`, `SESSION_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_APP_URL`, `BLOB_READ_WRITE_TOKEN`.
 
@@ -91,8 +91,8 @@ Keep existing: `POSTGRES_URL`, `SESSION_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`,
 
 For members who already pay in Stripe on the old system:
 
-1. Link `cus_…` and `sub_…` in Admin → Members (section 3) or SQL — see `STRIPE_SETUP.md`
-2. They log in → **Manage billing** opens portal — **not** Checkout again
+1. Link `cus_…` and `sub_…` in Admin → Members (section 3) or SQL - see `STRIPE_SETUP.md`
+2. They log in → **Manage billing** opens portal - **not** Checkout again
 
 ---
 
@@ -100,8 +100,8 @@ For members who already pay in Stripe on the old system:
 
 | Symptom | Fix |
 |---------|-----|
-| Signup skips payment, goes straight to console | `DEMO_SKIP_STRIPE=true` on Vercel — remove it |
-| Checkout error “No such price” | Wrong Price ID or test price used with live key — fix Admin plans |
+| Signup skips payment, goes straight to console | `DEMO_SKIP_STRIPE=true` on Vercel - remove it |
+| Checkout error “No such price” | Wrong Price ID or test price used with live key - fix Admin plans |
 | Paid but still “Subscription Required” | Webhook missing or wrong `STRIPE_WEBHOOK_SECRET` |
 | Second subscription created | Link existing `cus_`/`sub_` before member uses Checkout |
 

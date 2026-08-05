@@ -67,7 +67,7 @@ export default async function AudioTrackLandingPage({ content }: { content: Audi
       {showSignupCta && (
         <LandingTrialCtaBand
           signupHref={content.signupHref}
-          body="Set your goals tonight and hear guided audios like this in your nightly rotation — try Reach For The Stars free for 14 days."
+          body="Set your goals tonight and hear guided audios like this in your nightly rotation - try Reach For The Stars free for 14 days."
         />
       )}
 

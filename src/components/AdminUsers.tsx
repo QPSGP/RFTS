@@ -264,7 +264,7 @@ function playedAudioLocation(details: string): "library" | "play_options" | null
 /**
  * Text after "Library …" or "Play Options …" (strips keyword + first dash run).
  * Uses slice-after-prefix (not a single rigid "^Play Options ") so NBSP / multiple spaces
- * between words still match — session logs use `Play Options — First: …` from SessionPlayer.
+ * between words still match - session logs use `Play Options - First: …` from SessionPlayer.
  * Play Options is checked before Library so odd titles cannot confuse the parser.
  */
 function playedAudioAfterLocationPrefix(details: string): { where: "library" | "play_options"; rest: string } | null {
@@ -432,18 +432,18 @@ function activityDetailFallback(action: string): string | null {
 
 function formatActivityDetails(action: string, details: string | null): string {
   if (action === "played_audio" && (!details || !details.trim())) {
-    return "— (nothing was stored — plays log only when a member is signed in at /member/login)";
+    return "- (nothing was stored - plays log only when a member is signed in at /member/login)";
   }
   if (!details?.trim()) {
-    return activityDetailFallback(action) ?? "—";
+    return activityDetailFallback(action) ?? "-";
   }
   if (action === "audio_playback_outcome") {
     const o = outcomeTextFromActivityDetails(details);
-    return o || "—";
+    return o || "-";
   }
   if (action === "played_audio") {
     const ctx = formatPlayedAudioContext(action, details);
-    return ctx || "—";
+    return ctx || "-";
   }
   if (action === "login" && details.startsWith("to:")) {
     return `First destination: ${details.slice(3)}`;
@@ -468,7 +468,7 @@ function formatActivityTime(iso: string): string {
   }
 }
 
-/** 1 or 2 — how many main rotation recordings count as one finished “schedule night”. */
+/** 1 or 2 - how many main rotation recordings count as one finished “schedule night”. */
 function memberPlaysPerNight(user: { playsPerNight?: number }): 1 | 2 {
   return user.playsPerNight === 1 ? 1 : 2;
 }
@@ -509,10 +509,10 @@ export default function AdminUsers() {
   const audioAssignments = memberAudio.assignments;
   /** Platinum Managed: pending library item id for “Add at end of rotation” dropdown (per member email). */
   const [managedRotationPicker, setManagedRotationPicker] = useState<Record<string, string>>({});
-  /** While true, rotation edits must not run — async hydrate would overwrite them (race with saved order). */
+  /** While true, rotation edits must not run - async hydrate would overwrite them (race with saved order). */
   const [memberAudioHydrating, setMemberAudioHydrating] = useState<Record<string, boolean>>({});
   const memberAudioHydratingRef = useRef<Record<string, boolean>>({});
-  /** Avoid re-fetching server order when toggling profile — preserves unsaved rotation edits. */
+  /** Avoid re-fetching server order when toggling profile - preserves unsaved rotation edits. */
   const memberAudioServerLoadedRef = useRef<Record<string, boolean>>({});
   /** Scroll newly appended rotation rows into view (one list per member email). */
   const managedRotationOlRefs = useRef<Record<string, HTMLOListElement | null>>({});
@@ -1250,7 +1250,7 @@ export default function AdminUsers() {
     startMemberAudioHydration(email);
     const hydrateTimeout = window.setTimeout(() => {
       finishMemberAudioHydration(email);
-      setStatus("Rotation load timed out — you can still edit rotation below.");
+      setStatus("Rotation load timed out - you can still edit rotation below.");
     }, 12000);
     try {
       const assignments = buildAudioAssignment(email);
@@ -1314,7 +1314,7 @@ export default function AdminUsers() {
   const clearManagedAudioForItem = (email: string, itemId: string) => {
     const key = memberAudioEmailKey(email);
     if (memberAudioHydratingRef.current[key]) {
-      setStatus("Still loading saved rotation for this member — try again in a second.");
+      setStatus("Still loading saved rotation for this member - try again in a second.");
       return;
     }
     setMemberAudio((prev) => {
@@ -1332,7 +1332,7 @@ export default function AdminUsers() {
     tier: UserRow["subscriptionTier"]
   ) => {
     if (tier === "platinum_managed") {
-      /** Managed library uses its own checkbox handler — rotation is edited only in the rotation card. */
+      /** Managed library uses its own checkbox handler - rotation is edited only in the rotation card. */
       return;
     }
 
@@ -1360,7 +1360,7 @@ export default function AdminUsers() {
   const incrementManagedAudioSlot = (email: string, itemId: string): boolean => {
     const key = memberAudioEmailKey(email);
     if (memberAudioHydratingRef.current[key]) {
-      setStatus("Still loading saved rotation for this member — try again in a second.");
+      setStatus("Still loading saved rotation for this member - try again in a second.");
       return false;
     }
     let computed!: { next: MemberAudioSnapshot; outcome: "added" | "per_audio" };
@@ -1565,7 +1565,7 @@ export default function AdminUsers() {
     } else if (savedRotationOrder) {
       saveMsg =
         tierForSave === "platinum_managed"
-          ? `Saved ${stepsPhrase} to the server. The checklist did not need updates — those recordings already included this member for library access (that is separate from rotation).`
+          ? `Saved ${stepsPhrase} to the server. The checklist did not need updates - those recordings already included this member for library access (that is separate from rotation).`
           : `Saved ${stepsPhrase} to the server (library access unchanged).`;
     } else {
       saveMsg = "Saved.";
@@ -1974,7 +1974,7 @@ export default function AdminUsers() {
               <h3 style={{ marginTop: 0 }}>Create member</h3>
               <p style={{ color: "#4b5563", marginTop: 0, lineHeight: 1.5 }}>
                 Create member accounts, assign tiers, and activate subscriptions. Passwords are stored
-                as a secure hash — enter a new password here or in the member profile to reset login.
+                as a secure hash - enter a new password here or in the member profile to reset login.
               </p>
               <div id="admin-add-new-member-panel" className="grid">
                 <input
@@ -2050,7 +2050,7 @@ export default function AdminUsers() {
                       ? rawActivity
                       : rawActivity.filter((row) => classifyMemberActivityRow(row) === actFilter);
                   const displayedActivity = filteredActivity.slice(0, actPageSize);
-                  /** Pending tier in membership dropdown (saved on Save) — drives managed rotation UI. */
+                  /** Pending tier in membership dropdown (saved on Save) - drives managed rotation UI. */
                   const effectiveTier =
                     updates[user.email]?.subscriptionTier ?? user.subscriptionTier ?? "platinum";
                   const audioKey = memberAudioEmailKey(user.email);
@@ -2143,7 +2143,7 @@ export default function AdminUsers() {
                       {memberSectionIsOpen(user.email, "notes") && (
                         <div className="card" style={{ marginTop: 8 }}>
                           <p style={{ color: "#64748b", fontSize: 13, marginTop: 0, lineHeight: 1.5 }}>
-                            Internal notes for this member — visible to admins and assigned facilitators.
+                            Internal notes for this member - visible to admins and assigned facilitators.
                             Not shown to the member.
                           </p>
                           <textarea
@@ -2531,7 +2531,7 @@ export default function AdminUsers() {
                                 {facilitatorOptions.map((moderator) => (
                                   <option key={moderator.id} value={moderator.id}>
                                     {moderator.name} ({moderator.email})
-                                    {moderator.status !== "active" ? " — inactive" : ""}
+                                    {moderator.status !== "active" ? " - inactive" : ""}
                                   </option>
                                 ))}
                               </select>
@@ -2563,11 +2563,11 @@ export default function AdminUsers() {
                               >
                                 <p style={{ margin: "0 0 6px" }}>
                                   <strong>Member affiliate code:</strong>{" "}
-                                  {user.affiliateCode?.trim() || "—"}
+                                  {user.affiliateCode?.trim() || "-"}
                                 </p>
                                 <p style={{ margin: 0 }}>
                                   <strong>Referred by affiliate:</strong>{" "}
-                                  {user.referredByAffiliateCode?.trim() || "—"}
+                                  {user.referredByAffiliateCode?.trim() || "-"}
                                 </p>
                               </div>
                             </>
@@ -2651,7 +2651,7 @@ export default function AdminUsers() {
                           </div>
                           <p style={{ color: "#64748b", fontSize: 13, marginTop: 0, marginBottom: 12 }}>
                             Sign-ins (with first page they head to), sign-outs, page views, played audio (library
-                            and Play Options — each row lists the recording name), goal and console updates, and
+                            and Play Options - each row lists the recording name), goal and console updates, and
                             admin schedule changes. Use <strong>Filter</strong> for library vs Play Options playback vs
                             everything else; <strong>Rows</strong> caps how many matching rows appear (newest first).
                             Refresh loads up to 500 recent events. Rows with a <strong style={{ color: "#b91c1c" }}>red</strong>{" "}
@@ -2828,7 +2828,7 @@ export default function AdminUsers() {
                               </div>
                               <p style={{ margin: "10px 0 0", fontSize: 12, color: "#64748b" }}>
                                 Each main audio in the rotation is one step; order always moves forward whether the
-                                member plays 1 or 2 audios per night. This updates stored step count only — not goals,
+                                member plays 1 or 2 audios per night. This updates stored step count only - not goals,
                                 audios-per-night setting, or rotation start date.
                               </p>
                               <p style={{ margin: "8px 0 0", fontSize: 12, color: "#64748b" }}>
@@ -2914,10 +2914,10 @@ export default function AdminUsers() {
                                       >
                                         {row.action === "played_audio" ||
                                         row.action === "audio_playback_outcome"
-                                          ? playedAudioTitleForAdminCell(row.action, row.details) || "—"
+                                          ? playedAudioTitleForAdminCell(row.action, row.details) || "-"
                                           : row.action === "session_gap"
                                             ? "Gap / schedule"
-                                            : "—"}
+                                            : "-"}
                                       </td>
                                       <td
                                         style={{
@@ -2991,7 +2991,7 @@ export default function AdminUsers() {
                         <div className="card" style={{ marginTop: 8 }}>
                         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
                           Current password cannot be shown (one-way hash). Enter a new password (6+ characters) and click
-                          Save to reset member login—you can update password alone without changing tier or goals.
+                          Save to reset member login-you can update password alone without changing tier or goals.
                         </p>
                         <p style={{ fontSize: 12, color: "#0f766e", marginBottom: 8 }}>
                           <strong>Existing Stripe members:</strong> paste Customer ID (<code>cus_…</code>) and Subscription ID (<code>sub_…</code>) from the Stripe Dashboard before they sign up or pay again. That links their current billing and prevents a second subscription.
@@ -2999,7 +2999,7 @@ export default function AdminUsers() {
                         {renderMemberPaymentLinkBlock(user)}
                         <input
                           style={inputStyle}
-                          placeholder="Stripe Customer ID (cus_...) — from Stripe Dashboard"
+                          placeholder="Stripe Customer ID (cus_...) - from Stripe Dashboard"
                           value={
                             stripeEdits[user.email]?.stripeCustomerId ??
                             user.stripeCustomerId ??
@@ -3017,7 +3017,7 @@ export default function AdminUsers() {
                         />
                         <input
                           style={inputStyle}
-                          placeholder="Stripe Subscription ID (sub_...) — active subscription"
+                          placeholder="Stripe Subscription ID (sub_...) - active subscription"
                           value={
                             stripeEdits[user.email]?.stripeSubscriptionId ??
                             user.stripeSubscriptionId ??
@@ -3142,8 +3142,8 @@ export default function AdminUsers() {
                         </div>
                           <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid #e2e8f0" }}>
                         <p style={{ fontSize: 12, color: "#475569", marginBottom: 8 }}>
-                          <strong>Gold Member:</strong> $19.95/mo — Regular membership with goal-based scheduling.<br />
-                          <strong>Platinum Managed Member:</strong> $39.95/mo — Managed membership with admin-assigned audios (no goals).
+                          <strong>Gold Member:</strong> $19.95/mo - Regular membership with goal-based scheduling.<br />
+                          <strong>Platinum Managed Member:</strong> $39.95/mo - Managed membership with admin-assigned audios (no goals).
                         </p>
                         <p style={{ fontSize: 12, margin: 0 }}>
                           Current tier:{" "}
@@ -3153,8 +3153,8 @@ export default function AdminUsers() {
                               : "Gold Member ($19.95/mo)"}
                           </strong>
                           {memberHasStripeOnFile(user)
-                            ? " — Stripe billing is on file (see Membership Status)."
-                            : " — no Stripe billing yet. Use Payment Link in Membership Status (or on the collapsed member row)."}
+                            ? " - Stripe billing is on file (see Membership Status)."
+                            : " - no Stripe billing yet. Use Payment Link in Membership Status (or on the collapsed member row)."}
                         </p>
                           </div>
                         </div>
@@ -3194,7 +3194,7 @@ export default function AdminUsers() {
                                 });
                           const hasCat = (item: LibraryItem, cat: string) =>
                             (item.categories || []).some((c) => c.toLowerCase() === cat.toLowerCase());
-                          /** Personalized CGMR only — matches member schedule API (not first assigned track). */
+                          /** Personalized CGMR only - matches member schedule API (not first assigned track). */
                           const cgmrTrack = assignedOrdered.find((item) => hasCat(item, "cgmr")) ?? null;
                           const pickByCode = (code: string) => {
                             const norm = stripSkuHyphens(code);
@@ -3344,7 +3344,7 @@ export default function AdminUsers() {
                           />
                           <div>
                             <label style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
-                              Audio URL (required — filled automatically after upload)
+                              Audio URL (required - filled automatically after upload)
                             </label>
                             <input
                               style={inputStyle}
@@ -3372,7 +3372,7 @@ export default function AdminUsers() {
                             }
                           />
                           <label style={{ fontSize: 12 }}>
-                            Categories (comma-separated) — include <strong>CGMR</strong> so the schedule uses this as the member&apos;s CGMR slot
+                            Categories (comma-separated) - include <strong>CGMR</strong> so the schedule uses this as the member&apos;s CGMR slot
                           </label>
                           <input
                             style={inputStyle}
@@ -3416,7 +3416,7 @@ export default function AdminUsers() {
                         aria-expanded={memberSectionIsOpen(user.email, "goals")}
                         onClick={() => toggleMemberSection(user.email, "goals")}
                       >
-                        {memberSectionIsOpen(user.email, "goals") ? "▼" : "▶"} Goals{user.goalIds?.length ? ` — ${user.goalIds.length} selected` : ""}
+                        {memberSectionIsOpen(user.email, "goals") ? "▼" : "▶"} Goals{user.goalIds?.length ? ` - ${user.goalIds.length} selected` : ""}
                       </button>
                       {memberSectionIsOpen(user.email, "goals") && (
                         <div className="card" style={{ marginTop: 8 }}>
@@ -3581,7 +3581,7 @@ export default function AdminUsers() {
                         aria-expanded={memberSectionIsOpen(user.email, "rotation")}
                         onClick={() => toggleMemberSection(user.email, "rotation")}
                       >
-                        {memberSectionIsOpen(user.email, "rotation") ? "▼" : "▶"} Rotation Order{rotationOrder.length ? ` — ${rotationOrder.length} step${rotationOrder.length === 1 ? "" : "s"}` : ""}
+                        {memberSectionIsOpen(user.email, "rotation") ? "▼" : "▶"} Rotation Order{rotationOrder.length ? ` - ${rotationOrder.length} step${rotationOrder.length === 1 ? "" : "s"}` : ""}
                       </button>
                       {memberSectionIsOpen(user.email, "rotation") && (
                         <div className="card" style={{ marginTop: 8 }}>
@@ -3590,7 +3590,7 @@ export default function AdminUsers() {
                           </p>
                         {effectiveTier === "platinum_managed" ? (
                           <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
-                            Build the night-by-night list in <strong>Rotation order</strong> below — pick a recording and{" "}
+                            Build the night-by-night list in <strong>Rotation order</strong> below - pick a recording and{" "}
                             <strong>Add at end</strong> (the dropdown resets each time; same recording can appear multiple
                             times). Use <strong>Up / Down</strong> to place each step. Up to {MANAGED_MAX_SLOTS_PER_AUDIO}×
                             per recording (no fixed cap on total steps). Changes save automatically.
@@ -3598,7 +3598,7 @@ export default function AdminUsers() {
                         ) : (
                           <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
                             <strong>Gold:</strong> schedule audios come from assigned goals in <strong>Goals</strong>.
-                            Use the goals panel to choose what plays — no manual audio checklist is needed.
+                            Use the goals panel to choose what plays - no manual audio checklist is needed.
                           </p>
                         )}
                         {effectiveTier === "platinum_managed" && (
@@ -3612,7 +3612,7 @@ export default function AdminUsers() {
                             }}
                           >
                             <strong style={{ fontSize: 13, color: "#78350f" }}>
-                              Admin checklist — Platinum Managed rotation
+                              Admin checklist - Platinum Managed rotation
                             </strong>
                             <ol
                               style={{
@@ -3635,7 +3635,7 @@ export default function AdminUsers() {
                               </li>
                               <li>
                                 Add recordings using <strong>Add at end of rotation</strong> (dropdown + button). The dropdown
-                                resets after each add — choose the recording again for another step (same title allowed, max{" "}
+                                resets after each add - choose the recording again for another step (same title allowed, max{" "}
                                 {MANAGED_MAX_SLOTS_PER_AUDIO}× per recording). Use <strong>Up / Down</strong> to place each step.
                               </li>
                               <li>
@@ -3676,7 +3676,7 @@ export default function AdminUsers() {
                             ) : null}
                             {rotationOrder.length === 0 ? (
                               <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4, marginBottom: 10 }}>
-                                No steps yet — use <strong>Add at end of rotation</strong> below to choose a recording and
+                                No steps yet - use <strong>Add at end of rotation</strong> below to choose a recording and
                                 append it.
                               </p>
                             ) : (
@@ -3780,7 +3780,7 @@ export default function AdminUsers() {
                               <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 8px 0" }}>
                                 After each add the dropdown goes back to <strong>Choose recording…</strong> so you can pick the
                                 next step (including the same recording again). The page scrolls the new row into view when the
-                                browser supports it — use <strong>Up / Down</strong> to move it if needed.
+                                browser supports it - use <strong>Up / Down</strong> to move it if needed.
                               </p>
                               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
                               <select
@@ -3821,7 +3821,7 @@ export default function AdminUsers() {
                                   })
                                   .map((opt) => (
                                     <option key={opt.id} value={opt.id}>
-                                      {opt.skuCode ? `${opt.skuCode} — ` : ""}
+                                      {opt.skuCode ? `${opt.skuCode} - ` : ""}
                                       {opt.title || opt.id}
                                     </option>
                                   ))}

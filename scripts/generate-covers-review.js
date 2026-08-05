@@ -1,6 +1,6 @@
 /**
  * Generate square SVG "album" covers for library items with no coverUrl.
- * Outputs to public/covers-review/ — NOT wired into library; for admin review only.
+ * Outputs to public/covers-review/ - NOT wired into library; for admin review only.
  *
  * Usage: node scripts/generate-covers-review.js
  */
@@ -26,9 +26,9 @@ const BLURB_BY_ID = {
   "track-3":
     "Emotional recovery and resilience after fires, natural disasters, and other high-stress events.",
   "track-48":
-    "Harmony with your children — compassionate support for healthier family patterns and connection.",
+    "Harmony with your children - compassionate support for healthier family patterns and connection.",
   "track-54":
-    "Stop smoking and build positive stress management — calm body, clear mind, healthier habits.",
+    "Stop smoking and build positive stress management - calm body, clear mind, healthier habits.",
   "track-55": "Opening / starting music for Reach For The Stars guided meditation sessions."
 };
 
@@ -110,7 +110,7 @@ function pickVisualTheme({ title, rawDesc, isAdult }) {
 }
 
 /**
- * Large decorative vector layer (not a photo — SVG shapes) suggesting the session theme.
+ * Large decorative vector layer (not a photo - SVG shapes) suggesting the session theme.
  * Placed behind text; readability handled by fade overlay.
  */
 function renderThemedBackground(theme) {
@@ -284,7 +284,7 @@ function buildSvg({ title, sku, bodyLines, isAdult, rawDescForTheme }) {
   <text fill="#ecfdf5" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="700">${titleTspans}</text>
   <text fill="#d1fae5" font-family="system-ui, Segoe UI, sans-serif" font-size="15" opacity="0.92">${bodyTspans}</text>
   <text x="300" y="556" text-anchor="middle" fill="#5eead4" font-family="system-ui, sans-serif" font-size="11" letter-spacing="0.2em" font-weight="600">REACH FOR THE STARS</text>
-  <text x="300" y="578" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Review draft — not in production library</text>
+  <text x="300" y="578" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Review draft - not in production library</text>
 </svg>`;
 }
 
@@ -364,7 +364,7 @@ function main() {
   const rows = manifest
     .map((m) => {
       const rel = `./${m.fileName}`;
-      return `<tr><td><img src="${rel}" width="120" height="120" alt="" style="object-fit:cover;border-radius:8px;border:1px solid #e5e7eb"/></td><td><code>${escapeHtml(m.libraryJsonId)}</code></td><td>${escapeHtml(m.title)}</td><td>${escapeHtml(m.skuGuess || "—")}</td><td><code>${escapeHtml(m.visualTheme || "")}</code></td><td>${escapeHtml(m.descriptionSource)}</td><td><a href="${rel}">SVG</a></td></tr>`;
+      return `<tr><td><img src="${rel}" width="120" height="120" alt="" style="object-fit:cover;border-radius:8px;border:1px solid #e5e7eb"/></td><td><code>${escapeHtml(m.libraryJsonId)}</code></td><td>${escapeHtml(m.title)}</td><td>${escapeHtml(m.skuGuess || "-")}</td><td><code>${escapeHtml(m.visualTheme || "")}</code></td><td>${escapeHtml(m.descriptionSource)}</td><td><a href="${rel}">SVG</a></td></tr>`;
     })
     .join("\n");
 
@@ -373,7 +373,7 @@ function main() {
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Cover review — Reach For The Stars</title>
+  <title>Cover review - Reach For The Stars</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 1100px; margin: 24px auto; padding: 0 16px; color: #0f172a; }
     h1 { font-size: 1.35rem; }
@@ -386,8 +386,8 @@ function main() {
 <body>
   <h1>Generated cover drafts (review only)</h1>
   <p class="note">These files are <strong>not</strong> linked from the app or database. After you approve, upload PNG/SVG to Blob (or paste URL in Admin → library) and set <strong>Cover URL</strong> per item. Regenerate with <code>npm run covers:review</code> after updating <code>data/library.json</code> or descriptions.</p>
-  <p class="note">You can open this <code>index.html</code> directly from the folder (double-click) — previews use <strong>relative</strong> paths so images work. Or use the dev server: <code>http://localhost:3000/covers-review/index.html</code></p>
-  <p class="note">Background art is <strong>SVG illustration</strong> (shapes, gradients) chosen from title + description — not stock photos. Edit themes in <code>scripts/generate-covers-review.js</code> (<code>pickVisualTheme</code> / <code>renderThemedBackground</code>).</p>
+  <p class="note">You can open this <code>index.html</code> directly from the folder (double-click) - previews use <strong>relative</strong> paths so images work. Or use the dev server: <code>http://localhost:3000/covers-review/index.html</code></p>
+  <p class="note">Background art is <strong>SVG illustration</strong> (shapes, gradients) chosen from title + description - not stock photos. Edit themes in <code>scripts/generate-covers-review.js</code> (<code>pickVisualTheme</code> / <code>renderThemedBackground</code>).</p>
   <table>
     <thead><tr><th>Preview</th><th>ID</th><th>Title</th><th>SKU</th><th>Visual theme</th><th>Description source</th><th>File</th></tr></thead>
     <tbody>${rows}</tbody>

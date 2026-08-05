@@ -4,12 +4,12 @@ Use this before and after shipping changes to production (`https://reachforthest
 
 ## Pre-deploy
 
-1. **Env vars** — Confirm Vercel has required values: `SESSION_SECRET`, Postgres (`POSTGRES_URL`), Stripe keys, `RESEND_API_KEY`, `SUBMISSION_KEY`, cron secret if used.
-2. **Schema** — If `scripts/schema.sql` changed, run locally against prod DB:
+1. **Env vars** - Confirm Vercel has required values: `SESSION_SECRET`, Postgres (`POSTGRES_URL`), Stripe keys, `RESEND_API_KEY`, `SUBMISSION_KEY`, cron secret if used.
+2. **Schema** - If `scripts/schema.sql` changed, run locally against prod DB:
    ```bash
    npm run db:schema
    ```
-3. **Build** — From `rfts-platform/`:
+3. **Build** - From `rfts-platform/`:
    ```bash
    npx tsc --noEmit
    npm run build
@@ -22,7 +22,7 @@ Use this before and after shipping changes to production (`https://reachforthest
 
 ## Deploy
 
-**Option A — Git push (Vercel auto-deploy)**
+**Option A - Git push (Vercel auto-deploy)**
 
 ```bash
 git add -A
@@ -30,13 +30,13 @@ git commit -m "your message"
 git push
 ```
 
-**Option B — Vercel CLI**
+**Option B - Vercel CLI**
 
 ```bash
 npm run deploy
 ```
 
-**Option C — Commit + push helper**
+**Option C - Commit + push helper**
 
 ```bash
 DEPLOY_MSG="feat: your message" npm run push-deploy
@@ -44,9 +44,9 @@ DEPLOY_MSG="feat: your message" npm run push-deploy
 
 ## Post-deploy verification
 
-1. Open `/login` — admin and facilitator login load.
-2. Open `/moderator/console` — facilitator console loads (after login).
-3. Open `/admin` — admin panels load (after login).
+1. Open `/login` - admin and facilitator login load.
+2. Open `/moderator/console` - facilitator console loads (after login).
+3. Open `/admin` - admin panels load (after login).
 4. Member flows: `/member/profile`, library playback, checkout redirect.
 5. Re-run smoke tests against production if you changed API routes or auth.
 

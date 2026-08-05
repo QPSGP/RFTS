@@ -25,33 +25,33 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "balanced-life-highest-potential-guided-meditation-sleep",
     title:
-      "Balanced life: reach your highest potential — body, mind, spirit, and finances — while you sleep",
-    metaTitle: "Balanced Life Guided Meditation — Highest Potential at Night | RFTS Blog",
+      "Balanced life: reach your highest potential - body, mind, spirit, and finances - while you sleep",
+    metaTitle: "Balanced Life Guided Meditation - Highest Potential at Night | RFTS Blog",
     metaDescription:
       "Balanced life means highest potential physically, mentally, emotionally, spiritually, and financially. Nightly guided meditation reinforces whole-life growth while you sleep. Free trial.",
     publishedAt: "2026-08-10",
     readMinutes: 6,
     excerpt:
-      "A balanced life is not five separate self-help projects. It is one nightly practice that reinforces your highest potential across body, mind, emotions, spirit — and finances — while you sleep.",
+      "A balanced life is not five separate self-help projects. It is one nightly practice that reinforces your highest potential across body, mind, emotions, spirit - and finances - while you sleep.",
     goalSlug: "balanced-life",
     sections: [
       {
         paragraphs: [
           "People searching for a balanced life are often juggling pieces: health goals, stress, spiritual growth, relationships, and the quiet pressure to earn more without becoming someone they do not respect. Daytime programs ask you to pick one lane. Real life rarely works that way.",
-          "Reach For The Stars frames Balanced Life as Terry’s whole-person USP: reach your highest potential physically, mentally, emotionally, spiritually, and financially. Guided meditations play while you fall asleep and, if you choose two audios per night, again during sleep — so growth does not need another hour you do not have."
+          "Reach For The Stars frames Balanced Life as Terry’s whole-person USP: reach your highest potential physically, mentally, emotionally, spiritually, and financially. Guided meditations play while you fall asleep and, if you choose two audios per night, again during sleep - so growth does not need another hour you do not have."
         ]
       },
       {
         heading: "Why “financial” belongs in the same sentence as spiritual",
         paragraphs: [
-          "Many wellness offers stop at calm. Spiritual entrepreneurs, coaches, and mission-driven owners know that starving is not a virtue. When Balanced Life is a prioritized goal, your rotation can include abundance and confidence themes alongside peace, health, and purpose — so income and soul work stop fighting each other in your head.",
+          "Many wellness offers stop at calm. Spiritual entrepreneurs, coaches, and mission-driven owners know that starving is not a virtue. When Balanced Life is a prioritized goal, your rotation can include abundance and confidence themes alongside peace, health, and purpose - so income and soul work stop fighting each other in your head.",
           "That framing is intentional. You are not asked to pretend money does not matter. You are invited to grow as a beacon of success in every area that makes a full life."
         ]
       },
       {
         heading: "One bedtime cue instead of five apps",
         paragraphs: [
-          "Willpower fails when the day is already full. A fixed Start Session cue — intro relaxation music, then your Balanced Life and related recordings — builds repetition without a daytime course. Optional reinforcement later in the night meets you during restorative sleep.",
+          "Willpower fails when the day is already full. A fixed Start Session cue - intro relaxation music, then your Balanced Life and related recordings - builds repetition without a daytime course. Optional reinforcement later in the night meets you during restorative sleep.",
           "You still choose priorities (up to ten) and reorder them anytime. The schedule rotates so physical, mental, emotional, spiritual, and financial themes return on a predictable cadence instead of disappearing after one inspiring track."
         ]
       },
@@ -72,32 +72,32 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "resilience-meditation-bounce-back-stress-sleep",
     title: "Physical and psychological resilience: bounce back with guided meditation at night",
-    metaTitle: "Resilience Meditation at Night — Bounce Back From Stress | RFTS Blog",
+    metaTitle: "Resilience Meditation at Night - Bounce Back From Stress | RFTS Blog",
     metaDescription:
       "Build physical and psychological resilience with guided meditation at bedtime and during sleep. Recover from stress, adapt to hard days, and start a free trial.",
     publishedAt: "2026-08-03",
     readMinutes: 6,
     excerpt:
-      "Resilience is not toughness without feeling — it is recovering after hard days. Guided meditation at bedtime and during sleep reinforces calm, adaptability, and mind-body recovery without another daytime chore.",
+      "Resilience is not toughness without feeling - it is recovering after hard days. Guided meditation at bedtime and during sleep reinforces calm, adaptability, and mind-body recovery without another daytime chore.",
     topicSlug: "resilience-meditation",
     sections: [
       {
         paragraphs: [
-          "People searching for physical and psychological resilience usually already know what depletes them: shift work, caregiving, high-stakes jobs, chronic stress, or a string of hard weeks that never quite reset. What they want is not a motivational poster. They want a reliable way to bounce back — body and mind — when the next demand arrives.",
+          "People searching for physical and psychological resilience usually already know what depletes them: shift work, caregiving, high-stakes jobs, chronic stress, or a string of hard weeks that never quite reset. What they want is not a motivational poster. They want a reliable way to bounce back - body and mind - when the next demand arrives.",
           "Reach For The Stars supports resilience through guided meditation while you fall asleep and, if you choose two audios per night, again during sleep. Recovery becomes part of bedtime instead of another wellness task competing with your day."
         ]
       },
       {
         heading: "What resilience practice actually reinforces",
         paragraphs: [
-          "Resilience is the capacity to recover from stress, adapt to change, and keep functioning without burning out. Research on mindfulness and related practices links regular practice with better stress recovery and more adaptive coping over time — not because one night “fixes” you, but because repetition trains a calmer baseline.",
+          "Resilience is the capacity to recover from stress, adapt to change, and keep functioning without burning out. Research on mindfulness and related practices links regular practice with better stress recovery and more adaptive coping over time - not because one night “fixes” you, but because repetition trains a calmer baseline.",
           "Nightly goal audios can reinforce themes of calm under pressure, emotional steadiness, physical recovery, and balanced life. Your schedule rotates priorities so resilience sits alongside sleep, stress relief, and health goals instead of living as a one-off track you forget."
         ]
       },
       {
         heading: "Why bedtime is the right window for hard jobs",
         paragraphs: [
-          "Front-line caregivers, burned-out professionals, and parents often have no spare hour for a daytime resilience workshop. The only quiet window is late at night — exactly when the nervous system needs a downshift, not another podcast that keeps the mind spinning.",
+          "Front-line caregivers, burned-out professionals, and parents often have no spare hour for a daytime resilience workshop. The only quiet window is late at night - exactly when the nervous system needs a downshift, not another podcast that keeps the mind spinning.",
           "A fixed Start Session cue helps: intro relaxation music, then your resilience-related recording as you drift, then optional reinforcement about 2.5 hours later while restorative sleep is underway. You train recovery when the body is already in rest mode."
         ]
       },
@@ -105,7 +105,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: "Consistency beats heroic resets",
         paragraphs: [
           "A weekend spa day or a single “reset” retreat can feel good and still leave Monday unchanged. Resilience compounds when the same cue returns nightly: Start Session, then sleep. Skipping for a week and restarting with a new app resets both the habit of practice and the subconscious repetition recovery depends on.",
-          "If your role involves trauma exposure or clinical-level stress, pair nightly audios with professional support. Guided meditation is a recovery layer — not a substitute for therapy, medical care, or workplace trauma protocols when those are needed."
+          "If your role involves trauma exposure or clinical-level stress, pair nightly audios with professional support. Guided meditation is a recovery layer - not a substitute for therapy, medical care, or workplace trauma protocols when those are needed."
         ]
       },
       {
@@ -125,9 +125,9 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "overcoming-addiction-guided-meditation-habit-change-sleep",
     title: "Overcoming addiction: guided meditation for habit change while you sleep",
-    metaTitle: "Overcoming Addiction — Guided Meditation & Habit Change at Night | RFTS Blog",
+    metaTitle: "Overcoming Addiction - Guided Meditation & Habit Change at Night | RFTS Blog",
     metaDescription:
-      "Support overcoming addiction and unwanted habits with nightly guided meditation — smoking, overeating, and automatic patterns reinforced at bedtime and during sleep. Free trial.",
+      "Support overcoming addiction and unwanted habits with nightly guided meditation - smoking, overeating, and automatic patterns reinforced at bedtime and during sleep. Free trial.",
     publishedAt: "2026-07-28",
     readMinutes: 6,
     excerpt:
@@ -136,21 +136,21 @@ export const BLOG_POSTS: BlogPost[] = [
     sections: [
       {
         paragraphs: [
-          "People searching for help with overcoming addiction often already know what they want to change — smoking, overeating, scrolling, drinking, or another automatic pattern. The hard part is not naming the habit. It is staying consistent when cravings hit and daytime willpower is already spent.",
-          "Reach For The Stars treats overcoming addiction as a goal you can prioritize. Supportive guided meditations play while you fall asleep and, if you choose two audios per night, again during sleep — so habit-change messages reach your subconscious when you are most receptive, without adding another recovery task to an already full day."
+          "People searching for help with overcoming addiction often already know what they want to change - smoking, overeating, scrolling, drinking, or another automatic pattern. The hard part is not naming the habit. It is staying consistent when cravings hit and daytime willpower is already spent.",
+          "Reach For The Stars treats overcoming addiction as a goal you can prioritize. Supportive guided meditations play while you fall asleep and, if you choose two audios per night, again during sleep - so habit-change messages reach your subconscious when you are most receptive, without adding another recovery task to an already full day."
         ]
       },
       {
         heading: "What “habit change at night” actually supports",
         paragraphs: [
           "Hypnosis and guided meditation have long been used for smoking cessation, overeating, and other behavioral patterns by pairing deep relaxation with clear intention: calm instead of compulsion, control instead of autopilot, and a balanced life instead of the old loop. You are not asked to white-knuckle through a daytime lecture. You hear the same supportive framing as you wind down and rest.",
-          "That does not replace clinical care, detox, medication-assisted treatment, or a recovery program when those are needed. Nightly audios are a mindset and habit layer — useful alongside the professional support you already trust."
+          "That does not replace clinical care, detox, medication-assisted treatment, or a recovery program when those are needed. Nightly audios are a mindset and habit layer - useful alongside the professional support you already trust."
         ]
       },
       {
         heading: "Why bedtime beats fighting the urge alone",
         paragraphs: [
-          "Cravings and old cues often show up when you are tired, stressed, or alone at night — exactly when “trying harder” fails. A fixed bedtime session flips that window: intro relaxation music, then your habit-change recording as you drift, then optional reinforcement about 2.5 hours later while you are still in restorative sleep.",
+          "Cravings and old cues often show up when you are tired, stressed, or alone at night - exactly when “trying harder” fails. A fixed bedtime session flips that window: intro relaxation music, then your habit-change recording as you drift, then optional reinforcement about 2.5 hours later while you are still in restorative sleep.",
           "Members often pair overcoming addiction with health, balanced life, or inspiration goals so the lineup addresses body, daily structure, and motivation together. The schedule rotates priorities so supportive themes return on a predictable cadence instead of disappearing after one random track."
         ]
       },
@@ -158,20 +158,20 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: "Consistency over heroic nights",
         paragraphs: [
           "One powerful session can feel hopeful. Lasting change usually comes from weeks of the same cue: Start Session, then rest. Skipping several nights and restarting with a new app resets both the habit of practice and the subconscious repetition that habit change depends on.",
-          "If you want extra personalization, a facilitator can help with a Customized Goal Manifestation Recording (CGMR) alongside library goals — especially when your story or triggers need more than a general track."
+          "If you want extra personalization, a facilitator can help with a Customized Goal Manifestation Recording (CGMR) alongside library goals - especially when your story or triggers need more than a general track."
         ]
       },
       {
         heading: "Who this helps most",
         paragraphs: [
           "This approach fits people quitting smoking or cutting back on overeating, anyone rebuilding after a slip, and high performers whose “addiction” looks like compulsive work, scrolling, or stress habits that undermine health. It also helps people who have tried daytime programs but could not keep a consistent practice when life got busy.",
-          "Guided meditation supports wellness and habit change. It is not a substitute for medical detox, addiction medicine, therapy, or crisis care. If you are in acute withdrawal, danger, or active substance dependence that needs clinical supervision, get professional help first — then consider nightly guided audios as one supportive layer."
+          "Guided meditation supports wellness and habit change. It is not a substitute for medical detox, addiction medicine, therapy, or crisis care. If you are in acute withdrawal, danger, or active substance dependence that needs clinical supervision, get professional help first - then consider nightly guided audios as one supportive layer."
         ]
       },
       {
         heading: "Get started tonight",
         paragraphs: [
-          "Choose overcoming addiction among your goals and complete registration to activate your membership. Order habit-change, health, and related priorities by importance — your personalized audios begin the first night you press Start Session.",
+          "Choose overcoming addiction among your goals and complete registration to activate your membership. Order habit-change, health, and related priorities by importance - your personalized audios begin the first night you press Start Session.",
           "Explore our overcoming addiction goal page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
         ]
       }
@@ -187,23 +187,23 @@ export const BLOG_POSTS: BlogPost[] = [
     title: "Better sleep: how guided meditation at night improves rest without daytime effort",
     metaTitle: "Better Sleep with Guided Meditation at Night | Reach For The Stars Blog",
     metaDescription:
-      "Better sleep from guided meditation and personalized nightly audios — bedtime wind-down plus optional reinforcement during sleep. Link to our sleep meditation page and free trial.",
+      "Better sleep from guided meditation and personalized nightly audios - bedtime wind-down plus optional reinforcement during sleep. Link to our sleep meditation page and free trial.",
     publishedAt: "2026-07-22",
     readMinutes: 6,
     excerpt:
-      "Better sleep rarely comes from one perfect night. It comes from a repeatable wind-down, content matched to your goals, and gentle reinforcement while you rest — without another daytime habit to maintain.",
+      "Better sleep rarely comes from one perfect night. It comes from a repeatable wind-down, content matched to your goals, and gentle reinforcement while you rest - without another daytime habit to maintain.",
     topicSlug: "sleep-meditation",
     sections: [
       {
         paragraphs: [
           "People hunting for better sleep usually try the same loop: earlier bedtime, less caffeine, a white-noise app, maybe a random guided track when they remember. Some nights it helps. Most weeks the habit frays because sleep improvement asks for consistency at the exact moment willpower is lowest.",
-          "Guided sleep meditation works when it removes that decision. Reach For The Stars schedules personalized audios while you fall asleep and, if you choose two audios per night, again during sleep — so better sleep support becomes part of bedtime, not another chore on your to-do list."
+          "Guided sleep meditation works when it removes that decision. Reach For The Stars schedules personalized audios while you fall asleep and, if you choose two audios per night, again during sleep - so better sleep support becomes part of bedtime, not another chore on your to-do list."
         ]
       },
       {
         heading: "What “better sleep” actually means in practice",
         paragraphs: [
-          "Better sleep is more than falling asleep faster. It includes quieter mind at lights-out, fewer middle-of-the-night spirals, and waking with enough rest to face the day. Meditation research and clinical overviews often list sleep improvement among the benefits of regular practice — alongside stress reduction and mood support — when people stick with it.",
+          "Better sleep is more than falling asleep faster. It includes quieter mind at lights-out, fewer middle-of-the-night spirals, and waking with enough rest to face the day. Meditation research and clinical overviews often list sleep improvement among the benefits of regular practice - alongside stress reduction and mood support - when people stick with it.",
           "A nightly program aimed at better sleep should feel simple: one clear Start Session step, intro relaxation music, then goal-aligned messaging about rest, calm, or balance. Explore our guided sleep meditation page for how that flow is built for people who want better sleep without juggling apps."
         ]
       },
@@ -211,13 +211,13 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: "Bedtime wind-down that replaces the scroll",
         paragraphs: [
           "Phone light and endless track-picking keep the brain in problem-solving mode. A fixed wind-down does the opposite: same cue, same first audio, same permission to stop deciding. Intro relaxation music settles the body; your first goal recording gives the mind a calm path to follow instead of replaying the day.",
-          "That structure is especially useful for burned-out professionals, caregivers, and parents whose only quiet window is late night — when anxiety often spikes. Better sleep starts when bedtime stops competing with your phone."
+          "That structure is especially useful for burned-out professionals, caregivers, and parents whose only quiet window is late night - when anxiety often spikes. Better sleep starts when bedtime stops competing with your phone."
         ]
       },
       {
-        heading: "Reinforcement during sleep — without staying awake for it",
+        heading: "Reinforcement during sleep - without staying awake for it",
         paragraphs: [
-          "Optional second audios play about 2.5 hours later, while you are still in restorative sleep. You are not meant to listen attentively. The point is gentle repetition of the same sleep-friendly intentions you began at bedtime — calm, safety, readiness to rest — so the message is not a one-and-done track you forget by morning.",
+          "Optional second audios play about 2.5 hours later, while you are still in restorative sleep. You are not meant to listen attentively. The point is gentle repetition of the same sleep-friendly intentions you began at bedtime - calm, safety, readiness to rest - so the message is not a one-and-done track you forget by morning.",
           "Members often pair rest-focused goals with stress relief or balanced life priorities when worry or overthinking is what breaks sleep. The schedule rotates those themes so better sleep support stays relevant week after week."
         ]
       },
@@ -231,7 +231,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         heading: "Get started tonight",
         paragraphs: [
-          "Choose rest, calm, or related goals and complete registration to activate your membership. Order priorities by importance — your personalized audios begin the first night you press Start Session.",
+          "Choose rest, calm, or related goals and complete registration to activate your membership. Order priorities by importance - your personalized audios begin the first night you press Start Session.",
           "Read more on our better sleep / guided sleep meditation page, or use Start your journey below to begin your free trial tonight."
         ]
       }
@@ -245,9 +245,9 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "guided-meditation-spirituality-inner-connection-sleep",
     title: "Guided meditation for spirituality: deepen your inner connection while you sleep",
-    metaTitle: "Spirituality & Inner Connection — Guided Meditation at Night | RFTS Blog",
+    metaTitle: "Spirituality & Inner Connection - Guided Meditation at Night | RFTS Blog",
     metaDescription:
-      "How nightly guided meditations support spirituality and inner connection — peace, presence, and a personal path without carving out daytime practice. Links to the Spirituality goal.",
+      "How nightly guided meditations support spirituality and inner connection - peace, presence, and a personal path without carving out daytime practice. Links to the Spirituality goal.",
     publishedAt: "2026-07-14",
     readMinutes: 6,
     excerpt:
@@ -256,14 +256,14 @@ export const BLOG_POSTS: BlogPost[] = [
     sections: [
       {
         paragraphs: [
-          "Many people want a greater connection with their spirituality — peace that lasts past a Sunday service, a morning meditation streak that keeps slipping, or a sense of meaning that work email rarely delivers. The barrier is rarely belief. It is time, and the exhaustion that makes daytime spiritual practice feel like one more obligation.",
-          "Reach For The Stars treats spirituality as one of the goals you can prioritize. When connection, peace, or inner alignment is in your rotation, guided audios play automatically as you fall asleep — and again during sleep if you choose two audios per night — so spiritual intention reaches your subconscious when daytime willpower is not required."
+          "Many people want a greater connection with their spirituality - peace that lasts past a Sunday service, a morning meditation streak that keeps slipping, or a sense of meaning that work email rarely delivers. The barrier is rarely belief. It is time, and the exhaustion that makes daytime spiritual practice feel like one more obligation.",
+          "Reach For The Stars treats spirituality as one of the goals you can prioritize. When connection, peace, or inner alignment is in your rotation, guided audios play automatically as you fall asleep - and again during sleep if you choose two audios per night - so spiritual intention reaches your subconscious when daytime willpower is not required."
         ]
       },
       {
         heading: "What “inner connection” means in a nightly program",
         paragraphs: [
-          "Spiritual practice looks different for everyone: prayer, meditation, gratitude, communion with nature, or simply wanting a quieter, more centered self. Guided meditation and hypnotherapy-style suggestion support that work by pairing deep relaxation with clear intention — presence, trust, compassion, and openness — without prescribing one theology or path.",
+          "Spiritual practice looks different for everyone: prayer, meditation, gratitude, communion with nature, or simply wanting a quieter, more centered self. Guided meditation and hypnotherapy-style suggestion support that work by pairing deep relaxation with clear intention - presence, trust, compassion, and openness - without prescribing one theology or path.",
           "You choose goals that match how you define spirituality. The schedule adapts when you reorder priorities, so the messages stay personal rather than generic background “calm” audio that never names what you actually care about."
         ]
       },
@@ -271,13 +271,13 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: "Why bedtime is a natural spiritual window",
         paragraphs: [
           "Across traditions, night has long been associated with reflection, prayer, and releasing the day. Scientifically, the transition into sleep is also when the mind is highly receptive. Instead of asking you to sit upright for twenty minutes after a hard day, Reach For The Stars uses that natural window: intro relaxation music, then your spirituality-related recording as you drift, then optional reinforcement about 2.5 hours later.",
-          "That structure turns bedtime into a sacred cue without stealing from family time or early mornings. Over weeks, the habit itself — Start Session, then rest — can become part of how you feel connected, not just another app you forgot to open."
+          "That structure turns bedtime into a sacred cue without stealing from family time or early mornings. Over weeks, the habit itself - Start Session, then rest - can become part of how you feel connected, not just another app you forgot to open."
         ]
       },
       {
         heading: "Pairing spirituality with other goals",
         paragraphs: [
-          "Inner life rarely exists alone. Members often rotate spirituality with health, relationship, or inspiration goals — body, heart, and meaning reinforcing each other. The algorithm rotates priorities so spirit-focused themes return on a predictable cadence rather than disappearing after one play.",
+          "Inner life rarely exists alone. Members often rotate spirituality with health, relationship, or inspiration goals - body, heart, and meaning reinforcing each other. The algorithm rotates priorities so spirit-focused themes return on a predictable cadence rather than disappearing after one play.",
           "If stress or sleeplessness is what blocks your sense of connection, pairing spirituality with stress relief or balanced life goals keeps the nightly lineup practical as well as contemplative."
         ]
       },
@@ -285,13 +285,13 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: "Who this helps most",
         paragraphs: [
           "This approach fits people returning to faith or meditation after a long gap, seekers who want consistency without rigid routines, and anyone whose spiritual life has been crowded out by busyness. It also supports those who value hypnosis and guided imagery as mind-body tools for peace and presence.",
-          "Guided meditation supports wellness and habit change; it is not a substitute for pastoral care, therapy, or clinical treatment when you need them. Your beliefs remain yours — the platform schedules the practice; you bring the meaning."
+          "Guided meditation supports wellness and habit change; it is not a substitute for pastoral care, therapy, or clinical treatment when you need them. Your beliefs remain yours - the platform schedules the practice; you bring the meaning."
         ]
       },
       {
         heading: "Get started tonight",
         paragraphs: [
-          "Choose spirituality among your goals and complete registration to activate your membership. Order connection, peace, and related priorities by importance — your personalized audios begin the first night you press Start Session.",
+          "Choose spirituality among your goals and complete registration to activate your membership. Order connection, peace, and related priorities by importance - your personalized audios begin the first night you press Start Session.",
           "Explore our spirituality goal page for how nightly rotation works, or use Start your journey below to sign up tonight."
         ]
       }
@@ -305,53 +305,53 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "racing-thoughts-bedtime-guided-sleep-meditation",
     title: "Racing thoughts at bedtime? How guided sleep meditation helps you fall asleep",
-    metaTitle: "Racing Thoughts at Bedtime — Guided Sleep Meditation | RFTS Blog",
+    metaTitle: "Racing Thoughts at Bedtime - Guided Sleep Meditation | RFTS Blog",
     metaDescription:
       "Can't shut your mind off at night? How guided sleep meditation and nightly audios replace the scroll habit, calm racing thoughts, and support deeper rest.",
     publishedAt: "2026-07-12",
     readMinutes: 6,
     excerpt:
-      "When your mind replays the day at 11 p.m., guided sleep meditation gives your brain something better to follow than worry — a fixed nightly flow that plays while you fall asleep and during sleep.",
+      "When your mind replays the day at 11 p.m., guided sleep meditation gives your brain something better to follow than worry - a fixed nightly flow that plays while you fall asleep and during sleep.",
     topicSlug: "sleep-meditation",
     sections: [
       {
         paragraphs: [
           "You know the pattern: lights out, eyes closed, and suddenly every unfinished task, awkward conversation, and tomorrow's deadline queues up at once. Racing thoughts at bedtime are one of the most common reasons people search for guided sleep meditation, sleep hypnosis, or anything that might finally quiet the noise.",
-          "The trap is reaching for your phone — one more scroll, one more podcast, one more random track from a meditation app you forgot to open yesterday. Reach For The Stars replaces that decision fatigue with a personalized nightly schedule: intro relaxation music, your first goal recording as you drift off, and an optional second audio about 2.5 hours later while you are still in restorative sleep."
+          "The trap is reaching for your phone - one more scroll, one more podcast, one more random track from a meditation app you forgot to open yesterday. Reach For The Stars replaces that decision fatigue with a personalized nightly schedule: intro relaxation music, your first goal recording as you drift off, and an optional second audio about 2.5 hours later while you are still in restorative sleep."
         ]
       },
       {
         heading: "Why bedtime is the hardest time to \"try to relax\"",
         paragraphs: [
           "During the day, distraction is everywhere. At night, there is nothing left to compete with your thoughts. Willpower is lowest when you are tired, which is why daytime meditation plans often fail for people whose main struggle is falling asleep.",
-          "Guided sleep meditation works differently: you press Start Session once, and the program handles timing. Your conscious mind follows a calm voice and structured imagery instead of rehearsing problems. That shift — from effort to receptivity — is what hypnotherapists have used for decades, and it maps cleanly onto the moments when your body is already winding down."
+          "Guided sleep meditation works differently: you press Start Session once, and the program handles timing. Your conscious mind follows a calm voice and structured imagery instead of rehearsing problems. That shift - from effort to receptivity - is what hypnotherapists have used for decades, and it maps cleanly onto the moments when your body is already winding down."
         ]
       },
       {
         heading: "From racing thoughts to a repeatable wind-down",
         paragraphs: [
-          "A useful sleep practice has three parts: a consistent cue (same time, same first step), content matched to your goals (rest, calm, balance, stress relief), and repetition over weeks — not a single heroic night.",
+          "A useful sleep practice has three parts: a consistent cue (same time, same first step), content matched to your goals (rest, calm, balance, stress relief), and repetition over weeks - not a single heroic night.",
           "Members choose priorities and order them by importance. The rotation brings sleep-friendly themes back on a predictable cadence so you are not hunting for \"the right track\" when you are exhausted. Many people pair rest with stress relief or balanced life goals when worry is what keeps them awake."
         ]
       },
       {
         heading: "The second audio: reinforcement while you sleep",
         paragraphs: [
-          "If you select two audios per night, the second plays during sleep — not as another thing to stay awake for. Research on sleep and learning suggests the brain remains receptive during parts of the night; gentle suggestion during that window can reinforce the same calm you started at bedtime.",
-          "You do not need to memorize steps or sit upright. The platform schedules everything. Over time, the cue itself — intro music, then your session — can become a signal that it is safe to let go of the day."
+          "If you select two audios per night, the second plays during sleep - not as another thing to stay awake for. Research on sleep and learning suggests the brain remains receptive during parts of the night; gentle suggestion during that window can reinforce the same calm you started at bedtime.",
+          "You do not need to memorize steps or sit upright. The platform schedules everything. Over time, the cue itself - intro music, then your session - can become a signal that it is safe to let go of the day."
         ]
       },
       {
         heading: "Who benefits most",
         paragraphs: [
           "This approach fits busy professionals, parents running on empty, shift workers with irregular hours, and anyone whose mind speeds up the moment the house goes quiet. It also helps people who have tried single sleep tracks but could not build a habit.",
-          "Guided meditation supports rest and habit change; it is not a substitute for clinical care when insomnia is severe or tied to untreated anxiety, trauma, or sleep disorders. If you are unsure, talk with your doctor — and consider nightly guided audios as one supportive layer alongside professional guidance."
+          "Guided meditation supports rest and habit change; it is not a substitute for clinical care when insomnia is severe or tied to untreated anxiety, trauma, or sleep disorders. If you are unsure, talk with your doctor - and consider nightly guided audios as one supportive layer alongside professional guidance."
         ]
       },
       {
         heading: "Get started tonight",
         paragraphs: [
-          "Choose goals that support rest — balance, calm, stress relief, or related priorities — and complete registration to activate your membership. Your personalized audios begin the first night you press Start Session.",
+          "Choose goals that support rest - balance, calm, stress relief, or related priorities - and complete registration to activate your membership. Your personalized audios begin the first night you press Start Session.",
           "Read more on our guided sleep meditation page for how nightly rotation works, or use Start your journey below to sign up tonight."
         ]
       }
@@ -365,9 +365,9 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "guided-meditation-inspiration-creativity-at-will",
     title: "Guided meditation for inspiration: creativity at will while you sleep",
-    metaTitle: "Inspiration & Creativity — Guided Meditation at Night | RFTS Blog",
+    metaTitle: "Inspiration & Creativity - Guided Meditation at Night | RFTS Blog",
     metaDescription:
-      "How nightly guided meditations support inspiration at will — for writers, entrepreneurs, and anyone who wants creative momentum without daytime willpower. Links to the Inspiration goal.",
+      "How nightly guided meditations support inspiration at will - for writers, entrepreneurs, and anyone who wants creative momentum without daytime willpower. Links to the Inspiration goal.",
     publishedAt: "2026-07-08",
     readMinutes: 6,
     excerpt:
@@ -377,34 +377,34 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         paragraphs: [
           "Writers stare at blank pages. Entrepreneurs stall before the next pitch. Artists and professionals alike know the feeling: you want to create, but the spark is not there when the calendar says it should be.",
-          "Reach For The Stars treats inspiration as one of up to ten goals you prioritize. When creativity, motivation, or entrepreneurial drive is in your rotation, guided audios play automatically while you fall asleep — and again during sleep if you choose two audios per night. That is the same receptive window hypnotherapists have used for decades to install confidence, follow-through, and what Terry Brussel-Rogers calls inspiration at will."
+          "Reach For The Stars treats inspiration as one of up to ten goals you prioritize. When creativity, motivation, or entrepreneurial drive is in your rotation, guided audios play automatically while you fall asleep - and again during sleep if you choose two audios per night. That is the same receptive window hypnotherapists have used for decades to install confidence, follow-through, and what Terry Brussel-Rogers calls inspiration at will."
         ]
       },
       {
         heading: "What “inspiration at will” means",
         paragraphs: [
-          "Classic creativity work in hypnosis pairs relaxation with suggestion: you learn to enter a focused, open state and associate it with real situations — a blank page, a new project, an audience, a business decision. Over time, those situations themselves can trigger the same inner readiness instead of dread or procrastination.",
-          "You do not need to carve out extra daytime hours. Nightly guided meditations reinforce the same messages when your conscious mind is quiet and your subconscious is listening — which is why members often describe waking with clearer ideas or renewed drive for work they had been avoiding."
+          "Classic creativity work in hypnosis pairs relaxation with suggestion: you learn to enter a focused, open state and associate it with real situations - a blank page, a new project, an audience, a business decision. Over time, those situations themselves can trigger the same inner readiness instead of dread or procrastination.",
+          "You do not need to carve out extra daytime hours. Nightly guided meditations reinforce the same messages when your conscious mind is quiet and your subconscious is listening - which is why members often describe waking with clearer ideas or renewed drive for work they had been avoiding."
         ]
       },
       {
         heading: "Why bedtime beats “trying harder” during the day",
         paragraphs: [
           "Daytime inspiration often competes with email, notifications, and fatigue. By the time you sit down to create, you may already be depleted. Bedtime practice sidesteps that fight: intro relaxation music, then your first goal recording as you drift off, then optional reinforcement about 2.5 hours later while you are still in restorative sleep.",
-          "The program rotates priorities over weeks so inspiration themes return on a predictable cadence — not one random track you forget to play. Pair inspiration with wealth or memory goals if you want entrepreneurial focus and sharper recall alongside creative momentum."
+          "The program rotates priorities over weeks so inspiration themes return on a predictable cadence - not one random track you forget to play. Pair inspiration with wealth or memory goals if you want entrepreneurial focus and sharper recall alongside creative momentum."
         ]
       },
       {
         heading: "Who this helps most",
         paragraphs: [
-          "This approach fits writers, speakers, coaches, side-hustle builders, and anyone whose success depends on showing up with fresh ideas. It also supports people returning to a creative practice after burnout or a long pause — when guilt and pressure make inspiration harder, not easier.",
+          "This approach fits writers, speakers, coaches, side-hustle builders, and anyone whose success depends on showing up with fresh ideas. It also supports people returning to a creative practice after burnout or a long pause - when guilt and pressure make inspiration harder, not easier.",
           "Guided meditation is a mind-body tool for habit and mindset, not a substitute for professional mental health care when you need clinical support. If creative blocks are tied to anxiety or trauma, work with a qualified clinician alongside any wellness practice."
         ]
       },
       {
         heading: "Get started tonight",
         paragraphs: [
-          "Choose inspiration among your goals and complete registration to activate your membership. Order creativity, motivation, and related priorities by importance — your personalized audios begin the first night you press Start Session.",
+          "Choose inspiration among your goals and complete registration to activate your membership. Order creativity, motivation, and related priorities by importance - your personalized audios begin the first night you press Start Session.",
           "Explore our inspiration goal page for how nightly rotation works, or use Start your journey below to sign up tonight."
         ]
       }
@@ -420,51 +420,51 @@ export const BLOG_POSTS: BlogPost[] = [
     title: "Weight loss hypnosis and guided meditation while you sleep",
     metaTitle: "Weight Loss Hypnosis & Guided Meditation at Night | RFTS Blog",
     metaDescription:
-      "How hypnosis and guided meditation support natural weight control — stress eating, sleep, and nightly goal audios. Adapted from Success Center, Inc. with transcript excerpt.",
+      "How hypnosis and guided meditation support natural weight control - stress eating, sleep, and nightly goal audios. Adapted from Success Center, Inc. with transcript excerpt.",
     publishedAt: "2026-07-07",
     readMinutes: 6,
     excerpt:
-      "Hypnosis for weight loss works through habit change at the subconscious level — especially when guided meditations repeat while you fall asleep and during sleep, not as another daytime chore.",
+      "Hypnosis for weight loss works through habit change at the subconscious level - especially when guided meditations repeat while you fall asleep and during sleep, not as another daytime chore.",
     goalSlug: "health",
     sections: [
       {
         paragraphs: [
-          "People searching for weight loss hypnosis or guided meditation for natural weight control often already know diets alone are not enough. The missing piece is often habit — emotional eating, stress cravings, and the inner script that says healthy choices have to feel like punishment.",
-          "Reach For The Stars treats health as one of your prioritized goals. When health and related themes are in your rotation, guided audios play automatically at bedtime and, if you choose two audios per night, again during sleep — the same receptive windows hypnotherapists have used for decades to support weight release and steady energy."
+          "People searching for weight loss hypnosis or guided meditation for natural weight control often already know diets alone are not enough. The missing piece is often habit - emotional eating, stress cravings, and the inner script that says healthy choices have to feel like punishment.",
+          "Reach For The Stars treats health as one of your prioritized goals. When health and related themes are in your rotation, guided audios play automatically at bedtime and, if you choose two audios per night, again during sleep - the same receptive windows hypnotherapists have used for decades to support weight release and steady energy."
         ]
       },
       {
         heading: "Does hypnosis help with weight loss?",
         paragraphs: [
-          "Research on hypnotherapy and weight loss has reported better outcomes when hypnosis is combined with behavioral change than diet alone in several studies — though results vary by person and program. Effective work is suggestion-based: you remain in control while your conscious and subconscious minds learn greater self-awareness and healthier responses.",
-          "Hypnosis is a relaxed state that unlocks access to the subconscious — where hunger cues, cravings, and emotional patterns often live. Guided imagery and positive suggestion can make healthy eating and enjoyable movement feel rewarding rather than forced, which matters because most people only sustain what feels good over time."
+          "Research on hypnotherapy and weight loss has reported better outcomes when hypnosis is combined with behavioral change than diet alone in several studies - though results vary by person and program. Effective work is suggestion-based: you remain in control while your conscious and subconscious minds learn greater self-awareness and healthier responses.",
+          "Hypnosis is a relaxed state that unlocks access to the subconscious - where hunger cues, cravings, and emotional patterns often live. Guided imagery and positive suggestion can make healthy eating and enjoyable movement feel rewarding rather than forced, which matters because most people only sustain what feels good over time."
         ]
       },
       {
         heading: "Stress eating and emotional eating",
         paragraphs: [
-          "Stress releases cortisol, which can interfere with healthy weight loss. Many people reach for sugar or excess carbs when tension spikes — not from true hunger but from a learned calming response.",
-          "Suggestions to meet stress with physical relaxation, emotional calm, and problem-solving behavior — instead of a box of snacks — are a core part of positive stress management. Pairing that with a health goal in your nightly rotation reinforces the same message when you are not willpower-depleted at 10 p.m."
+          "Stress releases cortisol, which can interfere with healthy weight loss. Many people reach for sugar or excess carbs when tension spikes - not from true hunger but from a learned calming response.",
+          "Suggestions to meet stress with physical relaxation, emotional calm, and problem-solving behavior - instead of a box of snacks - are a core part of positive stress management. Pairing that with a health goal in your nightly rotation reinforces the same message when you are not willpower-depleted at 10 p.m."
         ]
       },
       {
         heading: "Weight loss while you sleep",
         paragraphs: [
           "Sleep quality and weight are linked: deep, restorative rest supports steady energy and better choices the next day. Guided meditations can suggest releasing weight during rejuvenating sleep and resolving challenges on the subconscious level overnight.",
-          "Reach For The Stars schedules health-focused recordings in rotation over weeks — including the repeated exposure many practitioners associate with lasting mindset change — without requiring extra time in your busy day. Press Start Session at bedtime; your personalized audios handle the rest."
+          "Reach For The Stars schedules health-focused recordings in rotation over weeks - including the repeated exposure many practitioners associate with lasting mindset change - without requiring extra time in your busy day. Press Start Session at bedtime; your personalized audios handle the rest."
         ]
       },
       {
         heading: "A note on expectations",
         paragraphs: [
-          "Guided meditation and hypnosis are mind-body tools that support habit change — not a substitute for medical advice, nutrition counseling, or treatment when you need professional care. If you have a health condition affecting weight, work with your clinician alongside any wellness practice.",
+          "Guided meditation and hypnosis are mind-body tools that support habit change - not a substitute for medical advice, nutrition counseling, or treatment when you need professional care. If you have a health condition affecting weight, work with your clinician alongside any wellness practice.",
           "Members who see the best results tend to stay consistent for several weeks, choose health among their top goals, and treat nightly audios as one part of a whole approach to the body they want to delight in."
         ]
       },
       {
         heading: "Get started tonight",
         paragraphs: [
-          "Choose health among your goals and complete registration to activate your membership. Order your priorities by importance — your personalized audios begin the first night you press Start Session.",
+          "Choose health among your goals and complete registration to activate your membership. Order your priorities by importance - your personalized audios begin the first night you press Start Session.",
           "Explore our health goal page for how nightly rotation works, or use Start your journey below to sign up tonight."
         ]
       }
@@ -478,19 +478,19 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "guided-meditation-memory-goal-mental-focus",
     title: "Memory as a nightly goal: guided meditation for focus and recall",
-    metaTitle: "Memory Goal — Guided Meditation for Focus & Recall | RFTS Blog",
+    metaTitle: "Memory Goal - Guided Meditation for Focus & Recall | RFTS Blog",
     metaDescription:
       "Choose memory among your Reach For The Stars goals and hear guided meditations for focus and recall at bedtime and during sleep. Transcript excerpt included.",
     publishedAt: "2026-06-27",
     readMinutes: 5,
     excerpt:
-      "Memory and mental focus work best when they are goals you reinforce every night — not a random track you play once when you remember.",
+      "Memory and mental focus work best when they are goals you reinforce every night - not a random track you play once when you remember.",
     goalSlug: "memory",
     sections: [
       {
         paragraphs: [
-          "People search for memory improvement meditation, brain training, and sharper focus — often while juggling too many apps and playlists. Reach For The Stars treats memory as one of up to ten prioritized goals. When memory is in your rotation, relevant guided audios play automatically while you fall asleep and, if you choose two audios per night, again during sleep.",
-          "That matches how many members think about mental excellence: steady repetition at a receptive time, aligned with what you actually want to remember and focus on — not generic background audio."
+          "People search for memory improvement meditation, brain training, and sharper focus - often while juggling too many apps and playlists. Reach For The Stars treats memory as one of up to ten prioritized goals. When memory is in your rotation, relevant guided audios play automatically while you fall asleep and, if you choose two audios per night, again during sleep.",
+          "That matches how many members think about mental excellence: steady repetition at a receptive time, aligned with what you actually want to remember and focus on - not generic background audio."
         ]
       },
       {
@@ -504,13 +504,13 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: "Sleep, consolidation, and your second nightly audio",
         paragraphs: [
           "Sleep plays a central role in memory consolidation. The default program includes two audios per night: intro relaxation music and your first goal recording as you fall asleep, then optional reinforcement about 2.5 hours later while you are still in restorative sleep.",
-          "Members often describe clearer recall and steadier focus when they stay consistent for several weeks — not from one perfect night."
+          "Members often describe clearer recall and steadier focus when they stay consistent for several weeks - not from one perfect night."
         ]
       },
       {
         heading: "Get started tonight",
         paragraphs: [
-          "Choose your goals and complete registration to activate your membership. Order memory and related priorities by importance — your personalized audios begin the first night you press Start Session.",
+          "Choose your goals and complete registration to activate your membership. Order memory and related priorities by importance - your personalized audios begin the first night you press Start Session.",
           "Read How It Works for the complete nightly flow, or use Start your journey below to sign up tonight."
         ]
       }
@@ -530,12 +530,12 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-03-18",
     readMinutes: 5,
     excerpt:
-      "Guided sleep meditation works best when it is consistent, personalized, and timed for the moments your mind is most receptive — especially as you fall asleep and during sleep.",
+      "Guided sleep meditation works best when it is consistent, personalized, and timed for the moments your mind is most receptive - especially as you fall asleep and during sleep.",
     topicSlug: "sleep-meditation",
     sections: [
       {
         paragraphs: [
-          "Many people search for guided sleep meditation because they want something simpler than another app full of random tracks. The challenge is not finding a single calming recording — it is building a habit that fits your goals and repeats every night without extra effort.",
+          "Many people search for guided sleep meditation because they want something simpler than another app full of random tracks. The challenge is not finding a single calming recording - it is building a habit that fits your goals and repeats every night without extra effort.",
           "Reach For The Stars schedules personalized audios while you fall asleep and, if you choose two audios per night, again during sleep. That structure mirrors what sleep research suggests: relaxation at bedtime plus reinforcement during the night."
         ]
       },
@@ -544,7 +544,7 @@ export const BLOG_POSTS: BlogPost[] = [
         paragraphs: [
           "Choose content aligned with your priorities (rest, calm, balance), not generic background noise.",
           "Use a fixed nightly flow so you are not deciding what to play when you are already tired.",
-          "Give the practice several weeks — sleep and suggestion both respond to repetition."
+          "Give the practice several weeks - sleep and suggestion both respond to repetition."
         ]
       }
     ],
@@ -563,12 +563,12 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-03-17",
     readMinutes: 5,
     excerpt:
-      "While going to sleep and during sleep are ideal times for stress relief meditation — your body is winding down and guided audios meet you there instead of adding another daytime task.",
+      "While going to sleep and during sleep are ideal times for stress relief meditation - your body is winding down and guided audios meet you there instead of adding another daytime task.",
     topicSlug: "stress-relief",
     sections: [
       {
         paragraphs: [
-          "Stress relief meditation searches often spike in the evening, when the mind replays the day. A short guided relaxation can interrupt that loop — especially when the messages match goals you care about, like calm, confidence, or balance.",
+          "Stress relief meditation searches often spike in the evening, when the mind replays the day. A short guided relaxation can interrupt that loop - especially when the messages match goals you care about, like calm, confidence, or balance.",
           "With Reach For The Stars, your stress-related goals rotate through a nightly schedule. You hear intro relaxation music, then goal audios, without opening a library or choosing tracks when you are exhausted."
         ]
       },
@@ -576,7 +576,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: "Why repetition matters for stress",
         paragraphs: [
           "Occasional meditation can feel good in the moment. Lasting stress relief usually comes from consistent practice that trains attention and emotional regulation over time.",
-          "Members often report using techniques from their sessions during the day — a sign that nightly reinforcement is encoding new patterns, not just helping one night at a time."
+          "Members often report using techniques from their sessions during the day - a sign that nightly reinforcement is encoding new patterns, not just helping one night at a time."
         ]
       }
     ],
@@ -591,17 +591,17 @@ export const BLOG_POSTS: BlogPost[] = [
     title: "Pain relief meditation: mind-body support for natural comfort",
     metaTitle: "Pain Relief Meditation & Natural Comfort at Night | RFTS Blog",
     metaDescription:
-      "Pain relief meditation and guided relaxation for tension and chronic discomfort. Transcript excerpt and personalized nightly audios — alongside medical care.",
+      "Pain relief meditation and guided relaxation for tension and chronic discomfort. Transcript excerpt and personalized nightly audios - alongside medical care.",
     publishedAt: "2026-03-16",
     readMinutes: 6,
     excerpt:
-      "Pain relief meditation is not a replacement for medical care — it is a mind-body tool many people use alongside treatment to ease tension and improve sleep when pain keeps them awake.",
+      "Pain relief meditation is not a replacement for medical care - it is a mind-body tool many people use alongside treatment to ease tension and improve sleep when pain keeps them awake.",
     topicSlug: "pain-relief",
     sections: [
       {
         paragraphs: [
           "People look for natural pain relief when medication alone is not enough, or when they want relaxation skills they can use every night. Guided meditation can reduce muscle tension and stress that amplifies pain perception.",
-          "Reach For The Stars members can work with facilitators on personalized recordings (CGMR) in addition to goal-based library audios — so messages can align with their situation while still following a nightly schedule."
+          "Reach For The Stars members can work with facilitators on personalized recordings (CGMR) in addition to goal-based library audios - so messages can align with their situation while still following a nightly schedule."
         ]
       },
       {
@@ -627,19 +627,19 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-03-15",
     readMinutes: 5,
     excerpt:
-      "Memory improvement meditation searches often pair with questions about focus and brain training. Sleep plays a central role in consolidation — reinforcing learning messages at night can support both.",
+      "Memory improvement meditation searches often pair with questions about focus and brain training. Sleep plays a central role in consolidation - reinforcing learning messages at night can support both.",
     topicSlug: "memory-improvement",
     sections: [
       {
         paragraphs: [
-          "Research on meditation links regular practice to attention, working memory, and structural brain changes over weeks — not from a single session. Reach For The Stars applies that principle with goal-based audios scheduled every night.",
-          "When memory and mental excellence are among your chosen goals, your rotation includes relevant guided content automatically — no separate playlist to maintain."
+          "Research on meditation links regular practice to attention, working memory, and structural brain changes over weeks - not from a single session. Reach For The Stars applies that principle with goal-based audios scheduled every night.",
+          "When memory and mental excellence are among your chosen goals, your rotation includes relevant guided content automatically - no separate playlist to maintain."
         ]
       },
       {
         heading: "Two audios, one night",
         paragraphs: [
-          "The default is two audios per night: one as you fall asleep, another about 2.5 hours later. That second play reinforces goals during sleep — the same window many people associate with deep learning and integration.",
+          "The default is two audios per night: one as you fall asleep, another about 2.5 hours later. That second play reinforces goals during sleep - the same window many people associate with deep learning and integration.",
           "Members describe clearer recall and focus when they stay consistent over weeks, not days."
         ]
       }
@@ -655,7 +655,7 @@ export const BLOG_POSTS: BlogPost[] = [
     title: "Burnout recovery: guided audios for caregivers and high-stress work",
     metaTitle: "Burnout Recovery & Guided Audios for Caregivers | RFTS Blog",
     metaDescription:
-      "Burnout recovery with guided relaxation at night. For caregivers, healthcare workers, and anyone running on empty — nightly audios without another daytime chore.",
+      "Burnout recovery with guided relaxation at night. For caregivers, healthcare workers, and anyone running on empty - nightly audios without another daytime chore.",
     publishedAt: "2026-03-14",
     readMinutes: 5,
     excerpt:
@@ -664,7 +664,7 @@ export const BLOG_POSTS: BlogPost[] = [
     sections: [
       {
         paragraphs: [
-          "Burnout shows up as exhaustion, irritability, and trouble sleeping — often in caregivers, healthcare workers, and parents. Recovery requires sustainable habits, not heroic one-off self-care.",
+          "Burnout shows up as exhaustion, irritability, and trouble sleeping - often in caregivers, healthcare workers, and parents. Recovery requires sustainable habits, not heroic one-off self-care.",
           "Reach For The Stars runs while you sleep: press Start Session at bedtime and your personalized audios handle the rest. That lowers the friction that stops many burnout recovery plans cold."
         ]
       },
@@ -672,7 +672,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: "Start with calm and sleep goals",
         paragraphs: [
           "If you are depleted, begin with rest, balance, and stress relief goals before adding ambitious performance targets.",
-          "Pair the program with real boundaries and support where you can — audios reinforce intention; they do not replace time off or professional help when needed."
+          "Pair the program with real boundaries and support where you can - audios reinforce intention; they do not replace time off or professional help when needed."
         ]
       }
     ],
@@ -687,15 +687,15 @@ export const BLOG_POSTS: BlogPost[] = [
     title: "Why two audios per night reinforce your goals while you sleep",
     metaTitle: "Two Audios Per Night: How Nightly Reinforcement Works | RFTS Blog",
     metaDescription:
-      "Why Reach For The Stars plays two personalized audios per night — intro relaxation music, first goal, and a second session during sleep for deeper reinforcement.",
+      "Why Reach For The Stars plays two personalized audios per night - intro relaxation music, first goal, and a second session during sleep for deeper reinforcement.",
     publishedAt: "2026-03-13",
     readMinutes: 4,
     excerpt:
-      "One audio helps you fall asleep with intention. A second audio, about 2.5 hours later, reinforces the same goals during sleep — that is the Reach For The Stars nightly design.",
+      "One audio helps you fall asleep with intention. A second audio, about 2.5 hours later, reinforces the same goals during sleep - that is the Reach For The Stars nightly design.",
     sections: [
       {
         paragraphs: [
-          "Members can choose one or two audios per night; the default is two. The first session includes intro relaxation music and your first goal recording as you fall asleep — a high-suggestibility window for guided meditation.",
+          "Members can choose one or two audios per night; the default is two. The first session includes intro relaxation music and your first goal recording as you fall asleep - a high-suggestibility window for guided meditation.",
           "The second play targets the same goals during sleep, when the brain is still processing and consolidating. It is the same logic behind spaced repetition, applied to your wellness priorities."
         ]
       },

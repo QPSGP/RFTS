@@ -1,4 +1,4 @@
-# Member login — how it works (for any agent)
+# Member login - how it works (for any agent)
 
 **Restored (Feb 2026):** Member login and play-options were restored to the state at commit **2af5bde** (when they were working): form POST → 302 redirect with Set-Cookie, play-options as a single client page that fetches `/api/user/me`. Rebuild from here if needed.
 
@@ -37,4 +37,4 @@ That script POSTs to `/api/user/login` (form body) and then GETs `/api/user/me` 
 
 - **Env:** `POSTGRES_URL` and `SESSION_SECRET` in `.env.local` (and on Vercel if deployed).
 - **DevTools → Network:** On the login response, confirm `Set-Cookie: rfts_user_session=...`. On the next request (to `/play-options`), confirm `Cookie: rfts_user_session=...`.
-- **Header shows “Members Console” but page says “need to sign in”:** The cookie is present for the layout (header) but play-options must also read it in the same request; it uses `getMemberProfileForSession()` in the page server component. If that still happens, layout and page may be running in different contexts — check for middleware or dynamic rendering differences.
+- **Header shows “Members Console” but page says “need to sign in”:** The cookie is present for the layout (header) but play-options must also read it in the same request; it uses `getMemberProfileForSession()` in the page server component. If that still happens, layout and page may be running in different contexts - check for middleware or dynamic rendering differences.

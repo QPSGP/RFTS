@@ -22,7 +22,7 @@ const inputStyle = {
 };
 
 const CATEGORIES = [
-  { value: "", label: "— Select category (optional) —" },
+  { value: "", label: "- Select category (optional) -" },
   { value: "support", label: "Support" },
   { value: "technical", label: "Technical / Website" },
   { value: "playback", label: "Playback / Audio" },
@@ -231,7 +231,7 @@ export default function ReportIssueForm({
       <p style={{ margin: 0, fontSize: 12, color: "#64748b", lineHeight: 1.45 }}>
         {isAdminMode
           ? "This files an internal ticket in the shared admin queue so another admin can resolve it. Browser/device details are attached automatically."
-          : "Your account email, membership settings, and browser/device details are attached automatically — you do not need to type those in."}
+          : "Your account email, membership settings, and browser/device details are attached automatically - you do not need to type those in."}
       </p>
       <div>
         <label htmlFor="report-category" style={{ fontSize: 12, display: "block", marginBottom: 4 }}>

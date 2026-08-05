@@ -1,5 +1,5 @@
 ---
-description: Wednesday morning tech meeting brief — weekly developed/fixed summary, missing public covers, content fixes, agenda
+description: Wednesday morning tech meeting brief - weekly developed/fixed summary, missing public covers, content fixes, agenda
 alwaysApply: true
 ---
 
@@ -29,7 +29,7 @@ When the user asks to add library/audio issues to the fix list, append them to `
 
 ### B. Still needs fix (library)
 1. **Public covers:** one line **X missing / Y public titles** (exclude CGMR and private/custom); short SKU list if X > 0 (up to ~15).
-2. **Content / audio backlog:** from `libraryContentFixes` / `docs/LIBRARY_CONTENT_FIXES.md` — list each SKU and issue (group by issue type if helpful).
+2. **Content / audio backlog:** from `libraryContentFixes` / `docs/LIBRARY_CONTENT_FIXES.md` - list each SKU and issue (group by issue type if helpful).
 
 ### C. Wednesday morning tech meeting agenda
 - 4–7 concrete agenda items derived from A and B (prioritize risk, member-facing bugs, then content ops, then marketing/admin).
@@ -37,7 +37,7 @@ When the user asks to add library/audio issues to the fix list, append them to `
 
 ## Rules
 
-1. Keep the whole brief scannable — aim for under ~1 screen of bullets unless the week was huge.
+1. Keep the whole brief scannable - aim for under ~1 screen of bullets unless the week was huge.
 2. Do not invent work; only summarize commits, live cover query results, and the maintained content-fix list.
-3. Do **not** wait to be asked again on Wednesday once the session has started and the day is Wednesday — lead with the brief, then continue with whatever else they need.
+3. Do **not** wait to be asked again on Wednesday once the session has started and the day is Wednesday - lead with the brief, then continue with whatever else they need.
 4. If the DB query fails, still produce sections A, B2, and C from git + `LIBRARY_CONTENT_FIXES.md` and note that cover counts need `.env.local` / network.

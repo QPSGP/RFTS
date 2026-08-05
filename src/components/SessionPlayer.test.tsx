@@ -551,7 +551,7 @@ describe("SessionPlayer", () => {
       expect(screen.getByText(/First session complete/i)).toBeInTheDocument();
     });
 
-    await userEvent.click(screen.getByRole("button", { name: /End session — cancel second recording/i }));
+    await userEvent.click(screen.getByRole("button", { name: /End session - cancel second recording/i }));
 
     await waitFor(() => {
       expect(screen.queryByText(/First session complete/i)).not.toBeInTheDocument();

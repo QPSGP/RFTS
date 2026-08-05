@@ -42,14 +42,14 @@ export function buildTerryCgmrInductionAndDeepener(firstName: string): {
  */
 export function buildTerryCgmrClose(): string[] {
   return [
-    "Relaxation being pumped throughout your entire being, through your heart. Feel it in your shoulders and arms, in your back and spine, feel it in your neck, glowing in your face, and in your mind as you become fully aware of your mind, your essence, your being — what makes you what you are. Be fully aware of yourself and explore your own being.",
+    "Relaxation being pumped throughout your entire being, through your heart. Feel it in your shoulders and arms, in your back and spine, feel it in your neck, glowing in your face, and in your mind as you become fully aware of your mind, your essence, your being - what makes you what you are. Be fully aware of yourself and explore your own being.",
     "With this self-awareness comes the knowledge that you are your own master. You can control your own mind, body and emotions. You can control your own life and fully express yourself in every way.",
     "This knowledge gives you a feeling of peace and relaxation, a deep sense of well-being and health.",
     "I will count from zero to five. When I reach the count of five, you emerge gently, fully from the state of hypnosis. You move into a deep, restful, natural sleep.",
     "Zero… one… two… three… four… five. Emerging now from the state of hypnosis, you move into a deep, restful, natural sleep.",
     "You listen to this recording many times. You enjoy and are committed to listening to your Reach For The Stars each night.",
     "Each time you listen to it, the suggestions become stronger, more powerful, more effective for you.",
-    "You are doing everything in your power — physically, mentally, emotionally, spiritually, and financially — to make your goals, particularly the ones you have been listening to on this recording, a reality.",
+    "You are doing everything in your power - physically, mentally, emotionally, spiritually, and financially - to make your goals, particularly the ones you have been listening to on this recording, a reality.",
     "Reach for the Stars."
   ];
 }

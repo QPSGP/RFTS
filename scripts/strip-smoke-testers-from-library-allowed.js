@@ -53,7 +53,7 @@ const pool = new Pool({
     emailsRemoved += removed.length;
     if (sampleRemovals.length < 40) {
       sampleRemovals.push({
-        sku: row.sku_code || "—",
+        sku: row.sku_code || "-",
         title: row.title,
         removed,
         keptCount: kept.length

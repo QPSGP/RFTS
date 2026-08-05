@@ -16,7 +16,7 @@ export type TopicLandingContent = {
   slug: TopicLandingSlug;
   path: string;
   pill: string;
-  /** Primary H1 — aligned with common search queries */
+  /** Primary H1 - aligned with common search queries */
   title: string;
   metaTitle: string;
   metaDescription: string;
@@ -39,7 +39,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
     title: "Guided sleep meditation for better sleep",
     metaTitle: "Guided Sleep Meditation for Better Sleep | Reach For The Stars",
     metaDescription:
-      "Fall asleep faster with guided sleep meditation and personalized nightly audios. Goal-based sessions while you sleep — no app juggling.",
+      "Fall asleep faster with guided sleep meditation and personalized nightly audios. Goal-based sessions while you sleep - no app juggling.",
     heroLead:
       "If you search for guided sleep meditation, sleep hypnosis, or how to sleep better at night, Reach For The Stars delivers personalized audios scheduled while you fall asleep and during sleep.",
     eyebrow: "Better sleep",
@@ -50,7 +50,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       {
         title: "Relaxation before sleep",
         body:
-          "Each night begins with short intro relaxation music, then your first goal recording — a structured wind-down instead of scrolling or worrying."
+          "Each night begins with short intro relaxation music, then your first goal recording - a structured wind-down instead of scrolling or worrying."
       },
       {
         title: "Reinforcement while you sleep",
@@ -66,7 +66,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
     nightlySteps: [
       {
         title: "Pick sleep-related goals",
-        body: "Select focus areas that matter to you — rest, calm, balance, or related priorities."
+        body: "Select focus areas that matter to you - rest, calm, balance, or related priorities."
       },
       {
         title: "Press Start Session at bedtime",
@@ -97,7 +97,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       {
         title: "Calm at a receptive time",
         body:
-          "The transition into sleep is a natural window for suggestion and relaxation — ideal for stress relief meditation without adding another daytime task."
+          "The transition into sleep is a natural window for suggestion and relaxation - ideal for stress relief meditation without adding another daytime task."
       },
       {
         title: "Goal-based messaging",
@@ -107,13 +107,13 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       {
         title: "Repetition without effort",
         body:
-          "Hearing supportive messages on a schedule strengthens new mental patterns — the same principle behind habit and focus training."
+          "Hearing supportive messages on a schedule strengthens new mental patterns - the same principle behind habit and focus training."
       }
     ],
     nightlySteps: [
       {
         title: "Choose stress and calm goals",
-        body: "Prioritize what you want to feel more of — peace, confidence, balance, or focus."
+        body: "Prioritize what you want to feel more of - peace, confidence, balance, or focus."
       },
       {
         title: "Listen nightly",
@@ -133,7 +133,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
     title: "Burnout recovery meditation and guided reset",
     metaTitle: "Burnout Recovery Meditation & Guided Reset | Reach For The Stars",
     metaDescription:
-      "Recover from burnout with guided meditation at night. Personalized audios for stress, sleep, and balance — no extra daytime willpower required.",
+      "Recover from burnout with guided meditation at night. Personalized audios for stress, sleep, and balance - no extra daytime willpower required.",
     heroLead:
       "If you search for burnout recovery meditation, burnout sleep reset, or how to recover without one more self-care chore, Reach For The Stars schedules personalized guided audios while you fall asleep and during sleep.",
     eyebrow: "Recover while you rest",
@@ -144,7 +144,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       {
         title: "No extra daytime load",
         body:
-          "Press Start Session at bedtime. Intro relaxation music and your goal recordings run while you rest — so recovery is not competing with work or family."
+          "Press Start Session at bedtime. Intro relaxation music and your goal recordings run while you rest - so recovery is not competing with work or family."
       },
       {
         title: "Stress, sleep, and balance together",
@@ -154,13 +154,13 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       {
         title: "Repetition rebuilds the nervous system",
         body:
-          "Optional second audios during sleep reinforce the same calm you started at bedtime — consistent exposure without requiring motivation at 6 a.m."
+          "Optional second audios during sleep reinforce the same calm you started at bedtime - consistent exposure without requiring motivation at 6 a.m."
       }
     ],
     nightlySteps: [
       {
         title: "Choose recovery-related goals",
-        body: "Prioritize stress relief, rest, emotional health, or balanced life — ordered by what you need most."
+        body: "Prioritize stress relief, rest, emotional health, or balanced life - ordered by what you need most."
       },
       {
         title: "Start Session at bedtime",
@@ -191,7 +191,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       {
         title: "Relaxation for tension",
         body:
-          "Guided relaxation can ease muscle tension and the stress that amplifies pain — especially when practiced at bedtime."
+          "Guided relaxation can ease muscle tension and the stress that amplifies pain - especially when practiced at bedtime."
       },
       {
         title: "Personalized CGMR option",
@@ -211,7 +211,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       },
       {
         title: "Nightly guided sessions",
-        body: "Intro relaxation music plus goal audios — optional second play during sleep."
+        body: "Intro relaxation music plus goal audios - optional second play during sleep."
       },
       {
         title: "Track what helps",
@@ -248,7 +248,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       {
         title: "Structured rotation",
         body:
-          "Goals rotate in order so memory and focus themes are reinforced regularly — not one-off sessions you forget to repeat."
+          "Goals rotate in order so memory and focus themes are reinforced regularly - not one-off sessions you forget to repeat."
       }
     ],
     nightlySteps: [
@@ -280,7 +280,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
     eyebrow: "Cardiovascular wellness",
     sectionTitle: "How guided meditation supports blood pressure",
     sectionSubtitle:
-      "Relaxation practices can ease sympathetic nervous system arousal — a factor in elevated blood pressure for many people.",
+      "Relaxation practices can ease sympathetic nervous system arousal - a factor in elevated blood pressure for many people.",
     howItHelps: [
       {
         title: "Relaxation response",
@@ -290,7 +290,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       {
         title: "Nightly consistency",
         body:
-          "A fixed bedtime practice removes the friction of choosing what to listen to — consistency matters for cardiovascular benefits."
+          "A fixed bedtime practice removes the friction of choosing what to listen to - consistency matters for cardiovascular benefits."
       },
       {
         title: "Holistic health goals",
@@ -323,7 +323,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       {
         title: "Stress recovery",
         body:
-          "Nightly guided audios support recovery after demanding days — especially for caregivers and high-stress workers."
+          "Nightly guided audios support recovery after demanding days - especially for caregivers and high-stress workers."
       },
       {
         title: "Mind-body balance",
@@ -361,7 +361,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       {
         title: "Regulation skills",
         body:
-          "Repeated guided messages train attention and emotional responses — skills members often use during the day."
+          "Repeated guided messages train attention and emotional responses - skills members often use during the day."
       },
       {
         title: "Goal-aligned content",
@@ -390,7 +390,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
     metaDescription:
       "Strengthen will power and break bad habits with guided meditation and nightly goal audios. Reinforce discipline and follow-through while you sleep.",
     heroLead:
-      "Enhanced will power supports habit change — from smoking cessation to healthier routines. Reach For The Stars reinforces discipline and intention through personalized audios scheduled each night.",
+      "Enhanced will power supports habit change - from smoking cessation to healthier routines. Reach For The Stars reinforces discipline and intention through personalized audios scheduled each night.",
     eyebrow: "Discipline & habits",
     sectionTitle: "Will power through nightly reinforcement",
     sectionSubtitle:
@@ -399,7 +399,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       {
         title: "Habit replacement",
         body:
-          "Nightly goal messages support replacing unwanted habits with chosen priorities — aligned with balanced-life goals."
+          "Nightly goal messages support replacing unwanted habits with chosen priorities - aligned with balanced-life goals."
       },
       {
         title: "Pre-sleep priming",
@@ -437,7 +437,7 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
       {
         title: "Mindful attention",
         body:
-          "Guided audios train focused attention — a foundation for noticing thoughts and habits without judgment."
+          "Guided audios train focused attention - a foundation for noticing thoughts and habits without judgment."
       },
       {
         title: "Personalized goals",

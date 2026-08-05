@@ -10,7 +10,7 @@ describe("member-listen-progress", () => {
       parseMemberListenTitle("played_audio", "Play Options - First: T12 – Sleep Deep")
     ).toEqual({ title: "T12 – Sleep Deep", source: "session" });
     expect(
-      parseMemberListenTitle("played_audio", "Library — T08 – Calm Focus")
+      parseMemberListenTitle("played_audio", "Library - T08 – Calm Focus")
     ).toEqual({ title: "T08 – Calm Focus", source: "library" });
     expect(
       parseMemberListenTitle("played_audio", "Play Options - Intro relaxation music")
@@ -22,7 +22,7 @@ describe("member-listen-progress", () => {
       isCompletedFullListenOutcome("Play Options - First: T1 – Title | completed full listen")
     ).toBe(true);
     expect(
-      isCompletedFullListenOutcome("Library — T1 – Title | stopped before end (did not complete)")
+      isCompletedFullListenOutcome("Library - T1 – Title | stopped before end (did not complete)")
     ).toBe(false);
   });
 
@@ -41,7 +41,7 @@ describe("member-listen-progress", () => {
         },
         {
           action: "played_audio",
-          details: "Library — T1 – Alpha",
+          details: "Library - T1 – Alpha",
           createdAt: "2026-07-13T11:00:00.000Z"
         },
         {

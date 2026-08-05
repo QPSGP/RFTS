@@ -25,7 +25,7 @@ export default function BestYouLandingPage() {
     <main>
       <section className="hero section">
         <span className="pill">Conscious Growth Engine</span>
-        <h1>Imagine the best you — then train for it while you sleep.</h1>
+        <h1>Imagine the best you - then train for it while you sleep.</h1>
         <p>
           Reach For The Stars turns your prioritized goals into nightly guided
           meditations, so your subconscious gets the right messages at the right
@@ -45,7 +45,7 @@ export default function BestYouLandingPage() {
           <h2 className="section-title">Choose what matters. We rotate the rest.</h2>
           <p className="section-subtitle">
             Select up to ten priorities. Your schedule reinforces top goals more
-            often — without you building a playlist every evening.
+            often - without you building a playlist every evening.
           </p>
         </div>
         <div className="grid grid-3">
@@ -80,7 +80,7 @@ export default function BestYouLandingPage() {
           <div className="card">
             <h3>Fall-asleep window</h3>
             <p>
-              Sessions begin with preparation, then your first goal recording —
+              Sessions begin with preparation, then your first goal recording -
               timed for high receptivity as you drift off.
             </p>
           </div>
@@ -101,7 +101,7 @@ export default function BestYouLandingPage() {
         </div>
         <div className="cta-row" style={{ marginTop: 24, justifyContent: "center" }}>
           <a className="button" href={SIGNUP_HREF}>
-            Start Your Journey — 14 Day Free Trial
+            Start Your Journey - 14 Day Free Trial
           </a>
           <a className="button button-secondary" href="/landing/contracts">
             Tired of fictional contracts?

@@ -36,7 +36,7 @@ export default function AffiliateShareLinks({ affiliateCode }: Props) {
       setCopiedPath(path);
       window.setTimeout(() => setCopiedPath(null), 2500);
     } catch {
-      setCopyMessage(`Could not copy — select the link for ${label}.`);
+      setCopyMessage(`Could not copy - select the link for ${label}.`);
       setCopiedPath(null);
     }
   }, []);
@@ -50,7 +50,7 @@ export default function AffiliateShareLinks({ affiliateCode }: Props) {
       <h3 style={{ margin: "0 0 8px", fontSize: 17 }}>Share landing pages</h3>
       <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
         Copy a link below. Each URL includes your affiliate number so signups from that page
-        credit you. Visitors can browse the page and press Start Session — their trial signup
+        credit you. Visitors can browse the page and press Start Session - their trial signup
         keeps your <code>ref</code> for the session.
       </p>
       {groups.map((kind) => {

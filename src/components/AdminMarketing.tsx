@@ -129,7 +129,7 @@ const emptyTemplateForm = {
 };
 
 function formatDate(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   try {
     return new Date(iso).toLocaleDateString(undefined, {
       year: "numeric",
@@ -137,7 +137,7 @@ function formatDate(iso: string | null): string {
       day: "numeric"
     });
   } catch {
-    return "—";
+    return "-";
   }
 }
 
@@ -582,7 +582,7 @@ export default function AdminMarketing() {
           {overview && overviewStatus === "ready" && (
             <div className="grid grid-2" style={{ gap: 12 }}>
               <div className="card" style={{ borderColor: "#93c5fd", background: "#f8fbff" }}>
-                <strong>North Star — Weekly active listeners</strong>
+                <strong>North Star - Weekly active listeners</strong>
                 <p style={{ fontSize: 24, margin: "4px 0 0", fontWeight: 600 }}>
                   {overview.kpis.weeklyActiveListeners ?? 0}
                 </p>
@@ -591,11 +591,11 @@ export default function AdminMarketing() {
                 </p>
               </div>
               <div className="card" style={{ borderColor: "#93c5fd", background: "#f8fbff" }}>
-                <strong>North Star — 7-day retention</strong>
+                <strong>North Star - 7-day retention</strong>
                 <p style={{ fontSize: 24, margin: "4px 0 0", fontWeight: 600 }}>
                   {overview.kpis.retentionD7Percent != null
                     ? `${overview.kpis.retentionD7Percent}%`
-                    : "—"}
+                    : "-"}
                 </p>
                 <p style={{ margin: "4px 0 0", color: "#4b5563", fontSize: 13 }}>
                   {overview.kpis.retentionD7Eligible > 0
@@ -666,19 +666,19 @@ export default function AdminMarketing() {
               >
                 {overview.blogCadence.message ||
                   (overview.blogCadence.due
-                    ? `Late — ${overview.blogCadence.publishedThisWeek ?? "?"}/${overview.blogCadence.target ?? 3} this week`
-                    : `On pace — ${overview.blogCadence.publishedThisWeek ?? "?"}/${overview.blogCadence.target ?? 3} this week`)}
+                    ? `Late - ${overview.blogCadence.publishedThisWeek ?? "?"}/${overview.blogCadence.target ?? 3} this week`
+                    : `On pace - ${overview.blogCadence.publishedThisWeek ?? "?"}/${overview.blogCadence.target ?? 3} this week`)}
               </div>
               <p style={{ margin: "0 0 6px" }}>
                 <strong>This week:</strong>{" "}
-                {overview.blogCadence.publishedThisWeek ?? "—"}/
+                {overview.blogCadence.publishedThisWeek ?? "-"}/
                 {overview.blogCadence.target ?? 3}
                 {overview.blogCadence.weekStartIso
                   ? ` (${overview.blogCadence.weekStartIso} → ${overview.blogCadence.weekEndIso})`
                   : ""}
               </p>
               <p style={{ margin: "0 0 6px" }}>
-                <strong>Latest:</strong> {overview.blogCadence.latestTitle || "—"}{" "}
+                <strong>Latest:</strong> {overview.blogCadence.latestTitle || "-"}{" "}
                 <span style={{ color: "#6b7280" }}>
                   ({formatDate(overview.blogCadence.latestPublishedAt)})
                 </span>
@@ -809,7 +809,7 @@ export default function AdminMarketing() {
                   onChange={(e) => setForm((f) => ({ ...f, organization: e.target.value }))}
                   placeholder={
                     form.targetType === "individual"
-                      ? "e.g. Jordan Lee — wellness coach"
+                      ? "e.g. Jordan Lee - wellness coach"
                       : "e.g. City Fire Dept. wellness program"
                   }
                 />
@@ -820,7 +820,7 @@ export default function AdminMarketing() {
                   value={form.category}
                   onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
                 >
-                  <option value="">—</option>
+                  <option value="">-</option>
                   {OUTREACH_CATEGORIES.map((c) => (
                     <option key={c} value={c}>
                       {c}
@@ -834,7 +834,7 @@ export default function AdminMarketing() {
                   value={form.persona}
                   onChange={(e) => setForm((f) => ({ ...f, persona: e.target.value }))}
                 >
-                  <option value="">—</option>
+                  <option value="">-</option>
                   {OUTREACH_PERSONAS.map((p) => (
                     <option key={p} value={p}>
                       {p}
@@ -848,7 +848,7 @@ export default function AdminMarketing() {
                   value={form.entryPath}
                   onChange={(e) => setForm((f) => ({ ...f, entryPath: e.target.value }))}
                 >
-                  <option value="">—</option>
+                  <option value="">-</option>
                   {OUTREACH_ENTRY_PATHS.map((p) => (
                     <option key={p} value={p}>
                       {p}
@@ -895,7 +895,7 @@ export default function AdminMarketing() {
                   value={form.interest}
                   onChange={(e) => setForm((f) => ({ ...f, interest: e.target.value }))}
                 >
-                  <option value="">—</option>
+                  <option value="">-</option>
                   {OUTREACH_INTERESTS.map((i) => (
                     <option key={i} value={i}>
                       {i}
@@ -1271,12 +1271,12 @@ export default function AdminMarketing() {
                     <td className="admin-col-optional" style={tdMutedStyle}>
                       {outreachTargetTypeLabel(t.targetType || "organization")}
                     </td>
-                    <td className="admin-col-optional" style={tdMutedStyle}>{t.category || "—"}</td>
-                    <td className="admin-col-optional" style={tdMutedStyle}>{t.persona || "—"}</td>
-                    <td className="admin-col-optional" style={tdMutedStyle}>{t.entryPath || "—"}</td>
-                    <td className="admin-col-optional" style={tdMutedStyle}>{t.contact || "—"}</td>
+                    <td className="admin-col-optional" style={tdMutedStyle}>{t.category || "-"}</td>
+                    <td className="admin-col-optional" style={tdMutedStyle}>{t.persona || "-"}</td>
+                    <td className="admin-col-optional" style={tdMutedStyle}>{t.entryPath || "-"}</td>
+                    <td className="admin-col-optional" style={tdMutedStyle}>{t.contact || "-"}</td>
                     <td className="admin-col-optional" style={tdMutedStyle}>
-                      {t.followUpAt ? formatDate(t.followUpAt) : "—"}
+                      {t.followUpAt ? formatDate(t.followUpAt) : "-"}
                       {t.doNotEmail ? (
                         <div style={{ color: "#b91c1c", fontSize: 11 }}>Do not email</div>
                       ) : null}
@@ -1403,7 +1403,7 @@ export default function AdminMarketing() {
       {/* Reference */}
       {openSections.reference && (
         <section id="marketing-reference" style={{ marginBottom: 24 }}>
-          <h2 style={{ marginBottom: 12, fontSize: 18 }}>Reference — personas &amp; plan</h2>
+          <h2 style={{ marginBottom: 12, fontSize: 18 }}>Reference - personas &amp; plan</h2>
           <div className="grid grid-2" style={{ gap: 12, marginBottom: 16 }}>
             {REFERENCE_PERSONAS.map((p) => (
               <div key={p.name} className="card">

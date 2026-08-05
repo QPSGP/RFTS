@@ -2,16 +2,16 @@ import { getBaseUrl } from "./email";
 
 /**
  * Transactional templates (HTML + text) sent via Resend from the app:
- * - getForgotPasswordEmailContent — member forgot password
- * - getWelcomeEmailContent — after full signup / onboarding (member + CC to staff)
- * - getSubscriptionActiveEmailContent — Stripe checkout completed (subscription active)
- * - getReportIssueConfirmationContent — member report / tech support acknowledgment
- * - getIssueResolvedEmailContent — admin marked report resolved; notify member
- * - getLgdInterestEmailContent — Life Guidance Discovery Session interest (onboarding or profile)
- * - getLgdIntakeSubmittedFacilitatorEmailContent — member submitted electronic LGD intake
- * - getTherapistHealerCoachEmailContent — therapist / healer / coach (Build Practice) interest
- * - getAffiliateThresholdReachedEmailContent — affiliate pending balance reached payout minimum
- * - getAffiliatePayoutSentEmailContent — Stripe Connect affiliate commission payout sent
+ * - getForgotPasswordEmailContent - member forgot password
+ * - getWelcomeEmailContent - after full signup / onboarding (member + CC to staff)
+ * - getSubscriptionActiveEmailContent - Stripe checkout completed (subscription active)
+ * - getReportIssueConfirmationContent - member report / tech support acknowledgment
+ * - getIssueResolvedEmailContent - admin marked report resolved; notify member
+ * - getLgdInterestEmailContent - Life Guidance Discovery Session interest (onboarding or profile)
+ * - getLgdIntakeSubmittedFacilitatorEmailContent - member submitted electronic LGD intake
+ * - getTherapistHealerCoachEmailContent - therapist / healer / coach (Build Practice) interest
+ * - getAffiliateThresholdReachedEmailContent - affiliate pending balance reached payout minimum
+ * - getAffiliatePayoutSentEmailContent - Stripe Connect affiliate commission payout sent
  *
  * Staff BCC: set EMAIL_STAFF_BCC (comma-separated) for Terry, Richard, etc. Applied in sendEmail().
  */
@@ -22,7 +22,7 @@ function greeting(firstName?: string | null): string {
   return firstName ? `Hi ${firstName},` : "Hi there,";
 }
 
-/** Shared font stack — avoid system-ui (Gmail often ignores body font). */
+/** Shared font stack - avoid system-ui (Gmail often ignores body font). */
 const EMAIL_FONT = "Arial, Helvetica, sans-serif";
 const EMAIL_TEXT =
   `margin:0 0 16px;font-family:${EMAIL_FONT};font-size:16px;line-height:1.6;color:#1f2937;`;
@@ -87,7 +87,7 @@ ${inner}
 </body>
 </html>`;
 
-/** Bulletproof CTA — table + bgcolor so Gmail keeps the button look. */
+/** Bulletproof CTA - table + bgcolor so Gmail keeps the button look. */
 function emailCtaButton(href: string, label: string): string {
   return `
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin:24px 0;">
@@ -154,7 +154,7 @@ export function getSubscriptionActiveEmailContent(
   const subject = "Your Reach For The Stars membership is active";
   const html = emailWrapper(`
   ${p(greeting(firstName))}
-  ${p("Thank you — your subscription payment went through and your membership is <strong>active</strong>.")}
+  ${p("Thank you - your subscription payment went through and your membership is <strong>active</strong>.")}
   ${tierLine}
   ${p("You can open your member console anytime to manage sessions, goals, and the audio library.")}
   ${emailCtaButton(`${baseUrl}/play-options`, "Go to your console")}
@@ -258,7 +258,7 @@ Facilitating Goal Manifestation & Self-Actualization Since 1969
 Hypnosis & Coaching In-Person, by Phone, and on Zoom,
 
 USA & Canada:(800) GOAL NOW (462-5669) | International: +1 818-989-2923
-Visit AceSuccess.com — https://acesuccess.com
+Visit AceSuccess.com - https://acesuccess.com
 
 Open your console: ${baseUrl}/play-options
 
@@ -272,7 +272,7 @@ export type ReportIssueConfirmationOptions = {
   firstName?: string | null;
   subject: string;
   categoryLabel: string;
-  /** Form value e.g. support, technical — triggers tech-support style acknowledgment. */
+  /** Form value e.g. support, technical - triggers tech-support style acknowledgment. */
   categoryValue?: string;
 };
 
@@ -288,10 +288,10 @@ export function getReportIssueConfirmationContent(
   const cv = (categoryValue || "").toLowerCase().trim();
   const isTechSupport = cv === "support" || cv === "technical";
   const subj = isTechSupport
-    ? "We received your tech support request — Reach For The Stars"
-    : "We received your report — Reach For The Stars";
+    ? "We received your tech support request - Reach For The Stars"
+    : "We received your report - Reach For The Stars";
   const lead = isTechSupport
-    ? p("We've received your <strong>tech support</strong> request and our team will review it. For website, playback, or login issues, we'll follow up as soon as we can — often within one business day.")
+    ? p("We've received your <strong>tech support</strong> request and our team will review it. For website, playback, or login issues, we'll follow up as soon as we can - often within one business day.")
     : p("We've received your report and will look into it.");
   const html = emailWrapper(`
   ${p(greeting(firstName))}
@@ -331,8 +331,8 @@ export function getIssueResolvedEmailContent(opts: IssueResolvedEmailOptions): T
   const baseUrl = getBaseUrl();
   const subj =
     outcome === "closed"
-      ? "Your report has been closed — Reach For The Stars"
-      : "Your report has been resolved — Reach For The Stars";
+      ? "Your report has been closed - Reach For The Stars"
+      : "Your report has been resolved - Reach For The Stars";
   const notes = (resolutionNotes || "").trim();
   const emptyLead =
     outcome === "closed"
@@ -368,7 +368,7 @@ Back to your console: ${baseUrl}/play-options`;
  */
 export function getLgdInterestEmailContent(firstName?: string | null): TemplateContent {
   const baseUrl = getBaseUrl();
-  const subject = "Life Guidance Discovery Session — follow-up";
+  const subject = "Life Guidance Discovery Session - follow-up";
   const fn = firstName?.trim() ?? "";
   const hi = p(fn.length > 0 ? `Hi ${escapeHtml(fn)},` : "Hi there,");
 
@@ -385,7 +385,7 @@ export function getLgdInterestEmailContent(firstName?: string | null): TemplateC
   ${p("It's very convenient. We do it by phone, Zoom or in person if you happen to be near one of the hypnotherapists trained in the use of the <strong>Seven Keys to Self-Actualization</strong>. Terry Brussel-Rogers pioneered telephone hypnosis in 1995. It had nothing to do with Covid; we simply found that doing the session at home in your own space was more comfortable and productive for you, the client. Instead of having to drive there and back at an expense of gas money and your valuable time (not to mention effect on our environment), you do it from home and can use the energy of the session for accomplishing things after it or enjoy a relaxed, healing night's sleep afterward if it is an evening session. Since that is where you are likely to be practicing your self-hypnosis, it also works better to learn it in that environment.")}
   ${h2("Customized Goal Manifestation Recording")}
   ${p("The Life Guidance Discovery Session is the only way to arrange for the creation of a <strong>Customized Goal Manifestation Recording</strong> which includes the exact suggestions you and your hypnotherapist created together during the consultation and educational portions of that session. That professionally done recording suitable for listening to while going to sleep and during sleep is produced by your hypnotherapist and our audio engineer with as many takes as needed, music added, deepening suggestions and post production to make it exactly right for you. It plays automatically on Reach for the Stars program whether that is the 2nd play every other night at two meditations per night or every 4th play with one meditation per night. It is an integral part of manifesting your goals into reality!")}
-  ${p("This costs <strong>$200</strong> at the time of your session, <strong>$250</strong> later. It is a gift if you sign up for more private sessions at the time of your session or decide to purchase an annual membership in Reach for the Stars for <strong>$390</strong>—a $78 savings over the $39 a month price.")}
+  ${p("This costs <strong>$200</strong> at the time of your session, <strong>$250</strong> later. It is a gift if you sign up for more private sessions at the time of your session or decide to purchase an annual membership in Reach for the Stars for <strong>$390</strong>-a $78 savings over the $39 a month price.")}
   ${emailCtaButton(`${baseUrl}/play-options`, "Back to your member console")}
 `);
 
@@ -408,7 +408,7 @@ It's very convenient. We do it by phone, Zoom or in person if you happen to be n
 
 The Life Guidance Discovery Session is the only way to arrange for the creation of a Customized Goal Manifestation Recording which includes the exact suggestions you and your hypnotherapist created together during the consultation and educational portions of that session. That professionally done recording suitable for listening to while going to sleep and during sleep is produced by your hypnotherapist and our audio engineer with as many takes as needed, music added, deepening suggestions and post production to make it exactly right for you. It plays automatically on Reach for the Stars program whether that is the 2nd play every other night at two meditations per night or every 4th play with one meditation per night. It is an integral part of manifesting your goals into reality!
 
-This costs $200 at the time of your session, $250 later. It is a gift if you sign up for more private sessions at the time of your session or decide to purchase an annual membership in Reach for the Stars for $390—a $78 savings over the $39 a month price.
+This costs $200 at the time of your session, $250 later. It is a gift if you sign up for more private sessions at the time of your session or decide to purchase an annual membership in Reach for the Stars for $390-a $78 savings over the $39 a month price.
 
 Back to your console: ${baseUrl}/play-options
 
@@ -429,7 +429,7 @@ export function getLgdIntakeSubmittedFacilitatorEmailContent(input: {
   const memberName =
     [input.memberFirstName, input.memberLastName].filter(Boolean).join(" ").trim() ||
     input.memberEmail;
-  const subject = `Electronic LGD submitted — ${memberName}`;
+  const subject = `Electronic LGD submitted - ${memberName}`;
   const fac = input.facilitatorName?.trim() || "Facilitator";
   const consoleUrl = `${baseUrl}/moderator/console`;
   const html = emailWrapper(`
@@ -458,7 +458,7 @@ Reach For The Stars
 export function getTherapistHealerCoachEmailContent(firstName?: string | null): TemplateContent {
   const baseUrl = getBaseUrl();
   const giftsUrl = `${baseUrl}/goals`;
-  const subject = "Building your practice — thank you from Reach For The Stars";
+  const subject = "Building your practice - thank you from Reach For The Stars";
   const fn = firstName?.trim() ?? "";
   const hi = p(fn.length > 0 ? `Hi ${escapeHtml(fn)},` : "Hi there,");
 
@@ -502,7 +502,7 @@ export function getAffiliateThresholdReachedEmailContent(params: {
   const subject = "Your affiliate commission balance is ready for payout";
   const html = emailWrapper(`
   ${p(greeting(params.firstName))}
-  ${p("Good news — your Reach For The Stars affiliate commission balance has reached the minimum payout threshold.")}
+  ${p("Good news - your Reach For The Stars affiliate commission balance has reached the minimum payout threshold.")}
   ${p(`<strong>Affiliate #:</strong> ${escapeHtml(params.affiliateCode)}`)}
   ${p(`<strong>Pending balance:</strong> ${escapeHtml(params.balanceUsd)}`)}
   ${p(`Minimum payout is <strong>$${params.thresholdUsd}</strong>. Payouts are processed monthly for affiliates who set up automatic payouts through Stripe. You can also update manual payout preferences (PayPal, Venmo, Zelle, crypto) on your profile.`)}

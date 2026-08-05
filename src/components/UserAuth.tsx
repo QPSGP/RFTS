@@ -11,7 +11,7 @@ const inputStyle = {
 };
 
 export type UserAuthProps = {
-  /** From server `searchParams` — avoids useSearchParams (blank page / stuck Suspense on login). */
+  /** From server `searchParams` - avoids useSearchParams (blank page / stuck Suspense on login). */
   initialErrorInvalid?: boolean;
   initialNextPath?: string;
 };

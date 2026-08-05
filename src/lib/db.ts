@@ -408,7 +408,7 @@ export const getUserScreenWakeEnabled = async (userId: string): Promise<boolean>
 let memberProfileLgdInfoReady = false;
 
 /**
- * Ensure wants_lgd_info exists. One-time: legacy UI stored “interested in LGD” in had_lgd_session —
+ * Ensure wants_lgd_info exists. One-time: legacy UI stored “interested in LGD” in had_lgd_session -
  * copy to wants_lgd_info and clear had_lgd_session for those rows only.
  */
 const ensureMemberProfileLgdInfoColumn = async () => {
@@ -681,7 +681,7 @@ export type RecordScheduleNightResult =
 
 /**
  * Convert legacy progress (schedule-night index) to main audios played for all members not yet migrated.
- * Safe to run repeatedly — only updates rows with schedule_progress_model <> 1.
+ * Safe to run repeatedly - only updates rows with schedule_progress_model <> 1.
  */
 export const migrateAllMembersScheduleProgressToMainAudios = async (): Promise<{
   ok: true;
@@ -1045,7 +1045,7 @@ const ensureAdminsProfileColumns = async () => {
   }
 };
 
-/** List admins for UI — no password hash. */
+/** List admins for UI - no password hash. */
 export const listAdmins = async () => {
   await ensureAdminsProfileColumns();
   const { rows } = await sql<
@@ -3264,7 +3264,7 @@ export const updateFacilitatorProfile = async (payload: {
   return { application, moderator };
 };
 
-/** Plans offered for signup / upgrade — exclude legacy bronze/gold package rows. */
+/** Plans offered for signup / upgrade - exclude legacy bronze/gold package rows. */
 const OFFERED_SUBSCRIPTION_PLAN_IDS = new Set(["platinum", "platinum_managed"]);
 
 export const listSubscriptionPlans = async () => {
@@ -3831,7 +3831,7 @@ export const listTopReferrers = async (
 export type OutreachTarget = {
   id: string;
   organization: string;
-  /** `organization` | `individual` — `organization` column stores the display name either way. */
+  /** `organization` | `individual` - `organization` column stores the display name either way. */
   targetType: string;
   category: string | null;
   persona: string | null;

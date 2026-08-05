@@ -1,4 +1,4 @@
-# Phase 3 — Your steps (name.com + Vercel + Resend + Stripe)
+# Phase 3 - Your steps (name.com + Vercel + Resend + Stripe)
 
 The app is ready for production domain cutover. **You** must complete these in dashboards (Cursor cannot access them).
 
@@ -6,7 +6,7 @@ Code already handles: **www → apex redirect**, canonical URLs, cookie domain o
 
 ---
 
-## Day start — affiliate payouts, checkout, and smoke test (June 2026)
+## Day start - affiliate payouts, checkout, and smoke test (June 2026)
 
 Use this checklist when picking up work on **affiliate commissions**, **PayPal/ACH checkout**, and **production verification**. Order matters.
 
@@ -32,27 +32,27 @@ If migrations only ran against a dev database, repeat with production `POSTGRES_
 
 ### B. Stripe Dashboard (Test + Live)
 
-**Payment methods** — [Settings → Payment methods](https://dashboard.stripe.com/settings/payment_methods):
+**Payment methods** - [Settings → Payment methods](https://dashboard.stripe.com/settings/payment_methods):
 
-- [ ] **PayPal** — connect / enable
-- [ ] **ACH Direct Debit** (US bank account) — enable
+- [ ] **PayPal** - connect / enable
+- [ ] **ACH Direct Debit** (US bank account) - enable
 
 Checkout code requests `card`, `paypal`, and `us_bank_account` on every membership Checkout session.
 
-**Webhooks** — [Developers → Webhooks](https://dashboard.stripe.com/webhooks) → your endpoint `https://reachforthestars.today/api/webhooks/stripe`:
+**Webhooks** - [Developers → Webhooks](https://dashboard.stripe.com/webhooks) → your endpoint `https://reachforthestars.today/api/webhooks/stripe`:
 
 - [ ] `checkout.session.completed` (already used)
-- [ ] **`invoice.paid`** — required for affiliate commission ledger on renewals and paid invoices
+- [ ] **`invoice.paid`** - required for affiliate commission ledger on renewals and paid invoices
 
 Copy signing secret to Vercel `STRIPE_WEBHOOK_SECRET` if you add or rotate the endpoint.
 
-**Billing portal** — Settings → Billing → Customer portal: enabled (members manage card / PayPal / bank there).
+**Billing portal** - Settings → Billing → Customer portal: enabled (members manage card / PayPal / bank there).
 
-**Connect** — enable Stripe Connect (Express) for automated affiliate payouts.
+**Connect** - enable Stripe Connect (Express) for automated affiliate payouts.
 
 - [ ] Webhook: **`account.updated`** (sync Connect onboarding status)
 
-### B2. Vercel — `CRON_SECRET` (monthly Connect payouts)
+### B2. Vercel - `CRON_SECRET` (monthly Connect payouts)
 
 Monthly cron runs `GET /api/cron/affiliate-connect-payouts` on the **1st at 14:00 UTC** (`vercel.json`).
 
@@ -109,15 +109,15 @@ Play Options → **Enable Screen Wake** once (preference is saved). Start Sessio
 
 ---
 
-## 1. Vercel — add the domain
+## 1. Vercel - add the domain
 
 1. [Vercel Dashboard](https://vercel.com) → your RFTS project → **Settings** → **Domains**.
 2. Add **`reachforthestars.today`** and **`www.reachforthestars.today`**.
-3. Vercel shows DNS records to add at name.com (usually **A** record to Vercel’s IP, or **CNAME** to `cname.vercel-dns.com` — follow what Vercel displays).
+3. Vercel shows DNS records to add at name.com (usually **A** record to Vercel’s IP, or **CNAME** to `cname.vercel-dns.com` - follow what Vercel displays).
 
 ---
 
-## 2. name.com — DNS
+## 2. name.com - DNS
 
 1. Log in at [name.com](https://www.name.com).
 2. Open DNS for **reachforthestars.today**.
@@ -128,7 +128,7 @@ Play Options → **Enable Screen Wake** once (preference is saved). Start Sessio
 
 ---
 
-## 3. Vercel — production environment variables
+## 3. Vercel - production environment variables
 
 **Settings** → **Environment Variables** → **Production** → set or confirm:
 
@@ -143,7 +143,7 @@ Then **Redeploy** (Deployments → … → Redeploy) so `NEXT_PUBLIC_*` values a
 
 ---
 
-## 4. Resend — verify sending domain
+## 4. Resend - verify sending domain
 
 1. [Resend Dashboard](https://resend.com) → **Domains** → **Add domain** → `reachforthestars.today`.
 2. Add the **TXT / MX** records Resend gives you at **name.com** (same DNS zone).
@@ -154,7 +154,7 @@ Until verified, you can still send from `onboarding@resend.dev` for testing.
 
 ---
 
-## 5. Stripe — production webhook URL
+## 5. Stripe - production webhook URL
 
 1. [Stripe Dashboard](https://dashboard.stripe.com) → **Developers** → **Webhooks**.
 2. Endpoint URL: **`https://reachforthestars.today/api/webhooks/stripe`**
@@ -169,7 +169,7 @@ Enable **PayPal** and **ACH Direct Debit** under Settings → Payment methods (s
 
 ## 6. Smoke test on production
 
-Open **`https://reachforthestars.today`** (not www — www should redirect).
+Open **`https://reachforthestars.today`** (not www - www should redirect).
 
 - [ ] Home page loads; `www` redirects to apex.
 - [ ] Admin login → Content Console.

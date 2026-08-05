@@ -45,7 +45,7 @@ async function main() {
     process.exit(1);
   }
   if (!process.env.BLOB_READ_WRITE_TOKEN?.trim()) {
-    console.error("BLOB_READ_WRITE_TOKEN missing — needed to store generated audio.");
+    console.error("BLOB_READ_WRITE_TOKEN missing - needed to store generated audio.");
     process.exit(1);
   }
 
@@ -68,11 +68,11 @@ async function main() {
     `;
     const intake = rows[0];
     if (!intake) {
-      console.error(`  ✗ ${email} — no intake (run npm run lgd:seed-demos first)`);
+      console.error(`  ✗ ${email} - no intake (run npm run lgd:seed-demos first)`);
       continue;
     }
     if (intake.status === "draft" || intake.status === "cancelled") {
-      console.error(`  ✗ ${email} — intake status ${intake.status}; need submitted+`);
+      console.error(`  ✗ ${email} - intake status ${intake.status}; need submitted+`);
       continue;
     }
 

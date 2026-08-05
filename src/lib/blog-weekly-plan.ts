@@ -4,7 +4,7 @@ import { getBlogPostsNewestFirst, type BlogPost } from "@/lib/blog-posts";
 import type { TopicLandingSlug } from "@/lib/topic-landing-pages";
 import { buildMarketingSignupHref } from "@/lib/marketing-signup";
 
-/** Every article should drive signup — use in CTAs and new post checklists. */
+/** Every article should drive signup - use in CTAs and new post checklists. */
 export const BLOG_SIGNUP_PATH = buildMarketingSignupHref();
 
 export const BLOG_SIGNUP_HREF = BLOG_SIGNUP_PATH;
@@ -172,7 +172,7 @@ export function getBlogCadenceStatus(
 
 export function formatBlogCadenceReminder(status: BlogCadenceStatus): string {
   const lines = [
-    "Reach For The Stars — blog cadence (3 posts / week)",
+    "Reach For The Stars - blog cadence (3 posts / week)",
     "",
     status.message,
     "",
@@ -182,7 +182,7 @@ export function formatBlogCadenceReminder(status: BlogCadenceStatus): string {
       ? "Action needed: catch up before the week ends."
       : "Still on pace for this week.",
     "",
-    `Latest: ${status.latestTitle ?? "none"} (${status.latestPublishedAt ?? "—"})`,
+    `Latest: ${status.latestTitle ?? "none"} (${status.latestPublishedAt ?? "-"})`,
     status.daysSinceLatest != null ? `Days since latest: ${status.daysSinceLatest}` : "",
     "",
     `Suggested next topic (${status.nextTopic.kind}): ${status.nextTopic.label}`,

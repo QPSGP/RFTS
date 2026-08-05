@@ -1,5 +1,5 @@
 /**
- * Electronic Life Guidance Discovery (LGD) — field model, script skeleton,
+ * Electronic Life Guidance Discovery (LGD) - field model, script skeleton,
  * voice catalog, and facilitator feature flags.
  * Full product design: docs/LGD_ELECTRONIC_INTAKE.md
  */
@@ -85,7 +85,7 @@ export const LGD_LIFE_AREAS = [
 export type LgdLifeAreaId = (typeof LGD_LIFE_AREAS)[number]["id"];
 
 /**
- * Curated Challenges Checklist (Success Center style) — not the full clinical inventory.
+ * Curated Challenges Checklist (Success Center style) - not the full clinical inventory.
  * Member checks applicable items, then ranks up to 10 priorities.
  */
 export const LGD_CHALLENGE_CATEGORIES = [
@@ -196,7 +196,7 @@ export const LGD_SEVEN_KEYS = [
     metal: "Bronze",
     label: "Auto-suggestion & self-hypnosis",
     summary:
-      "Heightened sensory awareness, emotional control, decision-making, and the Will to Learn — the foundation before every other Key."
+      "Heightened sensory awareness, emotional control, decision-making, and the Will to Learn - the foundation before every other Key."
   },
   {
     id: "copper",
@@ -224,14 +224,14 @@ export const LGD_SEVEN_KEYS = [
     metal: "Gold",
     label: "Body awareness & health",
     summary:
-      "Stress, weight, comfort, athletic skill, vision/hearing support, rejuvenation — body cooperating with goals."
+      "Stress, weight, comfort, athletic skill, vision/hearing support, rejuvenation - body cooperating with goals."
   },
   {
     id: "ruby",
     metal: "Ruby",
     label: "Relationship establishment & enhancement",
     summary:
-      "Choose, attract, and deepen quality relationships — life mate, partnership, or family bonds."
+      "Choose, attract, and deepen quality relationships - life mate, partnership, or family bonds."
   },
   {
     id: "platinum",
@@ -251,7 +251,7 @@ export function lgdSevenKeyById(id: string) {
   return LGD_SEVEN_KEYS.find((k) => k.id === id) ?? null;
 }
 
-/** Ordered Keys for brief/UI — Bronze always rank 1 when any Keys are set. */
+/** Ordered Keys for brief/UI - Bronze always rank 1 when any Keys are set. */
 export function orderedLgdSevenKeys(answers: {
   sevenKeysOrder?: string[];
 }): { rank: number; id: LgdSevenKeyId; metal: string; label: string; summary: string }[] {
@@ -286,7 +286,7 @@ export function normalizeSevenKeysOrder(raw: unknown): LgdSevenKeyId[] {
 
 /**
  * Premise: “How would you like your subconscious programmed?”
- * Multi-select — shapes induction / support tone in the script draft.
+ * Multi-select - shapes induction / support tone in the script draft.
  */
 export const LGD_SUBCONSCIOUS_PROGRAMS = [
   {
@@ -347,7 +347,7 @@ export const LGD_SUBCONSCIOUS_PROGRAMS = [
     id: "thrive_expand",
     label: "Help me grow, expand, and thrive in all areas of life",
     scriptCue:
-      "You grow, expand, and thrive — physically, mentally, emotionally, spiritually, and financially."
+      "You grow, expand, and thrive - physically, mentally, emotionally, spiritually, and financially."
   }
 ] as const;
 
@@ -438,7 +438,7 @@ export const LGD_GROWTH_BELIEF_CHOICES = [
   },
   {
     id: "learn_succeed",
-    label: "I learn, adjust, and succeed — one clear step at a time."
+    label: "I learn, adjust, and succeed - one clear step at a time."
   },
   {
     id: "balanced_care",
@@ -474,38 +474,38 @@ export type LgdBeliefTransformation = {
 /**
  * Hypnotic voice catalog for CGMR overnight programming.
  * First priority for every option: calm, continuous, sleep-inducing delivery
- * that helps the subconscious accept suggestions — then gender/tone color.
+ * that helps the subconscious accept suggestions - then gender/tone color.
  */
 export const LGD_PROFESSIONAL_VOICES = [
   {
     id: "terry",
     label: "Terry Brussel-Rogers",
     description:
-      "Signature Success Center hypnotic voice — warm, trusted, peaceful authority for sleep programming.",
+      "Signature Success Center hypnotic voice - warm, trusted, peaceful authority for sleep programming.",
     presentation: "feminine",
     toneFamily: "signature_warm"
   },
   {
     id: "associate_warm",
-    label: "Nurturing — soft / feminine",
+    label: "Nurturing - soft / feminine",
     description:
-      "Gentle, caring hypnotic guide — soft cadence for rest, healing, and bedtime acceptance.",
+      "Gentle, caring hypnotic guide - soft cadence for rest, healing, and bedtime acceptance.",
     presentation: "feminine",
     toneFamily: "nurturing"
   },
   {
     id: "associate_clear",
-    label: "Professional — calm guide",
+    label: "Professional - calm guide",
     description:
-      "Clear but unhurried professional hypnotic tone — steady trust without brightness or urgency.",
+      "Clear but unhurried professional hypnotic tone - steady trust without brightness or urgency.",
     presentation: "neutral",
     toneFamily: "professional"
   },
   {
     id: "associate_deep",
-    label: "Deeper resonant — masculine",
+    label: "Deeper resonant - masculine",
     description:
-      "Lower, resonant hypnotic tone — peaceful depth for sleep deepening and subconscious work.",
+      "Lower, resonant hypnotic tone - peaceful depth for sleep deepening and subconscious work.",
     presentation: "masculine",
     toneFamily: "deep_resonant"
   }
@@ -515,7 +515,7 @@ export type LgdProfessionalVoiceId = (typeof LGD_PROFESSIONAL_VOICES)[number]["i
 
 /** Shared premise shown wherever members pick a CGMR voice. */
 export const LGD_VOICE_SELECTION_LEAD =
-  "Your CGMR voice must first sound hypnotic: slow, smooth, and peaceful enough to help you relax into sleep so the subconscious can accept the programming. Then choose the color that fits you — nurturing, professional calm, or deeper resonant (or Terry’s signature voice).";
+  "Your CGMR voice must first sound hypnotic: slow, smooth, and peaceful enough to help you relax into sleep so the subconscious can accept the programming. Then choose the color that fits you - nurturing, professional calm, or deeper resonant (or Terry’s signature voice).";
 
 export const LGD_FREQUENCY_BEDS = [
   {
@@ -578,7 +578,7 @@ export const LGD_SCRIPT_BLOCKS = [
 
 export type LgdScriptBlockId = (typeof LGD_SCRIPT_BLOCKS)[number];
 
-/** Facilitator toggles — active/inactive in Facilitator console. */
+/** Facilitator toggles - active/inactive in Facilitator console. */
 export const LGD_FACILITATOR_FEATURE_FLAGS = [
   {
     key: "lgdElectronicIntake",
@@ -675,7 +675,7 @@ export type LgdIntakeAnswers = {
   pastAttempts: string;
   strengths: string[];
   /**
-   * Seven Keys order — Bronze is always first; remaining Keys the member wants, ranked.
+   * Seven Keys order - Bronze is always first; remaining Keys the member wants, ranked.
    * Keys left blank on paper are simply omitted after Bronze.
    */
   sevenKeysOrder: LgdSevenKeyId[];
@@ -697,12 +697,12 @@ export type LgdIntakeAnswers = {
 export const LGD_CGMR_USAGE = {
   title: "How to use your Customized Goal Manifestation Recording (CGMR)",
   lead:
-    "Your CGMR is the overview of your goals — mental, physical, emotional, spiritual, and financial — so they settle into the subconscious on a continuing basis. Other hypnotic recordings implement those suggestions with specific skills and habits.",
+    "Your CGMR is the overview of your goals - mental, physical, emotional, spiritual, and financial - so they settle into the subconscious on a continuing basis. Other hypnotic recordings implement those suggestions with specific skills and habits.",
   bullets: [
-    "Best as reinforcement for private sessions when you have them — and powerful on its own with night listening.",
+    "Best as reinforcement for private sessions when you have them - and powerful on its own with night listening.",
     "Use your CGMR at least three or four nights a week.",
     "Alternate with supporting library / program recordings: CGMR suggests; specific tracks implement (e.g. memory, vision, sales, health).",
-    "If you wake at night, you may switch to a different recording. If you sleep through, play CGMR and supporting tracks on different nights — or spaced MP3s, no more than three per night.",
+    "If you wake at night, you may switch to a different recording. If you sleep through, play CGMR and supporting tracks on different nights - or spaced MP3s, no more than three per night.",
     "Schedule placement on Reach For The Stars: 2 plays/night → CGMR as 2nd play every other night; 1 play/night → every 4th play (when your CGMR is in rotation).",
     "Plan an annual Life Guidance Renewal to update goals and your CGMR as life changes."
   ],
@@ -995,31 +995,31 @@ export function findLgdContradictionNotes(answers: LgdIntakeAnswers): string[] {
     (answers.incomeDesiredBand?.trim() || (answers.lifeAreaScores.financial ?? 0) <= 4)
   ) {
     notes.push(
-      "Spiritual language set to none while financial growth is in focus — keep mission framing practical, avoid faith metaphors."
+      "Spiritual language set to none while financial growth is in focus - keep mission framing practical, avoid faith metaphors."
     );
   }
   if (answers.crisisFlag) {
-    notes.push("Crisis flag set — do not produce automated script; escalate to human care.");
+    notes.push("Crisis flag set - do not produce automated script; escalate to human care.");
   }
   if (
     answers.voiceId === "member_own" &&
     !answers.ownVoiceConsent
   ) {
-    notes.push("Member selected own voice without consent checkbox — confirm before clone/recording.");
+    notes.push("Member selected own voice without consent checkbox - confirm before clone/recording.");
   }
   if ((answers.willToLearn ?? 5) <= 2 || (answers.beliefCanLearn ?? 5) <= 2) {
-    notes.push("Low will-to-learn or belief-can-learn scores — add reassurance and small-step suggestions.");
+    notes.push("Low will-to-learn or belief-can-learn scores - add reassurance and small-step suggestions.");
   }
   if (answers.wordsAvoid.some((w) =>
     answers.identityStatements.some((id) => id.toLowerCase().includes(w.toLowerCase()))
   )) {
-    notes.push("An identity statement may contain a word marked to avoid — edit before production.");
+    notes.push("An identity statement may contain a word marked to avoid - edit before production.");
   }
   if (!answers.subconsciousPrograms.length) {
-    notes.push("No subconscious programming preferences selected — confirm tone with member.");
+    notes.push("No subconscious programming preferences selected - confirm tone with member.");
   }
   if (!answers.beliefTransformations.some((p) => p.limitingText && p.growthText)) {
-    notes.push("No belief transformation pairs — script may lack clear release → install reframes.");
+    notes.push("No belief transformation pairs - script may lack clear release → install reframes.");
   }
   return notes;
 }
@@ -1063,21 +1063,21 @@ export function buildLgdScriptDraftBlocks(input: {
   const induction = [...terryFrame.induction];
   if (programCues.length) {
     induction.push(
-      "Tonight your subconscious continues to receive programming for growth, expansion, and thriving — in the ways you chose."
+      "Tonight your subconscious continues to receive programming for growth, expansion, and thriving - in the ways you chose."
     );
     induction.push(...programCues.slice(0, 4));
   }
   const deepener = [...terryFrame.deepener];
   if (metaphors.length) {
     deepener.push(
-      `Images that feel especially true for you — ${metaphors.join(", ")} — can join this natural deepening.`
+      `Images that feel especially true for you - ${metaphors.join(", ")} - can join this natural deepening.`
     );
   }
 
   const presentBridge: string[] = [];
   if (a.primaryStruggle.trim()) {
     presentBridge.push(
-      `You acknowledge where you have been: ${a.primaryStruggle.trim()} — and you choose to move forward with clarity.`
+      `You acknowledge where you have been: ${a.primaryStruggle.trim()} - and you choose to move forward with clarity.`
     );
   } else {
     presentBridge.push(
@@ -1087,7 +1087,7 @@ export function buildLgdScriptDraftBlocks(input: {
   const topChallenges = prioritizedLgdChallenges(a);
   if (topChallenges.length) {
     presentBridge.push(
-      "The priorities you named for growth can resolve as your subconscious cooperates with your clear goals — without rehearsing old struggle."
+      "The priorities you named for growth can resolve as your subconscious cooperates with your clear goals - without rehearsing old struggle."
     );
   }
   const keysPath = orderedLgdSevenKeys(a);
@@ -1097,13 +1097,13 @@ export function buildLgdScriptDraftBlocks(input: {
       .map((k) => `${k.metal} (${k.label})`)
       .join("; ");
     presentBridge.push(
-      `Your growth path begins with the Bronze Key — self-hypnosis as foundation — then continues through: ${pathLabels}${
+      `Your growth path begins with the Bronze Key - self-hypnosis as foundation - then continues through: ${pathLabels}${
         keysPath.length > 4 ? "; and the Keys you chose beyond these" : ""
       }.`
     );
   } else if (keysPath.length === 1) {
     presentBridge.push(
-      "Your foundation is the Bronze Key — auto-suggestion and self-hypnosis — the doorway to every other Key."
+      "Your foundation is the Bronze Key - auto-suggestion and self-hypnosis - the doorway to every other Key."
     );
   }
   if (pairs.length) {
@@ -1139,11 +1139,11 @@ export function buildLgdScriptDraftBlocks(input: {
       : [];
   if (identitySource.length) {
     for (const phrase of identitySource) {
-      identitySuggestions.push(`You are becoming — and more and more you are — “${phrase}”`);
+      identitySuggestions.push(`You are becoming - and more and more you are - “${phrase}”`);
     }
   } else {
     identitySuggestions.push(
-      "You grow into the highest expression of yourself physically, mentally, emotionally, spiritually, and financially — in your own time, with steady repetition."
+      "You grow into the highest expression of yourself physically, mentally, emotionally, spiritually, and financially - in your own time, with steady repetition."
     );
   }
   if (outcomes.length) {
@@ -1158,7 +1158,7 @@ export function buildLgdScriptDraftBlocks(input: {
   }
   if (wordsAvoid.length) {
     identitySuggestions.push(
-      `(Production note: avoid these words in the read — ${wordsAvoid.join(", ")}.)`
+      `(Production note: avoid these words in the read - ${wordsAvoid.join(", ")}.)`
     );
   }
 
@@ -1173,7 +1173,7 @@ export function buildLgdScriptDraftBlocks(input: {
   }
   if (a.blocks.length) {
     supportSuggestions.push(
-      "As old outer blocks soften, you choose the next right step with calm confidence — without rehearsing the old story."
+      "As old outer blocks soften, you choose the next right step with calm confidence - without rehearsing the old story."
     );
   }
   if (a.pastAttempts.trim()) {
@@ -1191,7 +1191,7 @@ export function buildLgdScriptDraftBlocks(input: {
   const missionFinancial: string[] = [];
   if (a.incomeDesiredBand?.trim() || a.lifeAreaScores.financial != null) {
     missionFinancial.push(
-      "Success is allowed. You show up as a beacon — meaning and practical results together. Right action and right income can grow side by side."
+      "Success is allowed. You show up as a beacon - meaning and practical results together. Right action and right income can grow side by side."
     );
     if (a.incomeDesiredBand?.trim()) {
       missionFinancial.push(`You move steadily toward: ${a.incomeDesiredBand.trim()}.`);
@@ -1199,7 +1199,7 @@ export function buildLgdScriptDraftBlocks(input: {
   }
 
   const futurePacing = [
-    "In the days ahead you notice small proofs — calmer evenings, clearer choices, aligned action — and each proof deepens trust in this path."
+    "In the days ahead you notice small proofs - calmer evenings, clearer choices, aligned action - and each proof deepens trust in this path."
   ];
   if (a.shortTermGoals.trim()) {
     futurePacing.push(`Near-term, you move toward: ${a.shortTermGoals.trim()}.`);
@@ -1214,7 +1214,7 @@ export function buildLgdScriptDraftBlocks(input: {
   }
   if (a.ultimateGoal.trim()) {
     futurePacing.push(
-      `Your ultimate direction — the North Star you keep — is: ${a.ultimateGoal.trim()}.`
+      `Your ultimate direction - the North Star you keep - is: ${a.ultimateGoal.trim()}.`
     );
   }
   if (a.timeline === "90_days") {
@@ -1222,7 +1222,7 @@ export function buildLgdScriptDraftBlocks(input: {
   } else if (a.timeline === "12_months" && !a.oneYearChange.trim()) {
     futurePacing.push("Across this year, the new pattern becomes natural.");
   } else if (a.timeline === "ongoing") {
-    futurePacing.push("This is an ongoing path — each day you practice, the pattern deepens.");
+    futurePacing.push("This is an ongoing path - each day you practice, the pattern deepens.");
   }
 
   const postHypnotic =
@@ -1237,8 +1237,8 @@ export function buildLgdScriptDraftBlocks(input: {
   // Classic SC CGMR close (self-mastery + emerge into natural sleep + nightly reinforcement).
   const close = [
     ...buildTerryCgmrClose(),
-    // Studio/production note only — strip before final voice read if desired.
-    `(Production note — not spoken: voice ${a.voiceId || "unset"} · sound bed ${bed})`
+    // Studio/production note only - strip before final voice read if desired.
+    `(Production note - not spoken: voice ${a.voiceId || "unset"} · sound bed ${bed})`
   ];
 
   return {
@@ -1278,7 +1278,7 @@ export function buildGoalManifestationScriptDraft(input: {
     close: "9. Close"
   };
   const lines: string[] = [
-    `# Goal Manifestation Script Draft — ${name}`,
+    `# Goal Manifestation Script Draft - ${name}`,
     "",
     "_Generated from Electronic Life Guidance Discovery. Review before production._",
     ""
@@ -1351,7 +1351,7 @@ export function buildLgdProductionPacket(input: {
       ? "member_own (device recording)"
       : "ai_internal preferred; studio_external (Paul Griffin) fallback";
   return [
-    "RFTS — Goal Manifestation Production Packet",
+    "RFTS - Goal Manifestation Production Packet",
     "============================================",
     `Member: ${name}`,
     `Email: ${input.memberEmail}`,
@@ -1379,7 +1379,7 @@ export function buildLgdProductionPacket(input: {
       const keys = orderedLgdSevenKeys(input.answers);
       return [
         "Seven Keys order (Bronze always first):",
-        ...keys.map((k) => `${k.rank}. ${k.metal} — ${k.label}`),
+        ...keys.map((k) => `${k.rank}. ${k.metal} - ${k.label}`),
         ""
       ].join("\n");
     })(),

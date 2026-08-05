@@ -88,7 +88,7 @@ export function buildSitePageIndex(library: LibraryItem[]): SitePageEntry[] {
   }
 
   for (const audio of buildAllAudioLandingContent(library)) {
-    const label = audio.skuCode ? `${audio.skuCode} — ${audio.title}` : audio.title;
+    const label = audio.skuCode ? `${audio.skuCode} - ${audio.title}` : audio.title;
     entries.push({
       category: "audio",
       categoryLabel: CATEGORY_LABELS.audio,

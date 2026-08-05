@@ -4,7 +4,7 @@
 
 Product design for a digital Life Guidance Discovery intake that (a) prepares a facilitator/hypnotherapist session and/or (b) produces a high-quality **Goal Manifestation script draft** for Customized Goal Manifestation Recording (CGMR) production.
 
-Aligned with Success Center practice (Terry Brussel-Rogers), Platinum CGMR placement rules, and personas in `docs/personas.md` (especially Chris — Spiritual Entrepreneur).
+Aligned with Success Center practice (Terry Brussel-Rogers), Platinum CGMR placement rules, and personas in `docs/personas.md` (especially Chris - Spiritual Entrepreneur).
 
 ---
 
@@ -25,7 +25,7 @@ The automated draft is designed to be **more complete and consistent** than an a
 
 | Surface | Behavior |
 |---------|----------|
-| **Public website** | `/life-guidance-discovery` (or `/lgd`) — marketing page + start intake (guest can start; account required to save/submit) |
+| **Public website** | `/life-guidance-discovery` (or `/lgd`) - marketing page + start intake (guest can start; account required to save/submit) |
 | **Member console** | If `hadLgdSession` is false and no completed intake/CGMR: offer paid or included LGD electronic intake (plan/price configurable) |
 | **Signup** | (1) Interested in LGD info → follow-up email; (2) Already had LGD → sets `hadLgdSession` (skips “need LGD” upsell later) |
 | **Facilitator console** | Feature toggles (active/inactive): electronic intake, script draft, professional voices, member-own-voice (later), frequency beds, public LGD offer, member-console paid offer |
@@ -51,19 +51,19 @@ Stored per facilitator (defaults below). Admin may also set platform defaults.
 
 ## 4. Voice options (phased)
 
-**Phase A — Professional hypnotic voices (ship first)**  
+**Phase A - Professional hypnotic voices (ship first)**  
 Catalog examples (names illustrative; final talent TBD):
 
-Every CGMR voice is judged first on **hypnotic sleep delivery** (slow, smooth, continuous, peaceful — suitable for inducing a receptive subconscious state). Tone color is secondary:
+Every CGMR voice is judged first on **hypnotic sleep delivery** (slow, smooth, continuous, peaceful - suitable for inducing a receptive subconscious state). Tone color is secondary:
 
 - Terry Brussel-Rogers (signature warm feminine authority)
-- Nurturing — soft / feminine
-- Professional — calm guide
-- Deeper resonant — masculine
+- Nurturing - soft / feminine
+- Professional - calm guide
+- Deeper resonant - masculine
 
 Member or facilitator selects one voice. AI produce uses hypnotic instructions + slower pace (`gpt-4o-mini-tts` by default); studio uploads should already be a calm hypnotic read.
 
-**Phase B — “My own voice”**  
+**Phase B - “My own voice”**  
 Consent → record a **calm, peaceful hypnotic-state** sample (not daytime speech) → clone/studio match that relaxed voice as closely as possible → QA → optional mix with induction/bed.
 
 ---
@@ -88,37 +88,37 @@ Chosen from intake answers (primary life area + sleep vs daytime preference). Al
 
 Each section collects **structured fields + free-text “in your words”**. Free text is copied verbatim into script suggestion lines where marked `[MEMBER_WORDS]`.
 
-### Section A — Subconscious programming & consent
+### Section A - Subconscious programming & consent
 - Premise: **How would you like your subconscious programmed?** (multi-select catalog)
 - Consent to store answers and generate a draft script
 - Crisis / medical disclaimer (escalate to human, no auto-script)
 - Already completed live LGD? (syncs `hadLgdSession`)
 
-### Section B — Beliefs & where you are
+### Section B - Beliefs & where you are
 - **Belief transformation** (multiple choice): select limiting beliefs → choose growth belief to install (or custom pair)
 - Life areas 1–10 ratings: physical, mental, emotional, spiritual, financial, relationship, work/mission, sleep/energy
-- **Challenges checklist** (curated ~34 items in 6 categories; not the full clinical paper inventory) — check applicable, then rank **top 10 priorities**
+- **Challenges checklist** (curated ~34 items in 6 categories; not the full clinical paper inventory) - check applicable, then rank **top 10 priorities**
 - What is working / gratitude (3 items)
 - Most important challenge this season (one paragraph)
 - Script uses each belief pair as **Releasing… / Installing…** (does not rehearse challenge labels as suggestions); priorities appear on facilitator brief + production packet
 
-### Section C — Where you want to go (desired state)
+### Section C - Where you want to go (desired state)
 - **Goal horizons** (Success Center intake): short-term, long-term, one-year change, ultimate goal
 - Top 3 outcomes in **their words** (must be sensory/specific)
 - Align with RFTS goal catalog (multi-select + priority order, max 10)
-- Identity statements desired: “I am becoming…” / “I am now…” (up to 7 phrases — **core of CGMR**)
+- Identity statements desired: “I am becoming…” / “I am now…” (up to 7 phrases - **core of CGMR**)
 - Timeline: 90 days / 12 months / ongoing
 - Income intention (optional; Chris avatar): current band, desired band, “investment” framing notes
 
-### Section D — How you get there (bridges & blocks)
-- **Seven Keys ranking** — Bronze always #1; member checks and orders Copper→Platinum Keys that apply (Success Center / Terry Brussel-Rogers)
+### Section D - How you get there (bridges & blocks)
+- **Seven Keys ranking** - Bronze always #1; member checks and orders Copper→Platinum Keys that apply (Success Center / Terry Brussel-Rogers)
 - Known blocks (fear, habit, people, time, money story)
 - Past attempts and what failed
 - Resources / strengths to leverage
-- Will to learn (1–5) + belief I can learn (1–5) — from Barnes/Brussel Session 2
+- Will to learn (1–5) + belief I can learn (1–5) - from Barnes/Brussel Session 2
 - Non-negotiables / ethics / spiritual frame (optional)
 
-### Section E — Language & modality preferences
+### Section E - Language & modality preferences
 - Preferred metaphors (ocean, mountain, light, business, sports, faith, etc.)
 - Words they love / words to avoid
 - Faith / spiritual language OK? (yes / minimal / none)
@@ -126,9 +126,9 @@ Each section collects **structured fields + free-text “in your words”**. Fre
 - Voice preference (catalog) + later “my own”
 - Frequency bed preference (or “choose for me”)
 
-### Section F — Facilitator handoff
+### Section F - Facilitator handoff
 - Questions for the live session
-- **Interested in live LGD / private sessions** (checkbox — facilitator follow-up)
+- **Interested in live LGD / private sessions** (checkbox - facilitator follow-up)
 - Permission for facilitator to edit draft
 - After submit / CGMR path: member console shows **CGMR usage instructions** (3–4 nights/week; CGMR overview vs supporting tracks; annual renewal)
 
@@ -138,15 +138,15 @@ Each section collects **structured fields + free-text “in your words”**. Fre
 
 ### Script skeleton (always generated)
 
-1. **Induction** — classic SC CGMR progressive relaxation (feet → scalp), recovered from library CGMRs  
-2. **Deepener** — classic 5→0 into hypnosis + soft grass / tall tree / brook / forest vitality scene  
-3. **Present → future bridge** — acknowledge current state without reinforcing blocks  
-4. **Identity & goal suggestions** — member’s “I am now…” phrases, prioritized goals, USP five areas when Balanced Life / holistic selected  
-5. **Behavioral / emotional supports** — sleep, stress, will to learn, specific bridges  
-6. **Financial / mission** (if opted) — investment mindset, ethical success (beacon language)  
-7. **Future pacing** — waking life evidence cues  
-8. **Post-hypnotic sleep suggestion** — personalized suggestions continue overnight  
-9. **Emergence / sleep close** — classic SC self-mastery close, 0→5 into natural sleep, nightly Reach For The Stars reinforcement  
+1. **Induction** - classic SC CGMR progressive relaxation (feet → scalp), recovered from library CGMRs  
+2. **Deepener** - classic 5→0 into hypnosis + soft grass / tall tree / brook / forest vitality scene  
+3. **Present → future bridge** - acknowledge current state without reinforcing blocks  
+4. **Identity & goal suggestions** - member’s “I am now…” phrases, prioritized goals, USP five areas when Balanced Life / holistic selected  
+5. **Behavioral / emotional supports** - sleep, stress, will to learn, specific bridges  
+6. **Financial / mission** (if opted) - investment mindset, ethical success (beacon language)  
+7. **Future pacing** - waking life evidence cues  
+8. **Post-hypnotic sleep suggestion** - personalized suggestions continue overnight  
+9. **Emergence / sleep close** - classic SC self-mastery close, 0→5 into natural sleep, nightly Reach For The Stars reinforcement  
 
 Shared open/close text lives in `src/lib/terry-cgmr-shared-script.ts` (transcribed from SC CGMR library audio).  
 
@@ -193,9 +193,9 @@ facilitator_lgd_settings (
 
 ## 9. Build sequence (recommended)
 
-1. **Signup + profile fields** — `wantsLgdInfo` vs `hadLgdSession` ✅  
-2. **Intake UI (member)** — sections A–F, save draft, submit ✅ (`/member/lgd`)  
-3. **Facilitator review** — brief + script draft + approve/edit ✅ (Facilitators Console → Life Guidance Discovery)  
+1. **Signup + profile fields** - `wantsLgdInfo` vs `hadLgdSession` ✅  
+2. **Intake UI (member)** - sections A–F, save draft, submit ✅ (`/member/lgd`)  
+3. **Facilitator review** - brief + script draft + approve/edit ✅ (Facilitators Console → Life Guidance Discovery)  
 4. **Public LGD page + console offer** ✅ (`/life-guidance-discovery`, `/lgd`; console CTA when no prior LGD)  
 5. **Facilitator feature toggles** ✅ (same console panel)  
 6. **Professional voice catalog + production handoff** ✅ (catalog + production packet + Produce CGMR)  
@@ -206,7 +206,7 @@ facilitator_lgd_settings (
 11. **Produce CGMR → playlist** ✅ Admin/Facilitator: AI TTS (OpenAI) or upload/assign → personalized `CGMR` library item for member  
 
 ### Ops notes (current)
-- **Admin-only preview:** `LGD_ADMIN_ONLY=true` (default) — review at `/admin/lgd`; members/facilitators/public hidden. Set `false` to open.  
+- **Admin-only preview:** `LGD_ADMIN_ONLY=true` (default) - review at `/admin/lgd`; members/facilitators/public hidden. Set `false` to open.  
 - **Stripe:** product `prod_I7hhOenF6qstnH` at **$397** one-time Checkout (`/api/member/lgd-checkout`). Optional `STRIPE_LGD_PRICE_ID`.  
 - **Voice production:** prefer AI/internal (`LGD_VOICE_PRODUCTION=ai_internal`); studio files (Paul Griffin) as fallback.  
 - **AI generate:** set `OPENAI_API_KEY` on Vercel; optional `LGD_OPENAI_VOICE_*` overrides. Without the key, upload a finished file and **Assign to playlist**.  

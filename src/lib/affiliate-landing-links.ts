@@ -11,7 +11,7 @@ export type AffiliateShareLink = {
   kind: "signup" | "home" | "wellness" | "goal" | "blog";
 };
 
-/** Curated pages affiliates can share — each URL includes their `?ref=` code. */
+/** Curated pages affiliates can share - each URL includes their `?ref=` code. */
 export function buildAffiliateShareLinks(
   affiliateCode: string,
   baseUrl?: string

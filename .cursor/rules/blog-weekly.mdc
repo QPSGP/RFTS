@@ -1,5 +1,5 @@
 ---
-description: Blog cadence — three posts per week linking to signup, rotating goals and wellness topics.
+description: Blog cadence - three posts per week linking to signup, rotating goals and wellness topics.
 globs:
   - "**/blog/**"
   - "**/blog-posts.ts"

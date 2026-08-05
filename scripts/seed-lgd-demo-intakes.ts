@@ -113,7 +113,7 @@ const PERSONAS: DemoPersona[] = [
         oneYearChange:
           "Calm evenings, consistent clients, income up meaningfully, more joy with partner.",
         ultimateGoal:
-          "Be a beacon — help others thrive spiritually and financially without apology.",
+          "Be a beacon - help others thrive spiritually and financially without apology.",
         topOutcomes: [
           "I close aligned clients with ease and warmth",
           "Evenings feel calm and connected at home",
@@ -275,7 +275,7 @@ const PERSONAS: DemoPersona[] = [
         shortTermGoals: "Walk 30 minutes daily; one short talk per month.",
         longTermGoals: "Vibrant health into later decades; inspiring speaker.",
         oneYearChange: "Stronger stamina, lighter body, comfortable on stage.",
-        ultimateGoal: "Live long enough — and well enough — to share what I’ve learned.",
+        ultimateGoal: "Live long enough - and well enough - to share what I’ve learned.",
         topOutcomes: [
           "I move with ease and enjoy exercise",
           "I present ideas clearly and warmly",
@@ -368,7 +368,7 @@ async function seedOne(persona: DemoPersona, goalPool: string[]) {
   } else {
     const existing = await getLatestLgdIntakeForUser(user.id);
     if (existing && existing.status !== "draft") {
-      console.log(`  skip ${persona.email} — already has ${existing.status} intake (use --replace)`);
+      console.log(`  skip ${persona.email} - already has ${existing.status} intake (use --replace)`);
       return;
     }
     if (existing?.status === "draft") {
@@ -451,7 +451,7 @@ async function main() {
     await seedOne(persona, goalPool);
   }
 
-  console.log("\nDone. Open /admin/lgd — search Demo or lgd-demo.");
+  console.log("\nDone. Open /admin/lgd - search Demo or lgd-demo.");
   console.log(`Demo member password (if logging in): ${DEMO_PASSWORD}`);
 }
 

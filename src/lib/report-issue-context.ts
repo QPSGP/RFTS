@@ -75,26 +75,26 @@ export function formatReportIssueContextBlock(
     "--- Automatic diagnostic context ---",
     `Account: ${server.memberEmail}`,
     `Member ID: ${server.memberId}`,
-    `Name: ${[server.firstName, server.lastName].filter(Boolean).join(" ") || "—"}`,
-    `Membership: ${server.subscriptionTier ?? "—"} (${server.subscriptionStatus ?? "—"})`,
+    `Name: ${[server.firstName, server.lastName].filter(Boolean).join(" ") || "-"}`,
+    `Membership: ${server.subscriptionTier ?? "-"} (${server.subscriptionStatus ?? "-"})`,
     `Plays per night: ${server.playsPerNight}`,
     `Goals selected: ${server.goalCount}`
   ];
 
   if (client) {
     lines.push(
-      `Page: ${client.pageUrl || "—"}`,
-      `User-Agent: ${client.userAgent || "—"}`,
-      `Platform: ${client.platform || "—"}`,
-      `Language: ${client.language || "—"}`,
-      `Time zone: ${client.timeZone || "—"}`,
-      `Screen: ${client.screen || "—"}`,
-      `Viewport: ${client.viewport || "—"}`,
+      `Page: ${client.pageUrl || "-"}`,
+      `User-Agent: ${client.userAgent || "-"}`,
+      `Platform: ${client.platform || "-"}`,
+      `Language: ${client.language || "-"}`,
+      `Time zone: ${client.timeZone || "-"}`,
+      `Screen: ${client.screen || "-"}`,
+      `Viewport: ${client.viewport || "-"}`,
       `Touch points: ${client.touchPoints}`,
-      `Device memory (GB): ${client.deviceMemoryGb ?? "—"}`,
-      `CPU cores: ${client.hardwareConcurrency ?? "—"}`,
+      `Device memory (GB): ${client.deviceMemoryGb ?? "-"}`,
+      `CPU cores: ${client.hardwareConcurrency ?? "-"}`,
       `Installed PWA: ${client.standalonePwa ? "yes" : "no"}`,
-      `Collected at: ${client.collectedAt || "—"}`
+      `Collected at: ${client.collectedAt || "-"}`
     );
   }
 
@@ -122,14 +122,14 @@ export function formatAdminReportIssueContextBlock(
   ];
   if (client) {
     lines.push(
-      `Page: ${client.pageUrl || "—"}`,
-      `User-Agent: ${client.userAgent || "—"}`,
-      `Platform: ${client.platform || "—"}`,
-      `Language: ${client.language || "—"}`,
-      `Time zone: ${client.timeZone || "—"}`,
-      `Screen: ${client.screen || "—"}`,
-      `Viewport: ${client.viewport || "—"}`,
-      `Collected at: ${client.collectedAt || "—"}`
+      `Page: ${client.pageUrl || "-"}`,
+      `User-Agent: ${client.userAgent || "-"}`,
+      `Platform: ${client.platform || "-"}`,
+      `Language: ${client.language || "-"}`,
+      `Time zone: ${client.timeZone || "-"}`,
+      `Screen: ${client.screen || "-"}`,
+      `Viewport: ${client.viewport || "-"}`,
+      `Collected at: ${client.collectedAt || "-"}`
     );
   }
   return lines.join("\n");

@@ -123,7 +123,7 @@ export async function POST(request: Request) {
     });
     if (!storedInAdmin) {
       console.error(
-        "[report-issue] Email sent but member_issue_reports insert failed — run db:schema on production DB"
+        "[report-issue] Email sent but member_issue_reports insert failed - run db:schema on production DB"
       );
     }
   }

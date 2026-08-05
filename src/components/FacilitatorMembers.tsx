@@ -192,7 +192,7 @@ function lineupAlgorithmNote(
       `Removed after plays: ${night.rotationRemovedAfterPlays.map((id) => idLabels.get(id) || id).join(", ")}`
     );
   }
-  return parts.join(" · ") || "—";
+  return parts.join(" · ") || "-";
 }
 
 type ConsolePanel = "client" | "add-member" | "member-audios" | "add-audio" | "lgd";
@@ -950,7 +950,7 @@ export default function FacilitatorMembers() {
       const url = blob?.url || "";
       setAudioDraft((d) => ({ ...d, audioUrl: url }));
       setAudioUploadStatus(
-        url ? "Upload complete — add title and description, then save." : "Upload finished but no URL returned."
+        url ? "Upload complete - add title and description, then save." : "Upload finished but no URL returned."
       );
       if (fileInput) fileInput.value = "";
     } catch (e) {
@@ -1197,7 +1197,7 @@ export default function FacilitatorMembers() {
                   </td>
                   <td style={{ padding: "8px 10px", verticalAlign: "top" }}>
                     {night.tracks.length === 0
-                      ? "—"
+                      ? "-"
                       : night.tracks.map((track, index) => (
                           <div key={`${night.night}-${index}`}>{trackLabel(track)}</div>
                         ))}
@@ -1228,7 +1228,7 @@ export default function FacilitatorMembers() {
         <span className="pill">Facilitator Console</span>
         <h1>Welcome, {facilitatorName || "Facilitator"}</h1>
         <p>
-          Manage members assigned to you — add clients, upload member audios, set Gold member goals,
+          Manage members assigned to you - add clients, upload member audios, set Gold member goals,
           preview each client&apos;s nightly lineup, and edit Platinum Managed rotations.
         </p>
       </section>
@@ -1634,7 +1634,7 @@ export default function FacilitatorMembers() {
                         <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
                           {activitySummary[selectedEmail]?.lastLoginAt
                             ? new Date(activitySummary[selectedEmail].lastLoginAt!).toLocaleString()
-                            : "—"}
+                            : "-"}
                         </p>
                       </div>
                       <div className="card" style={{ background: "#f8fafc" }}>
@@ -1642,7 +1642,7 @@ export default function FacilitatorMembers() {
                         <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
                           {activitySummary[selectedEmail]?.lastPlayAt
                             ? new Date(activitySummary[selectedEmail].lastPlayAt!).toLocaleString()
-                            : "—"}
+                            : "-"}
                         </p>
                       </div>
                     </div>
@@ -1683,7 +1683,7 @@ export default function FacilitatorMembers() {
                   {openClientSection === "profile" && selectedEmail && (
                     <div className="card" style={{ marginTop: 4, marginBottom: 8 }}>
                       <p style={{ fontSize: 13, color: "#64748b", marginTop: 0, lineHeight: 1.5 }}>
-                        Add or update the same personal details members enter during signup — name,
+                        Add or update the same personal details members enter during signup - name,
                         contact info, preferences, and goal-related fields.
                       </p>
                       {profileDrafts[selectedEmail] ? (
@@ -1742,7 +1742,7 @@ export default function FacilitatorMembers() {
                   {openClientSection === "notes" && (
                     <div className="card" style={{ marginTop: 4, marginBottom: 8 }}>
                       <p style={{ fontSize: 13, color: "#64748b", marginTop: 0, lineHeight: 1.5 }}>
-                        Shared internal notes — admins and facilitators can see and edit these.
+                        Shared internal notes - admins and facilitators can see and edit these.
                         Not visible to the member.
                       </p>
                       <textarea
@@ -1865,7 +1865,7 @@ export default function FacilitatorMembers() {
                       </div>
                       <p style={{ fontSize: 12, color: "#64748b", marginTop: 12, marginBottom: 0 }}>
                         <strong>Inactive</strong> blocks library and playback access. The account
-                        stays on your client list — nothing is deleted.
+                        stays on your client list - nothing is deleted.
                       </p>
                       {subscriptionSaveStatus && (
                         <p
@@ -1907,7 +1907,7 @@ export default function FacilitatorMembers() {
                           .filter((r) => r.memberEmail.toLowerCase() === selectedEmail.toLowerCase())
                           .map((issue) => (
                             <li key={issue.id} style={{ marginBottom: 8 }}>
-                              <strong>{issue.subject}</strong> ({issue.status}) —{" "}
+                              <strong>{issue.subject}</strong> ({issue.status}) -{" "}
                               {new Date(issue.createdAt).toLocaleString()}
                             </li>
                           ))}
@@ -1941,7 +1941,7 @@ export default function FacilitatorMembers() {
                     className={adminSectionToggleClass(openClientSection === "goals", true)}
                     onClick={() => toggleClientSection("goals")}
                   >
-                    Goals (Gold){memberGoalIds.length ? ` — ${memberGoalIds.length}` : ""}
+                    Goals (Gold){memberGoalIds.length ? ` - ${memberGoalIds.length}` : ""}
                   </button>
                   {openClientSection === "goals" && (
                 <div className="card" style={{ marginTop: 4, marginBottom: 8 }}>
@@ -2105,7 +2105,7 @@ export default function FacilitatorMembers() {
                     <p style={{ fontSize: 13, color: "#2563eb" }}>Loading rotation…</p>
                   ) : rotationOrder.length === 0 ? (
                     <p style={{ fontSize: 13, color: "#6b7280" }}>
-                      No steps yet — add a recording below.
+                      No steps yet - add a recording below.
                     </p>
                   ) : (
                     <ol style={{ listStyle: "none", padding: 0, margin: "0 0 12px" }}>
@@ -2170,7 +2170,7 @@ export default function FacilitatorMembers() {
                       <option value="">Choose recording…</option>
                       {sortedLibrary.map((item) => (
                         <option key={item.id} value={item.id}>
-                          {item.skuCode ? `${item.skuCode} — ` : ""}
+                          {item.skuCode ? `${item.skuCode} - ` : ""}
                           {item.title}
                         </option>
                       ))}
@@ -2222,7 +2222,7 @@ export default function FacilitatorMembers() {
                             </td>
                             <td style={{ padding: "6px 8px", verticalAlign: "top" }}>{row.action}</td>
                             <td style={{ padding: "6px 8px", verticalAlign: "top", color: "#64748b" }}>
-                              {row.details || "—"}
+                              {row.details || "-"}
                             </td>
                           </tr>
                         ))}

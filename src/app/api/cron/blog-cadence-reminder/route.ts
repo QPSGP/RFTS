@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     ];
     const result = await sendEmail({
       to: recipients,
-      subject: `[RFTS] Blog cadence late — ${status.publishedThisWeek}/${status.target} this week`,
+      subject: `[RFTS] Blog cadence late - ${status.publishedThisWeek}/${status.target} this week`,
       html: `${html}<p><a href="${appUrl}/blog">Blog</a> · <a href="${appUrl}${status.signupPath}">Signup</a> · <a href="${appUrl}${status.nextTopic.path}">${status.nextTopic.label}</a></p>`,
       text: body,
       skipStaffBcc: true

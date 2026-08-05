@@ -1,10 +1,10 @@
-# DNS (name.com) + Resend — step-by-step
+# DNS (name.com) + Resend - step-by-step
 
 Your site **`https://reachforthestars.today`** is already loading, so **Vercel DNS for the website is likely done**. Use this checklist to confirm and to add **Resend** email records on the same domain.
 
 ---
 
-## Part A — Confirm Vercel DNS (website)
+## Part A - Confirm Vercel DNS (website)
 
 ### In Vercel
 
@@ -23,7 +23,7 @@ Your site **`https://reachforthestars.today`** is already loading, so **Vercel D
 
 ---
 
-## Part B — Resend domain verification (email)
+## Part B - Resend domain verification (email)
 
 Do this so mail can send from **`noreply@reachforthestars.today`** (not only `onboarding@resend.dev`).
 
@@ -31,7 +31,7 @@ Do this so mail can send from **`noreply@reachforthestars.today`** (not only `on
 
 1. [Resend](https://resend.com) → **Domains** → **Add Domain**
 2. Enter **`reachforthestars.today`** (apex domain, not www)
-3. Resend shows **DNS records** to add — usually:
+3. Resend shows **DNS records** to add - usually:
    - **TXT** (domain verification)
    - **MX** (optional for receiving; often needed for sending reputation)
    - Sometimes **CNAME** for DKIM (e.g. `resend._domainkey`)
@@ -43,9 +43,9 @@ Do this so mail can send from **`noreply@reachforthestars.today`** (not only `on
 3. **Host/name tips:**
    - `@` = apex (`reachforthestars.today`)
    - Some panels want `@` for root; others want blank for root
-   - DKIM often looks like `resend._domainkey` or similar — copy exactly from Resend
+   - DKIM often looks like `resend._domainkey` or similar - copy exactly from Resend
 
-4. **Do not delete** Vercel’s A/CNAME records — website and email DNS live in the same zone.
+4. **Do not delete** Vercel’s A/CNAME records - website and email DNS live in the same zone.
 
 ### 3. Wait for verification
 
@@ -71,7 +71,7 @@ Do this so mail can send from **`noreply@reachforthestars.today`** (not only `on
 
 ---
 
-## Quick reference — records in one place
+## Quick reference - records in one place
 
 | Purpose | Where to configure | Typical records |
 |--------|-------------------|-----------------|
@@ -81,14 +81,14 @@ Do this so mail can send from **`noreply@reachforthestars.today`** (not only `on
 
 ---
 
-## Stripe (when you’re ready — no double charge)
+## Stripe (when you’re ready - no double charge)
 
 **Do not turn on live checkout for existing members until their Stripe IDs are linked.**
 
 1. Use the **same Stripe account** as the old system (`STRIPE_SECRET_KEY=sk_live_…` on Vercel).
 2. In **Stripe Dashboard → Customers**, find each member by email → copy **`cus_…`** and active **`sub_…`**.
 3. In **Admin → Members → View member** → section **3. Membership** → paste **Stripe Customer ID** and **Stripe Subscription ID** → **Save**.
-4. Set tier **active**; member uses **Manage billing** — **not** signup Checkout again.
+4. Set tier **active**; member uses **Manage billing** - **not** signup Checkout again.
 5. App blocks new Checkout when those IDs exist (billing portal instead).
 
 See **`STRIPE_SETUP.md`** (Go-live: link old-system Stripe customers).

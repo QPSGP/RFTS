@@ -46,7 +46,7 @@ def extract_descriptions() -> dict[str, str]:
     lines = [
         line.strip()
         for line in text.splitlines()
-        if line.strip() and not re.fullmatch(r"[-–—\s]*\d+\s*[-–—\s]*", line.strip())
+        if line.strip() and not re.fullmatch(r"[-–-\s]*\d+\s*[-–-\s]*", line.strip())
     ]
 
     current_code = None

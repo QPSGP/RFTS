@@ -33,7 +33,7 @@ function slugBaseFromItem(item: LibraryItem): string {
   return item.id;
 }
 
-/** Stable public slug for /audio/[slug] — suffix id when SKU collides. */
+/** Stable public slug for /audio/[slug] - suffix id when SKU collides. */
 export function resolveAudioLandingSlug(item: LibraryItem, allItems: LibraryItem[]): string {
   const base = slugBaseFromItem(item);
   if (!base) return item.id;
@@ -53,7 +53,7 @@ export function isExcludedFromAudioLanding(item: LibraryItem): boolean {
   return isCgmr || !!item.isAdult;
 }
 
-/** Facilitator member-only uploads — page may exist for staff preview but must not be indexed. */
+/** Facilitator member-only uploads - page may exist for staff preview but must not be indexed. */
 export function isPrivateFacilitatorAudio(item: LibraryItem): boolean {
   return Boolean(item.moderatorId) && item.inGeneralCatalog === false;
 }
@@ -67,7 +67,7 @@ export function isUtilityAudioTrack(item: LibraryItem): boolean {
   return false;
 }
 
-/** Eligible for Google indexing and sitemap — public catalog tracks only. */
+/** Eligible for Google indexing and sitemap - public catalog tracks only. */
 export function isIndexableAudioLanding(item: LibraryItem): boolean {
   if (!item.audioUrl?.trim()) return false;
   if (isExcludedFromAudioLanding(item)) return false;
@@ -95,10 +95,10 @@ function summaryForItem(item: LibraryItem): string {
     const fromCatalog = lookupRecordingDescription(item.skuCode).trim();
     if (fromCatalog) return fromCatalog;
   }
-  return "A guided audio session from the Reach For The Stars library — personalized for your nightly goals.";
+  return "A guided audio session from the Reach For The Stars library - personalized for your nightly goals.";
 }
 
-const SEO_META_HOOK = "14-day free trial — hear it in your nightly rotation.";
+const SEO_META_HOOK = "14-day free trial - hear it in your nightly rotation.";
 
 /** Meta description with trial hook for search snippets. */
 export function buildSeoMetaDescription(summary: string): string {
@@ -127,7 +127,7 @@ export function buildAudioLandingContent(
   const slug = resolveAudioLandingSlug(item, allItems);
   const title = item.title?.trim() || "Guided audio session";
   const summary = summaryForItem(item);
-  const skuLabel = item.skuCode ? `${item.skuCode} — ` : "";
+  const skuLabel = item.skuCode ? `${item.skuCode} - ` : "";
 
   return {
     slug,

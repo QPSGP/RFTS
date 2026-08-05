@@ -81,14 +81,14 @@ export function mergeOutreachTemplate(
 
 /** Personas from docs/personas.md, used to tag outreach targets. */
 export const OUTREACH_PERSONAS = [
-  "Alex — Burned-Out Professional",
-  "Jordan — Front-Line Caregiver",
-  "Sam — Sleep-Deprived Parent / Caregiver",
-  "Chris — Spiritual Entrepreneur",
-  "Riley — Single Seeking a Match",
-  "Morgan — High-Pressure Sales Professional",
-  "Taylor — Exam-Bound Professional",
-  "Casey — Working Actor / Performer"
+  "Alex - Burned-Out Professional",
+  "Jordan - Front-Line Caregiver",
+  "Sam - Sleep-Deprived Parent / Caregiver",
+  "Chris - Spiritual Entrepreneur",
+  "Riley - Single Seeking a Match",
+  "Morgan - High-Pressure Sales Professional",
+  "Taylor - Exam-Bound Professional",
+  "Casey - Working Actor / Performer"
 ] as const;
 
 /** Segment categories from docs/target-organizations.md. */
@@ -146,9 +146,9 @@ type StarterTarget = {
   entryPath: string;
 };
 
-const JORDAN = "Jordan — Front-Line Caregiver";
-const ALEX = "Alex — Burned-Out Professional";
-const SAM = "Sam — Sleep-Deprived Parent / Caregiver";
+const JORDAN = "Jordan - Front-Line Caregiver";
+const ALEX = "Alex - Burned-Out Professional";
+const SAM = "Sam - Sleep-Deprived Parent / Caregiver";
 
 /** Seed list for the outreach tracker (from docs/target-organizations.md). */
 export const STARTER_OUTREACH_TARGETS: StarterTarget[] = [
@@ -433,7 +433,7 @@ Open your console: {{siteUrl}}/play-options`
     subject: "Partnership idea: Reach For The Stars for your community",
     bodyText: `Hello {{contactName}},
 
-I'm reaching out about Reach For The Stars (ReachForTheStars.Today) — guided meditations that play while people fall asleep and during sleep, so goal work happens without another daytime chore.
+I'm reaching out about Reach For The Stars (ReachForTheStars.Today) - guided meditations that play while people fall asleep and during sleep, so goal work happens without another daytime chore.
 
 Many {{organization}} members juggle stress, irregular sleep, and burnout. We partner with organizations through:
 - Affiliate referrals (25% ongoing), or
@@ -467,10 +467,10 @@ Thank you,
   {
     name: "Resilience blog share (member or prospect)",
     purpose: "resilience_blog_share",
-    subject: "Hard days need recovery — not another daytime chore",
+    subject: "Hard days need recovery - not another daytime chore",
     bodyText: `Hello {{firstName}},
 
-I wanted to share a short piece on physical and psychological resilience — how guided meditation at bedtime (and during sleep) helps people bounce back after hard shifts and high-stress weeks.
+I wanted to share a short piece on physical and psychological resilience - how guided meditation at bedtime (and during sleep) helps people bounce back after hard shifts and high-stress weeks.
 
 Read it here:
 {{siteUrl}}/blog/resilience-meditation-bounce-back-stress-sleep
@@ -482,14 +482,14 @@ Warmly,
 {{yourName}}`
   },
   {
-    name: "Affiliate partner — resilience + 25% ongoing",
+    name: "Affiliate partner - resilience + 25% ongoing",
     purpose: "affiliate_resilience_partner",
     subject: "25% ongoing + a resilience tool that fits shift work",
     bodyText: `Hello {{contactName}},
 
 Quick partnership idea for {{organization}}.
 
-Reach For The Stars gives people guided meditations that run at bedtime and during sleep — resilience, stress relief, and sleep support without another daytime wellness chore. Affiliates earn 25% ongoing for as long as referred members stay subscribed.
+Reach For The Stars gives people guided meditations that run at bedtime and during sleep - resilience, stress relief, and sleep support without another daytime wellness chore. Affiliates earn 25% ongoing for as long as referred members stay subscribed.
 
 Useful pages to share:
 - Affiliates: {{siteUrl}}/affiliates
@@ -512,7 +512,7 @@ Warmly,
     subject: "For your sales team: quota calm that trains at night",
     bodyText: `Hello {{contactName}},
 
-Salespeople don’t need another daytime podcast — they need composure under quota and sleep before the big close.
+Salespeople don’t need another daytime podcast - they need composure under quota and sleep before the big close.
 
 Reach For The Stars reinforces wealth, resilience, and stress-relief goals while they fall asleep and during sleep. Partners earn 25% ongoing on referred memberships.
 
@@ -537,68 +537,68 @@ export type ReferencePersona = {
 /** Condensed persona reference (from docs/personas.md) for the inline reference panel. */
 export const REFERENCE_PERSONAS: ReferencePersona[] = [
   {
-    name: "Alex — Burned-Out Professional",
+    name: "Alex - Burned-Out Professional",
     role: "Manager / knowledge worker / entrepreneur, 32–44",
     snapshot:
       "Competent and exhausted; brain won't power down at bedtime. Tried apps that add another daytime chore.",
     message:
-      "No extra daytime chore — press Start at bedtime; evidence-informed, habit without willpower."
+      "No extra daytime chore - press Start at bedtime; evidence-informed, habit without willpower."
   },
   {
-    name: "Jordan — Front-Line Caregiver",
+    name: "Jordan - Front-Line Caregiver",
     role: "Nurse, EMT, firefighter, police, hospital staff, 28–55",
     snapshot:
       "Carries stress home; irregular sleep and hypervigilance. Wants practical, trauma-informed tools, not fluff.",
     message:
-      "Built for real stress — nightly nervous-system downshift; trusted voice; works when depleted."
+      "Built for real stress - nightly nervous-system downshift; trusted voice; works when depleted."
   },
   {
-    name: "Sam — Sleep-Deprived Parent / Caregiver",
+    name: "Sam - Sleep-Deprived Parent / Caregiver",
     role: "Parent of young kids or caring for aging parents, 30–50",
     snapshot:
       "Fragmented sleep and mental load; late night is the only quiet time, when anxiety spikes.",
     message:
-      "Self-care that doesn't steal from family — happens while already in bed; replace the scroll."
+      "Self-care that doesn't steal from family - happens while already in bed; replace the scroll."
   },
   {
-    name: "Chris — Spiritual Entrepreneur",
-    role: "Coach, hypnotist, healer, or owner — spirit + profit, ~$65K+ aiming higher",
+    name: "Chris - Spiritual Entrepreneur",
+    role: "Coach, hypnotist, healer, or owner - spirit + profit, ~$65K+ aiming higher",
     snapshot:
       "Wants spiritual growth and income lift; rejects starving-healer myth. Will to learn; buys when growth is an investment.",
     message:
-      "Highest potential physically, mentally, emotionally, spiritually, and financially — nightly, while you sleep."
+      "Highest potential physically, mentally, emotionally, spiritually, and financially - nightly, while you sleep."
   },
   {
-    name: "Riley — Single Seeking a Match",
+    name: "Riley - Single Seeking a Match",
     role: "Single adult wanting a healthy romantic relationship, 28–48",
     snapshot:
       "Dating fatigue and old patterns; wants confidence and readiness without desperation or another daytime course.",
     message:
-      "Become the match you want — relationship goals reinforce nightly while you sleep."
+      "Become the match you want - relationship goals reinforce nightly while you sleep."
   },
   {
-    name: "Morgan — High-Pressure Sales Professional",
+    name: "Morgan - High-Pressure Sales Professional",
     role: "AE, realtor, advisor, or founder on quota, 26–55",
     snapshot:
       "Income tied to confidence and follow-through; rejection and pre-close anxiety wreck sleep and momentum.",
     message:
-      "Quota calm and bounce-back — sales confidence and prospecting drive reinforced at bedtime."
+      "Quota calm and bounce-back - sales confidence and prospecting drive reinforced at bedtime."
   },
   {
-    name: "Taylor — Exam-Bound Professional",
+    name: "Taylor - Exam-Bound Professional",
     role: "Student or working pro facing boards, bar, CPA, certs, 22–45",
     snapshot:
       "Career hinge is a test date; knows the material but blanks under pressure; cramming steals sleep.",
     message:
-      "Know it when it counts — calm recall and protected sleep through the exam window."
+      "Know it when it counts - calm recall and protected sleep through the exam window."
   },
   {
-    name: "Casey — Working Actor / Performer",
+    name: "Casey - Working Actor / Performer",
     role: "Actor, voice, dancer, musician, or presenter, 20–50",
     snapshot:
       "Auditions and rejection loops; nerves steal presence; irregular schedule makes wellness fragile.",
     message:
-      "Presence over perfection — creative flow and rejection recovery, one Start at bedtime."
+      "Presence over perfection - creative flow and rejection recovery, one Start at bedtime."
   }
 ];
 
@@ -608,7 +608,7 @@ export const REFERENCE_PLAN_HIGHLIGHTS: string[] = [
   "Weekly blog cadence (required): one article every 7 days, each linking to a goal/wellness page and driving signup.",
   "Short-form: 3–5 clips/week on TikTok & Instagram Reels.",
   "Affiliate payouts: 25% ongoing of subscription revenue for as long as the referred member stays subscribed.",
-  "Affiliate/facilitator targets: therapists, wellness coaches, community leaders, nonprofits — recruit Chris-like spiritual entrepreneurs who can pay and refer.",
+  "Affiliate/facilitator targets: therapists, wellness coaches, community leaders, nonprofits - recruit Chris-like spiritual entrepreneurs who can pay and refer.",
   "USP: highest potential physically, mentally, emotionally, spiritually, and financially (financial piece is intentional).",
   "Ideal commercial client: need + ability to pay (~$65K+) + will to learn; intentional giveaway separate from core funnel.",
   "Offer bundles: Sleep Pack, Burnout Pack, First Responders Pack; annual discount for retention."

@@ -68,7 +68,7 @@ export async function GET(request: Request) {
   if (isManaged && !assignedAudioIds?.length) {
     return NextResponse.json({
       schedule: [],
-      message: "No rotation steps yet — add recordings in Rotation order for this member.",
+      message: "No rotation steps yet - add recordings in Rotation order for this member.",
       tier: "platinum_managed",
       playsPerNight: profile.playsPerNight === 1 ? 1 : 2,
       goalCount: 0,
@@ -81,7 +81,7 @@ export async function GET(request: Request) {
   if (!isManaged && goalIds.length === 0) {
     return NextResponse.json({
       schedule: [],
-      message: "No goals assigned yet — add goals to preview the nightly lineup.",
+      message: "No goals assigned yet - add goals to preview the nightly lineup.",
       tier: "platinum",
       playsPerNight: profile.playsPerNight === 1 ? 1 : 2,
       goalCount: 0,
