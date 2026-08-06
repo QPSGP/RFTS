@@ -12,34 +12,54 @@ const inputStyle = {
 
 export default function FacilitatorPage() {
   const [status, setStatus] = useState<string | null>(null);
+  const [statusKind, setStatusKind] = useState<"ok" | "error" | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setStatus(null);
-    const formData = new FormData(event.currentTarget);
+    setStatusKind(null);
+    setSubmitting(true);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const str = (key: string) => String(formData.get(key) ?? "").trim();
     const payload = {
-      name: formData.get("name"),
-      email: formData.get("email"),
-      focusAreas: formData.get("focusAreas"),
-      experience: formData.get("experience"),
-      links: formData.get("links"),
-      phone: formData.get("phone"),
-      website: formData.get("website"),
-      socialLinks: formData.get("socialLinks"),
-      photoUrl: formData.get("photoUrl")
+      name: str("name"),
+      email: str("email"),
+      focusAreas: str("focusAreas"),
+      experience: str("experience"),
+      links: str("links"),
+      phone: str("phone"),
+      website: str("website"),
+      socialLinks: str("socialLinks"),
+      photoUrl: str("photoUrl")
     };
-    const response = await fetch("/api/moderators", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    if (response.ok) {
-      event.currentTarget.reset();
-      setStatus("Thanks! Your application has been received.");
-      return;
+    try {
+      const response = await fetch("/api/moderators", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify(payload)
+      });
+      if (response.ok) {
+        form.reset();
+        setStatusKind("ok");
+        setStatus(
+          "Thanks! Your application has been received. Admins: open Content Console → Facilitator Applications (expand that section and Refresh if the page was already open)."
+        );
+        return;
+      }
+      const data = await response.json().catch(() => ({}));
+      setStatusKind("error");
+      setStatus(
+        data?.error || "Something went wrong. Please review your responses and try again."
+      );
+    } catch {
+      setStatusKind("error");
+      setStatus("Network error - please try again.");
+    } finally {
+      setSubmitting(false);
     }
-    const data = await response.json().catch(() => ({}));
-    setStatus(data?.error || "Something went wrong. Please review your responses and try again.");
   };
 
   return (
@@ -207,11 +227,25 @@ export default function FacilitatorPage() {
             placeholder="Profile photo URL (optional)"
             style={inputStyle}
           />
-          <button className="button" type="submit">
-            Submit Application
+          <button className="button" type="submit" disabled={submitting}>
+            {submitting ? "Submitting…" : "Submit Application"}
           </button>
         </form>
-        {status && <p style={{ marginTop: 12 }}>{status}</p>}
+        {status && (
+          <p
+            style={{
+              marginTop: 12,
+              padding: "10px 12px",
+              borderRadius: 8,
+              background: statusKind === "ok" ? "#ecfdf5" : "#fef2f2",
+              color: statusKind === "ok" ? "#065f46" : "#991b1b",
+              border: `1px solid ${statusKind === "ok" ? "#a7f3d0" : "#fecaca"}`
+            }}
+            role="status"
+          >
+            {status}
+          </p>
+        )}
       </section>
       <SiteFooter showStartJourney={false} />
     </main>

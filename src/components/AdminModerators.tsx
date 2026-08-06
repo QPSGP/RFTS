@@ -97,7 +97,9 @@ export default function AdminModerators() {
     setOpenSection(opening ? { [section]: true } : { ...openSection, [section]: false });
     if (
       opening &&
-      (section === "featuredProfiles" || section === "activeFacilitators")
+      (section === "featuredProfiles" ||
+        section === "activeFacilitators" ||
+        section === "applications")
     ) {
       void load();
     }
@@ -855,6 +857,9 @@ export default function AdminModerators() {
           onClick={() => toggleFacilitatorSection("applications")}
         >
           Facilitator Applications
+          {pendingApplications.length > 0
+            ? ` (${pendingApplications.length})`
+            : ""}
         </button>
         {facilitatorSectionIsOpen("applications") && (
           <div className="card" style={{ marginTop: 4 }}>
@@ -864,6 +869,13 @@ export default function AdminModerators() {
           in <strong>Active Facilitators</strong>.
         </p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => void load()}
+          >
+            Refresh list
+          </button>
           <button
             type="button"
             className="button button-secondary"
