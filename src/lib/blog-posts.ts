@@ -23,13 +23,60 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "focus-attention-span-guided-meditation-sleep",
+    title:
+      "Increased focus and attention span: guided meditation that trains concentration while you sleep",
+    metaTitle: "Focus & Attention Span Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "Rebuild focus and attention span with guided meditation at bedtime and during sleep. Nightly brain training without another daytime chore. Free trial.",
+    publishedAt: "2026-08-06",
+    readMinutes: 6,
+    excerpt:
+      "Attention span shrinks when every hour is a notification. Guided meditation at bedtime and during sleep reinforces focus and recall without adding daytime brain-training homework.",
+    topicSlug: "memory-improvement",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for increased focus and attention span usually already know the problem: tab-switching, doom-scrolling, and half-finished thoughts. What they want is not another productivity app. They want a reliable way to train concentration that does not require a spare hour they do not have.",
+          "Reach For The Stars supports focus through guided meditation while you fall asleep and, if you choose two audios per night, again during sleep. Attention practice becomes part of bedtime instead of competing with work, caregiving, or study."
+        ]
+      },
+      {
+        heading: "Focus is a skill you reinforce, not a mood you wait for",
+        paragraphs: [
+          "Attention span improves when the same calm cues return regularly. Research on meditation links steady practice with better working memory and sustained attention over weeks - not from a single heroic session, but from repetition that sticks.",
+          "When memory, learning, and mental clarity sit among your goals, your nightly rotation includes focus-aligned recordings automatically. Explore our memory improvement page for how that landing path frames brain training while you sleep."
+        ]
+      },
+      {
+        heading: "Why bedtime beats another daytime course",
+        paragraphs: [
+          "Daytime focus programs fail for the same reason daytime meditation often fails: the people who need them most are already overloaded. The only quiet window is late at night - exactly when the nervous system can downshift and the brain can consolidate learning.",
+          "A fixed Start Session cue helps: intro relaxation music, then your focus-related recording as you drift, then optional reinforcement about 2.5 hours later during restorative sleep. You train attention when the day can no longer interrupt you."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits students and exam prep, knowledge workers drowning in meetings and messages, creatives who need deep work without another morning routine, and anyone who feels their attention span has thinned and wants a low-friction reset.",
+          "Visit the memory and focus landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Clear focus and steady attention (excerpt)",
+      quote:
+        "Your attention gathers… distractions soften and fall away… you hold one clear intention… focus returns easily… your mind stays present, calm, and ready…"
+    }
+  },
+  {
     slug: "balanced-life-highest-potential-guided-meditation-sleep",
     title:
       "Balanced life: reach your highest potential - body, mind, spirit, and finances - while you sleep",
     metaTitle: "Balanced Life Guided Meditation - Highest Potential at Night | RFTS Blog",
     metaDescription:
       "Balanced life means highest potential physically, mentally, emotionally, spiritually, and financially. Nightly guided meditation reinforces whole-life growth while you sleep. Free trial.",
-    publishedAt: "2026-08-10",
+    publishedAt: "2026-08-06",
     readMinutes: 6,
     excerpt:
       "A balanced life is not five separate self-help projects. It is one nightly practice that reinforces your highest potential across body, mind, emotions, spirit - and finances - while you sleep.",
