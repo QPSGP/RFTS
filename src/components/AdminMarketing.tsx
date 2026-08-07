@@ -16,11 +16,13 @@ import {
   outreachTargetTypeLabel
 } from "@/lib/marketing-reference";
 import AdminOutreachCrmPanel from "@/components/AdminOutreachCrmPanel";
+import AdminEventLeadsPanel from "@/components/AdminEventLeadsPanel";
 
 const marketingSections = {
   overview: false,
   blog: false,
   landing: false,
+  leads: false,
   outreach: false,
   affiliates: false,
   reference: false
@@ -546,6 +548,14 @@ export default function AdminMarketing() {
           </button>
           <button
             type="button"
+            className={adminSectionToggleClass(openSections.leads, true)}
+            aria-expanded={openSections.leads}
+            onClick={() => toggleSection("leads", "marketing-leads")}
+          >
+            Event leads
+          </button>
+          <button
+            type="button"
             className={adminSectionToggleClass(openSections.outreach, true)}
             aria-expanded={openSections.outreach}
             onClick={() => toggleSection("outreach", "marketing-outreach")}
@@ -751,6 +761,14 @@ export default function AdminMarketing() {
               </tbody>
             </table>
           </div>
+        </section>
+      )}
+
+      {/* Event leads */}
+      {openSections.leads && (
+        <section id="marketing-leads" style={{ marginBottom: 24 }}>
+          <h2 style={{ marginBottom: 12, fontSize: 18 }}>Event leads</h2>
+          <AdminEventLeadsPanel open={openSections.leads} />
         </section>
       )}
 

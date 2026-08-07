@@ -45,7 +45,7 @@ export default function AdminMarketingPage() {
       >
         <div>
           <h1>Marketing</h1>
-          <p>Overview, blog cadence, share links, outreach tracker, affiliate snapshot, and reference.</p>
+          <p>Overview, blog cadence, share links, event leads, outreach tracker, affiliate snapshot, and reference.</p>
         </div>
         <div className="admin-toolbar">
           <Link

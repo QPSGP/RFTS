@@ -27,6 +27,7 @@ Set the same variables on **Vercel** → Project → Settings → Environment Va
 - **Welcome** - Onboarding route when member registers.
 - **Life Guidance (LGD)** - Onboarding or profile when LGD checkbox is newly checked.
 - **Build Practice (therapist/healer/coach)** - Onboarding or profile when that checkbox is newly checked.
+- **Event lead auto-reply** - Optional on QR/link submit (`/lead/practice`, `/lead/consumer`); practice survey vs Abundance magnet templates in `email-templates.ts`.
 
 **Staff copies:** Set `EMAIL_STAFF_BCC` to Terry and Richard’s real addresses. Internal report emails still go to `REPORT_ISSUE_EMAIL`; BCC adds Terry without duplicating the primary recipient when Richard is `to`.
 

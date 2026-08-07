@@ -12,6 +12,8 @@ import { getBaseUrl } from "./email";
  * - getTherapistHealerCoachEmailContent - therapist / healer / coach (Build Practice) interest
  * - getAffiliateThresholdReachedEmailContent - affiliate pending balance reached payout minimum
  * - getAffiliatePayoutSentEmailContent - Stripe Connect affiliate commission payout sent
+ * - getEventLeadPracticeAutoReplyContent - Expo / practice survey lead auto-reply
+ * - getEventLeadConsumerAutoReplyContent - consumer Abundance magnet lead auto-reply
  *
  * Staff BCC: set EMAIL_STAFF_BCC (comma-separated) for Terry, Richard, etc. Applied in sendEmail().
  */
@@ -596,6 +598,74 @@ ${params.billingNote}
 
 Sign in: ${params.loginUrl}
 Member console: ${baseUrl}/play-options
+`.trim();
+  return { subject, html, text };
+}
+
+/** Event lead auto-reply - practice survey (Expo / healer-coach). */
+export function getEventLeadPracticeAutoReplyContent(params: {
+  firstName?: string | null;
+  eventName?: string | null;
+}): TemplateContent {
+  const baseUrl = getBaseUrl();
+  const subject = "Thanks for connecting at the expo - next steps for your practice";
+  const dear = greeting(params.firstName);
+  const eventLine = params.eventName?.trim()
+    ? `Thanks for stopping by at ${escapeHtml(params.eventName.trim())}.`
+    : "Thanks for sharing your practice survey with us.";
+  const html = emailWrapper(`
+  ${p(dear)}
+  ${p(eventLine)}
+  ${p("Reach For The Stars helps coaches, healers, and hypnotherapists grow income and presence without another daytime chore - guided sessions run at bedtime and during sleep.")}
+  ${p("When you are ready, explore facilitator / affiliate options (25% ongoing) or start a personal membership trial.")}
+  ${emailCtaButton(`${baseUrl}/affiliates`, "Explore partner options")}
+  ${emailCtaButton(`${baseUrl}/signup/step-1-subscription-selection`, "Start your journey")}
+  ${p("Questions? 800-GOAL-NOW (462-5669) or reply to this email.", EMAIL_MUTED)}
+`);
+  const text = `
+${dear}
+
+${params.eventName?.trim() ? `Thanks for stopping by at ${params.eventName.trim()}.` : "Thanks for sharing your practice survey with us."}
+
+Reach For The Stars helps coaches, healers, and hypnotherapists grow income and presence - sessions run at bedtime and during sleep.
+
+Partner options: ${baseUrl}/affiliates
+Start trial: ${baseUrl}/signup/step-1-subscription-selection
+
+Questions? 800-GOAL-NOW (462-5669)
+`.trim();
+  return { subject, html, text };
+}
+
+/** Event lead auto-reply - consumer Abundance magnet card. */
+export function getEventLeadConsumerAutoReplyContent(params: {
+  firstName?: string | null;
+  eventName?: string | null;
+}): TemplateContent {
+  const baseUrl = getBaseUrl();
+  const subject = "Your free Abundance meditation - Abundance: Your Money and MORE Magnet";
+  const dear = greeting(params.firstName);
+  const eventLine = params.eventName?.trim()
+    ? `Thanks for connecting at ${escapeHtml(params.eventName.trim())}.`
+    : "Thanks for requesting your free download.";
+  const html = emailWrapper(`
+  ${p(dear)}
+  ${p(eventLine)}
+  ${p("Watch your inbox for free downloads and resources from Success Center / Reach For The Stars. Your Abundance: Your Money and MORE Magnet Goal Manifestation Guided Meditation is designed to draw abundance into every area of your life.")}
+  ${p("Ready for nightly guided sessions while you sleep?")}
+  ${emailCtaButton(`${baseUrl}/signup/step-1-subscription-selection`, "Start your free trial")}
+  ${p("Questions? 800-GOAL-NOW (462-5669) or reply to this email.", EMAIL_MUTED)}
+`);
+  const text = `
+${dear}
+
+${params.eventName?.trim() ? `Thanks for connecting at ${params.eventName.trim()}.` : "Thanks for requesting your free download."}
+
+Watch for free downloads from Success Center / Reach For The Stars, including Abundance: Your Money and MORE Magnet.
+
+Start your free trial: ${baseUrl}/signup/step-1-subscription-selection
+
+Questions? 800-GOAL-NOW (462-5669)
 `.trim();
   return { subject, html, text };
 }

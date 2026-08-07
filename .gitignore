@@ -16,3 +16,11 @@ tmp/
 *.tsbuildinfo
 # Local SC client intake PDF (not shipped; process consent restricted)
 docs/Client_Intake_Form_fillable.pdf
+# Expo lead-card scan binaries stay local (extracts JSON is committed)
+docs/lead-card-scans/**/*.jpg
+docs/lead-card-scans/**/*.jpeg
+docs/lead-card-scans/**/*.png
+docs/lead-card-scans/**/*.PDF
+docs/lead-card-scans/**/*.pdf
+!docs/lead-card-scans/**/extracts.json
+eng.traineddata
