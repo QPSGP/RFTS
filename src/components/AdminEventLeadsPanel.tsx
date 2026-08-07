@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent
+} from "react";
 import {
   EVENT_LEAD_FORM_TYPES,
   EVENT_LEAD_STATUSES,
@@ -224,10 +232,16 @@ export default function AdminEventLeadsPanel({ open }: Props) {
     if (open) void load();
   }, [open, load]);
 
-  const selected = useMemo(
-    () => leads.find((l) => l.id === selectedId) || null,
+  const selectedIndex = useMemo(
+    () => (selectedId ? leads.findIndex((l) => l.id === selectedId) : -1),
     [leads, selectedId]
   );
+  const selected = selectedIndex >= 0 ? leads[selectedIndex] : null;
+  const showingLead = Boolean(selectedId) && (mode === "view" || mode === "edit");
+  const showingList = !showingLead && mode !== "add";
+
+  const swipeStartX = useRef<number | null>(null);
+  const swipeStartY = useRef<number | null>(null);
 
   function openAdd() {
     setMode("add");
@@ -248,6 +262,68 @@ export default function AdminEventLeadsPanel({ open }: Props) {
     setMode("view");
     setMessage(null);
   }
+
+  function closeLead() {
+    setSelectedId(null);
+    setMode("view");
+    setMessage(null);
+  }
+
+  const goAdjacent = useCallback(
+    (delta: number) => {
+      if (selectedIndex < 0 || leads.length === 0) return;
+      const nextIndex = selectedIndex + delta;
+      if (nextIndex < 0 || nextIndex >= leads.length) return;
+      const next = leads[nextIndex];
+      setSelectedId(next.id);
+      setMode("view");
+      setMessage(null);
+    },
+    [leads, selectedIndex]
+  );
+
+  function onLeadPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
+    if (mode !== "view") return;
+    swipeStartX.current = e.clientX;
+    swipeStartY.current = e.clientY;
+  }
+
+  function onLeadPointerUp(e: ReactPointerEvent<HTMLDivElement>) {
+    if (mode !== "view" || swipeStartX.current == null || swipeStartY.current == null) {
+      swipeStartX.current = null;
+      swipeStartY.current = null;
+      return;
+    }
+    const dx = e.clientX - swipeStartX.current;
+    const dy = e.clientY - swipeStartY.current;
+    swipeStartX.current = null;
+    swipeStartY.current = null;
+    if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+    if (dx < 0) goAdjacent(1);
+    else goAdjacent(-1);
+  }
+
+  useEffect(() => {
+    if (!showingLead || mode !== "view") return;
+    function onKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        goAdjacent(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        goAdjacent(1);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        setSelectedId(null);
+        setMode("view");
+        setMessage(null);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showingLead, mode, goAdjacent]);
 
   async function saveForm() {
     setSaving(true);
@@ -370,8 +446,12 @@ export default function AdminEventLeadsPanel({ open }: Props) {
               type="button"
               className="button button-secondary"
               onClick={() => {
-                setMode("view");
-                if (!selectedId) setForm(emptyAddForm());
+                if (mode === "edit" && selected) {
+                  setMode("view");
+                } else {
+                  closeLead();
+                  setForm(emptyAddForm());
+                }
               }}
             >
               Cancel
@@ -632,6 +712,7 @@ export default function AdminEventLeadsPanel({ open }: Props) {
         </div>
       )}
 
+      {showingList && (
       <div className="card">
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
           <input
@@ -669,7 +750,11 @@ export default function AdminEventLeadsPanel({ open }: Props) {
             </thead>
             <tbody>
               {leads.map((lead) => (
-                <tr key={lead.id}>
+                <tr
+                  key={lead.id}
+                  onClick={() => openView(lead)}
+                  style={{ cursor: "pointer" }}
+                >
                   <td>{displayLeadName(lead)}</td>
                   <td>{lead.eventName}</td>
                   <td>{lead.formType}</td>
@@ -680,7 +765,10 @@ export default function AdminEventLeadsPanel({ open }: Props) {
                       type="button"
                       className="button button-secondary"
                       style={{ padding: "4px 8px", fontSize: 12, marginRight: 4 }}
-                      onClick={() => openView(lead)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openView(lead);
+                      }}
                     >
                       View
                     </button>
@@ -688,7 +776,10 @@ export default function AdminEventLeadsPanel({ open }: Props) {
                       type="button"
                       className="button button-secondary"
                       style={{ padding: "4px 8px", fontSize: 12 }}
-                      onClick={() => openEdit(lead)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEdit(lead);
+                      }}
                     >
                       Edit
                     </button>
@@ -704,21 +795,51 @@ export default function AdminEventLeadsPanel({ open }: Props) {
           </table>
         </div>
       </div>
+      )}
 
       {mode === "view" && selected && (
-        <div className="card" id="event-lead-detail">
+        <div
+          className="card"
+          id="event-lead-detail"
+          onPointerDown={onLeadPointerDown}
+          onPointerUp={onLeadPointerUp}
+          onPointerCancel={() => {
+            swipeStartX.current = null;
+            swipeStartY.current = null;
+          }}
+          style={{ touchAction: "pan-y", userSelect: "none" }}
+        >
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <strong>Digital lead - {displayLeadName(selected)}</strong>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button type="button" className="button" onClick={() => openEdit(selected)}>
-                Edit
+            <div>
+              <strong>Digital lead - {displayLeadName(selected)}</strong>
+              <div style={{ fontSize: 13, color: "#6b7280", marginTop: 4 }}>
+                {selectedIndex + 1} of {leads.length}
+                {" · "}
+                Swipe or use ← → to move · Esc for list
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="button button-secondary"
+                disabled={selectedIndex <= 0}
+                onClick={() => goAdjacent(-1)}
+              >
+                Previous
               </button>
               <button
                 type="button"
                 className="button button-secondary"
-                onClick={() => setSelectedId(null)}
+                disabled={selectedIndex >= leads.length - 1}
+                onClick={() => goAdjacent(1)}
               >
-                Close
+                Next
+              </button>
+              <button type="button" className="button" onClick={() => openEdit(selected)}>
+                Edit
+              </button>
+              <button type="button" className="button button-secondary" onClick={closeLead}>
+                Back to list
               </button>
             </div>
           </div>
@@ -728,7 +849,8 @@ export default function AdminEventLeadsPanel({ open }: Props) {
               gridTemplateColumns: "160px 1fr",
               gap: "6px 12px",
               fontSize: 14,
-              marginTop: 12
+              marginTop: 12,
+              userSelect: "text"
             }}
           >
             <dt>Form</dt>
@@ -772,7 +894,7 @@ export default function AdminEventLeadsPanel({ open }: Props) {
               </pre>
             </dd>
           </dl>
-          <label style={{ display: "block", marginTop: 12 }}>
+          <label style={{ display: "block", marginTop: 12, userSelect: "text" }}>
             Status
             <select
               value={selected.status}
