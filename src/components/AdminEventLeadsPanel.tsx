@@ -270,17 +270,34 @@ export default function AdminEventLeadsPanel({ open }: Props) {
   }
 
   const goAdjacent = useCallback(
-    (delta: number) => {
-      if (selectedIndex < 0 || leads.length === 0) return;
-      const nextIndex = selectedIndex + delta;
-      if (nextIndex < 0 || nextIndex >= leads.length) return;
+    (delta: number, options?: { edit?: boolean }) => {
+      if (leads.length === 0) return;
+      const stayInEdit = Boolean(options?.edit);
+      let nextIndex: number;
+      if (selectedIndex < 0) {
+        // Add form: next opens first record, previous opens last.
+        nextIndex = delta > 0 ? 0 : leads.length - 1;
+      } else {
+        nextIndex = selectedIndex + delta;
+        if (nextIndex < 0 || nextIndex >= leads.length) return;
+      }
       const next = leads[nextIndex];
       setSelectedId(next.id);
-      setMode("view");
+      if (stayInEdit) {
+        setMode("edit");
+        setForm(formFromLead(next));
+      } else {
+        setMode("view");
+      }
       setMessage(null);
     },
     [leads, selectedIndex]
   );
+
+  const canGoPrev =
+    leads.length > 0 && (selectedIndex < 0 || selectedIndex > 0);
+  const canGoNext =
+    leads.length > 0 && (selectedIndex < 0 || selectedIndex < leads.length - 1);
 
   function onLeadPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
     if (mode !== "view") return;
@@ -304,26 +321,32 @@ export default function AdminEventLeadsPanel({ open }: Props) {
   }
 
   useEffect(() => {
-    if (!showingLead || mode !== "view") return;
+    if (!showingLead && mode !== "add") return;
+    if (mode !== "view" && mode !== "edit" && mode !== "add") return;
     function onKey(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select") return;
+      const editNav = mode === "edit" || mode === "add";
       if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
         e.preventDefault();
-        goAdjacent(-1);
+        goAdjacent(-1, editNav ? { edit: true } : undefined);
       } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
         e.preventDefault();
-        goAdjacent(1);
+        goAdjacent(1, editNav ? { edit: true } : undefined);
       } else if (e.key === "Escape") {
         e.preventDefault();
-        setSelectedId(null);
-        setMode("view");
-        setMessage(null);
+        if (mode === "edit" && selectedId) {
+          setMode("view");
+        } else {
+          setSelectedId(null);
+          setMode("view");
+          setMessage(null);
+        }
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [showingLead, mode, goAdjacent]);
+  }, [showingLead, mode, goAdjacent, selectedId]);
 
   async function saveForm() {
     setSaving(true);
@@ -440,22 +463,59 @@ export default function AdminEventLeadsPanel({ open }: Props) {
 
       {(mode === "add" || mode === "edit") && (
         <div className="card" id="event-lead-form">
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-            <strong>{mode === "add" ? "Add event lead" : "Edit event lead"}</strong>
-            <button
-              type="button"
-              className="button button-secondary"
-              onClick={() => {
-                if (mode === "edit" && selected) {
-                  setMode("view");
-                } else {
-                  closeLead();
-                  setForm(emptyAddForm());
-                }
-              }}
-            >
-              Cancel
-            </button>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 12,
+              flexWrap: "wrap",
+              alignItems: "flex-start"
+            }}
+          >
+            <div>
+              <strong>{mode === "add" ? "Add event lead" : "Edit event lead"}</strong>
+              <div style={{ fontSize: 13, color: "#6b7280", marginTop: 4 }}>
+                {mode === "edit" && selectedIndex >= 0
+                  ? `${selectedIndex + 1} of ${leads.length}`
+                  : leads.length
+                    ? `${leads.length} in list - Next/Previous opens a saved lead`
+                    : "No saved leads yet"}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="button button-secondary"
+                disabled={!canGoPrev}
+                onClick={() => goAdjacent(-1, { edit: true })}
+                aria-label="Previous lead"
+              >
+                ← Previous
+              </button>
+              <button
+                type="button"
+                className="button button-secondary"
+                disabled={!canGoNext}
+                onClick={() => goAdjacent(1, { edit: true })}
+                aria-label="Next lead"
+              >
+                Next →
+              </button>
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={() => {
+                  if (mode === "edit" && selected) {
+                    setMode("view");
+                  } else {
+                    closeLead();
+                    setForm(emptyAddForm());
+                  }
+                }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
           <div style={fieldGrid}>
             <label>
@@ -822,18 +882,18 @@ export default function AdminEventLeadsPanel({ open }: Props) {
               <button
                 type="button"
                 className="button button-secondary"
-                disabled={selectedIndex <= 0}
+                disabled={!canGoPrev}
                 onClick={() => goAdjacent(-1)}
               >
-                Previous
+                ← Previous
               </button>
               <button
                 type="button"
                 className="button button-secondary"
-                disabled={selectedIndex >= leads.length - 1}
+                disabled={!canGoNext}
                 onClick={() => goAdjacent(1)}
               >
-                Next
+                Next →
               </button>
               <button type="button" className="button" onClick={() => openEdit(selected)}>
                 Edit
