@@ -1,16 +1,188 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import {
   EVENT_LEAD_FORM_TYPES,
   EVENT_LEAD_STATUSES,
+  EXPO_PRACTICE_DEFAULTS,
   LONG_BEACH_EXPO_2026,
   displayLeadName,
+  type EventLeadFormTypeId,
   type EventLeadRecord
 } from "@/lib/event-leads";
+import {
+  OUTREACH_CATEGORIES,
+  OUTREACH_ENTRY_PATHS,
+  OUTREACH_INTERESTS,
+  OUTREACH_PERSONAS
+} from "@/lib/marketing-reference";
 
 type Props = {
   open: boolean;
+};
+
+type LeadFormState = {
+  formType: EventLeadFormTypeId;
+  status: string;
+  eventName: string;
+  eventDates: string;
+  eventKey: string;
+  fullName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneMobile: string;
+  smsOk: boolean;
+  city: string;
+  state: string;
+  zip: string;
+  persona: string;
+  category: string;
+  interest: string;
+  entryPath: string;
+  capturedBy: string;
+  notes: string;
+  primaryOccupation: string;
+  incomeGoalAmount: string;
+  incomeGoalYear: string;
+  wantFullTime: boolean;
+  goalInterests: string;
+};
+
+function emptyAddForm(): LeadFormState {
+  return {
+    formType: "practice_survey",
+    status: "new",
+    eventName: EXPO_PRACTICE_DEFAULTS.eventName,
+    eventDates: EXPO_PRACTICE_DEFAULTS.eventDates,
+    eventKey: LONG_BEACH_EXPO_2026.eventKey,
+    fullName: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneMobile: "",
+    smsOk: false,
+    city: "",
+    state: "",
+    zip: "",
+    persona: EXPO_PRACTICE_DEFAULTS.persona,
+    category: EXPO_PRACTICE_DEFAULTS.category,
+    interest: EXPO_PRACTICE_DEFAULTS.interest,
+    entryPath: EXPO_PRACTICE_DEFAULTS.entryPath,
+    capturedBy: "",
+    notes: "",
+    primaryOccupation: "",
+    incomeGoalAmount: "",
+    incomeGoalYear: "",
+    wantFullTime: false,
+    goalInterests: ""
+  };
+}
+
+function formFromLead(lead: EventLeadRecord): LeadFormState {
+  const practice =
+    lead.payload?.practice && typeof lead.payload.practice === "object"
+      ? (lead.payload.practice as Record<string, unknown>)
+      : {};
+  const consumer =
+    lead.payload?.consumer && typeof lead.payload.consumer === "object"
+      ? (lead.payload.consumer as Record<string, unknown>)
+      : {};
+  const goalInterests = Array.isArray(consumer.goalInterests)
+    ? (consumer.goalInterests as string[]).join(", ")
+    : "";
+  return {
+    formType: lead.formType,
+    status: lead.status,
+    eventName: lead.eventName || "",
+    eventDates: lead.eventDates || "",
+    eventKey: lead.eventKey || "",
+    fullName: lead.fullName || "",
+    firstName: lead.firstName || "",
+    lastName: lead.lastName || "",
+    email: lead.email || "",
+    phoneMobile: lead.phoneMobile || "",
+    smsOk: lead.smsOk,
+    city: lead.city || "",
+    state: lead.state || "",
+    zip: lead.zip || "",
+    persona: lead.persona || "",
+    category: lead.category || "",
+    interest: lead.interest || "",
+    entryPath: lead.entryPath || "",
+    capturedBy: lead.capturedBy || "",
+    notes: lead.notes || "",
+    primaryOccupation: String(practice.primaryOccupation || consumer.position || ""),
+    incomeGoalAmount: String(
+      practice.incomeGoalAmount || consumer.incomeGoalAmount || ""
+    ),
+    incomeGoalYear: String(practice.incomeGoalYear || consumer.incomeGoalYear || ""),
+    wantFullTime: Boolean(practice.wantFullTime),
+    goalInterests
+  };
+}
+
+function payloadFromForm(form: LeadFormState) {
+  if (form.formType === "practice_survey") {
+    return {
+      practice: {
+        primaryOccupation: form.primaryOccupation.trim() || null,
+        incomeGoalAmount: form.incomeGoalAmount.trim() || null,
+        incomeGoalYear: form.incomeGoalYear.trim() || null,
+        wantFullTime: form.wantFullTime,
+        wantTxt: form.smsOk
+      },
+      consumer: null
+    };
+  }
+  return {
+    practice: null,
+    consumer: {
+      offerCode: "abundance-magnet",
+      goalInterests: form.goalInterests
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      incomeGoalAmount: form.incomeGoalAmount.trim() || null,
+      incomeGoalYear: form.incomeGoalYear.trim() || null,
+      position: form.primaryOccupation.trim() || null
+    }
+  };
+}
+
+function bodyFromForm(form: LeadFormState) {
+  const extras = payloadFromForm(form);
+  return {
+    formType: form.formType,
+    status: form.status,
+    eventName: form.eventName.trim(),
+    eventDates: form.eventDates.trim() || null,
+    eventKey: form.eventKey.trim() || null,
+    fullName: form.fullName.trim() || null,
+    firstName: form.firstName.trim() || null,
+    lastName: form.lastName.trim() || null,
+    email: form.email.trim() || null,
+    phoneMobile: form.phoneMobile.trim() || null,
+    smsOk: form.smsOk,
+    city: form.city.trim() || null,
+    state: form.state.trim() || null,
+    zip: form.zip.trim() || null,
+    persona: form.persona.trim() || null,
+    category: form.category.trim() || null,
+    interest: form.interest.trim() || null,
+    entryPath: form.entryPath.trim() || null,
+    capturedBy: form.capturedBy.trim() || null,
+    notes: form.notes.trim() || null,
+    autoReply: false,
+    ...extras
+  };
+}
+
+const fieldGrid: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: 10,
+  marginTop: 12
 };
 
 export default function AdminEventLeadsPanel({ open }: Props) {
@@ -19,6 +191,9 @@ export default function AdminEventLeadsPanel({ open }: Props) {
   const [message, setMessage] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filterEventKey, setFilterEventKey] = useState("");
+  const [mode, setMode] = useState<"view" | "edit" | "add">("view");
+  const [form, setForm] = useState<LeadFormState>(emptyAddForm);
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     setStatus("loading");
@@ -49,28 +224,61 @@ export default function AdminEventLeadsPanel({ open }: Props) {
     if (open) void load();
   }, [open, load]);
 
-  const selected = leads.find((l) => l.id === selectedId) || null;
+  const selected = useMemo(
+    () => leads.find((l) => l.id === selectedId) || null,
+    [leads, selectedId]
+  );
 
-  async function seedSarahRose() {
+  function openAdd() {
+    setMode("add");
+    setSelectedId(null);
+    setForm(emptyAddForm());
     setMessage(null);
-    const res = await fetch("/api/admin/marketing/event-leads", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ seedSarahRose: true })
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setMessage(data.error || "Import failed.");
-      return;
+  }
+
+  function openEdit(lead: EventLeadRecord) {
+    setSelectedId(lead.id);
+    setMode("edit");
+    setForm(formFromLead(lead));
+    setMessage(null);
+  }
+
+  function openView(lead: EventLeadRecord) {
+    setSelectedId(lead.id);
+    setMode("view");
+    setMessage(null);
+  }
+
+  async function saveForm() {
+    setSaving(true);
+    setMessage(null);
+    const body = bodyFromForm(form);
+    try {
+      const res = await fetch("/api/admin/marketing/event-leads", {
+        method: mode === "edit" && selectedId ? "PATCH" : "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          mode === "edit" && selectedId ? { id: selectedId, ...body } : body
+        )
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage(data.error || "Save failed.");
+        setSaving(false);
+        return;
+      }
+      setMessage(mode === "edit" ? "Lead updated." : "Lead created.");
+      await load();
+      if (data.lead?.id) {
+        setSelectedId(data.lead.id);
+        setMode("view");
+      }
+    } catch {
+      setMessage("Save failed.");
+    } finally {
+      setSaving(false);
     }
-    setMessage(
-      data.alreadyExisted
-        ? "Sarah Rose Long Beach Expo lead already in CRM."
-        : "Imported Sarah Rose from scan 20260803_124059."
-    );
-    await load();
-    if (data.lead?.id) setSelectedId(data.lead.id);
   }
 
   async function importExtractsFile() {
@@ -84,12 +292,12 @@ export default function AdminEventLeadsPanel({ open }: Props) {
         return;
       }
       const dataFile = await extractsRes.json();
-      const leads = dataFile.leads || [];
+      const batch = dataFile.leads || [];
       const res = await fetch("/api/admin/marketing/event-leads", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ importExtracts: true, leads })
+        body: JSON.stringify({ importExtracts: true, leads: batch })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -121,44 +329,27 @@ export default function AdminEventLeadsPanel({ open }: Props) {
     typeof window !== "undefined"
       ? `${window.location.origin}/lead/practice?key=${encodeURIComponent(LONG_BEACH_EXPO_2026.eventKey)}`
       : `/lead/practice?key=${LONG_BEACH_EXPO_2026.eventKey}`;
-  const consumerUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/lead/consumer`
-      : "/lead/consumer";
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <div className="card">
-        <strong>Digital lead cards (QR / link only)</strong>
+        <strong>Digital lead cards</strong>
         <p style={{ margin: "8px 0", fontSize: 14, color: "#4b5563" }}>
-          Not in site nav. Share QR or link at events. Submissions land here and sync to Outreach
-          as Chris / Coaches when practice survey defaults apply.
+          QR/link for attendees, or add/edit here. Practice survey defaults to Chris / Coaches /
+          Long Beach Expo.
         </p>
-        <ul style={{ margin: "8px 0", paddingLeft: 18, fontSize: 14 }}>
-          {EVENT_LEAD_FORM_TYPES.map((f) => (
-            <li key={f.id}>
-              <strong>{f.label}</strong> - <code>{f.path}</code>
-            </li>
-          ))}
-        </ul>
-        <p style={{ fontSize: 13, marginBottom: 8 }}>
-          Long Beach Expo practice QR target:{" "}
+        <p style={{ fontSize: 13, marginBottom: 12 }}>
+          Practice QR:{" "}
           <a href={practiceUrl} target="_blank" rel="noreferrer">
             {practiceUrl}
           </a>
         </p>
-        <p style={{ fontSize: 13, marginBottom: 12 }}>
-          Consumer lead form:{" "}
-          <a href={consumerUrl} target="_blank" rel="noreferrer">
-            {consumerUrl}
-          </a>
-        </p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <button type="button" className="button" onClick={openAdd}>
+            Add lead
+          </button>
           <button type="button" className="button button-secondary" onClick={() => void load()}>
             Refresh
-          </button>
-          <button type="button" className="button" onClick={() => void seedSarahRose()}>
-            Import Sarah Rose scan (Long Beach Expo)
           </button>
           <button
             type="button"
@@ -170,6 +361,276 @@ export default function AdminEventLeadsPanel({ open }: Props) {
         </div>
         {message && <p style={{ marginTop: 10, fontSize: 14 }}>{message}</p>}
       </div>
+
+      {(mode === "add" || mode === "edit") && (
+        <div className="card" id="event-lead-form">
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+            <strong>{mode === "add" ? "Add event lead" : "Edit event lead"}</strong>
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={() => {
+                setMode("view");
+                if (!selectedId) setForm(emptyAddForm());
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+          <div style={fieldGrid}>
+            <label>
+              Form type
+              <select
+                value={form.formType}
+                onChange={(e) => {
+                  const formType = e.target.value as EventLeadFormTypeId;
+                  setForm((f) => ({
+                    ...f,
+                    formType,
+                    ...(formType === "practice_survey"
+                      ? {
+                          persona: EXPO_PRACTICE_DEFAULTS.persona,
+                          category: EXPO_PRACTICE_DEFAULTS.category,
+                          interest: EXPO_PRACTICE_DEFAULTS.interest,
+                          entryPath: EXPO_PRACTICE_DEFAULTS.entryPath
+                        }
+                      : {
+                          persona: "Alex - Burned-Out Professional",
+                          category: "Individuals & influencers",
+                          interest: "Personal membership",
+                          entryPath: "Direct"
+                        })
+                  }));
+                }}
+              >
+                {EVENT_LEAD_FORM_TYPES.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Status
+              <select
+                value={form.status}
+                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
+              >
+                {EVENT_LEAD_STATUSES.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Event name
+              <input
+                value={form.eventName}
+                onChange={(e) => setForm((f) => ({ ...f, eventName: e.target.value }))}
+              />
+            </label>
+            <label>
+              Event dates
+              <input
+                value={form.eventDates}
+                onChange={(e) => setForm((f) => ({ ...f, eventDates: e.target.value }))}
+              />
+            </label>
+            <label>
+              Event key
+              <input
+                value={form.eventKey}
+                onChange={(e) => setForm((f) => ({ ...f, eventKey: e.target.value }))}
+              />
+            </label>
+            <label>
+              Full name
+              <input
+                value={form.fullName}
+                onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
+              />
+            </label>
+            <label>
+              First name
+              <input
+                value={form.firstName}
+                onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
+              />
+            </label>
+            <label>
+              Last name
+              <input
+                value={form.lastName}
+                onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+              />
+            </label>
+            <label>
+              Email
+              <input
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              />
+            </label>
+            <label>
+              Mobile
+              <input
+                value={form.phoneMobile}
+                onChange={(e) => setForm((f) => ({ ...f, phoneMobile: e.target.value }))}
+              />
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 22 }}>
+              <input
+                type="checkbox"
+                checked={form.smsOk}
+                onChange={(e) => setForm((f) => ({ ...f, smsOk: e.target.checked }))}
+              />
+              TXT OK
+            </label>
+            <label>
+              City
+              <input
+                value={form.city}
+                onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+              />
+            </label>
+            <label>
+              State
+              <input
+                value={form.state}
+                onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}
+              />
+            </label>
+            <label>
+              Zip
+              <input
+                value={form.zip}
+                onChange={(e) => setForm((f) => ({ ...f, zip: e.target.value }))}
+              />
+            </label>
+            <label>
+              Persona
+              <select
+                value={form.persona}
+                onChange={(e) => setForm((f) => ({ ...f, persona: e.target.value }))}
+              >
+                <option value="">-</option>
+                {OUTREACH_PERSONAS.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Category
+              <select
+                value={form.category}
+                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+              >
+                <option value="">-</option>
+                {OUTREACH_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Interest
+              <select
+                value={form.interest}
+                onChange={(e) => setForm((f) => ({ ...f, interest: e.target.value }))}
+              >
+                <option value="">-</option>
+                {OUTREACH_INTERESTS.map((i) => (
+                  <option key={i} value={i}>
+                    {i}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Entry path
+              <select
+                value={form.entryPath}
+                onChange={(e) => setForm((f) => ({ ...f, entryPath: e.target.value }))}
+              >
+                <option value="">-</option>
+                {OUTREACH_ENTRY_PATHS.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Captured by
+              <input
+                value={form.capturedBy}
+                onChange={(e) => setForm((f) => ({ ...f, capturedBy: e.target.value }))}
+              />
+            </label>
+            <label>
+              Occupation / role
+              <input
+                value={form.primaryOccupation}
+                onChange={(e) => setForm((f) => ({ ...f, primaryOccupation: e.target.value }))}
+              />
+            </label>
+            <label>
+              Income goal $
+              <input
+                value={form.incomeGoalAmount}
+                onChange={(e) => setForm((f) => ({ ...f, incomeGoalAmount: e.target.value }))}
+              />
+            </label>
+            <label>
+              Income goal year
+              <input
+                value={form.incomeGoalYear}
+                onChange={(e) => setForm((f) => ({ ...f, incomeGoalYear: e.target.value }))}
+              />
+            </label>
+            {form.formType === "practice_survey" ? (
+              <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 22 }}>
+                <input
+                  type="checkbox"
+                  checked={form.wantFullTime}
+                  onChange={(e) => setForm((f) => ({ ...f, wantFullTime: e.target.checked }))}
+                />
+                Want full time
+              </label>
+            ) : (
+              <label>
+                Goal interests (comma-separated)
+                <input
+                  value={form.goalInterests}
+                  onChange={(e) => setForm((f) => ({ ...f, goalInterests: e.target.value }))}
+                />
+              </label>
+            )}
+          </div>
+          <label style={{ display: "block", marginTop: 12 }}>
+            Notes
+            <textarea
+              rows={3}
+              value={form.notes}
+              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+            />
+          </label>
+          <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+            <button
+              type="button"
+              className="button"
+              disabled={saving}
+              onClick={() => void saveForm()}
+            >
+              {saving ? "Saving…" : mode === "edit" ? "Save changes" : "Create lead"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
@@ -185,9 +646,7 @@ export default function AdminEventLeadsPanel({ open }: Props) {
           <button
             type="button"
             className="button button-secondary"
-            onClick={() => {
-              setFilterEventKey(LONG_BEACH_EXPO_2026.eventKey);
-            }}
+            onClick={() => setFilterEventKey(LONG_BEACH_EXPO_2026.eventKey)}
           >
             Long Beach Expo key
           </button>
@@ -216,14 +675,22 @@ export default function AdminEventLeadsPanel({ open }: Props) {
                   <td>{lead.formType}</td>
                   <td>{lead.persona || "-"}</td>
                   <td>{lead.status}</td>
-                  <td>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      style={{ padding: "4px 8px", fontSize: 12, marginRight: 4 }}
+                      onClick={() => openView(lead)}
+                    >
+                      View
+                    </button>
                     <button
                       type="button"
                       className="button button-secondary"
                       style={{ padding: "4px 8px", fontSize: 12 }}
-                      onClick={() => setSelectedId(lead.id)}
+                      onClick={() => openEdit(lead)}
                     >
-                      View
+                      Edit
                     </button>
                   </td>
                 </tr>
@@ -238,17 +705,22 @@ export default function AdminEventLeadsPanel({ open }: Props) {
         </div>
       </div>
 
-      {selected && (
+      {mode === "view" && selected && (
         <div className="card" id="event-lead-detail">
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-            <strong>Locked digital lead - {displayLeadName(selected)}</strong>
-            <button
-              type="button"
-              className="button button-secondary"
-              onClick={() => setSelectedId(null)}
-            >
-              Close
-            </button>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <strong>Digital lead - {displayLeadName(selected)}</strong>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="button" className="button" onClick={() => openEdit(selected)}>
+                Edit
+              </button>
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={() => setSelectedId(null)}
+              >
+                Close
+              </button>
+            </div>
           </div>
           <dl
             style={{
@@ -266,10 +738,6 @@ export default function AdminEventLeadsPanel({ open }: Props) {
               {selected.eventName}
               {selected.eventDates ? ` (${selected.eventDates})` : ""}
             </dd>
-            <dt>Event key</dt>
-            <dd>
-              <code>{selected.eventKey || "-"}</code>
-            </dd>
             <dt>Email</dt>
             <dd>{selected.email || "-"}</dd>
             <dt>Mobile</dt>
@@ -277,22 +745,22 @@ export default function AdminEventLeadsPanel({ open }: Props) {
               {selected.phoneMobile || "-"}
               {selected.smsOk ? " (TXT OK)" : ""}
             </dd>
+            <dt>Location</dt>
+            <dd>
+              {[selected.city, selected.state, selected.zip].filter(Boolean).join(", ") || "-"}
+            </dd>
             <dt>Persona</dt>
             <dd>{selected.persona || "-"}</dd>
             <dt>Category</dt>
             <dd>{selected.category || "-"}</dd>
             <dt>Interest</dt>
             <dd>{selected.interest || "-"}</dd>
-            <dt>Entry path</dt>
-            <dd>{selected.entryPath || "-"}</dd>
+            <dt>Notes</dt>
+            <dd>{selected.notes || "-"}</dd>
             <dt>Scan</dt>
             <dd>
               <code>{selected.sourceScanPath || "-"}</code>
             </dd>
-            <dt>Notes</dt>
-            <dd>{selected.notes || "-"}</dd>
-            <dt>Auto-reply</dt>
-            <dd>{selected.autoReplySentAt || "Not sent"}</dd>
             <dt>Outreach target</dt>
             <dd>
               <code>{selected.outreachTargetId || "-"}</code>

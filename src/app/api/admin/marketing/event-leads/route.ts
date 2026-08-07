@@ -11,6 +11,7 @@ import {
   findEventLeadByEmailAndEvent,
   getEventLead,
   listEventLeads,
+  updateEventLead,
   updateEventLeadStatus
 } from "@/lib/event-leads-db";
 
@@ -131,11 +132,32 @@ export async function PATCH(request: Request) {
   }
   const body = await request.json().catch(() => ({}));
   const id = typeof body?.id === "string" ? body.id : "";
-  const status = typeof body?.status === "string" ? body.status.trim() : "";
-  if (!id || !status) {
-    return NextResponse.json({ error: "id and status required." }, { status: 400 });
+  if (!id) {
+    return NextResponse.json({ error: "id required." }, { status: 400 });
   }
-  const lead = await updateEventLeadStatus(id, status);
+
+  // Status-only shortcut (list dropdown).
+  if (body?.status && !body?.formType && !body?.eventName && !body?.fullName) {
+    const status = String(body.status).trim();
+    if (!status) {
+      return NextResponse.json({ error: "status required." }, { status: 400 });
+    }
+    const lead = await updateEventLeadStatus(id, status);
+    if (!lead) return NextResponse.json({ error: "Not found." }, { status: 404 });
+    return NextResponse.json({ lead });
+  }
+
+  const parsed = eventLeadSubmitSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid lead data.", details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+  const lead = await updateEventLead(id, {
+    ...parsed.data,
+    status: typeof body.status === "string" ? body.status : undefined
+  });
   if (!lead) return NextResponse.json({ error: "Not found." }, { status: 404 });
   return NextResponse.json({ lead });
 }

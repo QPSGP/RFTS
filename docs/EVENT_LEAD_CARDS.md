@@ -14,8 +14,9 @@ Long Beach Expo practice QR (default):
 ## Admin
 **Admin → Marketing → Event leads**
 - List / filter by event key
-- Locked digital lead detail (payload, scan path, outreach target id)
-- **Import Sarah Rose scan** - verified extract from `docs/20260803_124059.PDF` (image at `docs/lead-card-scans/20260803_124059-1.jpg`)
+- **Add lead** and **Edit** (syncs linked Outreach target/contact when present)
+- Detail view (payload, scan path, outreach target id) with status dropdown
+- **Import extracts JSON batch** for Long Beach Expo scans
 
 Each submit also creates an Outreach **individual** target + primary contact for CRM follow-up.
 

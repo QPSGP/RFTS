@@ -8,7 +8,10 @@ import {
 import {
   createOutreachActivity,
   createOutreachContact,
-  createOutreachTarget
+  createOutreachTarget,
+  listOutreachContacts,
+  updateOutreachContact,
+  updateOutreachTarget
 } from "@/lib/db";
 
 let eventLeadsTableReady = false;
@@ -388,4 +391,104 @@ export async function updateEventLeadStatus(
       created_at AS "createdAt", updated_at AS "updatedAt"
   `;
   return rows[0] ? mapLeadRow(rows[0]) : null;
+}
+
+export async function updateEventLead(
+  id: string,
+  raw: EventLeadSubmitInput & { status?: string | null }
+): Promise<EventLeadRecord | null> {
+  await ensureEventLeadsTable();
+  const existing = await getEventLead(id);
+  if (!existing) return null;
+
+  const input = applyLeadDefaults(raw);
+  const payload = {
+    practice: input.practice ?? null,
+    consumer: input.consumer ?? null
+  };
+  const payloadJson = JSON.stringify(payload);
+  const nextStatus = (raw.status || existing.status || "new").trim() || existing.status;
+
+  const { rows } = await sql<EventLeadRecord>`
+    UPDATE marketing_event_leads
+    SET
+      form_type = ${input.formType},
+      status = ${nextStatus},
+      event_name = ${input.eventName},
+      event_dates = ${input.eventDates ?? null},
+      event_key = ${input.eventKey ?? null},
+      first_name = ${input.firstName ?? null},
+      last_name = ${input.lastName ?? null},
+      full_name = ${input.fullName ?? null},
+      email = ${input.email ?? null},
+      phone_mobile = ${input.phoneMobile ?? null},
+      sms_ok = ${Boolean(input.smsOk)},
+      city = ${input.city ?? null},
+      state = ${input.state ?? null},
+      zip = ${input.zip ?? null},
+      country = ${input.country ?? null},
+      persona = ${input.persona ?? null},
+      category = ${input.category ?? null},
+      interest = ${input.interest ?? null},
+      entry_path = ${input.entryPath ?? null},
+      captured_by = ${input.capturedBy ?? null},
+      notes = ${input.notes ?? null},
+      source_scan_path = ${input.sourceScanPath ?? existing.sourceScanPath},
+      payload = CAST(${payloadJson} AS jsonb),
+      updated_at = now()
+    WHERE id = ${id}
+    RETURNING
+      id, form_type AS "formType", status,
+      event_name AS "eventName", event_dates AS "eventDates", event_key AS "eventKey",
+      first_name AS "firstName", last_name AS "lastName", full_name AS "fullName",
+      email, phone_mobile AS "phoneMobile", COALESCE(sms_ok, false) AS "smsOk",
+      city, state, zip, country,
+      persona, category, interest, entry_path AS "entryPath",
+      captured_by AS "capturedBy", notes, source_scan_path AS "sourceScanPath",
+      COALESCE(payload, '{}'::jsonb) AS payload,
+      outreach_target_id AS "outreachTargetId",
+      auto_reply_sent_at AS "autoReplySentAt",
+      created_at AS "createdAt", updated_at AS "updatedAt"
+  `;
+  const lead = rows[0] ? mapLeadRow(rows[0]) : null;
+  if (!lead?.outreachTargetId) return lead;
+
+  try {
+    await updateOutreachTarget(lead.outreachTargetId, {
+      organization:
+        lead.fullName ||
+        [lead.firstName, lead.lastName].filter(Boolean).join(" ") ||
+        lead.email ||
+        "Event lead",
+      targetType: "individual",
+      category: lead.category,
+      persona: lead.persona,
+      entryPath: lead.entryPath,
+      contact: [lead.email, lead.phoneMobile].filter(Boolean).join(" · ") || null,
+      notes: [
+        `Event lead (${lead.formType})`,
+        lead.eventName,
+        lead.eventDates,
+        lead.notes
+      ]
+        .filter(Boolean)
+        .join(" | "),
+      interest: lead.interest
+    });
+    const contacts = await listOutreachContacts(lead.outreachTargetId);
+    const primary = contacts.find((c) => c.isPrimary) || contacts[0];
+    if (primary) {
+      await updateOutreachContact(primary.id, {
+        firstName: lead.firstName,
+        lastName: lead.lastName,
+        name: lead.fullName,
+        email: lead.email,
+        phoneMobile: lead.phoneMobile,
+        notes: lead.notes
+      });
+    }
+  } catch {
+    // Lead save succeeded; outreach sync is best-effort.
+  }
+  return lead;
 }
