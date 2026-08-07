@@ -154,8 +154,8 @@ export const consumerLeadExtrasSchema = z.object({
 
 export const eventLeadSubmitSchema = eventLeadCoreSchema
   .extend({
-    practice: practiceSurveyExtrasSchema.optional(),
-    consumer: consumerLeadExtrasSchema.optional()
+    practice: practiceSurveyExtrasSchema.nullish(),
+    consumer: consumerLeadExtrasSchema.nullish()
   })
   .superRefine((data, ctx) => {
     const email = normalizeLeadEmail(data.email ?? null);

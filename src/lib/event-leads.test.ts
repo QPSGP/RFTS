@@ -1,6 +1,7 @@
 import {
   SARAH_ROSE_LONG_BEACH_EXTRACT,
   applyLeadDefaults,
+  eventLeadSubmitSchema,
   normalizeLeadEmail,
   normalizeLeadPhone,
   splitLeadName
@@ -42,5 +43,17 @@ describe("event-leads", () => {
     expect(SARAH_ROSE_LONG_BEACH_EXTRACT.email).toBe("sarahrosehealing@gmail.com");
     expect(SARAH_ROSE_LONG_BEACH_EXTRACT.practice?.incomeGoalAmount).toBe("40000");
     expect(SARAH_ROSE_LONG_BEACH_EXTRACT.persona).toContain("Chris");
+  });
+
+  it("accepts null practice/consumer payloads from vision extracts", () => {
+    const parsed = eventLeadSubmitSchema.safeParse({
+      formType: "consumer_lead",
+      eventName: "Holistic Healing Expo - Long Beach",
+      fullName: "Test Lead",
+      email: "test@example.com",
+      practice: null,
+      consumer: null
+    });
+    expect(parsed.success).toBe(true);
   });
 });
