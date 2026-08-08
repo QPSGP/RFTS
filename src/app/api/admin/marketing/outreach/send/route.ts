@@ -118,7 +118,12 @@ export async function POST(request: Request) {
   }
 
   const nextStatus =
-    parsed.data.markContacted && target.status === "prospect" ? "contacted" : target.status;
+    parsed.data.markContacted &&
+    ["prospect", "process_chosen", "draft_ready", "awaiting_approval", "ready_to_send"].includes(
+      target.status
+    )
+      ? "contacted"
+      : target.status;
 
   const updated = await updateOutreachTarget(target.id, {
     organization: target.organization,

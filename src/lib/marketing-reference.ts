@@ -3,12 +3,68 @@ import { WELLNESS_BENEFIT_LINKS } from "@/lib/meditation-benefits";
 
 /** Status options for the outreach tracker (value + label). */
 export const OUTREACH_STATUSES = [
-  { id: "prospect", label: "Prospect" },
+  { id: "prospect", label: "In CRM" },
+  { id: "process_chosen", label: "Process chosen" },
+  { id: "draft_ready", label: "Draft ready" },
+  { id: "awaiting_approval", label: "Awaiting approval" },
+  { id: "ready_to_send", label: "Approved to send" },
   { id: "contacted", label: "Contacted" },
   { id: "in_talks", label: "In talks" },
   { id: "active", label: "Active partner" },
   { id: "declined", label: "Declined / paused" }
 ] as const;
+
+/** Guided CRM steps before an outreach email goes out. */
+export const OUTREACH_PIPELINE_STEPS = [
+  {
+    id: "capture",
+    label: "1 · Capture",
+    description: "Contacts and notes in the CRM",
+    statusIds: ["prospect"] as const
+  },
+  {
+    id: "process",
+    label: "2 · Process",
+    description: "Choose interest, persona, and entry path",
+    statusIds: ["process_chosen"] as const
+  },
+  {
+    id: "draft",
+    label: "3 · Draft",
+    description: "Pick template and write the email",
+    statusIds: ["draft_ready"] as const
+  },
+  {
+    id: "approval",
+    label: "4 · Approve",
+    description: "Review and approve before send",
+    statusIds: ["awaiting_approval", "ready_to_send"] as const
+  },
+  {
+    id: "send",
+    label: "5 · Send",
+    description: "Send via Resend when approved",
+    statusIds: ["ready_to_send"] as const
+  }
+] as const;
+
+export type OutreachPipelineStepId = (typeof OUTREACH_PIPELINE_STEPS)[number]["id"];
+
+export function outreachPipelineStepForStatus(status: string): OutreachPipelineStepId {
+  if (status === "process_chosen") return "process";
+  if (status === "draft_ready") return "draft";
+  if (status === "awaiting_approval") return "approval";
+  if (status === "ready_to_send") return "send";
+  if (
+    status === "contacted" ||
+    status === "in_talks" ||
+    status === "active" ||
+    status === "declined"
+  ) {
+    return "send";
+  }
+  return "capture";
+}
 
 /** Organization vs individual prospect in the outreach CRM. */
 export const OUTREACH_TARGET_TYPES = [

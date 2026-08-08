@@ -2,8 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
-import { OUTREACH_INTERESTS } from "@/lib/marketing-reference";
-import { mergeOutreachTemplate } from "@/lib/marketing-reference";
+import {
+  OUTREACH_CATEGORIES,
+  OUTREACH_ENTRY_PATHS,
+  OUTREACH_INTERESTS,
+  OUTREACH_PERSONAS,
+  OUTREACH_PIPELINE_STEPS,
+  OUTREACH_STATUSES,
+  mergeOutreachTemplate,
+  outreachPipelineStepForStatus,
+  outreachStatusLabel,
+  type OutreachPipelineStepId
+} from "@/lib/marketing-reference";
 
 type OutreachTarget = {
   id: string;
@@ -62,7 +72,11 @@ type OutreachEmailTemplate = {
 type Props = {
   target: OutreachTarget;
   templates: OutreachEmailTemplate[];
+  targetIndex?: number;
+  targetCount?: number;
+  onAdjacent?: (delta: number) => void;
   onClose: () => void;
+  onStatusChange?: (status: string) => void;
   onTargetUpdated: (target: OutreachTarget) => void;
 };
 
@@ -83,14 +97,19 @@ const emptyContactForm = {
   isPrimary: true
 };
 
-type CrmSectionKey = "gather" | "contacts" | "send" | "activity";
+type CrmSectionKey = "capture" | "process" | "draft" | "approval" | "send" | "activity";
 
-const crmSectionsClosed: Record<CrmSectionKey, boolean> = {
-  gather: false,
-  contacts: false,
-  send: false,
-  activity: false
-};
+function sectionsForStatus(status: string): Record<CrmSectionKey, boolean> {
+  const step = outreachPipelineStepForStatus(status);
+  return {
+    capture: step === "capture",
+    process: step === "process",
+    draft: step === "draft",
+    approval: step === "approval",
+    send: step === "send",
+    activity: false
+  };
+}
 
 function toDateInput(iso: string | null): string {
   if (!iso) return "";
@@ -118,7 +137,11 @@ function formatWhen(iso: string): string {
 export default function AdminOutreachCrmPanel({
   target,
   templates,
+  targetIndex = -1,
+  targetCount = 0,
+  onAdjacent,
   onClose,
+  onStatusChange,
   onTargetUpdated
 }: Props) {
   const [contacts, setContacts] = useState<OutreachContact[]>([]);
@@ -134,13 +157,21 @@ export default function AdminOutreachCrmPanel({
     decisionTimeline: target.decisionTimeline || "",
     followUpAt: toDateInput(target.followUpAt),
     doNotEmail: !!target.doNotEmail,
-    notes: target.notes || ""
+    notes: target.notes || "",
+    category: target.category || "",
+    persona: target.persona || "",
+    entryPath: target.entryPath || ""
   });
 
   const [contactForm, setContactForm] = useState({ ...emptyContactForm });
   const [editingContactId, setEditingContactId] = useState<string | null>(null);
   const [savingContact, setSavingContact] = useState(false);
-  const [openCrmSections, setOpenCrmSections] = useState({ ...crmSectionsClosed });
+  const [openCrmSections, setOpenCrmSections] = useState(() =>
+    sectionsForStatus(target.status)
+  );
+  const [activeStep, setActiveStep] = useState<OutreachPipelineStepId>(() =>
+    outreachPipelineStepForStatus(target.status)
+  );
 
   const toggleCrmSection = (key: CrmSectionKey) => {
     setOpenCrmSections((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -156,6 +187,8 @@ export default function AdminOutreachCrmPanel({
   });
 
   const [noteText, setNoteText] = useState("");
+  const canSend =
+    target.status === "ready_to_send" && !target.doNotEmail && Boolean(sendForm.contactId);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -199,9 +232,14 @@ export default function AdminOutreachCrmPanel({
       decisionTimeline: target.decisionTimeline || "",
       followUpAt: toDateInput(target.followUpAt),
       doNotEmail: !!target.doNotEmail,
-      notes: target.notes || ""
+      notes: target.notes || "",
+      category: target.category || "",
+      persona: target.persona || "",
+      entryPath: target.entryPath || ""
     });
-    setOpenCrmSections({ ...crmSectionsClosed });
+    const step = outreachPipelineStepForStatus(target.status);
+    setActiveStep(step);
+    setOpenCrmSections(sectionsForStatus(target.status));
     setEditingContactId(null);
     setContactForm({ ...emptyContactForm, isPrimary: true });
   }, [target]);
@@ -223,7 +261,7 @@ export default function AdminOutreachCrmPanel({
       firstName: selectedContact?.firstName || "",
       lastName: selectedContact?.lastName || "",
       organization: target.organization,
-      persona: target.persona || "",
+      persona: crmForm.persona || target.persona || "",
       siteUrl: typeof window !== "undefined" ? window.location.origin : "",
       yourName: "",
       refCode: target.refCode || ""
@@ -236,7 +274,7 @@ export default function AdminOutreachCrmPanel({
     }));
   };
 
-  const saveCrmFields = async () => {
+  const saveCrmFields = async (nextStatus?: string) => {
     setSavingCrm(true);
     setStatus(null);
     try {
@@ -248,12 +286,12 @@ export default function AdminOutreachCrmPanel({
           id: target.id,
           organization: target.organization,
           targetType: target.targetType === "individual" ? "individual" : "organization",
-          category: target.category,
-          persona: target.persona,
-          entryPath: target.entryPath,
+          category: crmForm.category.trim() || null,
+          persona: crmForm.persona.trim() || null,
+          entryPath: crmForm.entryPath.trim() || null,
           contact: target.contact,
           refCode: target.refCode,
-          status: target.status,
+          status: nextStatus || target.status,
           notes: crmForm.notes.trim() || null,
           interest: crmForm.interest.trim() || null,
           audienceSize: crmForm.audienceSize.trim() || null,
@@ -265,13 +303,84 @@ export default function AdminOutreachCrmPanel({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setStatus(data?.error || "Could not save CRM fields.");
-        return;
+        return false;
       }
       if (data.target) onTargetUpdated(data.target);
-      setStatus("CRM fields saved.");
+      if (nextStatus) onStatusChange?.(nextStatus);
+      setStatus(nextStatus ? `Moved to ${outreachStatusLabel(nextStatus)}.` : "CRM fields saved.");
       await load();
+      return true;
     } finally {
       setSavingCrm(false);
+    }
+  };
+
+  const logPipelineNote = async (subject: string, body: string) => {
+    await fetch("/api/admin/marketing/outreach/activities", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        targetId: target.id,
+        subject,
+        body
+      })
+    }).catch(() => {});
+  };
+
+  const saveDraftAndAdvance = async () => {
+    if (!sendForm.subject.trim() || !sendForm.bodyText.trim()) {
+      setStatus("Add a subject and body before marking the draft ready.");
+      return;
+    }
+    await logPipelineNote(
+      "Outreach draft",
+      `Subject: ${sendForm.subject.trim()}\n\n${sendForm.bodyText.trim()}`
+    );
+    const ok = await saveCrmFields("draft_ready");
+    if (ok) {
+      setActiveStep("approval");
+      setOpenCrmSections((s) => ({ ...s, draft: false, approval: true }));
+    }
+  };
+
+  const requestApproval = async () => {
+    const ok = await saveCrmFields("awaiting_approval");
+    if (ok) {
+      await logPipelineNote("Awaiting approval", "Draft queued for approval before send.");
+      setActiveStep("approval");
+      setOpenCrmSections((s) => ({ ...s, approval: true }));
+    }
+  };
+
+  const approveForSend = async () => {
+    const ok = await saveCrmFields("ready_to_send");
+    if (ok) {
+      await logPipelineNote("Approved to send", "Ready for Resend send.");
+      setActiveStep("send");
+      setOpenCrmSections((s) => ({ ...s, approval: false, send: true }));
+    }
+  };
+
+  const saveProcessAndAdvance = async () => {
+    if (!crmForm.interest.trim() && !crmForm.persona.trim() && !crmForm.entryPath.trim()) {
+      setStatus("Choose at least an interest, persona, or entry path.");
+      return;
+    }
+    const ok = await saveCrmFields("process_chosen");
+    if (ok) {
+      setActiveStep("draft");
+      setOpenCrmSections((s) => ({ ...s, process: false, draft: true }));
+    }
+  };
+
+  const markCaptureComplete = async () => {
+    const ok = await saveCrmFields(
+      target.status === "prospect" || !target.status ? "prospect" : target.status
+    );
+    if (ok) {
+      setActiveStep("process");
+      setOpenCrmSections((s) => ({ ...s, capture: false, process: true }));
     }
   };
 
@@ -282,7 +391,8 @@ export default function AdminOutreachCrmPanel({
 
   const startEditContact = (c: OutreachContact) => {
     setEditingContactId(c.id);
-    setOpenCrmSections((prev) => ({ ...prev, contacts: true }));
+    setOpenCrmSections((prev) => ({ ...prev, capture: true }));
+    setActiveStep("capture");
     setContactForm({
       firstName: c.firstName || "",
       lastName: c.lastName || "",
@@ -451,9 +561,11 @@ export default function AdminOutreachCrmPanel({
     <div
       className="card"
       style={{
-        marginTop: 16,
+        marginTop: 0,
         border: "1px solid #0f766e",
-        background: "#f0fdfa"
+        background: "#f0fdfa",
+        minWidth: 0,
+        maxWidth: "100%"
       }}
     >
       <div
@@ -462,25 +574,102 @@ export default function AdminOutreachCrmPanel({
           justifyContent: "space-between",
           gap: 12,
           flexWrap: "wrap",
-          alignItems: "baseline"
+          alignItems: "flex-start"
         }}
       >
-        <div>
+        <div style={{ minWidth: 0, flex: "1 1 220px" }}>
           <h3 style={{ margin: 0, fontSize: 17 }}>CRM - {target.organization}</h3>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: "#475569" }}>
-            {target.targetType === "individual" ? "Individual" : "Organization"} · contacts, send
-            email (Resend), follow-ups, and activity timeline.
+            {target.targetType === "individual" ? "Individual" : "Organization"} ·{" "}
+            {outreachStatusLabel(target.status)}
+            {targetIndex >= 0 && targetCount > 0
+              ? ` · ${targetIndex + 1} of ${targetCount}`
+              : ""}
           </p>
         </div>
-        <button
-          type="button"
-          className="button button-secondary"
-          style={{ width: "auto" }}
-          onClick={onClose}
-        >
-          Close
-        </button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {onAdjacent ? (
+            <>
+              <button
+                type="button"
+                className="button button-secondary"
+                style={{ width: "auto" }}
+                disabled={targetIndex <= 0}
+                onClick={() => onAdjacent(-1)}
+              >
+                ← Previous
+              </button>
+              <button
+                type="button"
+                className="button button-secondary"
+                style={{ width: "auto" }}
+                disabled={targetIndex < 0 || targetIndex >= targetCount - 1}
+                onClick={() => onAdjacent(1)}
+              >
+                Next →
+              </button>
+            </>
+          ) : null}
+          <button
+            type="button"
+            className="button button-secondary"
+            style={{ width: "auto" }}
+            onClick={onClose}
+          >
+            Back to list
+          </button>
+        </div>
       </div>
+
+      <div className="outreach-pipeline-steps" aria-label="Outreach pipeline">
+        {OUTREACH_PIPELINE_STEPS.map((step) => {
+          const order = OUTREACH_PIPELINE_STEPS.findIndex((s) => s.id === step.id);
+          const activeOrder = OUTREACH_PIPELINE_STEPS.findIndex((s) => s.id === activeStep);
+          const isActive = step.id === activeStep;
+          const isDone = order < activeOrder;
+          return (
+            <button
+              key={step.id}
+              type="button"
+              className={`outreach-pipeline-step${isActive ? " is-active" : ""}${
+                isDone ? " is-done" : ""
+              }`}
+              title={step.description}
+              onClick={() => {
+                setActiveStep(step.id);
+                setOpenCrmSections((prev) => ({
+                  ...prev,
+                  capture: step.id === "capture",
+                  process: step.id === "process",
+                  draft: step.id === "draft",
+                  approval: step.id === "approval",
+                  send: step.id === "send"
+                }));
+              }}
+            >
+              {step.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <label style={{ display: "grid", gap: 4, fontSize: 13, marginTop: 12, maxWidth: 280 }}>
+        Pipeline status
+        <select
+          value={
+            OUTREACH_STATUSES.some((s) => s.id === target.status) ? target.status : "prospect"
+          }
+          onChange={(e) => {
+            void saveCrmFields(e.target.value);
+          }}
+        >
+          {OUTREACH_STATUSES.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+      </label>
 
       {status && (
         <p style={{ margin: "10px 0 0", fontSize: 13, color: "#374151" }}>{status}</p>
@@ -492,53 +681,20 @@ export default function AdminOutreachCrmPanel({
       <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
         <button
           type="button"
-          className={adminSectionToggleClass(openCrmSections.gather, true)}
-          aria-expanded={openCrmSections.gather}
-          onClick={() => toggleCrmSection("gather")}
+          className={adminSectionToggleClass(openCrmSections.capture, true)}
+          aria-expanded={openCrmSections.capture}
+          onClick={() => toggleCrmSection("capture")}
         >
-          {openCrmSections.gather ? "▼" : "▶"} Gather info
-          {crmForm.followUpAt ? ` · follow-up ${crmForm.followUpAt}` : ""}
+          {openCrmSections.capture ? "▼" : "▶"} 1 · Capture in CRM
+          {contacts.length ? ` · ${contacts.length} contact(s)` : " · add contacts"}
           {crmForm.doNotEmail ? " · do not email" : ""}
         </button>
-        {openCrmSections.gather ? (
+        {openCrmSections.capture ? (
           <div className="card" style={{ background: "#fff", margin: 0 }}>
-            <div style={{ display: "grid", gap: 10 }}>
-              <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
-                Interest
-                <select
-                  value={crmForm.interest}
-                  onChange={(e) => setCrmForm((f) => ({ ...f, interest: e.target.value }))}
-                >
-                  <option value="">-</option>
-                  {OUTREACH_INTERESTS.map((i) => (
-                    <option key={i} value={i}>
-                      {i}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
-                {target.targetType === "individual" ? "Reach / following" : "Audience size"}
-                <input
-                  value={crmForm.audienceSize}
-                  onChange={(e) => setCrmForm((f) => ({ ...f, audienceSize: e.target.value }))}
-                  placeholder={
-                    target.targetType === "individual"
-                      ? "e.g. newsletter ~5k"
-                      : "e.g. 200 staff"
-                  }
-                />
-              </label>
-              <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
-                Decision timeline
-                <input
-                  value={crmForm.decisionTimeline}
-                  onChange={(e) =>
-                    setCrmForm((f) => ({ ...f, decisionTimeline: e.target.value }))
-                  }
-                  placeholder="e.g. Q3 review"
-                />
-              </label>
+            <p style={{ marginTop: 0, fontSize: 13, color: "#64748b" }}>
+              Confirm contact details and notes first. Then choose the marketing process.
+            </p>
+            <div style={{ display: "grid", gap: 10, marginBottom: 16 }}>
               <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
                 Follow-up date
                 <input
@@ -563,30 +719,28 @@ export default function AdminOutreachCrmPanel({
                   onChange={(e) => setCrmForm((f) => ({ ...f, notes: e.target.value }))}
                 />
               </label>
-              <button
-                type="button"
-                className="button"
-                style={{ width: "auto" }}
-                disabled={savingCrm}
-                onClick={() => void saveCrmFields()}
-              >
-                {savingCrm ? "Saving…" : "Save CRM fields"}
-              </button>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  style={{ width: "auto" }}
+                  disabled={savingCrm}
+                  onClick={() => void saveCrmFields()}
+                >
+                  {savingCrm ? "Saving…" : "Save capture"}
+                </button>
+                <button
+                  type="button"
+                  className="button"
+                  style={{ width: "auto" }}
+                  disabled={savingCrm}
+                  onClick={() => void markCaptureComplete()}
+                >
+                  Continue to process →
+                </button>
+              </div>
             </div>
-          </div>
-        ) : null}
-
-        <button
-          type="button"
-          className={adminSectionToggleClass(openCrmSections.contacts, true)}
-          aria-expanded={openCrmSections.contacts}
-          onClick={() => toggleCrmSection("contacts")}
-        >
-          {openCrmSections.contacts ? "▼" : "▶"} Contacts ({contacts.length})
-          {contacts.some((c) => c.email) ? "" : " · add email to send"}
-        </button>
-        {openCrmSections.contacts ? (
-          <div className="card" style={{ background: "#fff", margin: 0 }}>
+            <h5 style={{ margin: "0 0 8px", fontSize: 14 }}>Contacts ({contacts.length})</h5>
             <p style={{ marginTop: 0, fontSize: 12, color: "#64748b" }}>
               Full contact records - names, phones, socials, notes. Email send uses contacts with an
               address.
@@ -798,18 +952,135 @@ export default function AdminOutreachCrmPanel({
 
         <button
           type="button"
-          className={adminSectionToggleClass(openCrmSections.send, true)}
-          aria-expanded={openCrmSections.send}
-          onClick={() => toggleCrmSection("send")}
+          className={adminSectionToggleClass(openCrmSections.process, true)}
+          aria-expanded={openCrmSections.process}
+          onClick={() => toggleCrmSection("process")}
         >
-          {openCrmSections.send ? "▼" : "▶"} Send email
-          {target.doNotEmail ? " · blocked" : ""}
+          {openCrmSections.process ? "▼" : "▶"} 2 · Choose marketing process
+          {crmForm.interest ? ` · ${crmForm.interest}` : ""}
         </button>
-        {openCrmSections.send ? (
+        {openCrmSections.process ? (
+          <div className="card" style={{ background: "#fff", margin: 0 }}>
+            <p style={{ marginTop: 0, fontSize: 13, color: "#64748b" }}>
+              Decide the best path for this prospect before drafting outreach.
+            </p>
+            <div style={{ display: "grid", gap: 10 }}>
+              <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                Interest / offer
+                <select
+                  value={crmForm.interest}
+                  onChange={(e) => setCrmForm((f) => ({ ...f, interest: e.target.value }))}
+                >
+                  <option value="">-</option>
+                  {OUTREACH_INTERESTS.map((i) => (
+                    <option key={i} value={i}>
+                      {i}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                Persona
+                <select
+                  value={crmForm.persona}
+                  onChange={(e) => setCrmForm((f) => ({ ...f, persona: e.target.value }))}
+                >
+                  <option value="">-</option>
+                  {OUTREACH_PERSONAS.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                Entry path
+                <select
+                  value={crmForm.entryPath}
+                  onChange={(e) => setCrmForm((f) => ({ ...f, entryPath: e.target.value }))}
+                >
+                  <option value="">-</option>
+                  {OUTREACH_ENTRY_PATHS.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                Category
+                <select
+                  value={crmForm.category}
+                  onChange={(e) => setCrmForm((f) => ({ ...f, category: e.target.value }))}
+                >
+                  <option value="">-</option>
+                  {OUTREACH_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                {target.targetType === "individual" ? "Reach / following" : "Audience size"}
+                <input
+                  value={crmForm.audienceSize}
+                  onChange={(e) => setCrmForm((f) => ({ ...f, audienceSize: e.target.value }))}
+                  placeholder={
+                    target.targetType === "individual"
+                      ? "e.g. newsletter ~5k"
+                      : "e.g. 200 staff"
+                  }
+                />
+              </label>
+              <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                Decision timeline
+                <input
+                  value={crmForm.decisionTimeline}
+                  onChange={(e) =>
+                    setCrmForm((f) => ({ ...f, decisionTimeline: e.target.value }))
+                  }
+                  placeholder="e.g. Q3 review"
+                />
+              </label>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  style={{ width: "auto" }}
+                  disabled={savingCrm}
+                  onClick={() => void saveCrmFields()}
+                >
+                  Save process
+                </button>
+                <button
+                  type="button"
+                  className="button"
+                  style={{ width: "auto" }}
+                  disabled={savingCrm}
+                  onClick={() => void saveProcessAndAdvance()}
+                >
+                  Continue to draft →
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          className={adminSectionToggleClass(openCrmSections.draft, true)}
+          aria-expanded={openCrmSections.draft}
+          onClick={() => toggleCrmSection("draft")}
+        >
+          {openCrmSections.draft ? "▼" : "▶"} 3 · Set up draft
+          {sendForm.subject ? " · draft started" : ""}
+        </button>
+        {openCrmSections.draft ? (
           <div className="card" style={{ background: "#fff", margin: 0 }}>
             {target.doNotEmail ? (
               <p style={{ color: "#b91c1c", fontSize: 13, margin: 0 }}>
-                Do-not-email is on for this target. Clear it under Gather info to send.
+                Do-not-email is on. Clear it under Capture before drafting a send.
               </p>
             ) : (
               <div style={{ display: "grid", gap: 10 }}>
@@ -859,6 +1130,148 @@ export default function AdminOutreachCrmPanel({
                     style={{ fontFamily: "inherit" }}
                   />
                 </label>
+                <button
+                  type="button"
+                  className="button"
+                  style={{ width: "auto" }}
+                  disabled={savingCrm}
+                  onClick={() => void saveDraftAndAdvance()}
+                >
+                  Save draft &amp; continue to approval →
+                </button>
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          className={adminSectionToggleClass(openCrmSections.approval, true)}
+          aria-expanded={openCrmSections.approval}
+          onClick={() => toggleCrmSection("approval")}
+        >
+          {openCrmSections.approval ? "▼" : "▶"} 4 · Approval
+          {target.status === "ready_to_send" ? " · approved" : ""}
+          {target.status === "awaiting_approval" ? " · waiting" : ""}
+        </button>
+        {openCrmSections.approval ? (
+          <div className="card" style={{ background: "#fff", margin: 0 }}>
+            <p style={{ marginTop: 0, fontSize: 13, color: "#64748b" }}>
+              Review the draft, then approve. Send stays locked until status is{" "}
+              <strong>Approved to send</strong>.
+            </p>
+            <dl
+              style={{
+                display: "grid",
+                gridTemplateColumns: "120px 1fr",
+                gap: "6px 12px",
+                fontSize: 13,
+                margin: "0 0 12px"
+              }}
+            >
+              <dt>Process</dt>
+              <dd>{crmForm.interest || target.interest || "-"}</dd>
+              <dt>Persona</dt>
+              <dd>{crmForm.persona || target.persona || "-"}</dd>
+              <dt>Path</dt>
+              <dd>{crmForm.entryPath || target.entryPath || "-"}</dd>
+              <dt>To</dt>
+              <dd>
+                {selectedContact
+                  ? `${selectedContact.name || "Contact"} <${selectedContact.email}>`
+                  : "-"}
+              </dd>
+              <dt>Subject</dt>
+              <dd>{sendForm.subject || "-"}</dd>
+            </dl>
+            {sendForm.bodyText ? (
+              <pre
+                style={{
+                  whiteSpace: "pre-wrap",
+                  fontFamily: "inherit",
+                  fontSize: 13,
+                  background: "#f8fafc",
+                  padding: 12,
+                  borderRadius: 8,
+                  margin: "0 0 12px",
+                  maxHeight: 220,
+                  overflow: "auto"
+                }}
+              >
+                {sendForm.bodyText}
+              </pre>
+            ) : (
+              <p style={{ fontSize: 13, color: "#b91c1c" }}>
+                No draft loaded yet. Go back to step 3 and save a draft.
+              </p>
+            )}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="button button-secondary"
+                style={{ width: "auto" }}
+                disabled={savingCrm || !sendForm.subject.trim()}
+                onClick={() => void requestApproval()}
+              >
+                Mark awaiting approval
+              </button>
+              <button
+                type="button"
+                className="button"
+                style={{ width: "auto" }}
+                disabled={savingCrm || !sendForm.subject.trim()}
+                onClick={() => void approveForSend()}
+              >
+                Approve for send →
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          className={adminSectionToggleClass(openCrmSections.send, true)}
+          aria-expanded={openCrmSections.send}
+          onClick={() => toggleCrmSection("send")}
+        >
+          {openCrmSections.send ? "▼" : "▶"} 5 · Send
+          {target.doNotEmail ? " · blocked" : ""}
+          {target.status !== "ready_to_send" ? " · needs approval" : ""}
+        </button>
+        {openCrmSections.send ? (
+          <div className="card" style={{ background: "#fff", margin: 0 }}>
+            {target.doNotEmail ? (
+              <p style={{ color: "#b91c1c", fontSize: 13, margin: 0 }}>
+                Do-not-email is on for this target. Clear it under Capture to send.
+              </p>
+            ) : target.status !== "ready_to_send" ? (
+              <p style={{ color: "#b45309", fontSize: 13, margin: 0 }}>
+                This record is not approved yet. Complete steps 3-4, then Approve for send.
+              </p>
+            ) : (
+              <div style={{ display: "grid", gap: 10 }}>
+                <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+                  Final send via Resend. Confirm recipient and follow-up, then send.
+                </p>
+                <label style={{ display: "grid", gap: 4, fontSize: 13 }}>
+                  To (contact)
+                  <select
+                    value={sendForm.contactId}
+                    onChange={(e) => setSendForm((f) => ({ ...f, contactId: e.target.value }))}
+                  >
+                    <option value="">-</option>
+                    {contacts
+                      .filter((c) => c.email)
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {(c.name || "Contact") + ` <${c.email}>`}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                <div style={{ fontSize: 13 }}>
+                  <strong>Subject:</strong> {sendForm.subject || "-"}
+                </div>
                 <label style={{ display: "grid", gap: 4, fontSize: 13, maxWidth: 220 }}>
                   Set follow-up after send
                   <input
@@ -875,13 +1288,13 @@ export default function AdminOutreachCrmPanel({
                       setSendForm((f) => ({ ...f, markContacted: e.target.checked }))
                     }
                   />
-                  Mark status Contacted if currently Prospect
+                  Mark status Contacted after send
                 </label>
                 <button
                   type="button"
                   className="button"
                   style={{ width: "auto" }}
-                  disabled={sending}
+                  disabled={sending || !canSend}
                   onClick={() => void sendEmail()}
                 >
                   {sending ? "Sending…" : "Send via Resend"}

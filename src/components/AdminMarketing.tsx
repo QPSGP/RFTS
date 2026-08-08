@@ -13,6 +13,7 @@ import {
   OUTREACH_TARGET_TYPES,
   REFERENCE_PERSONAS,
   REFERENCE_PLAN_HIGHLIGHTS,
+  outreachStatusLabel,
   outreachTargetTypeLabel
 } from "@/lib/marketing-reference";
 import AdminOutreachCrmPanel from "@/components/AdminOutreachCrmPanel";
@@ -774,13 +775,15 @@ export default function AdminMarketing() {
 
       {/* Outreach tracker */}
       {openSections.outreach && (
-        <section id="marketing-outreach" style={{ marginBottom: 24 }}>
+        <section id="marketing-outreach" style={{ marginBottom: 24, minWidth: 0 }}>
           <h2 style={{ marginBottom: 12, fontSize: 18 }}>Outreach tracker / CRM</h2>
           <p style={{ color: "#4b5563", marginBottom: 12 }}>
-            Pipeline for organizations and individuals. Use the target list below, open{" "}
-            <strong>CRM</strong> on a row to send email, and expand sections only when you need them.
+            Flow: capture in Event leads or Add target → open CRM → choose marketing process → draft
+            email → approve → send. Open one record at a time so the page stays readable.
           </p>
 
+          {!crmTarget ? (
+            <>
           <div id="outreach-add-target" style={{ marginBottom: 12 }}>
             <button
               type="button"
@@ -1256,118 +1259,86 @@ export default function AdminMarketing() {
             ))}
           </div>
 
-          <p className="admin-table-hint">Swipe sideways for more columns on a small screen.</p>
-          <div className="card table-scroll">
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720, fontSize: 14 }}>
-              <thead>
-                <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
-                  <th style={thStyle}>Name</th>
-                  <th className="admin-col-optional" style={thStyle}>Type</th>
-                  <th className="admin-col-optional" style={thStyle}>Category</th>
-                  <th className="admin-col-optional" style={thStyle}>Persona</th>
-                  <th className="admin-col-optional" style={thStyle}>Entry path</th>
-                  <th className="admin-col-optional" style={thStyle}>Contact emails</th>
-                  <th className="admin-col-optional" style={thStyle}>Follow-up</th>
-                  <th style={thStyle}>Status</th>
-                  <th style={thStyle}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTargets.map((t) => (
-                  <tr key={t.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                    <td style={tdStyle}>
-                      <div style={{ fontWeight: 600 }}>{t.organization}</div>
-                      {t.notes && (
-                        <div style={{ color: "#6b7280", fontSize: 12, marginTop: 2 }}>{t.notes}</div>
-                      )}
-                      {t.refCode && (
-                        <div style={{ color: "#6b7280", fontSize: 12, marginTop: 2 }}>
-                          ref: {t.refCode}
-                        </div>
-                      )}
-                    </td>
-                    <td className="admin-col-optional" style={tdMutedStyle}>
-                      {outreachTargetTypeLabel(t.targetType || "organization")}
-                    </td>
-                    <td className="admin-col-optional" style={tdMutedStyle}>{t.category || "-"}</td>
-                    <td className="admin-col-optional" style={tdMutedStyle}>{t.persona || "-"}</td>
-                    <td className="admin-col-optional" style={tdMutedStyle}>{t.entryPath || "-"}</td>
-                    <td className="admin-col-optional" style={tdMutedStyle}>{t.contact || "-"}</td>
-                    <td className="admin-col-optional" style={tdMutedStyle}>
-                      {t.followUpAt ? formatDate(t.followUpAt) : "-"}
-                      {t.doNotEmail ? (
-                        <div style={{ color: "#b91c1c", fontSize: 11 }}>Do not email</div>
-                      ) : null}
-                    </td>
-                    <td style={tdStyle}>
-                      <select
-                        value={t.status}
-                        onChange={(e) => changeStatus(t, e.target.value)}
-                        aria-label={`Status for ${t.organization}`}
-                      >
-                        {OUTREACH_STATUSES.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.label}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td style={tdStyle}>
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                        <button
-                          type="button"
-                          className="button"
-                          style={{ width: "auto", padding: "6px 10px", fontSize: 13 }}
-                          onClick={() => {
-                            setCrmTargetId(t.id);
-                            requestAnimationFrame(() => {
-                              document.getElementById("outreach-crm-panel")?.scrollIntoView({
-                                behavior: "smooth",
-                                block: "start"
-                              });
-                            });
-                          }}
-                        >
-                          CRM
-                        </button>
-                        <button
-                          type="button"
-                          className="button button-secondary"
-                          style={{ width: "auto", padding: "6px 10px", fontSize: 13 }}
-                          onClick={() => startEdit(t)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="button button-secondary"
-                          style={{ width: "auto", padding: "6px 10px", fontSize: 13 }}
-                          onClick={() => removeTarget(t)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="outreach-pipeline-list">
+            {filteredTargets.map((t) => (
+              <div key={t.id} className="outreach-pipeline-row">
+                <div style={{ minWidth: 0 }}>
+                  <strong>{t.organization}</strong>
+                  <div className="outreach-pipeline-meta">
+                    {[
+                      outreachTargetTypeLabel(t.targetType || "organization"),
+                      t.persona,
+                      t.category,
+                      t.followUpAt ? `Follow-up ${formatDate(t.followUpAt)}` : null,
+                      t.doNotEmail ? "Do not email" : null
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </div>
+                </div>
+                <span className="outreach-pipeline-stage">{outreachStatusLabel(t.status)}</span>
+                <div className="outreach-pipeline-actions">
+                  <button
+                    type="button"
+                    className="button"
+                    style={{ width: "auto", padding: "6px 12px", fontSize: 13 }}
+                    onClick={() => {
+                      setCrmTargetId(t.id);
+                      requestAnimationFrame(() => {
+                        document.getElementById("outreach-crm-panel")?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start"
+                        });
+                      });
+                    }}
+                  >
+                    Open CRM
+                  </button>
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    style={{ width: "auto", padding: "6px 10px", fontSize: 13 }}
+                    onClick={() => startEdit(t)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    style={{ width: "auto", padding: "6px 10px", fontSize: 13 }}
+                    onClick={() => removeTarget(t)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
             {targetsLoaded && filteredTargets.length === 0 && (
-              <p style={{ padding: 16, color: "#6b7280", margin: 0 }}>
+              <p style={{ padding: 8, color: "#6b7280", margin: 0 }}>
                 {targets.length === 0
                   ? "No targets yet. Add one above or use “Add missing starter targets”."
                   : "No targets with this status."}
               </p>
             )}
-            {!targetsLoaded && <p style={{ padding: 16, color: "#6b7280", margin: 0 }}>Loading…</p>}
+            {!targetsLoaded && <p style={{ padding: 8, color: "#6b7280", margin: 0 }}>Loading…</p>}
           </div>
+            </>
+          ) : null}
 
           <div id="outreach-crm-panel">
             {crmTarget ? (
               <AdminOutreachCrmPanel
                 target={crmTarget}
                 templates={templates}
+                targetIndex={filteredTargets.findIndex((t) => t.id === crmTarget.id)}
+                targetCount={filteredTargets.length}
+                onAdjacent={(delta) => {
+                  const idx = filteredTargets.findIndex((t) => t.id === crmTarget.id);
+                  const next = filteredTargets[idx + delta];
+                  if (next) setCrmTargetId(next.id);
+                }}
                 onClose={() => setCrmTargetId(null)}
+                onStatusChange={(status) => void changeStatus(crmTarget, status)}
                 onTargetUpdated={(updated) => {
                   setTargets((prev) =>
                     prev.map((row) => (row.id === updated.id ? { ...row, ...updated } : row))
