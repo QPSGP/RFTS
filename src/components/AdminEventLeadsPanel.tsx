@@ -6,11 +6,11 @@ import {
   useMemo,
   useRef,
   useState,
-  type CSSProperties,
   type PointerEvent as ReactPointerEvent
 } from "react";
 import {
   EVENT_LEAD_FORM_TYPES,
+  EVENT_LEAD_GOAL_INTERESTS,
   EVENT_LEAD_STATUSES,
   EXPO_PRACTICE_DEFAULTS,
   LONG_BEACH_EXPO_2026,
@@ -54,7 +54,7 @@ type LeadFormState = {
   incomeGoalAmount: string;
   incomeGoalYear: string;
   wantFullTime: boolean;
-  goalInterests: string;
+  goalInterests: string[];
 };
 
 function emptyAddForm(): LeadFormState {
@@ -83,7 +83,7 @@ function emptyAddForm(): LeadFormState {
     incomeGoalAmount: "",
     incomeGoalYear: "",
     wantFullTime: false,
-    goalInterests: ""
+    goalInterests: []
   };
 }
 
@@ -97,8 +97,8 @@ function formFromLead(lead: EventLeadRecord): LeadFormState {
       ? (lead.payload.consumer as Record<string, unknown>)
       : {};
   const goalInterests = Array.isArray(consumer.goalInterests)
-    ? (consumer.goalInterests as string[]).join(", ")
-    : "";
+    ? (consumer.goalInterests as string[]).map((g) => String(g).trim()).filter(Boolean)
+    : [];
   return {
     formType: lead.formType,
     status: lead.status,
@@ -147,10 +147,7 @@ function payloadFromForm(form: LeadFormState) {
     practice: null,
     consumer: {
       offerCode: "abundance-magnet",
-      goalInterests: form.goalInterests
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
+      goalInterests: form.goalInterests,
       incomeGoalAmount: form.incomeGoalAmount.trim() || null,
       incomeGoalYear: form.incomeGoalYear.trim() || null,
       position: form.primaryOccupation.trim() || null
@@ -185,13 +182,6 @@ function bodyFromForm(form: LeadFormState) {
     ...extras
   };
 }
-
-const fieldGrid: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-  gap: 10,
-  marginTop: 12
-};
 
 export default function AdminEventLeadsPanel({ open }: Props) {
   const [leads, setLeads] = useState<EventLeadRecord[]>([]);
@@ -298,6 +288,24 @@ export default function AdminEventLeadsPanel({ open }: Props) {
     leads.length > 0 && (selectedIndex < 0 || selectedIndex > 0);
   const canGoNext =
     leads.length > 0 && (selectedIndex < 0 || selectedIndex < leads.length - 1);
+
+  const goalInterestOptions = useMemo(() => {
+    const known = EVENT_LEAD_GOAL_INTERESTS as readonly string[];
+    const extras = form.goalInterests.filter((g) => !known.includes(g));
+    return [...known, ...extras];
+  }, [form.goalInterests]);
+
+  function toggleGoalInterest(goal: string) {
+    setForm((f) => {
+      const has = f.goalInterests.includes(goal);
+      return {
+        ...f,
+        goalInterests: has
+          ? f.goalInterests.filter((g) => g !== goal)
+          : [...f.goalInterests, goal]
+      };
+    });
+  }
 
   function onLeadPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
     if (mode !== "view") return;
@@ -462,7 +470,7 @@ export default function AdminEventLeadsPanel({ open }: Props) {
       </div>
 
       {(mode === "add" || mode === "edit") && (
-        <div className="card" id="event-lead-form">
+        <div className="card" id="event-lead-form" style={{ minWidth: 0, overflow: "hidden" }}>
           <div
             style={{
               display: "flex",
@@ -517,7 +525,7 @@ export default function AdminEventLeadsPanel({ open }: Props) {
               </button>
             </div>
           </div>
-          <div style={fieldGrid}>
+          <div className="event-lead-form-grid">
             <label>
               Form type
               <select
@@ -648,7 +656,7 @@ export default function AdminEventLeadsPanel({ open }: Props) {
                 onChange={(e) => setForm((f) => ({ ...f, zip: e.target.value }))}
               />
             </label>
-            <label>
+            <label className="event-lead-form-span">
               Persona
               <select
                 value={form.persona}
@@ -662,7 +670,7 @@ export default function AdminEventLeadsPanel({ open }: Props) {
                 ))}
               </select>
             </label>
-            <label>
+            <label className="event-lead-form-span">
               Category
               <select
                 value={form.category}
@@ -742,13 +750,29 @@ export default function AdminEventLeadsPanel({ open }: Props) {
                 Want full time
               </label>
             ) : (
-              <label>
-                Goal interests (comma-separated)
-                <input
-                  value={form.goalInterests}
-                  onChange={(e) => setForm((f) => ({ ...f, goalInterests: e.target.value }))}
-                />
-              </label>
+              <div className="event-lead-form-span">
+                <div style={{ fontSize: 13, fontWeight: 600 }}>
+                  Goal interests for email targeting
+                </div>
+                <p style={{ margin: "4px 0 0", fontSize: 12, color: "#6b7280" }}>
+                  Select the key goals to use when drafting or sending outreach.
+                  {form.goalInterests.length
+                    ? ` Selected: ${form.goalInterests.length}`
+                    : ""}
+                </p>
+                <div className="event-lead-goal-grid">
+                  {goalInterestOptions.map((goal) => (
+                    <label key={goal}>
+                      <input
+                        type="checkbox"
+                        checked={form.goalInterests.includes(goal)}
+                        onChange={() => toggleGoalInterest(goal)}
+                      />
+                      <span>{goal}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
           <label style={{ display: "block", marginTop: 12 }}>
@@ -757,6 +781,7 @@ export default function AdminEventLeadsPanel({ open }: Props) {
               rows={3}
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
             />
           </label>
           <div style={{ marginTop: 12, display: "flex", gap: 8 }}>

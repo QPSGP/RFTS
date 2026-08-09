@@ -46,6 +46,39 @@ export const LONG_BEACH_EXPO_2026 = {
   eventKey: "holistic-healing-expo-long-beach-2026-08"
 } as const;
 
+/** Consumer lead-card goals used for email targeting (Abundance / Aisha-style cards). */
+export const EVENT_LEAD_GOAL_INTERESTS = [
+  "Anger Management",
+  "Attract Love",
+  "Coaching",
+  "Confidence",
+  "Creativity",
+  "End Pain",
+  "End Procrastination",
+  "Energy",
+  "Explore Past Lives",
+  "Health & Rejuvenation",
+  "Life Mission",
+  "Marketing",
+  "Memory Excellence",
+  "Motivation",
+  "Psychic Abilities",
+  "Quit Smoking",
+  "Raise Income",
+  "Relationship Joy",
+  "Retirement $",
+  "Sales Skills",
+  "Sleep Well",
+  "Speaking Skills",
+  "Spiritual Growth",
+  "Stop Smoking",
+  "Stress Management",
+  "Time Management",
+  "Travel $",
+  "Vision",
+  "Weight Control"
+] as const;
+
 const emptyToNull = (v: unknown) => {
   if (v == null) return null;
   if (typeof v === "string" && !v.trim()) return null;
