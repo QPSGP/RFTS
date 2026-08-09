@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { HOMEPAGE_GOAL_CARDS } from "@/lib/homepage-goals";
+import { WELLNESS_BENEFIT_LINKS } from "@/lib/meditation-benefits";
 
 /** Digital lead card form types (paper + QR). */
 export const EVENT_LEAD_FORM_TYPES = [
@@ -46,8 +48,14 @@ export const LONG_BEACH_EXPO_2026 = {
   eventKey: "holistic-healing-expo-long-beach-2026-08"
 } as const;
 
-/** Consumer lead-card goals used for email targeting (Abundance / Aisha-style cards). */
-export const EVENT_LEAD_GOAL_INTERESTS = [
+/** Core RFTS goals for marketing / email targeting. */
+export const EVENT_LEAD_CORE_GOALS = HOMEPAGE_GOAL_CARDS.map((g) => g.label);
+
+/** Wellness focus areas (landing pages) for how to market the prospect. */
+export const EVENT_LEAD_WELLNESS_FOCUS = WELLNESS_BENEFIT_LINKS.map((b) => b.label);
+
+/** Paper lead-card goal checkboxes (Abundance / Aisha-style). */
+export const EVENT_LEAD_CARD_GOALS = [
   "Anger Management",
   "Attract Love",
   "Coaching",
@@ -78,6 +86,15 @@ export const EVENT_LEAD_GOAL_INTERESTS = [
   "Vision",
   "Weight Control"
 ] as const;
+
+/** Flat list of all selectable goal / focus options (unique, order preserved). */
+export const EVENT_LEAD_GOAL_INTERESTS: string[] = Array.from(
+  new Set<string>([
+    ...EVENT_LEAD_CORE_GOALS,
+    ...EVENT_LEAD_WELLNESS_FOCUS,
+    ...EVENT_LEAD_CARD_GOALS
+  ])
+);
 
 const emptyToNull = (v: unknown) => {
   if (v == null) return null;
@@ -164,7 +181,8 @@ export const practiceSurveyExtrasSchema = z.object({
   wantPacket: z.boolean().optional().nullable(),
   wantPresentation: z.boolean().optional().nullable(),
   wantTxt: z.boolean().optional().nullable(),
-  marginNotes: optionalString
+  marginNotes: optionalString,
+  goalInterests: z.array(z.string()).optional().nullable()
 });
 
 /** Consumer / Aisha-style lead card extras. */

@@ -9,9 +9,11 @@ import {
   type PointerEvent as ReactPointerEvent
 } from "react";
 import {
+  EVENT_LEAD_CARD_GOALS,
+  EVENT_LEAD_CORE_GOALS,
   EVENT_LEAD_FORM_TYPES,
-  EVENT_LEAD_GOAL_INTERESTS,
   EVENT_LEAD_STATUSES,
+  EVENT_LEAD_WELLNESS_FOCUS,
   EXPO_PRACTICE_DEFAULTS,
   LONG_BEACH_EXPO_2026,
   displayLeadName,
@@ -96,9 +98,14 @@ function formFromLead(lead: EventLeadRecord): LeadFormState {
     lead.payload?.consumer && typeof lead.payload.consumer === "object"
       ? (lead.payload.consumer as Record<string, unknown>)
       : {};
-  const goalInterests = Array.isArray(consumer.goalInterests)
-    ? (consumer.goalInterests as string[]).map((g) => String(g).trim()).filter(Boolean)
-    : [];
+  const goalInterestsRaw = Array.isArray(consumer.goalInterests)
+    ? consumer.goalInterests
+    : Array.isArray(practice.goalInterests)
+      ? practice.goalInterests
+      : [];
+  const goalInterests = (goalInterestsRaw as unknown[])
+    .map((g) => String(g).trim())
+    .filter(Boolean);
   return {
     formType: lead.formType,
     status: lead.status,
@@ -138,7 +145,8 @@ function payloadFromForm(form: LeadFormState) {
         incomeGoalAmount: form.incomeGoalAmount.trim() || null,
         incomeGoalYear: form.incomeGoalYear.trim() || null,
         wantFullTime: form.wantFullTime,
-        wantTxt: form.smsOk
+        wantTxt: form.smsOk,
+        goalInterests: form.goalInterests
       },
       consumer: null
     };
@@ -290,22 +298,14 @@ export default function AdminEventLeadsPanel({ open }: Props) {
     leads.length > 0 && (selectedIndex < 0 || selectedIndex < leads.length - 1);
 
   const goalInterestOptions = useMemo(() => {
-    const known = EVENT_LEAD_GOAL_INTERESTS as readonly string[];
-    const extras = form.goalInterests.filter((g) => !known.includes(g));
-    return [...known, ...extras];
+    const known = new Set<string>([
+      ...EVENT_LEAD_CORE_GOALS,
+      ...EVENT_LEAD_WELLNESS_FOCUS,
+      ...EVENT_LEAD_CARD_GOALS
+    ]);
+    const extras = form.goalInterests.filter((g) => !known.has(g));
+    return extras;
   }, [form.goalInterests]);
-
-  function toggleGoalInterest(goal: string) {
-    setForm((f) => {
-      const has = f.goalInterests.includes(goal);
-      return {
-        ...f,
-        goalInterests: has
-          ? f.goalInterests.filter((g) => g !== goal)
-          : [...f.goalInterests, goal]
-      };
-    });
-  }
 
   function onLeadPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
     if (mode !== "view") return;
@@ -749,31 +749,61 @@ export default function AdminEventLeadsPanel({ open }: Props) {
                 />
                 Want full time
               </label>
-            ) : (
-              <div className="event-lead-form-span">
-                <div style={{ fontSize: 13, fontWeight: 600 }}>
-                  Goal interests for email targeting
-                </div>
-                <p style={{ margin: "4px 0 0", fontSize: 12, color: "#6b7280" }}>
-                  Select the key goals to use when drafting or sending outreach.
-                  {form.goalInterests.length
-                    ? ` Selected: ${form.goalInterests.length}`
-                    : ""}
-                </p>
-                <div className="event-lead-goal-grid">
-                  {goalInterestOptions.map((goal) => (
-                    <label key={goal}>
-                      <input
-                        type="checkbox"
-                        checked={form.goalInterests.includes(goal)}
-                        onChange={() => toggleGoalInterest(goal)}
-                      />
-                      <span>{goal}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
+            ) : null}
+            <div className="event-lead-form-span">
+              <label style={{ display: "grid", gap: 4, margin: 0 }}>
+                Goal &amp; wellness focus (multi-select)
+                <select
+                  multiple
+                  size={12}
+                  value={form.goalInterests}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions).map((o) => o.value);
+                    setForm((f) => ({ ...f, goalInterests: selected }));
+                  }}
+                  aria-label="Goal and wellness focus areas"
+                  style={{ minHeight: 220 }}
+                >
+                  <optgroup label="Core goals">
+                    {EVENT_LEAD_CORE_GOALS.map((goal) => (
+                      <option key={`core-${goal}`} value={goal}>
+                        {goal}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Wellness focus areas">
+                    {EVENT_LEAD_WELLNESS_FOCUS.map((goal) => (
+                      <option key={`wellness-${goal}`} value={goal}>
+                        {goal}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Lead card goals">
+                    {EVENT_LEAD_CARD_GOALS.map((goal) => (
+                      <option key={`card-${goal}`} value={goal}>
+                        {goal}
+                      </option>
+                    ))}
+                  </optgroup>
+                  {goalInterestOptions.length > 0 ? (
+                    <optgroup label="Saved custom">
+                      {goalInterestOptions.map((goal) => (
+                        <option key={`custom-${goal}`} value={goal}>
+                          {goal}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : null}
+                </select>
+              </label>
+              <p style={{ margin: "6px 0 0", fontSize: 12, color: "#6b7280" }}>
+                Hold Ctrl (Windows) or Cmd (Mac) to select multiple. Use these to target email
+                and outreach for the individual or organization.
+                {form.goalInterests.length
+                  ? ` Selected: ${form.goalInterests.join(", ")}`
+                  : ""}
+              </p>
+            </div>
           </div>
           <label style={{ display: "block", marginTop: 12 }}>
             Notes
