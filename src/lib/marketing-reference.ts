@@ -1,4 +1,5 @@
 import { HOMEPAGE_GOAL_CARDS } from "@/lib/homepage-goals";
+import { MEMBER_CONVERSION_EMAIL_TEMPLATES } from "@/lib/member-conversion-emails";
 import { WELLNESS_BENEFIT_LINKS } from "@/lib/meditation-benefits";
 
 /** Status options for the outreach tracker (value + label). */
@@ -581,7 +582,8 @@ Open to a short intro call for {{organization}}?
 Thank you,
 {{yourName}}
 {{siteUrl}}`
-  }
+  },
+  ...MEMBER_CONVERSION_EMAIL_TEMPLATES
 ];
 export type ReferencePersona = {
   name: string;
