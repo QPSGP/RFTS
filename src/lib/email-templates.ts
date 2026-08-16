@@ -609,12 +609,15 @@ export function getEventLeadPracticeAutoReplyContent(params: {
 }): TemplateContent {
   const baseUrl = getBaseUrl();
   const subject = "Thanks for connecting at the expo - next steps for your practice";
-  const dear = greeting(params.firstName);
+  const dearText = greeting(params.firstName);
+  const dearHtml = params.firstName?.trim()
+    ? `Hi ${escapeHtml(params.firstName.trim())},`
+    : "Hi there,";
   const eventLine = params.eventName?.trim()
     ? `Thanks for stopping by at ${escapeHtml(params.eventName.trim())}.`
     : "Thanks for sharing your practice survey with us.";
   const html = emailWrapper(`
-  ${p(dear)}
+  ${p(dearHtml)}
   ${p(eventLine)}
   ${p("Reach For The Stars helps coaches, healers, and hypnotherapists grow income and presence without another daytime chore - guided sessions run at bedtime and during sleep.")}
   ${p("When you are ready, explore facilitator / affiliate options (25% ongoing) or start a personal membership trial.")}
@@ -623,7 +626,7 @@ export function getEventLeadPracticeAutoReplyContent(params: {
   ${p("Questions? 800-GOAL-NOW (462-5669) or reply to this email.", EMAIL_MUTED)}
 `);
   const text = `
-${dear}
+${dearText}
 
 ${params.eventName?.trim() ? `Thanks for stopping by at ${params.eventName.trim()}.` : "Thanks for sharing your practice survey with us."}
 
@@ -644,12 +647,15 @@ export function getEventLeadConsumerAutoReplyContent(params: {
 }): TemplateContent {
   const baseUrl = getBaseUrl();
   const subject = "Your free Abundance meditation - Abundance: Your Money and MORE Magnet";
-  const dear = greeting(params.firstName);
+  const dearText = greeting(params.firstName);
+  const dearHtml = params.firstName?.trim()
+    ? `Hi ${escapeHtml(params.firstName.trim())},`
+    : "Hi there,";
   const eventLine = params.eventName?.trim()
     ? `Thanks for connecting at ${escapeHtml(params.eventName.trim())}.`
     : "Thanks for requesting your free download.";
   const html = emailWrapper(`
-  ${p(dear)}
+  ${p(dearHtml)}
   ${p(eventLine)}
   ${p("Watch your inbox for free downloads and resources from Success Center / Reach For The Stars. Your Abundance: Your Money and MORE Magnet Goal Manifestation Guided Meditation is designed to draw abundance into every area of your life.")}
   ${p("Ready for nightly guided sessions while you sleep?")}
@@ -657,7 +663,7 @@ export function getEventLeadConsumerAutoReplyContent(params: {
   ${p("Questions? 800-GOAL-NOW (462-5669) or reply to this email.", EMAIL_MUTED)}
 `);
   const text = `
-${dear}
+${dearText}
 
 ${params.eventName?.trim() ? `Thanks for connecting at ${params.eventName.trim()}.` : "Thanks for requesting your free download."}
 

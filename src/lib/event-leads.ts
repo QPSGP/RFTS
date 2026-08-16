@@ -110,7 +110,9 @@ export function normalizeLeadEmail(raw: string | null | undefined): string | nul
     .replace(/\s+/g, "")
     .trim()
     .toLowerCase();
-  if (!cleaned.includes("@") || !cleaned.includes(".")) return cleaned || null;
+  if (!cleaned) return null;
+  // Require local@domain.tld shape after OCR cleanup.
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleaned)) return null;
   return cleaned;
 }
 
@@ -141,6 +143,12 @@ const optionalString = z.preprocess(
   z.string().trim().max(500).nullable().optional()
 );
 
+const cappedStringArray = z
+  .array(z.string().trim().max(120))
+  .max(40)
+  .optional()
+  .nullable();
+
 /** Shared contact + event fields on every lead. */
 export const eventLeadCoreSchema = z.object({
   formType: z.enum(["practice_survey", "consumer_lead"]),
@@ -169,9 +177,9 @@ export const eventLeadCoreSchema = z.object({
 
 /** Practice survey extras (Expo healer/coach card). */
 export const practiceSurveyExtrasSchema = z.object({
-  roles: z.array(z.string()).optional().nullable(),
+  roles: cappedStringArray,
   primaryOccupation: optionalString,
-  statusFlags: z.array(z.string()).optional().nullable(),
+  statusFlags: cappedStringArray,
   otherTraining: optionalString,
   yearPracticeStarted: optionalString,
   timezone: optionalString,
@@ -182,14 +190,14 @@ export const practiceSurveyExtrasSchema = z.object({
   wantPresentation: z.boolean().optional().nullable(),
   wantTxt: z.boolean().optional().nullable(),
   marginNotes: optionalString,
-  goalInterests: z.array(z.string()).optional().nullable()
+  goalInterests: cappedStringArray
 });
 
 /** Consumer / Aisha-style lead card extras. */
 export const consumerLeadExtrasSchema = z.object({
   gotHereVia: optionalString,
   topPriorities: optionalString,
-  goalInterests: z.array(z.string()).optional().nullable(),
+  goalInterests: cappedStringArray,
   position: optionalString,
   businessName: optionalString,
   relationshipStatus: optionalString,
@@ -209,7 +217,15 @@ export const eventLeadSubmitSchema = eventLeadCoreSchema
     consumer: consumerLeadExtrasSchema.nullish()
   })
   .superRefine((data, ctx) => {
+    const rawEmail = (data.email ?? "").trim();
     const email = normalizeLeadEmail(data.email ?? null);
+    if (rawEmail && !email) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Enter a valid email address.",
+        path: ["email"]
+      });
+    }
     const phone = normalizeLeadPhone(data.phoneMobile ?? null);
     const name =
       [data.firstName, data.lastName].filter(Boolean).join(" ").trim() ||

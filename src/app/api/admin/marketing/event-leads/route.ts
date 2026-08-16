@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionEmail, isAdminSession } from "@/lib/auth";
 import {
   EVENT_LEAD_FORM_TYPES,
+  EVENT_LEAD_STATUSES,
   SARAH_ROSE_LONG_BEACH_EXTRACT,
   eventLeadSubmitSchema,
   type EventLeadFormTypeId
@@ -20,6 +21,30 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const url = new URL(request.url);
+  const extractsKey = url.searchParams.get("extracts");
+  if (extractsKey === "long-beach-2026-08") {
+    const fs = await import("fs/promises");
+    const path = await import("path");
+    const filePath = path.join(
+      process.cwd(),
+      "docs",
+      "lead-card-scans",
+      "long-beach-2026-08",
+      "extracts.json"
+    );
+    try {
+      const raw = await fs.readFile(filePath, "utf8");
+      const data = JSON.parse(raw) as unknown;
+      return NextResponse.json(data, {
+        headers: { "Cache-Control": "no-store, no-cache, must-revalidate" }
+      });
+    } catch {
+      return NextResponse.json(
+        { error: "Extracts file not found on server (docs/lead-card-scans/long-beach-2026-08/extracts.json)." },
+        { status: 404 }
+      );
+    }
+  }
   const id = url.searchParams.get("id");
   if (id) {
     const lead = await getEventLead(id);
@@ -59,32 +84,40 @@ export async function POST(request: Request) {
   }
 
   if (body?.importExtracts === true && Array.isArray(body.leads)) {
+    const batch = body.leads as unknown[];
+    if (batch.length > 250) {
+      return NextResponse.json(
+        { error: "Import batch too large (max 250)." },
+        { status: 400 }
+      );
+    }
     const results: { scanId?: string; id?: string; skipped?: boolean; error?: string }[] = [];
-    for (const raw of body.leads) {
-      const scanId = typeof raw?.scanId === "string" ? raw.scanId : undefined;
+    for (const raw of batch) {
+      const row = raw as Record<string, unknown>;
+      const scanId = typeof row?.scanId === "string" ? row.scanId : undefined;
       const parsed = eventLeadSubmitSchema.safeParse({
-        formType: raw.formType,
-        eventName: raw.eventName || "Holistic Healing Expo - Long Beach",
-        eventDates: raw.eventDates || "2026-08-01 / 2026-08-02",
-        eventKey: raw.eventKey || "holistic-healing-expo-long-beach-2026-08",
-        fullName: raw.fullName,
-        firstName: raw.firstName,
-        lastName: raw.lastName,
-        email: raw.email,
-        phoneMobile: raw.phoneMobile,
-        smsOk: raw.smsOk,
-        city: raw.city,
-        state: raw.state,
-        zip: raw.zip,
-        persona: raw.persona,
-        category: raw.category,
-        interest: raw.interest,
-        entryPath: raw.entryPath,
-        notes: raw.notes,
-        sourceScanPath: raw.sourceScanPath,
+        formType: row.formType,
+        eventName: row.eventName || "Holistic Healing Expo - Long Beach",
+        eventDates: row.eventDates || "2026-08-01 / 2026-08-02",
+        eventKey: row.eventKey || "holistic-healing-expo-long-beach-2026-08",
+        fullName: row.fullName,
+        firstName: row.firstName,
+        lastName: row.lastName,
+        email: row.email,
+        phoneMobile: row.phoneMobile,
+        smsOk: row.smsOk,
+        city: row.city,
+        state: row.state,
+        zip: row.zip,
+        persona: row.persona,
+        category: row.category,
+        interest: row.interest,
+        entryPath: row.entryPath,
+        notes: row.notes,
+        sourceScanPath: row.sourceScanPath,
         autoReply: false,
-        practice: raw.practice,
-        consumer: raw.consumer
+        practice: row.practice,
+        consumer: row.consumer
       });
       if (!parsed.success) {
         results.push({ scanId, error: "invalid" });
@@ -102,7 +135,7 @@ export async function POST(request: Request) {
         }
       }
       const lead = await createEventLead(parsed.data, { createdByEmail: adminEmail });
-      if (raw.statusHint === "paused") {
+      if (row.statusHint === "paused") {
         await updateEventLeadStatus(lead.id, "paused");
       }
       results.push({ scanId, id: lead.id, skipped: false });
@@ -139,8 +172,9 @@ export async function PATCH(request: Request) {
   // Status-only shortcut (list dropdown).
   if (body?.status && !body?.formType && !body?.eventName && !body?.fullName) {
     const status = String(body.status).trim();
-    if (!status) {
-      return NextResponse.json({ error: "status required." }, { status: 400 });
+    const allowed = new Set(EVENT_LEAD_STATUSES.map((s) => s.id));
+    if (!allowed.has(status)) {
+      return NextResponse.json({ error: "Invalid status." }, { status: 400 });
     }
     const lead = await updateEventLeadStatus(id, status);
     if (!lead) return NextResponse.json({ error: "Not found." }, { status: 404 });
@@ -154,9 +188,18 @@ export async function PATCH(request: Request) {
       { status: 400 }
     );
   }
+  let nextStatus: string | undefined;
+  if (typeof body.status === "string") {
+    const status = body.status.trim();
+    const allowed = new Set(EVENT_LEAD_STATUSES.map((s) => s.id));
+    if (!allowed.has(status)) {
+      return NextResponse.json({ error: "Invalid status." }, { status: 400 });
+    }
+    nextStatus = status;
+  }
   const lead = await updateEventLead(id, {
     ...parsed.data,
-    status: typeof body.status === "string" ? body.status : undefined
+    status: nextStatus
   });
   if (!lead) return NextResponse.json({ error: "Not found." }, { status: 404 });
   return NextResponse.json({ lead });

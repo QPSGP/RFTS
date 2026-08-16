@@ -30,8 +30,10 @@ Folder: `docs/lead-card-scans/20260806 Leads from Long Beach Holistic Health Exp
 
 Pipeline:
 1. JPEG + preview under `docs/lead-card-scans/long-beach-2026-08/`
-2. Hand/vision extracts → `docs/lead-card-scans/long-beach-2026-08/extracts.json` (also `public/lead-card-extracts/long-beach-2026-08.json`)
+2. Hand/vision extracts → `docs/lead-card-scans/long-beach-2026-08/extracts.json` (admin-only; served via `GET /api/admin/marketing/event-leads?extracts=long-beach-2026-08`)
 3. Admin → Event leads → **Import extracts JSON batch**
 4. Optional bulk vision: add `OPENAI_API_KEY` to `.env.local`, then `npx tsx scripts/extract-lead-card-scans.ts`
+
+**Security:** Do not put extracts under `public/` (PII). Public `POST /api/lead/submit` is rate-limited.
 
 Staff marks **DN / No Deal** → import status `paused`.

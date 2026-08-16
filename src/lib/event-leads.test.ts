@@ -45,6 +45,22 @@ describe("event-leads", () => {
     expect(SARAH_ROSE_LONG_BEACH_EXTRACT.persona).toContain("Chris");
   });
 
+  it("rejects invalid emails after cleanup", () => {
+    expect(normalizeLeadEmail("not-an-email")).toBeNull();
+    expect(normalizeLeadEmail("missing-tld@gmail")).toBeNull();
+    expect(normalizeLeadEmail("")).toBeNull();
+  });
+
+  it("rejects schema when email is present but invalid", () => {
+    const parsed = eventLeadSubmitSchema.safeParse({
+      formType: "practice_survey",
+      eventName: "Expo",
+      fullName: "Test Lead",
+      email: "not-valid"
+    });
+    expect(parsed.success).toBe(false);
+  });
+
   it("accepts null practice/consumer payloads from vision extracts", () => {
     const parsed = eventLeadSubmitSchema.safeParse({
       formType: "consumer_lead",

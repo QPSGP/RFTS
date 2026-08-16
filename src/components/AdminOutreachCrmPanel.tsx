@@ -188,7 +188,9 @@ export default function AdminOutreachCrmPanel({
 
   const [noteText, setNoteText] = useState("");
   const canSend =
-    target.status === "ready_to_send" && !target.doNotEmail && Boolean(sendForm.contactId);
+    (target.status === "ready_to_send" || target.status === "contacted") &&
+    !target.doNotEmail &&
+    Boolean(sendForm.contactId);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1236,7 +1238,11 @@ export default function AdminOutreachCrmPanel({
         >
           {openCrmSections.send ? "▼" : "▶"} 5 · Send
           {target.doNotEmail ? " · blocked" : ""}
-          {target.status !== "ready_to_send" ? " · needs approval" : ""}
+          {target.status === "contacted"
+            ? " · follow-up ok"
+            : target.status !== "ready_to_send"
+              ? " · needs approval"
+              : ""}
         </button>
         {openCrmSections.send ? (
           <div className="card" style={{ background: "#fff", margin: 0 }}>
@@ -1244,7 +1250,7 @@ export default function AdminOutreachCrmPanel({
               <p style={{ color: "#b91c1c", fontSize: 13, margin: 0 }}>
                 Do-not-email is on for this target. Clear it under Capture to send.
               </p>
-            ) : target.status !== "ready_to_send" ? (
+            ) : target.status !== "ready_to_send" && target.status !== "contacted" ? (
               <p style={{ color: "#b45309", fontSize: 13, margin: 0 }}>
                 This record is not approved yet. Complete steps 3-4, then Approve for send.
               </p>

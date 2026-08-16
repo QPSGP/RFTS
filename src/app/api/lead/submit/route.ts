@@ -1,25 +1,35 @@
 import { NextResponse } from "next/server";
-import { sendEmail } from "@/lib/email";
-import {
-  getEventLeadConsumerAutoReplyContent,
-  getEventLeadPracticeAutoReplyContent
-} from "@/lib/email-templates";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import {
   applyLeadDefaults,
-  eventLeadSubmitSchema,
-  normalizeLeadEmail
+  eventLeadSubmitSchema
 } from "@/lib/event-leads";
 import {
   createEventLead,
   findEventLeadByEmailAndEvent,
   markEventLeadAutoReplied
 } from "@/lib/event-leads-db";
+import { sendEmail } from "@/lib/email";
+import {
+  getEventLeadConsumerAutoReplyContent,
+  getEventLeadPracticeAutoReplyContent
+} from "@/lib/email-templates";
+
+const LEAD_SUBMIT_MAX_PER_MINUTE = 5;
 
 /**
- * Public QR / link submit for digital lead cards.
+ * Public event lead card submit (practice survey or consumer).
  * Not linked from site nav; callers use /lead/practice or /lead/consumer.
  */
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  if (!rateLimit(`lead-submit:${ip}`, LEAD_SUBMIT_MAX_PER_MINUTE)) {
+    return NextResponse.json(
+      { error: "Too many submissions. Please try again in a minute." },
+      { status: 429 }
+    );
+  }
+
   const body = await request.json().catch(() => ({}));
   const parsed = eventLeadSubmitSchema.safeParse(body);
   if (!parsed.success) {
@@ -30,7 +40,7 @@ export async function POST(request: Request) {
   }
 
   const input = applyLeadDefaults(parsed.data);
-  const email = normalizeLeadEmail(input.email ?? null);
+  const email = input.email;
 
   if (email && input.eventKey) {
     const existing = await findEventLeadByEmailAndEvent(email, input.eventKey);

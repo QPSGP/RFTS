@@ -4077,24 +4077,52 @@ export const updateOutreachTarget = async (
   input: OutreachTargetWrite
 ): Promise<OutreachTarget | null> => {
   await ensureMarketingOutreachTable();
-  const targetType = normalizeOutreachTargetType(input.targetType);
+  const existing = await getOutreachTarget(id);
+  if (!existing) return null;
+
+  const organization = input.organization.trim() || existing.organization;
+  const targetType = normalizeOutreachTargetType(
+    input.targetType !== undefined ? input.targetType : existing.targetType
+  );
+  const category = input.category !== undefined ? input.category : existing.category;
+  const persona = input.persona !== undefined ? input.persona : existing.persona;
+  const entryPath = input.entryPath !== undefined ? input.entryPath : existing.entryPath;
+  const contact = input.contact !== undefined ? input.contact : existing.contact;
+  const refCode = input.refCode !== undefined ? input.refCode : existing.refCode;
+  const status =
+    input.status !== undefined && input.status !== null && String(input.status).trim()
+      ? String(input.status).trim()
+      : existing.status;
+  const notes = input.notes !== undefined ? input.notes : existing.notes;
+  const interest = input.interest !== undefined ? input.interest : existing.interest;
+  const audienceSize =
+    input.audienceSize !== undefined ? input.audienceSize : existing.audienceSize;
+  const decisionTimeline =
+    input.decisionTimeline !== undefined ? input.decisionTimeline : existing.decisionTimeline;
+  const followUpAt =
+    input.followUpAt !== undefined ? input.followUpAt : existing.followUpAt;
+  const doNotEmail =
+    input.doNotEmail !== undefined && input.doNotEmail !== null
+      ? Boolean(input.doNotEmail)
+      : existing.doNotEmail;
+
   const { rows } = await sql<OutreachTarget>`
     UPDATE marketing_outreach_targets
     SET
-      organization = ${input.organization},
+      organization = ${organization},
       target_type = ${targetType},
-      category = ${input.category ?? null},
-      persona = ${input.persona ?? null},
-      entry_path = ${input.entryPath ?? null},
-      contact = ${input.contact ?? null},
-      ref_code = ${input.refCode ?? null},
-      status = ${input.status ?? "prospect"},
-      notes = ${input.notes ?? null},
-      interest = ${input.interest ?? null},
-      audience_size = ${input.audienceSize ?? null},
-      decision_timeline = ${input.decisionTimeline ?? null},
-      follow_up_at = ${input.followUpAt ?? null},
-      do_not_email = ${input.doNotEmail ?? false},
+      category = ${category ?? null},
+      persona = ${persona ?? null},
+      entry_path = ${entryPath ?? null},
+      contact = ${contact ?? null},
+      ref_code = ${refCode ?? null},
+      status = ${status},
+      notes = ${notes ?? null},
+      interest = ${interest ?? null},
+      audience_size = ${audienceSize ?? null},
+      decision_timeline = ${decisionTimeline ?? null},
+      follow_up_at = ${followUpAt ?? null},
+      do_not_email = ${doNotEmail},
       updated_at = now()
     WHERE id = ${id}
     RETURNING

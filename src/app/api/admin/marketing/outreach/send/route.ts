@@ -43,6 +43,15 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+  if (target.status !== "ready_to_send" && target.status !== "contacted") {
+    return NextResponse.json(
+      {
+        error:
+          "Target must be marked Ready to send (or already Contacted) before emailing. Use the CRM approval pipeline first."
+      },
+      { status: 400 }
+    );
+  }
 
   const contact = await getOutreachContact(parsed.data.contactId);
   if (!contact || contact.targetId !== target.id) {

@@ -391,11 +391,14 @@ export default function AdminEventLeadsPanel({ open }: Props) {
   async function importExtractsFile() {
     setMessage(null);
     try {
-      const extractsRes = await fetch(`/lead-card-extracts/long-beach-2026-08.json`, {
-        cache: "no-store"
-      });
+      const extractsRes = await fetch(
+        `/api/admin/marketing/event-leads?extracts=long-beach-2026-08`,
+        { credentials: "include", cache: "no-store" }
+      );
       if (!extractsRes.ok) {
-        setMessage("Extracts file not found at /lead-card-extracts/long-beach-2026-08.json");
+        setMessage(
+          "Extracts file not found (admin API → docs/lead-card-scans/long-beach-2026-08/extracts.json)."
+        );
         return;
       }
       const dataFile = await extractsRes.json();

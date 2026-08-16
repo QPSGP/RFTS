@@ -58,6 +58,11 @@ const ensureEventLeadsTable = async () => {
     CREATE INDEX IF NOT EXISTS marketing_event_leads_email_idx
     ON marketing_event_leads (lower(email))
   `;
+  await sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS marketing_event_leads_email_event_uidx
+    ON marketing_event_leads (lower(email), event_key)
+    WHERE email IS NOT NULL AND event_key IS NOT NULL
+  `;
   eventLeadsTableReady = true;
 };
 
@@ -373,6 +378,15 @@ export async function updateEventLeadStatus(
   status: string
 ): Promise<EventLeadRecord | null> {
   await ensureEventLeadsTable();
+  const allowed = new Set([
+    "new",
+    "auto_replied",
+    "contacted",
+    "qualified",
+    "converted",
+    "paused"
+  ]);
+  if (!allowed.has(status)) return null;
   const { rows } = await sql<EventLeadRecord>`
     UPDATE marketing_event_leads
     SET status = ${status}, updated_at = now()

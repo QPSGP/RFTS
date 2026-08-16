@@ -554,3 +554,42 @@ CREATE TABLE IF NOT EXISTS facilitator_lgd_settings (
   flags jsonb NOT NULL DEFAULT '{}'::jsonb,
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Event lead cards (Expo / QR) - also created at runtime by ensureEventLeadsTable
+CREATE TABLE IF NOT EXISTS marketing_event_leads (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  form_type text NOT NULL,
+  status text NOT NULL DEFAULT 'new',
+  event_name text NOT NULL,
+  event_dates text,
+  event_key text,
+  first_name text,
+  last_name text,
+  full_name text,
+  email text,
+  phone_mobile text,
+  sms_ok boolean NOT NULL DEFAULT false,
+  city text,
+  state text,
+  zip text,
+  country text,
+  persona text,
+  category text,
+  interest text,
+  entry_path text,
+  captured_by text,
+  notes text,
+  source_scan_path text,
+  payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+  outreach_target_id uuid,
+  auto_reply_sent_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS marketing_event_leads_event_key_idx
+  ON marketing_event_leads (event_key);
+CREATE INDEX IF NOT EXISTS marketing_event_leads_email_idx
+  ON marketing_event_leads (lower(email));
+CREATE UNIQUE INDEX IF NOT EXISTS marketing_event_leads_email_event_uidx
+  ON marketing_event_leads (lower(email), event_key)
+  WHERE email IS NOT NULL AND event_key IS NOT NULL;
