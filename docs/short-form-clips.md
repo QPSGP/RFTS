@@ -143,4 +143,44 @@ Link in bio → resilience article
 
 Use UTM when useful:  
 `?ref=6051C794&utm_source=instagram&utm_medium=reel&utm_campaign=sleep-week-a`  
-Resilience week: `utm_campaign=resilience-week-d`
+Resilience week: `utm_campaign=resilience-week-d`  
+Insight week (2026-08-10): `utm_campaign=insight-week-e`
+
+---
+
+## Week E - Insight / inner work (Alex + Chris) - week of 2026-08-10
+
+**Full shoot + paste pack:** `docs/marketing-week-insight-2026-08-10.md`  
+Rendered reels: `docs/marketing-clips/insight-week/`
+
+Blog pin: `/blog/self-awareness-guided-meditation-insight-sleep`  
+Landings: `/self-awareness`, `/will-power`, `/emotional-health` with `?ref=6051C794`
+
+### Clip 15 - Same pattern (10-15s)
+**Hook (text on screen):** Stuck in the same pattern?  
+**Voice / VO:** “Self-awareness is not more self-criticism. It is clearer seeing. Press Start at bedtime. Insight grows while you sleep.”  
+**CTA:** “Free trial - link in bio”  
+**Link:** self-awareness blog or `/self-awareness?ref=…`
+
+### Clip 16 - Empty willpower (15-20s)
+**Hook:** Empty willpower by 9 p.m.?  
+**VO:** “The day already used your willpower. Rehearse follow-through at bedtime, not with another morning pep talk.”  
+**CTA:** “Try Reach For The Stars tonight.”  
+**Link:** `/will-power?ref=…`
+
+### Clip 17 - Then night hits (15-20s)
+**Hook:** Fine all day. Then night hits.  
+**VO:** “Emotional health is steadier mood when the day catches up. Guided audios meet you at the pillow, not as another homework pile.”  
+**CTA:** Link in bio → emotional health article  
+**Link:** `/emotional-health?ref=…`
+
+### Clip 18 - Too tired for journaling (20-30s)
+**Hook:** Too tired for journaling?  
+**VO:** “Insight, resolve, and mood regulation should not need another hour. Start Session, then sleep.”  
+**CTA:** “14-day free trial”  
+**Link:** signup with `ref=6051C794`
+
+### Clip 19 - Partner angle (20-30s)
+**Hook:** Coaches: clients rest, you earn  
+**VO:** “Members press Start at night. Refer with 25% ongoing. Self-awareness, will power, and emotional health pages ready to share.”  
+**CTA:** `reachforthestars.today/affiliates`
