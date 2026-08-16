@@ -23,6 +23,147 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "self-awareness-guided-meditation-insight-sleep",
+    title:
+      "Greater self-awareness: guided meditation that builds insight while you sleep",
+    metaTitle: "Self-Awareness Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "Grow greater self-awareness with guided meditation at bedtime and during sleep. Nightly insight without another daytime journaling stack. Free trial.",
+    publishedAt: "2026-08-13",
+    readMinutes: 6,
+    excerpt:
+      "Self-awareness is not more self-criticism. It is clearer seeing - patterns, triggers, and goals - reinforced at night when the day can no longer interrupt you.",
+    topicSlug: "self-awareness",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for greater self-awareness often already track habits, moods, or therapy notes. What they still want is a quieter way to notice patterns without turning every evening into homework. Insight fails when it competes with exhaustion.",
+          "Reach For The Stars supports self-awareness through guided meditation while you fall asleep and, if you choose two audios per night, again during sleep. Reflection becomes part of bedtime instead of another app you forget to open."
+        ]
+      },
+      {
+        heading: "Awareness grows with repetition, not with shame",
+        paragraphs: [
+          "Self-awareness improves when the same calm cues return regularly - noticing without attacking yourself. Nightly practice helps you recognize triggers, values, and goals more clearly over weeks, not from a single dramatic breakthrough.",
+          "When introspection and personal insight sit among your priorities, your rotation includes awareness-aligned recordings automatically. Explore our self-awareness page for how that landing path frames nightly insight."
+        ]
+      },
+      {
+        heading: "Why bedtime works for introspection",
+        paragraphs: [
+          "Daytime mindfulness is valuable, and many people abandon it when meetings, caregiving, or screens fill the only free hour. The quiet window before sleep is when the nervous system can settle and the mind can review the day without performing.",
+          "A fixed Start Session cue helps: intro relaxation music, then your awareness-related recording as you drift, then optional reinforcement about 2.5 hours later. You build insight when willpower is no longer the bottleneck."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits anyone stuck in repeating patterns, people in growth work who want nightly reinforcement, spiritual seekers who want clarity without more daytime ritual, and professionals who feel reactive and want a calmer inner map.",
+          "Visit the self-awareness landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Clear seeing, kind awareness (excerpt)",
+      quote:
+        "You notice gently… patterns soften into understanding… you see yourself with honesty and kindness… clarity returns… awareness grows night by night…"
+    }
+  },
+  {
+    slug: "will-power-guided-meditation-follow-through-sleep",
+    title:
+      "Enhanced will power: guided meditation that strengthens follow-through while you sleep",
+    metaTitle: "Will Power Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "Strengthen will power and follow-through with guided meditation at bedtime and during sleep. Nightly discipline without another daytime grind. Free trial.",
+    publishedAt: "2026-08-12",
+    readMinutes: 6,
+    excerpt:
+      "Will power fails when the day already used it up. Guided meditation at bedtime and during sleep reinforces resolve and follow-through when your defenses are down - in a good way.",
+    topicSlug: "will-power",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for enhanced will power usually know what they should do. The gap is follow-through after a long day: snacks, scrolling, skipping the plan. Another morning pep talk rarely fixes depletion.",
+          "Reach For The Stars supports will power through guided meditation while you fall asleep and, if you choose two audios per night, again during sleep. Discipline becomes a nightly cue instead of a white-knuckle afternoon."
+        ]
+      },
+      {
+        heading: "Resolve is a practice, not a personality trait",
+        paragraphs: [
+          "Will power improves when commitment language returns regularly in a calm state. You rehearse finishing what you start, choosing the aligned action, and recovering after a slip - without turning failure into identity.",
+          "When determination and follow-through sit among your goals, your rotation includes will-power themes automatically. Explore our will power page for how that landing path frames nightly reinforcement."
+        ]
+      },
+      {
+        heading: "Why night beats another hustle playlist",
+        paragraphs: [
+          "Motivation content in the morning feels strong and fades by evening. Bedtime is when habits quietly win or lose. Placing resolve practice there meets you at the decision window that actually matters.",
+          "A fixed Start Session cue helps: intro relaxation music, then your will-power recording as you drift, then optional reinforcement later in restorative sleep. Consistency replaces the need for perfect mornings."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits habit change, exam prep, sales follow-up, creative shipping, and anyone who starts strong on Monday and frays by Thursday. It pairs well with stress relief and self-awareness themes when reactivity is draining resolve.",
+          "Visit the will power landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Steady resolve and follow-through (excerpt)",
+      quote:
+        "Your intention holds… you choose the aligned next step… excuses soften… follow-through feels natural… your will returns calm, clear, and strong…"
+    }
+  },
+  {
+    slug: "emotional-health-guided-meditation-mood-sleep",
+    title:
+      "Improved emotional health: guided meditation that steadies mood while you sleep",
+    metaTitle: "Emotional Health Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "Support improved emotional health with guided meditation at bedtime and during sleep. Nightly mood regulation without another daytime therapy homework pile. Free trial.",
+    publishedAt: "2026-08-11",
+    readMinutes: 6,
+    excerpt:
+      "Emotional health is not pretending you are fine. It is steadier mood, kinder recovery after hard days, and nightly practice that does not require another hour of emotional labor.",
+    topicSlug: "emotional-health",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for improved emotional health are often already doing the work - therapy, journaling, deep talks - and still feel reactive by evening. What they need is not more insight alone. They need a low-friction way to settle the nervous system when the day is done.",
+          "Reach For The Stars supports emotional health through guided meditation while you fall asleep and, if you choose two audios per night, again during sleep. Mood regulation becomes part of bedtime instead of competing with caregiving, work, or screens."
+        ]
+      },
+      {
+        heading: "Regulation before resolution",
+        paragraphs: [
+          "Emotional health improves when calm returns often enough that feelings do not run the whole night. Research on meditation links regular practice with better mood and emotional regulation over weeks - from repetition that sticks, not from one perfect session.",
+          "When emotional balance sits among your priorities, your rotation includes related recordings automatically. Explore our emotional health page for how that landing path frames nightly support."
+        ]
+      },
+      {
+        heading: "Why bedtime is a practical window",
+        paragraphs: [
+          "Hard days do not leave spare capacity for another workshop. The transition into sleep is when the body can downshift and the mind can stop rehearsing conflict. That is a useful place to reinforce steadiness, compassion, and recovery.",
+          "A fixed Start Session cue helps: intro relaxation music, then your emotional-health recording as you drift, then optional reinforcement about 2.5 hours later. You practice regulation when willpower is already spent elsewhere."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits burned-out professionals, caregivers, anyone navigating grief or conflict, and people who feel fine until night arrives and the day catches up with them. It pairs well with stress relief and resilience themes.",
+          "Visit the emotional health landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Steady mood and gentle recovery (excerpt)",
+      quote:
+        "Emotions settle… you soften around the hard places… breath restores balance… kindness returns… your emotional health grows calm, clear, and resilient…"
+    }
+  },
+  {
     slug: "focus-attention-span-guided-meditation-sleep",
     title:
       "Increased focus and attention span: guided meditation that trains concentration while you sleep",
