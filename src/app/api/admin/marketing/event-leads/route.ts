@@ -172,7 +172,7 @@ export async function PATCH(request: Request) {
   // Status-only shortcut (list dropdown).
   if (body?.status && !body?.formType && !body?.eventName && !body?.fullName) {
     const status = String(body.status).trim();
-    const allowed = new Set(EVENT_LEAD_STATUSES.map((s) => s.id));
+    const allowed = new Set<string>(EVENT_LEAD_STATUSES.map((s) => s.id));
     if (!allowed.has(status)) {
       return NextResponse.json({ error: "Invalid status." }, { status: 400 });
     }
@@ -191,7 +191,7 @@ export async function PATCH(request: Request) {
   let nextStatus: string | undefined;
   if (typeof body.status === "string") {
     const status = body.status.trim();
-    const allowed = new Set(EVENT_LEAD_STATUSES.map((s) => s.id));
+    const allowed = new Set<string>(EVENT_LEAD_STATUSES.map((s) => s.id));
     if (!allowed.has(status)) {
       return NextResponse.json({ error: "Invalid status." }, { status: 400 });
     }
