@@ -3,7 +3,9 @@ import { getSessionEmail, isAdminSession } from "@/lib/auth";
 import {
   EVENT_LEAD_FORM_TYPES,
   EVENT_LEAD_STATUSES,
+  LONG_BEACH_EXPO_2026,
   SARAH_ROSE_LONG_BEACH_EXTRACT,
+  TERRY_FACILITATOR_REF_CODE,
   eventLeadSubmitSchema,
   type EventLeadFormTypeId
 } from "@/lib/event-leads";
@@ -15,6 +17,41 @@ import {
   updateEventLead,
   updateEventLeadStatus
 } from "@/lib/event-leads-db";
+import {
+  normalizeImportRow,
+  parseDelimitedTable
+} from "@/lib/marketing-import";
+
+function coerceFormType(raw: string | null | undefined): "practice_survey" | "consumer_lead" {
+  const v = (raw || "").trim().toLowerCase();
+  if (v === "consumer_lead" || v === "consumer" || v === "abundance") return "consumer_lead";
+  return "practice_survey";
+}
+
+function rowToLeadInput(row: Record<string, string>) {
+  const n = normalizeImportRow(row);
+  return {
+    formType: coerceFormType(n.formType),
+    eventName: n.eventName || LONG_BEACH_EXPO_2026.eventName,
+    eventDates: n.eventDates || LONG_BEACH_EXPO_2026.eventDates,
+    eventKey: n.eventKey || LONG_BEACH_EXPO_2026.eventKey,
+    fullName: n.fullName,
+    firstName: n.firstName,
+    lastName: n.lastName,
+    email: n.email,
+    phoneMobile: n.phoneMobile,
+    city: n.city,
+    state: n.state,
+    zip: n.zip,
+    persona: n.persona,
+    category: n.category,
+    interest: n.interest,
+    entryPath: n.entryPath,
+    refCode: n.refCode || TERRY_FACILITATOR_REF_CODE,
+    notes: n.notes,
+    autoReply: false
+  };
+}
 
 export async function GET(request: Request) {
   if (!(await isAdminSession())) {
@@ -40,7 +77,10 @@ export async function GET(request: Request) {
       });
     } catch {
       return NextResponse.json(
-        { error: "Extracts file not found on server (docs/lead-card-scans/long-beach-2026-08/extracts.json)." },
+        {
+          error:
+            "Extracts file not found on server (docs/lead-card-scans/long-beach-2026-08/extracts.json)."
+        },
         { status: 404 }
       );
     }
@@ -97,9 +137,9 @@ export async function POST(request: Request) {
       const scanId = typeof row?.scanId === "string" ? row.scanId : undefined;
       const parsed = eventLeadSubmitSchema.safeParse({
         formType: row.formType,
-        eventName: row.eventName || "Holistic Healing Expo - Long Beach",
-        eventDates: row.eventDates || "2026-08-01 / 2026-08-02",
-        eventKey: row.eventKey || "holistic-healing-expo-long-beach-2026-08",
+        eventName: row.eventName || LONG_BEACH_EXPO_2026.eventName,
+        eventDates: row.eventDates || LONG_BEACH_EXPO_2026.eventDates,
+        eventKey: row.eventKey || LONG_BEACH_EXPO_2026.eventKey,
         fullName: row.fullName,
         firstName: row.firstName,
         lastName: row.lastName,
@@ -113,6 +153,7 @@ export async function POST(request: Request) {
         category: row.category,
         interest: row.interest,
         entryPath: row.entryPath,
+        refCode: row.refCode || TERRY_FACILITATOR_REF_CODE,
         notes: row.notes,
         sourceScanPath: row.sourceScanPath,
         autoReply: false,
@@ -139,6 +180,75 @@ export async function POST(request: Request) {
         await updateEventLeadStatus(lead.id, "paused");
       }
       results.push({ scanId, id: lead.id, skipped: false });
+    }
+    return NextResponse.json({
+      imported: results.filter((r) => r.id && !r.skipped).length,
+      skipped: results.filter((r) => r.skipped).length,
+      errors: results.filter((r) => r.error).length,
+      results
+    });
+  }
+
+  if (body?.importDatabase === true) {
+    let batch: Record<string, string>[] = [];
+    if (typeof body.text === "string" && body.text.trim()) {
+      batch = parseDelimitedTable(body.text);
+    } else if (Array.isArray(body.rows)) {
+      batch = (body.rows as unknown[]).map((raw) => {
+        if (!raw || typeof raw !== "object") return {};
+        const out: Record<string, string> = {};
+        for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+          if (v == null) continue;
+          out[k] = typeof v === "string" ? v : String(v);
+        }
+        return out;
+      });
+    } else if (Array.isArray(body.leads)) {
+      batch = (body.leads as unknown[]).map((raw) => {
+        if (!raw || typeof raw !== "object") return {};
+        const out: Record<string, string> = {};
+        for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+          if (v == null || typeof v === "object") continue;
+          out[k] = typeof v === "string" ? v : String(v);
+        }
+        return out;
+      });
+    }
+    if (batch.length > 500) {
+      return NextResponse.json(
+        { error: "Import batch too large (max 500)." },
+        { status: 400 }
+      );
+    }
+    if (!batch.length) {
+      return NextResponse.json(
+        { error: "No rows to import. Upload CSV/TSV or JSON with name/email columns." },
+        { status: 400 }
+      );
+    }
+    const results: { id?: string; skipped?: boolean; error?: string }[] = [];
+    for (const row of batch) {
+      const parsed = eventLeadSubmitSchema.safeParse(rowToLeadInput(row));
+      if (!parsed.success) {
+        results.push({ error: "invalid" });
+        continue;
+      }
+      const email = parsed.data.email;
+      if (email) {
+        const existing = await findEventLeadByEmailAndEvent(
+          email,
+          parsed.data.eventKey ?? null
+        );
+        if (existing) {
+          results.push({ id: existing.id, skipped: true });
+          continue;
+        }
+      }
+      const lead = await createEventLead(parsed.data, { createdByEmail: adminEmail });
+      if (row.status === "paused") {
+        await updateEventLeadStatus(lead.id, "paused");
+      }
+      results.push({ id: lead.id, skipped: false });
     }
     return NextResponse.json({
       imported: results.filter((r) => r.id && !r.skipped).length,

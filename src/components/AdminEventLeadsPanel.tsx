@@ -16,6 +16,8 @@ import {
   EVENT_LEAD_WELLNESS_FOCUS,
   EXPO_PRACTICE_DEFAULTS,
   LONG_BEACH_EXPO_2026,
+  TERRY_FACILITATOR_REF_CODE,
+  TERRY_FACILITATOR_REF_LABEL,
   displayLeadName,
   type EventLeadFormTypeId,
   type EventLeadRecord
@@ -26,6 +28,7 @@ import {
   OUTREACH_INTERESTS,
   OUTREACH_PERSONAS
 } from "@/lib/marketing-reference";
+import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 
 type Props = {
   open: boolean;
@@ -50,6 +53,7 @@ type LeadFormState = {
   category: string;
   interest: string;
   entryPath: string;
+  refCode: string;
   capturedBy: string;
   notes: string;
   primaryOccupation: string;
@@ -79,6 +83,7 @@ function emptyAddForm(): LeadFormState {
     category: EXPO_PRACTICE_DEFAULTS.category,
     interest: EXPO_PRACTICE_DEFAULTS.interest,
     entryPath: EXPO_PRACTICE_DEFAULTS.entryPath,
+    refCode: TERRY_FACILITATOR_REF_CODE,
     capturedBy: "",
     notes: "",
     primaryOccupation: "",
@@ -125,6 +130,7 @@ function formFromLead(lead: EventLeadRecord): LeadFormState {
     category: lead.category || "",
     interest: lead.interest || "",
     entryPath: lead.entryPath || "",
+    refCode: TERRY_FACILITATOR_REF_CODE,
     capturedBy: lead.capturedBy || "",
     notes: lead.notes || "",
     primaryOccupation: String(practice.primaryOccupation || consumer.position || ""),
@@ -184,6 +190,7 @@ function bodyFromForm(form: LeadFormState) {
     category: form.category.trim() || null,
     interest: form.interest.trim() || null,
     entryPath: form.entryPath.trim() || null,
+    refCode: form.refCode.trim() || TERRY_FACILITATOR_REF_CODE,
     capturedBy: form.capturedBy.trim() || null,
     notes: form.notes.trim() || null,
     autoReply: false,
@@ -199,6 +206,14 @@ export default function AdminEventLeadsPanel({ open }: Props) {
   const [filterEventKey, setFilterEventKey] = useState("");
   const [mode, setMode] = useState<"view" | "edit" | "add">("view");
   const [form, setForm] = useState<LeadFormState>(emptyAddForm);
+  type LeadSubKey = "cards" | "importDb" | "list";
+  const [openSubs, setOpenSubs] = useState<Record<LeadSubKey, boolean>>({
+    cards: false,
+    importDb: false,
+    list: false
+  });
+  const importFileRef = useRef<HTMLInputElement | null>(null);
+  const [importBusy, setImportBusy] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -246,6 +261,40 @@ export default function AdminEventLeadsPanel({ open }: Props) {
     setSelectedId(null);
     setForm(emptyAddForm());
     setMessage(null);
+    setOpenSubs((prev) => ({ ...prev, cards: true }));
+  }
+
+  function toggleSub(key: LeadSubKey) {
+    setOpenSubs((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  async function importDatabaseFromFile(file: File) {
+    setImportBusy(true);
+    setMessage(null);
+    try {
+      const text = await file.text();
+      const res = await fetch("/api/admin/marketing/event-leads", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ importDatabase: true, text })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage(data.error || "Database import failed.");
+        return;
+      }
+      setMessage(
+        `Imported ${data.imported ?? 0}, skipped ${data.skipped ?? 0}, errors ${data.errors ?? 0}. Referral default: ${TERRY_FACILITATOR_REF_CODE}.`
+      );
+      setOpenSubs((prev) => ({ ...prev, list: true }));
+      await load();
+    } catch {
+      setMessage("Database import failed.");
+    } finally {
+      setImportBusy(false);
+      if (importFileRef.current) importFileRef.current.value = "";
+    }
   }
 
   function openEdit(lead: EventLeadRecord) {
@@ -441,35 +490,87 @@ export default function AdminEventLeadsPanel({ open }: Props) {
       : `/lead/practice?key=${LONG_BEACH_EXPO_2026.eventKey}`;
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
-      <div className="card">
-        <strong>Digital lead cards</strong>
-        <p style={{ margin: "8px 0", fontSize: 14, color: "#4b5563" }}>
-          QR/link for attendees, or add/edit here. Practice survey defaults to Chris / Coaches /
-          Long Beach Expo.
-        </p>
-        <p style={{ fontSize: 13, marginBottom: 12 }}>
-          Practice QR:{" "}
-          <a href={practiceUrl} target="_blank" rel="noreferrer">
-            {practiceUrl}
-          </a>
-        </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          <button type="button" className="button" onClick={openAdd}>
-            Add lead
-          </button>
-          <button type="button" className="button button-secondary" onClick={() => void load()}>
-            Refresh
-          </button>
-          <button
-            type="button"
-            className="button button-secondary"
-            onClick={() => void importExtractsFile()}
-          >
-            Import extracts JSON batch
-          </button>
-        </div>
-        {message && <p style={{ marginTop: 10, fontSize: 14 }}>{message}</p>}
+    <div style={{ display: "grid", gap: 12 }}>
+      <p style={{ margin: 0, fontSize: 13, color: "#4b5563" }}>
+        Event leads sync into Outreach. Default referral code:{" "}
+        <strong>{TERRY_FACILITATOR_REF_LABEL}</strong> unless you set another.
+      </p>
+
+      <div>
+        <button
+          type="button"
+          className={adminSectionToggleClass(openSubs.cards, true)}
+          aria-expanded={openSubs.cards}
+          onClick={() => toggleSub("cards")}
+        >
+          {openSubs.cards ? "▼" : "▶"} Digital lead cards
+        </button>
+        {openSubs.cards ? (
+          <div className="card" style={{ marginTop: 10 }}>
+            <p style={{ margin: "0 0 8px", fontSize: 14, color: "#4b5563" }}>
+              QR/link for attendees, or add/edit here. Practice survey defaults to Chris / Coaches /
+              Long Beach Expo. Referral defaults to Terry as facilitator.
+            </p>
+            <p style={{ fontSize: 13, marginBottom: 12 }}>
+              Practice QR:{" "}
+              <a href={practiceUrl} target="_blank" rel="noreferrer">
+                {practiceUrl}
+              </a>
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <button type="button" className="button" onClick={openAdd}>
+                Add lead
+              </button>
+              <button type="button" className="button button-secondary" onClick={() => void load()}>
+                Refresh
+              </button>
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={() => void importExtractsFile()}
+              >
+                Import Long Beach extracts JSON
+              </button>
+            </div>
+            {message && <p style={{ marginTop: 10, fontSize: 14 }}>{message}</p>}
+          </div>
+        ) : null}
+      </div>
+
+      <div>
+        <button
+          type="button"
+          className={adminSectionToggleClass(openSubs.importDb, true)}
+          aria-expanded={openSubs.importDb}
+          onClick={() => toggleSub("importDb")}
+        >
+          {openSubs.importDb ? "▼" : "▶"} Import lead database
+        </button>
+        {openSubs.importDb ? (
+          <div className="card" style={{ marginTop: 10 }}>
+            <p style={{ margin: "0 0 8px", fontSize: 14, color: "#4b5563" }}>
+              Upload a CSV, TSV, or JSON export (columns like name, email, phone, city, notes).
+              Missing referral codes get Terry&apos;s facilitator code ({TERRY_FACILITATOR_REF_CODE}).
+              Duplicates by email + event are skipped.
+            </p>
+            <input
+              ref={importFileRef}
+              type="file"
+              accept=".csv,.tsv,.txt,.json,text/csv,application/json"
+              disabled={importBusy}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void importDatabaseFromFile(file);
+              }}
+            />
+            {importBusy ? (
+              <p style={{ marginTop: 8, fontSize: 13 }}>Importing…</p>
+            ) : null}
+            {message && openSubs.importDb ? (
+              <p style={{ marginTop: 10, fontSize: 14 }}>{message}</p>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {(mode === "add" || mode === "edit") && (
@@ -716,6 +817,17 @@ export default function AdminEventLeadsPanel({ open }: Props) {
               </select>
             </label>
             <label>
+              Referral / facilitator code
+              <input
+                value={form.refCode}
+                onChange={(e) => setForm((f) => ({ ...f, refCode: e.target.value }))}
+                placeholder={TERRY_FACILITATOR_REF_CODE}
+              />
+              <span style={{ display: "block", fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+                Default: Terry Brussel-Rogers facilitator ({TERRY_FACILITATOR_REF_CODE})
+              </span>
+            </label>
+            <label>
               Captured by
               <input
                 value={form.capturedBy}
@@ -831,7 +943,18 @@ export default function AdminEventLeadsPanel({ open }: Props) {
       )}
 
       {showingList && (
-      <div className="card">
+      <div>
+        <button
+          type="button"
+          className={adminSectionToggleClass(openSubs.list, true)}
+          aria-expanded={openSubs.list}
+          onClick={() => toggleSub("list")}
+        >
+          {openSubs.list ? "▼" : "▶"} Saved event leads ({leads.length}
+          {status === "loading" ? "…" : ""})
+        </button>
+        {openSubs.list ? (
+      <div className="card" style={{ marginTop: 10 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
           <input
             placeholder="Filter event key (optional)"
@@ -912,6 +1035,8 @@ export default function AdminEventLeadsPanel({ open }: Props) {
             </tbody>
           </table>
         </div>
+      </div>
+        ) : null}
       </div>
       )}
 

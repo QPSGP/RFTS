@@ -264,6 +264,7 @@ export async function createEventLead(
       persona: input.persona,
       entryPath: input.entryPath,
       contact: [input.email, input.phoneMobile].filter(Boolean).join(" · ") || null,
+      refCode: input.refCode ?? null,
       status: "prospect",
       notes: [
         `Event lead (${input.formType})`,
@@ -479,6 +480,7 @@ export async function updateEventLead(
       persona: lead.persona,
       entryPath: lead.entryPath,
       contact: [lead.email, lead.phoneMobile].filter(Boolean).join(" · ") || null,
+      refCode: input.refCode ?? null,
       notes: [
         `Event lead (${lead.formType})`,
         lead.eventName,

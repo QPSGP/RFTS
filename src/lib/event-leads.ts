@@ -31,6 +31,14 @@ export const EVENT_LEAD_STATUSES = [
 
 export type EventLeadStatusId = (typeof EVENT_LEAD_STATUSES)[number]["id"];
 
+/**
+ * Default referral / affiliate code for event leads → outreach (Terry Brussel-Rogers
+ * as facilitator), unless a row or form explicitly sets another ref.
+ */
+export const TERRY_FACILITATOR_REF_CODE = "6051C794";
+export const TERRY_FACILITATOR_REF_LABEL =
+  "Terry Brussel-Rogers (facilitator) — 6051C794";
+
 /** Default tagging for Holistic Health Expo practice surveys → Chris. */
 export const EXPO_PRACTICE_DEFAULTS = {
   formType: "practice_survey" as EventLeadFormTypeId,
@@ -39,7 +47,8 @@ export const EXPO_PRACTICE_DEFAULTS = {
   interest: "Facilitator / managed memberships",
   entryPath: "Facilitator / Managed",
   eventName: "Holistic Healing Expo - Long Beach",
-  eventDates: "2026-08-01 / 2026-08-02"
+  eventDates: "2026-08-01 / 2026-08-02",
+  refCode: TERRY_FACILITATOR_REF_CODE
 };
 
 export const LONG_BEACH_EXPO_2026 = {
@@ -169,6 +178,8 @@ export const eventLeadCoreSchema = z.object({
   category: optionalString,
   interest: optionalString,
   entryPath: optionalString,
+  /** Outreach / signup referral code; defaults to Terry facilitator when omitted. */
+  refCode: optionalString,
   capturedBy: optionalString,
   notes: optionalString,
   sourceScanPath: optionalString,
@@ -326,23 +337,29 @@ export function applyLeadDefaults(
     phoneMobile: normalizeLeadPhone(input.phoneMobile ?? null)
   };
 
+  const withTerryRef = {
+    ...base,
+    refCode: (base.refCode || "").trim() || TERRY_FACILITATOR_REF_CODE
+  };
+
   if (formType === "practice_survey") {
     return {
-      ...base,
-      persona: base.persona || EXPO_PRACTICE_DEFAULTS.persona,
-      category: base.category || EXPO_PRACTICE_DEFAULTS.category,
-      interest: base.interest || EXPO_PRACTICE_DEFAULTS.interest,
-      entryPath: base.entryPath || EXPO_PRACTICE_DEFAULTS.entryPath,
-      eventName: base.eventName || EXPO_PRACTICE_DEFAULTS.eventName,
-      eventDates: base.eventDates || EXPO_PRACTICE_DEFAULTS.eventDates
+      ...withTerryRef,
+      persona: withTerryRef.persona || EXPO_PRACTICE_DEFAULTS.persona,
+      category: withTerryRef.category || EXPO_PRACTICE_DEFAULTS.category,
+      interest: withTerryRef.interest || EXPO_PRACTICE_DEFAULTS.interest,
+      entryPath: withTerryRef.entryPath || EXPO_PRACTICE_DEFAULTS.entryPath,
+      eventName: withTerryRef.eventName || EXPO_PRACTICE_DEFAULTS.eventName,
+      eventDates: withTerryRef.eventDates || EXPO_PRACTICE_DEFAULTS.eventDates
     };
   }
 
   return {
-    ...base,
+    ...withTerryRef,
+    entryPath: withTerryRef.entryPath || "Facilitator / Managed",
     consumer: {
       offerCode: "abundance-magnet",
-      ...base.consumer
+      ...withTerryRef.consumer
     }
   };
 }

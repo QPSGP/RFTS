@@ -61,15 +61,33 @@ describe("event-leads", () => {
     expect(parsed.success).toBe(false);
   });
 
-  it("accepts null practice/consumer payloads from vision extracts", () => {
-    const parsed = eventLeadSubmitSchema.safeParse({
-      formType: "consumer_lead",
-      eventName: "Holistic Healing Expo - Long Beach",
-      fullName: "Test Lead",
-      email: "test@example.com",
-      practice: null,
-      consumer: null
+  it("defaults referral code to Terry facilitator for all event leads", () => {
+    const practice = applyLeadDefaults({
+      formType: "practice_survey",
+      eventName: "Expo",
+      fullName: "Alex Example",
+      email: "alex@example.com"
     });
-    expect(parsed.success).toBe(true);
+    expect(practice.refCode).toBe("6051C794");
+
+    const consumer = applyLeadDefaults({
+      formType: "consumer_lead",
+      eventName: "Expo",
+      fullName: "Pat Example",
+      email: "pat@example.com"
+    });
+    expect(consumer.refCode).toBe("6051C794");
+    expect(consumer.entryPath).toBe("Facilitator / Managed");
+  });
+
+  it("keeps an explicit referral override", () => {
+    const lead = applyLeadDefaults({
+      formType: "consumer_lead",
+      eventName: "Expo",
+      fullName: "Override",
+      email: "override@example.com",
+      refCode: "ABCD1234"
+    });
+    expect(lead.refCode).toBe("ABCD1234");
   });
 });

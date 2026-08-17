@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 import {
@@ -18,13 +18,13 @@ import {
 } from "@/lib/marketing-reference";
 import AdminOutreachCrmPanel from "@/components/AdminOutreachCrmPanel";
 import AdminEventLeadsPanel from "@/components/AdminEventLeadsPanel";
+import { TERRY_FACILITATOR_REF_CODE } from "@/lib/event-leads";
 
 const marketingSections = {
   overview: false,
   blog: false,
   landing: false,
-  leads: false,
-  outreach: false,
+  leadsOutreach: false,
   affiliates: false,
   reference: false
 } as const;
@@ -114,7 +114,7 @@ const emptyForm = {
   persona: "",
   entryPath: "",
   contact: "",
-  refCode: "",
+  refCode: TERRY_FACILITATOR_REF_CODE,
   status: "prospect",
   notes: "",
   interest: "",
@@ -169,12 +169,23 @@ export default function AdminMarketing() {
 
   const [copied, setCopied] = useState<string | null>(null);
 
-  type OutreachSubKey = "addTarget" | "addTemplate" | "savedTemplates";
+  type OutreachSubKey =
+    | "eventLeads"
+    | "importOutreach"
+    | "outreachList"
+    | "addTarget"
+    | "addTemplate"
+    | "savedTemplates";
   const [openOutreachSubs, setOpenOutreachSubs] = useState<Record<OutreachSubKey, boolean>>({
+    eventLeads: false,
+    importOutreach: false,
+    outreachList: false,
     addTarget: false,
     addTemplate: false,
     savedTemplates: false
   });
+  const outreachImportRef = useRef<HTMLInputElement | null>(null);
+  const [outreachImportBusy, setOutreachImportBusy] = useState(false);
 
   const toggleOutreachSub = (key: OutreachSubKey) => {
     setOpenOutreachSubs((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -221,13 +232,13 @@ export default function AdminMarketing() {
   }, []);
 
   useEffect(() => {
-    if (openSections.outreach && !targetsLoaded) {
+    if (openSections.leadsOutreach && !targetsLoaded) {
       loadTargets();
     }
-    if (openSections.outreach && !templatesLoaded) {
+    if (openSections.leadsOutreach && !templatesLoaded) {
       loadTemplates();
     }
-  }, [openSections.outreach, targetsLoaded, templatesLoaded, loadTargets, loadTemplates]);
+  }, [openSections.leadsOutreach, targetsLoaded, templatesLoaded, loadTargets, loadTemplates]);
 
   const toggleSection = (key: MarketingSection, id: string) => {
     setOpenSections((prev) => {
@@ -288,7 +299,7 @@ export default function AdminMarketing() {
       persona: form.persona || null,
       entryPath: form.entryPath || null,
       contact: form.contact.trim() || null,
-      refCode: form.refCode.trim() || null,
+      refCode: form.refCode.trim() || TERRY_FACILITATOR_REF_CODE,
       status: form.status || "prospect",
       notes: form.notes.trim() || null,
       interest: form.interest.trim() || null,
@@ -324,7 +335,7 @@ export default function AdminMarketing() {
       persona: t.persona ?? "",
       entryPath: t.entryPath ?? "",
       contact: t.contact ?? "",
-      refCode: t.refCode ?? "",
+      refCode: t.refCode || TERRY_FACILITATOR_REF_CODE,
       status: t.status || "prospect",
       notes: t.notes ?? "",
       interest: t.interest ?? "",
@@ -397,6 +408,36 @@ export default function AdminMarketing() {
           ? `Added ${data.added} starter target(s).`
           : "No new starter targets (all already in the tracker)."
       );
+    }
+  };
+
+  const importOutreachDatabase = async (file: File) => {
+    setOutreachImportBusy(true);
+    setOutreachStatus(null);
+    try {
+      const text = await file.text();
+      const res = await fetch("/api/admin/marketing/outreach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ importDatabase: true, text })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setOutreachStatus(data.error || "Outreach import failed.");
+        return;
+      }
+      if (Array.isArray(data.targets)) setTargets(data.targets);
+      else await loadTargets();
+      setOutreachStatus(
+        `Imported ${data.imported ?? 0}, skipped ${data.skipped ?? 0}, errors ${data.errors ?? 0}. Default ref: ${TERRY_FACILITATOR_REF_CODE}.`
+      );
+      setOpenOutreachSubs((prev) => ({ ...prev, outreachList: true }));
+    } catch {
+      setOutreachStatus("Outreach import failed.");
+    } finally {
+      setOutreachImportBusy(false);
+      if (outreachImportRef.current) outreachImportRef.current.value = "";
     }
   };
 
@@ -549,19 +590,11 @@ export default function AdminMarketing() {
           </button>
           <button
             type="button"
-            className={adminSectionToggleClass(openSections.leads, true)}
-            aria-expanded={openSections.leads}
-            onClick={() => toggleSection("leads", "marketing-leads")}
+            className={adminSectionToggleClass(openSections.leadsOutreach, true)}
+            aria-expanded={openSections.leadsOutreach}
+            onClick={() => toggleSection("leadsOutreach", "marketing-leads-outreach")}
           >
-            Event leads
-          </button>
-          <button
-            type="button"
-            className={adminSectionToggleClass(openSections.outreach, true)}
-            aria-expanded={openSections.outreach}
-            onClick={() => toggleSection("outreach", "marketing-outreach")}
-          >
-            Outreach tracker
+            Leads &amp; outreach
           </button>
           <button
             type="button"
@@ -765,22 +798,68 @@ export default function AdminMarketing() {
         </section>
       )}
 
-      {/* Event leads */}
-      {openSections.leads && (
-        <section id="marketing-leads" style={{ marginBottom: 24 }}>
-          <h2 style={{ marginBottom: 12, fontSize: 18 }}>Event leads</h2>
-          <AdminEventLeadsPanel open={openSections.leads} />
-        </section>
-      )}
-
-      {/* Outreach tracker */}
-      {openSections.outreach && (
-        <section id="marketing-outreach" style={{ marginBottom: 24, minWidth: 0 }}>
-          <h2 style={{ marginBottom: 12, fontSize: 18 }}>Outreach tracker / CRM</h2>
-          <p style={{ color: "#4b5563", marginBottom: 12 }}>
-            Flow: capture in Event leads or Add target → open CRM → choose marketing process → draft
-            email → approve → send. Open one record at a time so the page stays readable.
+      {/* Leads & outreach (combined) */}
+      {openSections.leadsOutreach && (
+        <section id="marketing-leads-outreach" style={{ marginBottom: 24, minWidth: 0 }}>
+          <h2 style={{ marginBottom: 8, fontSize: 18 }}>Leads &amp; outreach</h2>
+          <p style={{ color: "#4b5563", marginBottom: 12, fontSize: 14 }}>
+            Capture event leads, import contact databases, then work the outreach CRM. Each process
+            below starts collapsed. New event leads and imports default to Terry Brussel-Rogers
+            facilitator referral code <code>{TERRY_FACILITATOR_REF_CODE}</code> unless you set
+            another.
           </p>
+
+          <div style={{ marginBottom: 12 }}>
+            <button
+              type="button"
+              className={adminSectionToggleClass(openOutreachSubs.eventLeads, true)}
+              aria-expanded={openOutreachSubs.eventLeads}
+              onClick={() => toggleOutreachSub("eventLeads")}
+            >
+              {openOutreachSubs.eventLeads ? "▼" : "▶"} Event leads &amp; digital cards
+            </button>
+            {openOutreachSubs.eventLeads ? (
+              <div style={{ marginTop: 10 }}>
+                <AdminEventLeadsPanel open={openOutreachSubs.eventLeads} />
+              </div>
+            ) : null}
+          </div>
+
+          <div style={{ marginBottom: 12 }}>
+            <button
+              type="button"
+              className={adminSectionToggleClass(openOutreachSubs.importOutreach, true)}
+              aria-expanded={openOutreachSubs.importOutreach}
+              onClick={() => toggleOutreachSub("importOutreach")}
+            >
+              {openOutreachSubs.importOutreach ? "▼" : "▶"} Import outreach database
+            </button>
+            {openOutreachSubs.importOutreach ? (
+              <div className="card" style={{ marginTop: 10 }}>
+                <p style={{ margin: "0 0 8px", fontSize: 14, color: "#4b5563" }}>
+                  Upload CSV, TSV, or JSON (columns: name / organization, email, phone, notes,
+                  persona, category, ref). Missing refs get Terry&apos;s code. Duplicate
+                  organization names are skipped.
+                </p>
+                <input
+                  ref={outreachImportRef}
+                  type="file"
+                  accept=".csv,.tsv,.txt,.json,text/csv,application/json"
+                  disabled={outreachImportBusy}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void importOutreachDatabase(file);
+                  }}
+                />
+                {outreachImportBusy ? (
+                  <p style={{ marginTop: 8, fontSize: 13 }}>Importing…</p>
+                ) : null}
+                {outreachStatus && openOutreachSubs.importOutreach ? (
+                  <p style={{ marginTop: 10, fontSize: 14 }}>{outreachStatus}</p>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
 
           {!crmTarget ? (
             <>
@@ -890,12 +969,15 @@ export default function AdminMarketing() {
                 />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
-                Affiliate ref code
+                Affiliate / facilitator ref code
                 <input
                   value={form.refCode}
                   onChange={(e) => setForm((f) => ({ ...f, refCode: e.target.value }))}
-                  placeholder="Issued ?ref= code"
+                  placeholder={TERRY_FACILITATOR_REF_CODE}
                 />
+                <span style={{ fontSize: 12, color: "#6b7280" }}>
+                  Default: Terry Brussel-Rogers facilitator ({TERRY_FACILITATOR_REF_CODE})
+                </span>
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
                 Status
@@ -1220,6 +1302,19 @@ export default function AdminMarketing() {
             ) : null}
           </div>
 
+          <div style={{ marginBottom: 12 }}>
+            <button
+              type="button"
+              className={adminSectionToggleClass(openOutreachSubs.outreachList, true)}
+              aria-expanded={openOutreachSubs.outreachList}
+              onClick={() => toggleOutreachSub("outreachList")}
+            >
+              {openOutreachSubs.outreachList ? "▼" : "▶"} Outreach tracker (
+              {targets.length}
+              {!targetsLoaded ? "…" : ""})
+            </button>
+            {openOutreachSubs.outreachList ? (
+              <div style={{ marginTop: 10 }}>
           <div
             style={{
               display: "flex",
@@ -1321,6 +1416,9 @@ export default function AdminMarketing() {
               </p>
             )}
             {!targetsLoaded && <p style={{ padding: 8, color: "#6b7280", margin: 0 }}>Loading…</p>}
+          </div>
+              </div>
+            ) : null}
           </div>
             </>
           ) : null}
