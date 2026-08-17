@@ -23,6 +23,147 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "health-guided-meditation-vitality-sleep",
+    title:
+      "Health goals at night: guided meditation that supports vitality while you sleep",
+    metaTitle: "Health Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "Support health and vitality with guided meditation at bedtime and during sleep. Nightly reinforcement without another daytime wellness chore. Free trial.",
+    publishedAt: "2026-08-17",
+    readMinutes: 6,
+    excerpt:
+      "Health goals fail when they compete with an already full day. Guided meditation at bedtime and during sleep reinforces vitality, recovery, and kinder body habits when willpower is offline.",
+    goalSlug: "health",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for better health usually already know the basics: sleep, food, movement, stress. What they need is a way to keep those intentions alive when the calendar wins. Another daytime wellness app often becomes one more thing to skip.",
+          "Reach For The Stars treats Health as a prioritized goal. When health is in your rotation, guided meditations play while you fall asleep and, if you choose two audios per night, again during sleep - so body-supportive messages return without stealing an hour you do not have."
+        ]
+      },
+      {
+        heading: "Vitality is trained by repetition",
+        paragraphs: [
+          "Lasting health change is less about one perfect week and more about cues your nervous system hears often: rest is allowed, recovery matters, healthy choices can feel rewarding. Nightly practice places those cues in the quiet window before and during sleep.",
+          "When Health sits among your goals, your personalized lineup includes health-aligned recordings automatically. Explore our health page for how that landing path frames nightly reinforcement."
+        ]
+      },
+      {
+        heading: "Why bedtime beats another morning checklist",
+        paragraphs: [
+          "Morning routines help until life interrupts them. Bedtime is already on the calendar. A fixed Start Session flow - intro relaxation music, then your health-related audio as you drift, then optional reinforcement later in the night - builds consistency when motivation is lowest.",
+          "That rhythm supports people rebuilding after burnout, managing stress eating or low energy, and anyone who wants body and mind goals to share the same nightly practice."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits professionals who run on caffeine and residual stress, caregivers who put themselves last, and members who want health to feel like investment rather than punishment.",
+          "Visit the health landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Vitality and restorative rest (excerpt)",
+      quote:
+        "Your body knows how to restore… each breath softens tension… you choose care with ease… vitality returns night by night… you wake clearer and steadier…"
+    }
+  },
+  {
+    slug: "reduced-stress-guided-meditation-nervous-system-sleep",
+    title:
+      "Reduced stress: guided meditation that downshifts your nervous system while you sleep",
+    metaTitle: "Reduced Stress Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "Reduce stress with guided meditation at bedtime and during sleep. Nightly nervous-system downshift without another daytime calm app. Free trial.",
+    publishedAt: "2026-08-19",
+    readMinutes: 6,
+    excerpt:
+      "Reduced stress is not one deep breath in traffic. It is a repeatable downshift - guided at bedtime and during sleep - so your nervous system practices calm when the day can no longer pile on.",
+    topicSlug: "stress-relief",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for reduced stress often already tried breathing apps, walks, or journaling. Those tools help until the evening spiral starts: unfinished tasks, tense shoulders, a mind that will not power down. Adding another daytime protocol rarely survives a hard week.",
+          "Reach For The Stars supports stress relief through guided meditation while you fall asleep and, if you choose two audios per night, again during sleep. Calm becomes a nightly cue instead of a skill you must summon at 3 p.m."
+        ]
+      },
+      {
+        heading: "Your nervous system learns what you repeat",
+        paragraphs: [
+          "Stress relief sticks when the body rehearses safety and release regularly. Softening the jaw, lengthening the exhale, and returning to a settled baseline are patterns - and patterns respond to repetition in a receptive state.",
+          "When stress relief sits among your priorities, your rotation includes calm-aligned recordings automatically. Explore our stress relief page for how that landing path frames nightly downshift."
+        ]
+      },
+      {
+        heading: "Night is when load finally has nowhere to go",
+        paragraphs: [
+          "During the day, stress has jobs, kids, screens, and inboxes to hide behind. At bedtime it shows up as rumination. Meeting that moment with a fixed Start Session - intro music, then a stress-related recording - interrupts the loop without asking for more willpower.",
+          "Optional second playback during sleep reinforces the same calm language after the conscious mind has stepped aside. That is useful for shift workers, caregivers, and anyone whose stress peaks after dark."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits high-responsibility roles, people rebuilding after burnout, and anyone who wants emotional balance without another daytime meditation streak to maintain.",
+          "Visit the stress relief landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Nervous system downshift (excerpt)",
+      quote:
+        "Shoulders soften… breath lengthens… the day can wait… you are safe to settle now… calm returns as a familiar rhythm… stress loosens its grip night by night…"
+    }
+  },
+  {
+    slug: "wealth-guided-meditation-income-goals-sleep",
+    title:
+      "Wealth mindset while you sleep: guided meditation for income goals and financial calm",
+    metaTitle: "Wealth Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "Reinforce wealth and income goals with guided meditation at bedtime and during sleep. Nightly financial calm without another daytime hustle playlist. Free trial.",
+    publishedAt: "2026-08-21",
+    readMinutes: 6,
+    excerpt:
+      "Wealth goals stall when money anxiety steals sleep and sleep debt steals follow-through. Guided meditation at bedtime and during sleep reinforces income focus and financial calm in the same nightly practice.",
+    goalSlug: "wealth",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for a wealth mindset usually already consume podcasts, books, or sales trainings. The gap is overnight: worry about cash flow, quota, or clients keeps the nervous system activated, and the next day starts depleted. Another hustle playlist at 6 a.m. does not fix that loop.",
+          "Reach For The Stars treats Wealth as a prioritized goal. When wealth is in your rotation, guided meditations play while you fall asleep and, if you choose two audios per night, again during sleep - so earning, value, and steady follow-through get reinforced without another daytime chore."
+        ]
+      },
+      {
+        heading: "Income focus needs a calm nervous system",
+        paragraphs: [
+          "Financial growth is practical and psychological. You need actions - offers, outreach, craft - and you need composure under pressure. Nightly suggestion can support both: clarity about worth, willingness to ask, and recovery after a lost deal.",
+          "When Wealth sits among your goals, your personalized lineup includes wealth-aligned recordings automatically. Explore our wealth page for how that landing path frames nightly reinforcement."
+        ]
+      },
+      {
+        heading: "Why sleep-side practice beats more daytime grind",
+        paragraphs: [
+          "Daytime learning competes with delivery work. Bedtime is already reserved. A fixed Start Session cue installs wealth-related language when defenses are down - in a useful way - then optional later-night playback deepens the same themes.",
+          "That pattern fits sales professionals, coaches and healers raising income, and entrepreneurs who want spiritual growth and profit in the same system."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits anyone whose income is tied to confidence and consistency, and anyone who wants money goals without turning every evening into more content consumption.",
+          "Visit the wealth landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Worth, income, and calm follow-through (excerpt)",
+      quote:
+        "You recognize your value… opportunities feel approachable… you follow through with steady confidence… financial calm and focused action grow together… night by night…"
+    }
+  },
+  {
     slug: "self-awareness-guided-meditation-insight-sleep",
     title:
       "Greater self-awareness: guided meditation that builds insight while you sleep",

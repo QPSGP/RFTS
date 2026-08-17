@@ -1,4 +1,4 @@
-import { BLOG_POSTS } from "@/lib/blog-posts";
+import { getBlogPostsNewestFirst } from "@/lib/blog-posts";
 import { GOAL_LANDING_PAGES } from "@/lib/goal-landing-pages";
 import { WELLNESS_BENEFIT_LINKS } from "@/lib/meditation-benefits";
 import { buildAllAudioLandingContent } from "@/lib/audio-landing";
@@ -78,7 +78,7 @@ export function buildSitePageIndex(library: LibraryItem[]): SitePageEntry[] {
     });
   }
 
-  for (const post of BLOG_POSTS) {
+  for (const post of getBlogPostsNewestFirst()) {
     entries.push({
       category: "blog",
       categoryLabel: CATEGORY_LABELS.blog,
