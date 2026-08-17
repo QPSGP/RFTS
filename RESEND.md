@@ -12,12 +12,26 @@ When the user asks for **“Resend” info** or **Resend email setup**, use this
 | Variable | Purpose |
 |----------|---------|
 | `RESEND_API_KEY` | Required for any outbound email. From [resend.com](https://resend.com) → API Keys. |
+| `RESEND_WEBHOOK_SECRET` | Signing secret for `/api/webhooks/resend` (bounce / complaint). From Resend → Webhooks → endpoint details. |
 | `EMAIL_FROM` | Sender, e.g. `Reach For The Stars <noreply@yourdomain.com>`. Use a verified domain. |
 | `NEXT_PUBLIC_APP_URL` | Base URL for links in emails (password reset, etc.). |
 | `EMAIL_STAFF_BCC` | Comma- or semicolon-separated addresses (e.g. Terry, Richard). Merged into **BCC** on automated member emails. `sendEmail()` dedupes BCC against the primary `to` so staff are not duplicated. |
 | `REPORT_ISSUE_EMAIL` | Inbox for **Report an issue** submissions (internal). If unset, defaults apply per code/README. |
 
 Set the same variables on **Vercel** → Project → Settings → Environment Variables for production.
+
+## Bounce / complaint webhook (Marketing)
+
+1. In Resend → **Webhooks** → Add endpoint:
+   - URL: `https://reachforthestars.today/api/webhooks/resend`
+   - Events: **`email.bounced`**, **`email.complained`**
+2. Copy the endpoint **signing secret** into Vercel as **`RESEND_WEBHOOK_SECRET`** and redeploy.
+3. On bounce or spam complaint, the app:
+   - Logs a row in **Admin → Marketing → Leads & outreach → Email bounces & complaints**
+   - Sets matching **outreach** targets to **do not email** (contact email match, or email found in the target contact field)
+   - Adds a CRM activity on those targets
+
+Idempotent via Svix message id (duplicate deliveries are ignored).
 
 ## Flows covered (all use `sendEmail` / templates in code)
 
@@ -41,4 +55,6 @@ Set the same variables on **Vercel** → Project → Settings → Environment Va
 
 - `src/lib/email.ts` - `sendEmail()`, staff BCC parsing, Resend client.
 - `src/lib/email-templates.ts` - HTML/text bodies and subjects.
+- `src/app/api/webhooks/resend/route.ts` - bounce / complaint webhook → Marketing log + outreach do-not-email.
+- `src/lib/email-delivery-events.ts` / `src/lib/resend-webhook.ts` - event storage and processing.
 - `src/app/api/member/forgot-password/route.ts`, `report-issue/route.ts`, onboarding, profile PATCH, `src/app/api/webhooks/stripe/route.ts`.

@@ -501,6 +501,31 @@ CREATE TABLE IF NOT EXISTS marketing_outreach_activities (
 CREATE INDEX IF NOT EXISTS marketing_outreach_activities_target_idx
   ON marketing_outreach_activities (target_id, created_at DESC);
 
+-- Resend bounce / complaint log (Admin Marketing)
+CREATE TABLE IF NOT EXISTS marketing_email_events (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider text NOT NULL DEFAULT 'resend',
+  event_type text NOT NULL,
+  svix_id text,
+  resend_email_id text,
+  recipient_email text,
+  subject text,
+  bounce_type text,
+  bounce_subtype text,
+  message text,
+  payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+  outreach_targets_updated integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS marketing_email_events_svix_uidx
+  ON marketing_email_events (svix_id)
+  WHERE svix_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS marketing_email_events_created_idx
+  ON marketing_email_events (created_at DESC);
+CREATE INDEX IF NOT EXISTS marketing_email_events_recipient_idx
+  ON marketing_email_events (lower(recipient_email))
+  WHERE recipient_email IS NOT NULL;
+
 -- Admin-editable staff / transactional email recipient lists
 CREATE TABLE IF NOT EXISTS email_staff_lists (
   list_key text PRIMARY KEY,

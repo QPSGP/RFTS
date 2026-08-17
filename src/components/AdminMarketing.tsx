@@ -172,6 +172,7 @@ export default function AdminMarketing() {
   type OutreachSubKey =
     | "eventLeads"
     | "importOutreach"
+    | "emailEvents"
     | "outreachList"
     | "addTarget"
     | "addTemplate"
@@ -179,6 +180,7 @@ export default function AdminMarketing() {
   const [openOutreachSubs, setOpenOutreachSubs] = useState<Record<OutreachSubKey, boolean>>({
     eventLeads: false,
     importOutreach: false,
+    emailEvents: false,
     outreachList: false,
     addTarget: false,
     addTemplate: false,
@@ -186,6 +188,20 @@ export default function AdminMarketing() {
   });
   const outreachImportRef = useRef<HTMLInputElement | null>(null);
   const [outreachImportBusy, setOutreachImportBusy] = useState(false);
+
+  type EmailDeliveryEvent = {
+    id: string;
+    eventType: string;
+    recipientEmail: string | null;
+    subject: string | null;
+    bounceType: string | null;
+    bounceSubtype: string | null;
+    message: string | null;
+    outreachTargetsUpdated: number;
+    createdAt: string;
+  };
+  const [emailEvents, setEmailEvents] = useState<EmailDeliveryEvent[]>([]);
+  const [emailEventsLoaded, setEmailEventsLoaded] = useState(false);
 
   const toggleOutreachSub = (key: OutreachSubKey) => {
     setOpenOutreachSubs((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -231,6 +247,18 @@ export default function AdminMarketing() {
     setTemplatesLoaded(true);
   }, []);
 
+  const loadEmailEvents = useCallback(async () => {
+    const res = await fetch("/api/admin/marketing/email-events?limit=50", {
+      credentials: "include",
+      cache: "no-store"
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setEmailEvents(Array.isArray(data.events) ? data.events : []);
+    }
+    setEmailEventsLoaded(true);
+  }, []);
+
   useEffect(() => {
     if (openSections.leadsOutreach && !targetsLoaded) {
       loadTargets();
@@ -239,6 +267,12 @@ export default function AdminMarketing() {
       loadTemplates();
     }
   }, [openSections.leadsOutreach, targetsLoaded, templatesLoaded, loadTargets, loadTemplates]);
+
+  useEffect(() => {
+    if (openOutreachSubs.emailEvents) {
+      void loadEmailEvents();
+    }
+  }, [openOutreachSubs.emailEvents, loadEmailEvents]);
 
   const toggleSection = (key: MarketingSection, id: string) => {
     setOpenSections((prev) => {
@@ -857,6 +891,94 @@ export default function AdminMarketing() {
                 {outreachStatus && openOutreachSubs.importOutreach ? (
                   <p style={{ marginTop: 10, fontSize: 14 }}>{outreachStatus}</p>
                 ) : null}
+              </div>
+            ) : null}
+          </div>
+
+          <div style={{ marginBottom: 12 }}>
+            <button
+              type="button"
+              className={adminSectionToggleClass(openOutreachSubs.emailEvents, true)}
+              aria-expanded={openOutreachSubs.emailEvents}
+              onClick={() => toggleOutreachSub("emailEvents")}
+            >
+              {openOutreachSubs.emailEvents ? "▼" : "▶"} Email bounces &amp; complaints
+              {emailEventsLoaded ? ` (${emailEvents.length})` : ""}
+            </button>
+            {openOutreachSubs.emailEvents ? (
+              <div className="card" style={{ marginTop: 10 }}>
+                <p style={{ margin: "0 0 8px", fontSize: 14, color: "#4b5563" }}>
+                  Resend webhook events. Bounces and spam complaints auto-mark matching outreach
+                  targets as do-not-email. Configure{" "}
+                  <code>RESEND_WEBHOOK_SECRET</code> and point Resend at{" "}
+                  <code>/api/webhooks/resend</code>.
+                </p>
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  style={{ width: "auto", marginBottom: 10 }}
+                  onClick={() => void loadEmailEvents()}
+                >
+                  Refresh
+                </button>
+                {!emailEventsLoaded ? (
+                  <p style={{ margin: 0, color: "#6b7280", fontSize: 13 }}>Loading…</p>
+                ) : emailEvents.length === 0 ? (
+                  <p style={{ margin: 0, color: "#6b7280", fontSize: 13 }}>
+                    No bounce or complaint events logged yet.
+                  </p>
+                ) : (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ textAlign: "left", borderBottom: "1px solid #e5e7eb" }}>
+                          <th style={thStyle}>When</th>
+                          <th style={thStyle}>Type</th>
+                          <th style={thStyle}>Recipient</th>
+                          <th style={thStyle}>Subject</th>
+                          <th style={thStyle}>Detail</th>
+                          <th style={thStyle}>Outreach</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {emailEvents.map((ev) => (
+                          <tr key={ev.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                            <td style={tdStyle}>
+                              {(() => {
+                                try {
+                                  return new Date(ev.createdAt).toLocaleString(undefined, {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "numeric",
+                                    minute: "2-digit"
+                                  });
+                                } catch {
+                                  return formatDate(ev.createdAt);
+                                }
+                              })()}
+                            </td>
+                            <td style={tdStyle}>
+                              {ev.eventType === "complained" ? "Complaint" : "Bounce"}
+                            </td>
+                            <td style={tdStyle}>{ev.recipientEmail || "-"}</td>
+                            <td style={tdMutedStyle}>{ev.subject || "-"}</td>
+                            <td style={tdMutedStyle}>
+                              {[ev.bounceType, ev.bounceSubtype, ev.message]
+                                .filter(Boolean)
+                                .join(" · ") || "-"}
+                            </td>
+                            <td style={tdStyle}>
+                              {ev.outreachTargetsUpdated > 0
+                                ? `${ev.outreachTargetsUpdated} marked DNE`
+                                : "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             ) : null}
           </div>
