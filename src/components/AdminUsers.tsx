@@ -3194,8 +3194,14 @@ export default function AdminUsers() {
                                 });
                           const hasCat = (item: LibraryItem, cat: string) =>
                             (item.categories || []).some((c) => c.toLowerCase() === cat.toLowerCase());
-                          /** Personalized CGMR only - matches member schedule API (not first assigned track). */
-                          const cgmrTrack = assignedOrdered.find((item) => hasCat(item, "cgmr")) ?? null;
+                          /** Personalized CGMR only - newest allow-listed CGMR (matches schedule API). */
+                          const cgmrCandidates = assignedOrdered.filter((item) => hasCat(item, "cgmr"));
+                          const cgmrTrack =
+                            cgmrCandidates.slice().sort((a, b) => {
+                              const ta = Date.parse(String(a.createdAt || "")) || 0;
+                              const tb = Date.parse(String(b.createdAt || "")) || 0;
+                              return tb - ta;
+                            })[0] ?? null;
                           const pickByCode = (code: string) => {
                             const norm = stripSkuHyphens(code);
                             if (!norm) return null;

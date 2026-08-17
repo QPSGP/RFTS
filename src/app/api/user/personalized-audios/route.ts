@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { getUserSessionEmail } from "@/lib/user-auth";
 import { listPersonalizedLibraryForUser } from "@/lib/db";
-
-const isCgmr = (categories?: string[]) =>
-  (categories || []).some((category) => category.toLowerCase() === "cgmr");
+import { pickNewestMemberCgmr } from "@/lib/library-access";
 
 export async function GET() {
   const email = await getUserSessionEmail();
@@ -11,7 +9,8 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const items = await listPersonalizedLibraryForUser(email);
-  const personalized = items.filter((item) => isCgmr(item.categories));
+  const newest = pickNewestMemberCgmr(items, email);
+  const personalized = newest ? [newest] : [];
   return NextResponse.json({
     items: personalized.map((item) => ({
       id: item.id,

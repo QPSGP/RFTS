@@ -2499,6 +2499,73 @@ export const addEmailToLibraryItemAllowedList = async (
   return (rowCount ?? 0) > 0;
 };
 
+/** Remove email from a library item's allowed_user_emails (case-insensitive). */
+export const removeEmailFromLibraryItemAllowedList = async (
+  libraryItemId: string,
+  email: string
+): Promise<boolean> => {
+  await ensureLibrarySeeded();
+  const emailLower = email.trim().toLowerCase();
+  if (!emailLower) return false;
+  const { rowCount } = await sql`
+    UPDATE library_items
+    SET allowed_user_emails = COALESCE((
+      SELECT array_agg(e)
+      FROM unnest(COALESCE(allowed_user_emails, ARRAY[]::text[])) AS e
+      WHERE LOWER(e) <> ${emailLower}
+    ), ARRAY[]::text[])
+    WHERE id = ${libraryItemId}
+  `;
+  return (rowCount ?? 0) > 0;
+};
+
+/**
+ * Keep only keepLibraryItemId as this member's CGMR allow-list entry.
+ * Removes the member email from other CGMR items (does not delete library rows).
+ */
+export const revokeOtherMemberCgmrAllowListEntries = async (
+  memberEmail: string,
+  keepLibraryItemId: string
+): Promise<number> => {
+  await ensureLibrarySeeded();
+  const emailLower = memberEmail.trim().toLowerCase();
+  if (!emailLower || !keepLibraryItemId) return 0;
+  const { rows } = await sql<{ id: string }>`
+    SELECT id
+    FROM library_items
+    WHERE id <> ${keepLibraryItemId}
+      AND EXISTS (
+        SELECT 1 FROM unnest(COALESCE(categories, ARRAY[]::text[])) AS c
+        WHERE LOWER(c) = 'cgmr'
+      )
+      AND EXISTS (
+        SELECT 1 FROM unnest(COALESCE(allowed_user_emails, ARRAY[]::text[])) AS e
+        WHERE LOWER(e) = ${emailLower}
+      )
+  `;
+  let n = 0;
+  for (const row of rows) {
+    if (await removeEmailFromLibraryItemAllowedList(row.id, emailLower)) n += 1;
+  }
+  try {
+    await sql`
+      DELETE FROM member_audio_assignments
+      WHERE LOWER(user_email) = ${emailLower}
+        AND library_item_id <> ${keepLibraryItemId}
+        AND library_item_id IN (
+          SELECT id FROM library_items
+          WHERE EXISTS (
+            SELECT 1 FROM unnest(COALESCE(categories, ARRAY[]::text[])) AS c
+            WHERE LOWER(c) = 'cgmr'
+          )
+        )
+    `;
+  } catch {
+    // assignments table may be absent in some envs
+  }
+  return n;
+};
+
 /** Get the ordered list of library item IDs assigned to a member (for managed members). */
 export const getMemberAudioOrder = async (email: string): Promise<string[]> => {
   try {

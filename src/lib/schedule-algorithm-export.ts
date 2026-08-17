@@ -13,6 +13,7 @@ import {
   listLibrary
 } from "@/lib/db";
 import { SCHEDULE_MAX_NIGHTS } from "@/lib/schedule-limits";
+import { pickNewestMemberCgmr } from "@/lib/library-access";
 
 function hasCategory(item: { categories?: string[] }, cat: string): boolean {
   return (item.categories || []).some((c) => c.toLowerCase() === cat.toLowerCase());
@@ -50,12 +51,7 @@ export function resolveUserAssignedTrack(
   emailLower: string,
   assignedAudioIds: string[] | undefined
 ): LibraryItem | null {
-  const cgmrForMember =
-    filteredLibrary.find(
-      (item) =>
-        (item.allowedUserEmails || []).some((e) => e.toLowerCase() === emailLower) &&
-        hasCategory(item, "cgmr")
-    ) ?? null;
+  const cgmrForMember = pickNewestMemberCgmr(filteredLibrary, emailLower);
   const anyAllowListMatch =
     filteredLibrary.find((item) =>
       (item.allowedUserEmails || []).some((e) => e.toLowerCase() === emailLower)

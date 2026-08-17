@@ -6,6 +6,7 @@ import {
   getMemberProfileByUserId,
   getUserById,
   linkLgdIntakeCgmrLibraryItem,
+  revokeOtherMemberCgmrAllowListEntries,
   updateLibraryItem,
   type LgdIntakeRecord
 } from "@/lib/db";
@@ -429,6 +430,8 @@ export async function produceLgdCgmrForIntake(input: {
     libraryItemId,
     producedAudioUrl: audioUrl
   });
+
+  await revokeOtherMemberCgmrAllowListEntries(memberEmail, libraryItemId);
 
   const absoluteBed =
     bedPath && bedPath.startsWith("/") ? `${getPublicSiteUrl()}${bedPath}` : bedPath;

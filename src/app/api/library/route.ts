@@ -7,6 +7,7 @@ import {
   getLibraryItemIdBySkuCode,
   listLibrary,
   reorderLibraryItems,
+  revokeOtherMemberCgmrAllowListEntries,
   updateLibraryItem
 } from "@/lib/db";
 import { stripSkuHyphens } from "@/lib/sku-code";
@@ -89,6 +90,11 @@ export async function POST(request: Request) {
     isAdult: parsed.data.isAdult,
     inGeneralCatalog: parsed.data.inGeneralCatalog
   });
+  const isCgmr = (parsed.data.categories || []).some((c) => c.toLowerCase() === "cgmr");
+  const soleEmail = parsed.data.allowedUserEmails?.[0];
+  if (isCgmr && soleEmail && parsed.data.allowedUserEmails.length === 1) {
+    await revokeOtherMemberCgmrAllowListEntries(soleEmail, record.id);
+  }
   return NextResponse.json({ ok: true, record });
 }
 

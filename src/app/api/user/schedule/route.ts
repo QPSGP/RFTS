@@ -23,6 +23,7 @@ import {
 import { INTRO_RELAXATION_MUSIC_LABEL } from "@/lib/intro-relaxation-music";
 import { stripSkuHyphens } from "@/lib/sku-code";
 import { SCHEDULE_MAX_NIGHTS } from "@/lib/schedule-limits";
+import { pickNewestMemberCgmr } from "@/lib/library-access";
 
 const schema = z.object({
   /** Preview length; server extends this when the member has passed more nights than requested (see currentNight). */
@@ -105,16 +106,11 @@ export async function GET(request: Request) {
   const assignedAudioIds = isPlatinumManaged && assignedAudioOrder.length > 0 ? assignedAudioOrder : undefined;
 
   /**
-   * "Special" slot (every 4th session): CGMR assigned to this member, else global playback CGMR or fallback (e.g. T-18).
+   * "Special" slot (every 4th session): newest CGMR assigned to this member, else global playback CGMR or fallback (e.g. T-18).
    * For Platinum Managed with an assigned-audio list, do NOT treat the first library row that has their email on
    * allowedUserEmails as special - that was stealing the slot from T-18 when they had no CGMR.
    */
-  const cgmrForMember =
-    filteredLibrary.find(
-      (item) =>
-        (item.allowedUserEmails || []).some((e) => e.toLowerCase() === emailLower) &&
-        hasCategory(item, "cgmr")
-    ) ?? null;
+  const cgmrForMember = pickNewestMemberCgmr(filteredLibrary, emailLower);
   const anyAllowListMatch =
     filteredLibrary.find((item) =>
       (item.allowedUserEmails || []).some((e) => e.toLowerCase() === emailLower)
