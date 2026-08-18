@@ -1,0 +1,878 @@
+Reach For The Stars - Outreach & conversion email templates
+For Terry Brussel-Rogers to review and edit
+Generated: 2026-08-17
+
+Placeholders you can leave as-is (merged when sending):
+  {{name}}  {{firstName}}  {{lastName}}  {{contactName}}  {{organization}}  {{persona}}  {{siteUrl}}  {{yourName}}
+
+Edit Subject and Body below. Keep the ===== separators so we can find each template.
+
+================================================================================
+TEMPLATE 1 of 29
+Name: New member welcome (member-facing)
+Purpose tag: new_member
+--------------------------------------------------------------------------------
+Subject:
+Welcome New Member
+--------------------------------------------------------------------------------
+Body:
+Dear {{name}},
+
+By becoming a member of ReachForTheStars.Today, you have made a valuable investment in your personal development. We would like to acknowledge and congratulate you for making that commitment to yourself!
+
+We welcome you here and want to support you on your commitment to grow! Our ReachForTheStars.Today system is specifically designed to maximize the effectiveness of changing your subconscious programming in alignment with your chosen goals. The "Key" to your success is repetition so stick to the program.
+
+When you log in it opens you to your member Console. Everything is accessible and explained from within the console.
+
+Recommendations but not required:
+- Two audios per night (repetition)
+- Comfortable headset with mask (when listening while sleeping)
+
+Have any questions? Call (800) GOAL NOW (462-5669) or email customerservice@reachforthestars.today
+
+Open your console: {{siteUrl}}/play-options
+
+================================================================================
+TEMPLATE 2 of 29
+Name: Partner / affiliate intro
+Purpose tag: partner_intro
+--------------------------------------------------------------------------------
+Subject:
+Partnership idea: Reach For The Stars for your community
+--------------------------------------------------------------------------------
+Body:
+Hello {{contactName}},
+
+I'm reaching out about Reach For The Stars (ReachForTheStars.Today) - guided meditations that play while people fall asleep and during sleep, so goal work happens without another daytime chore.
+
+Many {{organization}} members juggle stress, irregular sleep, and burnout. We partner with organizations through:
+- Affiliate referrals (25% ongoing), or
+- Facilitator / managed enrollment for cohorts
+
+Happy to share a short overview, a free-trial path for your community, and sample messaging for {{persona}}.
+
+Would a brief call this week work?
+
+Warmly,
+{{yourName}}
+(800) GOAL NOW (462-5669)
+{{siteUrl}}
+
+================================================================================
+TEMPLATE 3 of 29
+Name: Facilitator / managed enrollment intro
+Purpose tag: facilitator_intro
+--------------------------------------------------------------------------------
+Subject:
+Managed wellness enrollment for your team
+--------------------------------------------------------------------------------
+Body:
+Hello {{contactName}},
+
+Reach For The Stars offers facilitator-managed memberships so your organization can enroll people in a nightly audio program without asking them to build another daytime habit.
+
+Members press Start at bedtime; recordings reinforce goals while falling asleep and during sleep. We can tailor onboarding and support for {{organization}}.
+
+If useful, I can send a one-page overview and trial options.
+
+Thank you,
+{{yourName}}
+{{siteUrl}}
+
+================================================================================
+TEMPLATE 4 of 29
+Name: Resilience blog share (member or prospect)
+Purpose tag: resilience_blog_share
+--------------------------------------------------------------------------------
+Subject:
+Hard days need recovery - not another daytime chore
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+I wanted to share a short piece on physical and psychological resilience - how guided meditation at bedtime (and during sleep) helps people bounce back after hard shifts and high-stress weeks.
+
+Read it here:
+{{siteUrl}}/blog/resilience-meditation-bounce-back-stress-sleep
+
+If it resonates, you can try Reach For The Stars free:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Warmly,
+{{yourName}}
+
+================================================================================
+TEMPLATE 5 of 29
+Name: Affiliate partner - resilience + 25% ongoing
+Purpose tag: affiliate_resilience_partner
+--------------------------------------------------------------------------------
+Subject:
+25% ongoing + a resilience tool that fits shift work
+--------------------------------------------------------------------------------
+Body:
+Hello {{contactName}},
+
+Quick partnership idea for {{organization}}.
+
+Reach For The Stars gives people guided meditations that run at bedtime and during sleep - resilience, stress relief, and sleep support without another daytime wellness chore. Affiliates earn 25% ongoing for as long as referred members stay subscribed.
+
+Useful pages to share:
+- Affiliates: {{siteUrl}}/affiliates
+- Resilience: {{siteUrl}}/resilience-meditation
+- Stress: {{siteUrl}}/stress-relief
+- Sleep: {{siteUrl}}/sleep-meditation
+
+Happy to set you up with a referral code and sample messaging for {{persona}}.
+
+Would a brief call this week work?
+
+Warmly,
+{{yourName}}
+(800) GOAL NOW (462-5669)
+{{siteUrl}}
+
+================================================================================
+TEMPLATE 6 of 29
+Name: Sales coach partner intro (Sales Edge)
+Purpose tag: affiliate_sales_edge
+--------------------------------------------------------------------------------
+Subject:
+For your sales team: quota calm that trains at night
+--------------------------------------------------------------------------------
+Body:
+Hello {{contactName}},
+
+Salespeople don’t need another daytime podcast - they need composure under quota and sleep before the big close.
+
+Reach For The Stars reinforces wealth, resilience, and stress-relief goals while they fall asleep and during sleep. Partners earn 25% ongoing on referred memberships.
+
+Overview: {{siteUrl}}/affiliates
+Wealth angle: {{siteUrl}}/wealth
+Resilience: {{siteUrl}}/resilience-meditation
+
+Open to a short intro call for {{organization}}?
+
+Thank you,
+{{yourName}}
+{{siteUrl}}
+
+================================================================================
+TEMPLATE 7 of 29
+Name: Convert nurture 1 - Imagine the best you
+Purpose tag: convert_nurture_1
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, imagine the best you - then train for it while you sleep
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Imagine the best you. Then give that version a nightly practice.
+
+Reach For The Stars turns the goals you care about into guided meditations that play while you fall asleep and during sleep. You pick up to ten priorities. We rotate them so your subconscious hears the right messages without another daytime chore.
+
+See the conversion page:
+{{siteUrl}}/landing/best-you
+
+Press Start Session at bedtime. Intro relaxation music, then your first goal recording. Optional second audio about 2.5 hours later, during restorative sleep.
+
+Gold membership includes a 14-day free trial, then $19.95 per month.
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 8 of 29
+Name: Convert nurture 2 - Your goals, nightly
+Purpose tag: convert_nurture_2
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, which of these is calling you?
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Membership is built around the goals you actually want. Open the page that matches you - or send this list to yourself and pick two or three to start.
+
+Health - healthy longevity, energy, a body to delight in
+{{siteUrl}}/health
+
+Wealth - financial abundance
+{{siteUrl}}/wealth
+
+Relationship - a joyful new or deeper present relationship
+{{siteUrl}}/relationship
+
+Memory - the focus you want now and lifelong
+{{siteUrl}}/memory
+
+Inspiration - creativity and entrepreneurial drive on demand
+{{siteUrl}}/inspiration
+
+Spirituality - a greater inner connection
+{{siteUrl}}/spirituality
+
+Overcoming Addiction - freedom from smoking, overeating, and unwanted habits
+{{siteUrl}}/overcoming-addiction
+
+Balanced Life - highest potential physically, mentally, emotionally, spiritually, and financially
+{{siteUrl}}/balanced-life
+
+You can reorder priorities anytime. Your nightly lineup updates when you press Start Session.
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 9 of 29
+Name: Convert nurture 3 - Sleep, stress, and recovery
+Purpose tag: convert_nurture_3
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, recovery that does not steal from your day
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Hard days need recovery - not another self-care chore. These wellness pages match what people search for when they are tired, tense, or burned out.
+
+Better sleep
+{{siteUrl}}/sleep-meditation
+
+Stress relief
+{{siteUrl}}/stress-relief
+
+Burnout recovery
+{{siteUrl}}/burnout-recovery
+
+Pain relief
+{{siteUrl}}/pain-relief
+
+Memory and focus
+{{siteUrl}}/memory-improvement
+
+Blood pressure regulation
+{{siteUrl}}/blood-pressure-regulation
+
+Physical and psychological resilience
+{{siteUrl}}/resilience-meditation
+
+Emotional health
+{{siteUrl}}/emotional-health
+
+Will power and habit change
+{{siteUrl}}/will-power
+
+Self-awareness
+{{siteUrl}}/self-awareness
+
+Choose the ones that fit. Your schedule mixes them with your goal list so support stays fresh over weeks.
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 10 of 29
+Name: Convert nurture 4 - How nights work
+Purpose tag: convert_nurture_4
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, how a night actually works (and why it sticks)
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Here is the whole method in one sitting.
+
+How it works - press Start Session at bedtime. Intro relaxation music, then your first goal recording as you drift off. Optional second recording during sleep.
+{{siteUrl}}/how-it-works
+
+The science - regular meditation is linked with lower stress, better sleep, focus, mood, and pain coping. We put that practice in the window when you are already in bed.
+{{siteUrl}}/science
+
+FAQs - trial, membership, listening with a headset, and what happens after signup.
+{{siteUrl}}/faqs
+
+Repetition is the key. Two audios per night is the default for deeper reinforcement. Stay with it for weeks, not one inspired evening.
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 11 of 29
+Name: Convert nurture 5 - Practice, not paper
+Purpose tag: convert_nurture_5
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, paper does not bind reality. Practice does.
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+If a "contract with the universe" were already working, you would feel it in your habits, sleep, and follow-through.
+
+Manifestation agreements sound powerful. Practice is what actually moves the needle: clear goals, ordered by priority, repeated while you fall asleep.
+
+Read the challenge:
+{{siteUrl}}/landing/contracts
+
+Then come back to the best-you page and start the 14-night test:
+{{siteUrl}}/landing/best-you
+
+Gold: 14-day free trial, then $19.95/month. Platinum Managed: 30-day trial with facilitator support if you want a guided enrollment.
+
+Tonight is enough. Pick your goals. Press Start Session.
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 12 of 29
+Name: Convert menu - All interests
+Purpose tag: convert_all_interests
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, your interests, one membership, nightly practice
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You do not have to pick one area of life and ignore the rest. Reach For The Stars lets you rank up to ten priorities. We rotate guided audios so health, wealth, relationships, and recovery can all get airtime - while you sleep.
+
+Start here:
+{{siteUrl}}/landing/best-you
+
+Goal pages
+- Health: {{siteUrl}}/health
+- Wealth: {{siteUrl}}/wealth
+- Relationship: {{siteUrl}}/relationship
+- Memory: {{siteUrl}}/memory
+- Inspiration: {{siteUrl}}/inspiration
+- Spirituality: {{siteUrl}}/spirituality
+- Overcoming Addiction: {{siteUrl}}/overcoming-addiction
+- Balanced Life: {{siteUrl}}/balanced-life
+
+Wellness pages
+- Sleep: {{siteUrl}}/sleep-meditation
+- Stress relief: {{siteUrl}}/stress-relief
+- Burnout recovery: {{siteUrl}}/burnout-recovery
+- Pain relief: {{siteUrl}}/pain-relief
+- Memory and focus: {{siteUrl}}/memory-improvement
+- Blood pressure: {{siteUrl}}/blood-pressure-regulation
+- Resilience: {{siteUrl}}/resilience-meditation
+- Emotional health: {{siteUrl}}/emotional-health
+- Will power: {{siteUrl}}/will-power
+- Self-awareness: {{siteUrl}}/self-awareness
+
+How it works: {{siteUrl}}/how-it-works
+The science: {{siteUrl}}/science
+FAQs: {{siteUrl}}/faqs
+Tired of fictional contracts? {{siteUrl}}/landing/contracts
+
+Open the pages that match you. Then start the trial and let tonight's session do the work.
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 13 of 29
+Name: Convert interest - Health
+Purpose tag: convert_health
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, health goals that work while you rest
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Health is more than one workout or one supplement. It is the body you want to delight in - energy, recovery, comfort, and healthy longevity - reinforced when the mind is most receptive.
+
+Reach For The Stars rotates health-focused guided meditations at bedtime and during sleep. Pair them with rest, resilience, or pain-comfort goals if those matter too.
+
+Read the health page:
+{{siteUrl}}/health
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 14 of 29
+Name: Convert interest - Wealth
+Purpose tag: convert_wealth
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, abundance mindset - trained at night, not another podcast
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Financial abundance starts with consistent mindset work. Wealth-focused guided meditations play in rotation so prosperity messages reach your subconscious nightly - confidence, follow-through, and the inner dialogue that matches the life you are building.
+
+Change your priorities anytime. New recordings enter your schedule from the list you set.
+
+Read the wealth page:
+{{siteUrl}}/wealth
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 15 of 29
+Name: Convert interest - Relationship
+Purpose tag: convert_relationship
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, connection that does not need another dating course
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Whether you want a joyful new relationship or a deeper present one, nightly relationship audios reinforce patience, warmth, and confidence - the qualities that support how you show up with others.
+
+Bedtime relaxation also lowers reactivity. A calmer nervous system is a better foundation for love.
+
+Read the relationship page:
+{{siteUrl}}/relationship
+
+Related support: emotional health {{siteUrl}}/emotional-health, self-awareness {{siteUrl}}/self-awareness, sleep {{siteUrl}}/sleep-meditation
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 16 of 29
+Name: Convert interest - Memory
+Purpose tag: convert_memory
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, memory and focus while you sleep
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Sleep supports memory consolidation. Reach For The Stars reinforces learning, recall, and mental clarity with goal-based audios scheduled each night - no playlist to maintain.
+
+Read the memory goal page:
+{{siteUrl}}/memory
+
+And the memory-improvement wellness page:
+{{siteUrl}}/memory-improvement
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 17 of 29
+Name: Convert interest - Inspiration
+Purpose tag: convert_inspiration
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, inspiration on a nightly schedule
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Inspiration at will for creative and entrepreneurial work. Guided audios reinforce openness, motivation, and follow-through before sleep clears mental clutter - so daytime flow is not competing with another course.
+
+Pair inspiration with wealth or spirituality if that is your mix.
+
+Read the inspiration page:
+{{siteUrl}}/inspiration
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 18 of 29
+Name: Convert interest - Spirituality
+Purpose tag: convert_spirituality
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, a sacred routine that happens at bedtime
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+A greater connection with your spirituality does not have to be one more daytime appointment. Bedtime becomes a consistent spiritual practice: peace, presence, and inner alignment, reinforced as you fall asleep and during sleep.
+
+You choose goals that match your path. The schedule adapts when you update them.
+
+Read the spirituality page:
+{{siteUrl}}/spirituality
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 19 of 29
+Name: Convert interest - Overcoming Addiction
+Purpose tag: convert_overcoming_addiction
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, habit change that primes the next day
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Overcoming addiction and unwanted habits starts with consistent mindset reinforcement. Supportive messages at bedtime and during sleep help prime next-day choices - calm, control, and balanced living instead of automatic patterns.
+
+This is a complement to medical care and recovery support, not a replacement.
+
+Read the overcoming addiction page:
+{{siteUrl}}/overcoming-addiction
+
+Related: will power {{siteUrl}}/will-power, balanced life {{siteUrl}}/balanced-life
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 20 of 29
+Name: Convert interest - Balanced Life
+Purpose tag: convert_balanced_life
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, highest potential across all of life - including financial
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Reach your highest potential physically, mentally, emotionally, spiritually, and financially. Balanced Life is the whole-life frame: not one habit at a time, but a nightly rotation across the areas you rank highest.
+
+Pick up to ten priorities. Reorder anytime. Press Start Session.
+
+Read the balanced life page:
+{{siteUrl}}/balanced-life
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 21 of 29
+Name: Convert interest - Sleep
+Purpose tag: convert_sleep
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, guided sleep meditation that actually has a schedule
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+If you have searched for guided sleep meditation or how to sleep better, this is the low-friction version: short intro relaxation music, then your first goal recording as you wind down. Optional second audio during restorative sleep.
+
+Your schedule rotates rest, calm, and related goals so it stays fresh - not one track on repeat.
+
+Read the sleep page:
+{{siteUrl}}/sleep-meditation
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 22 of 29
+Name: Convert interest - Stress relief
+Purpose tag: convert_stress
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, calm at the one window you already have
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+The transition into sleep is a natural window for relaxation. Stress-relief meditation at night reinforces calm, focus, and emotional balance without adding a daytime task you will skip when you are already overloaded.
+
+Members often use techniques from sessions to settle themselves during the day.
+
+Read the stress relief page:
+{{siteUrl}}/stress-relief
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 23 of 29
+Name: Convert interest - Burnout recovery
+Purpose tag: convert_burnout
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, burnout recovery that does not require 6 a.m. willpower
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Burnout drains the energy required for daytime meditation. Nightly guided audios meet you when the day is already over. Press Start Session. Recovery is not competing with work or family.
+
+Rotate calm, rest, and balanced-life goals. Stay consistent for weeks. Cumulative nights beat one intensive self-care weekend.
+
+Read the burnout recovery page:
+{{siteUrl}}/burnout-recovery
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 24 of 29
+Name: Convert interest - Pain relief
+Purpose tag: convert_pain
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, mind-body support for comfort and sleep
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Guided relaxation can ease muscle tension and the stress that amplifies pain - especially at bedtime. Better sleep also supports recovery. Use this alongside medical care, not instead of it.
+
+Facilitators can add personalized recordings (CGMR) when you need extra customization.
+
+Read the pain relief page:
+{{siteUrl}}/pain-relief
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 25 of 29
+Name: Convert interest - Blood pressure
+Purpose tag: convert_blood_pressure
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, cardiovascular calm as a nightly habit
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Regular meditation is linked with lower blood pressure and reduced cardiovascular stress. A fixed bedtime practice removes the friction of choosing what to listen to - consistency is what matters.
+
+Pair calm and health goals. Track progress with your doctor.
+
+Read the blood pressure page:
+{{siteUrl}}/blood-pressure-regulation
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 26 of 29
+Name: Convert interest - Resilience
+Purpose tag: convert_resilience
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, bounce back after hard days - while you sleep
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Physical and psychological resilience is the capacity to recover from life's demands. Nightly goal-based messages at bedtime and during sleep support that recovery - especially for caregivers and high-stress work.
+
+Hard days need recovery, not another daytime chore.
+
+Read the resilience page:
+{{siteUrl}}/resilience-meditation
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 27 of 29
+Name: Convert interest - Emotional health
+Purpose tag: convert_emotional_health
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, mood and regulation trained at bedtime
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Improved emotional health is one of the most cited benefits of meditation. Repeated guided messages train attention and emotional responses - skills you can use during the day.
+
+Choose calm, confidence, balance, or inspiration so the audios match what you want to feel more of.
+
+Read the emotional health page:
+{{siteUrl}}/emotional-health
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 28 of 29
+Name: Convert interest - Will power
+Purpose tag: convert_will_power
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, discipline that primes tomorrow's choices
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Enhanced will power supports habit change - from follow-through at work to healthier routines. Hearing intention-focused audios as you fall asleep primes the subconscious for next-day choices.
+
+Goals rotate so discipline themes are reinforced regularly, not as one-off sessions.
+
+Read the will power page:
+{{siteUrl}}/will-power
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 29 of 29
+Name: Convert interest - Self-awareness
+Purpose tag: convert_self_awareness
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, insight without another daytime journal assignment
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+Greater self-awareness helps you notice patterns, triggers, and goals more clearly. Guided meditation at night trains focused attention - a foundation for seeing thoughts and habits without judgment.
+
+Bedtime is already a pause. We give that pause structured content aligned with your priorities.
+
+Read the self-awareness page:
+{{siteUrl}}/self-awareness
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+END OF TEMPLATES
