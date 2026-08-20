@@ -20,6 +20,8 @@ Long Beach Expo practice QR (default):
 
 Each submit also creates an Outreach **individual** target + primary contact for CRM follow-up.
 
+Lead-card checkbox emails: **Convert lead card - {interest}** (and **Convert menu - Lead card interests** when they marked many). Seed via Admin → Marketing → **Add missing starter templates**. See `docs/MEMBER_CONVERSION_EMAILS.md`.
+
 ## Resend
 Optional auto-reply on submit (checkbox on form). Templates:
 - Practice: `getEventLeadPracticeAutoReplyContent`

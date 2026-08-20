@@ -1,4 +1,12 @@
+import { EVENT_LEAD_CARD_GOALS } from "@/lib/event-leads";
 import { GOAL_LANDING_PAGES } from "@/lib/goal-landing-pages";
+import {
+  LEAD_CARD_INTEREST_SPECS,
+  MEMBER_CONVERT_LEAD_CARD_INTEREST_EMAILS,
+  MEMBER_CONVERT_LEAD_CARD_MENU_EMAIL,
+  getLeadCardInterestEmail,
+  leadCardInterestTemplateName
+} from "@/lib/lead-card-interest-emails";
 import {
   MEMBER_CONVERSION_EMAIL_TEMPLATES,
   MEMBER_CONVERT_ALL_INTERESTS_EMAIL,
@@ -65,5 +73,28 @@ describe("member conversion emails", () => {
     const purposes = MEMBER_CONVERSION_EMAIL_TEMPLATES.map((t) => t.purpose);
     expect(new Set(names).size).toBe(names.length);
     expect(new Set(purposes).size).toBe(purposes.length);
+  });
+
+  it("has one Convert lead card email per lead-card checkbox", () => {
+    expect(LEAD_CARD_INTEREST_SPECS.map((s) => s.label)).toEqual([
+      ...EVENT_LEAD_CARD_GOALS
+    ]);
+    expect(MEMBER_CONVERT_LEAD_CARD_INTEREST_EMAILS).toHaveLength(
+      EVENT_LEAD_CARD_GOALS.length
+    );
+    for (const label of EVENT_LEAD_CARD_GOALS) {
+      const email = getLeadCardInterestEmail(label);
+      expect(email?.name).toBe(leadCardInterestTemplateName(label));
+      expect(email?.bodyText).toContain(`You marked ${label} on your lead card.`);
+      expect(email?.bodyText).toContain("{{siteUrl}}/signup/step-1-subscription-selection");
+    }
+    expect(MEMBER_CONVERT_LEAD_CARD_MENU_EMAIL.bodyText).toContain(
+      "{{siteUrl}}/landing/best-you"
+    );
+    for (const spec of LEAD_CARD_INTEREST_SPECS) {
+      expect(MEMBER_CONVERT_LEAD_CARD_MENU_EMAIL.bodyText).toContain(
+        `${spec.label}: {{siteUrl}}${spec.path}`
+      );
+    }
   });
 });

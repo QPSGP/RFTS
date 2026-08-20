@@ -1,8 +1,9 @@
 /**
  * Member-conversion email samples for CRM / Resend.
- * Covers every goal, wellness, and campaign landing page.
+ * Covers every goal, wellness, campaign landing, and lead-card checkbox.
  * Placeholders: {{firstName}}, {{siteUrl}}, {{yourName}}
  */
+import { MEMBER_LEAD_CARD_CONVERSION_EMAILS } from "@/lib/lead-card-interest-emails";
 
 export type ConversionEmailTemplate = {
   name: string;
@@ -443,5 +444,6 @@ Read the self-awareness page:
 export const MEMBER_CONVERSION_EMAIL_TEMPLATES: ConversionEmailTemplate[] = [
   ...MEMBER_CONVERT_NURTURE_EMAILS,
   MEMBER_CONVERT_ALL_INTERESTS_EMAIL,
-  ...MEMBER_CONVERT_INTEREST_EMAILS
+  ...MEMBER_CONVERT_INTEREST_EMAILS,
+  ...MEMBER_LEAD_CARD_CONVERSION_EMAILS
 ];

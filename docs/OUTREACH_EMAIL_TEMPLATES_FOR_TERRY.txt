@@ -1,6 +1,6 @@
 Reach For The Stars - Outreach & conversion email templates
 For Terry Brussel-Rogers to review and edit
-Generated: 2026-08-17
+Generated: 2026-08-20
 
 Placeholders you can leave as-is (merged when sending):
   {{name}}  {{firstName}}  {{lastName}}  {{contactName}}  {{organization}}  {{persona}}  {{siteUrl}}  {{yourName}}
@@ -8,7 +8,7 @@ Placeholders you can leave as-is (merged when sending):
 Edit Subject and Body below. Keep the ===== separators so we can find each template.
 
 ================================================================================
-TEMPLATE 1 of 29
+TEMPLATE 1 of 59
 Name: New member welcome (member-facing)
 Purpose tag: new_member
 --------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ Have any questions? Call (800) GOAL NOW (462-5669) or email customerservice@reac
 Open your console: {{siteUrl}}/play-options
 
 ================================================================================
-TEMPLATE 2 of 29
+TEMPLATE 2 of 59
 Name: Partner / affiliate intro
 Purpose tag: partner_intro
 --------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ Warmly,
 {{siteUrl}}
 
 ================================================================================
-TEMPLATE 3 of 29
+TEMPLATE 3 of 59
 Name: Facilitator / managed enrollment intro
 Purpose tag: facilitator_intro
 --------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ Thank you,
 {{siteUrl}}
 
 ================================================================================
-TEMPLATE 4 of 29
+TEMPLATE 4 of 59
 Name: Resilience blog share (member or prospect)
 Purpose tag: resilience_blog_share
 --------------------------------------------------------------------------------
@@ -102,7 +102,7 @@ Warmly,
 {{yourName}}
 
 ================================================================================
-TEMPLATE 5 of 29
+TEMPLATE 5 of 59
 Name: Affiliate partner - resilience + 25% ongoing
 Purpose tag: affiliate_resilience_partner
 --------------------------------------------------------------------------------
@@ -132,7 +132,7 @@ Warmly,
 {{siteUrl}}
 
 ================================================================================
-TEMPLATE 6 of 29
+TEMPLATE 6 of 59
 Name: Sales coach partner intro (Sales Edge)
 Purpose tag: affiliate_sales_edge
 --------------------------------------------------------------------------------
@@ -157,7 +157,7 @@ Thank you,
 {{siteUrl}}
 
 ================================================================================
-TEMPLATE 7 of 29
+TEMPLATE 7 of 59
 Name: Convert nurture 1 - Imagine the best you
 Purpose tag: convert_nurture_1
 --------------------------------------------------------------------------------
@@ -188,7 +188,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 8 of 29
+TEMPLATE 8 of 59
 Name: Convert nurture 2 - Your goals, nightly
 Purpose tag: convert_nurture_2
 --------------------------------------------------------------------------------
@@ -236,7 +236,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 9 of 29
+TEMPLATE 9 of 59
 Name: Convert nurture 3 - Sleep, stress, and recovery
 Purpose tag: convert_nurture_3
 --------------------------------------------------------------------------------
@@ -290,7 +290,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 10 of 29
+TEMPLATE 10 of 59
 Name: Convert nurture 4 - How nights work
 Purpose tag: convert_nurture_4
 --------------------------------------------------------------------------------
@@ -323,7 +323,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 11 of 29
+TEMPLATE 11 of 59
 Name: Convert nurture 5 - Practice, not paper
 Purpose tag: convert_nurture_5
 --------------------------------------------------------------------------------
@@ -357,7 +357,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 12 of 29
+TEMPLATE 12 of 59
 Name: Convert menu - All interests
 Purpose tag: convert_all_interests
 --------------------------------------------------------------------------------
@@ -411,7 +411,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 13 of 29
+TEMPLATE 13 of 59
 Name: Convert interest - Health
 Purpose tag: convert_health
 --------------------------------------------------------------------------------
@@ -438,7 +438,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 14 of 29
+TEMPLATE 14 of 59
 Name: Convert interest - Wealth
 Purpose tag: convert_wealth
 --------------------------------------------------------------------------------
@@ -465,7 +465,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 15 of 29
+TEMPLATE 15 of 59
 Name: Convert interest - Relationship
 Purpose tag: convert_relationship
 --------------------------------------------------------------------------------
@@ -494,7 +494,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 16 of 29
+TEMPLATE 16 of 59
 Name: Convert interest - Memory
 Purpose tag: convert_memory
 --------------------------------------------------------------------------------
@@ -522,7 +522,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 17 of 29
+TEMPLATE 17 of 59
 Name: Convert interest - Inspiration
 Purpose tag: convert_inspiration
 --------------------------------------------------------------------------------
@@ -549,7 +549,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 18 of 29
+TEMPLATE 18 of 59
 Name: Convert interest - Spirituality
 Purpose tag: convert_spirituality
 --------------------------------------------------------------------------------
@@ -576,7 +576,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 19 of 29
+TEMPLATE 19 of 59
 Name: Convert interest - Overcoming Addiction
 Purpose tag: convert_overcoming_addiction
 --------------------------------------------------------------------------------
@@ -605,7 +605,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 20 of 29
+TEMPLATE 20 of 59
 Name: Convert interest - Balanced Life
 Purpose tag: convert_balanced_life
 --------------------------------------------------------------------------------
@@ -632,7 +632,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 21 of 29
+TEMPLATE 21 of 59
 Name: Convert interest - Sleep
 Purpose tag: convert_sleep
 --------------------------------------------------------------------------------
@@ -659,7 +659,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 22 of 29
+TEMPLATE 22 of 59
 Name: Convert interest - Stress relief
 Purpose tag: convert_stress
 --------------------------------------------------------------------------------
@@ -686,7 +686,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 23 of 29
+TEMPLATE 23 of 59
 Name: Convert interest - Burnout recovery
 Purpose tag: convert_burnout
 --------------------------------------------------------------------------------
@@ -713,7 +713,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 24 of 29
+TEMPLATE 24 of 59
 Name: Convert interest - Pain relief
 Purpose tag: convert_pain
 --------------------------------------------------------------------------------
@@ -740,7 +740,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 25 of 29
+TEMPLATE 25 of 59
 Name: Convert interest - Blood pressure
 Purpose tag: convert_blood_pressure
 --------------------------------------------------------------------------------
@@ -767,7 +767,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 26 of 29
+TEMPLATE 26 of 59
 Name: Convert interest - Resilience
 Purpose tag: convert_resilience
 --------------------------------------------------------------------------------
@@ -794,7 +794,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 27 of 29
+TEMPLATE 27 of 59
 Name: Convert interest - Emotional health
 Purpose tag: convert_emotional_health
 --------------------------------------------------------------------------------
@@ -821,7 +821,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 28 of 29
+TEMPLATE 28 of 59
 Name: Convert interest - Will power
 Purpose tag: convert_will_power
 --------------------------------------------------------------------------------
@@ -848,7 +848,7 @@ Warmly,
 Reach For The Stars
 
 ================================================================================
-TEMPLATE 29 of 29
+TEMPLATE 29 of 59
 Name: Convert interest - Self-awareness
 Purpose tag: convert_self_awareness
 --------------------------------------------------------------------------------
@@ -864,6 +864,956 @@ Bedtime is already a pause. We give that pause structured content aligned with y
 
 Read the self-awareness page:
 {{siteUrl}}/self-awareness
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 30 of 59
+Name: Convert menu - Lead card interests
+Purpose tag: convert_lead_card_menu
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, the goals you checked, one nightly practice
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You checked more than one interest on the lead card. You do not have to pick a single lane. Reach For The Stars lets you rank up to ten priorities. We rotate guided audios so they all get airtime - while you sleep.
+
+Here are the pages that match the checkboxes on the card:
+
+Anger Management: {{siteUrl}}/emotional-health
+Attract Love: {{siteUrl}}/relationship
+Coaching: {{siteUrl}}/inspiration
+Confidence: {{siteUrl}}/will-power
+Creativity: {{siteUrl}}/inspiration
+End Pain: {{siteUrl}}/pain-relief
+End Procrastination: {{siteUrl}}/will-power
+Energy: {{siteUrl}}/health
+Explore Past Lives: {{siteUrl}}/spirituality
+Health & Rejuvenation: {{siteUrl}}/health
+Life Mission: {{siteUrl}}/inspiration
+Marketing: {{siteUrl}}/wealth
+Memory Excellence: {{siteUrl}}/memory
+Motivation: {{siteUrl}}/will-power
+Psychic Abilities: {{siteUrl}}/spirituality
+Quit Smoking: {{siteUrl}}/overcoming-addiction
+Raise Income: {{siteUrl}}/wealth
+Relationship Joy: {{siteUrl}}/relationship
+Retirement $: {{siteUrl}}/wealth
+Sales Skills: {{siteUrl}}/wealth
+Sleep Well: {{siteUrl}}/sleep-meditation
+Speaking Skills: {{siteUrl}}/inspiration
+Spiritual Growth: {{siteUrl}}/spirituality
+Stop Smoking: {{siteUrl}}/overcoming-addiction
+Stress Management: {{siteUrl}}/stress-relief
+Time Management: {{siteUrl}}/will-power
+Travel $: {{siteUrl}}/wealth
+Vision: {{siteUrl}}/inspiration
+Weight Control: {{siteUrl}}/overcoming-addiction
+
+Start here if you want the whole-life frame:
+{{siteUrl}}/landing/best-you
+
+How it works: {{siteUrl}}/how-it-works
+
+Open the pages that match what you marked. Then start the trial and let tonight's session do the work.
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 31 of 59
+Name: Convert lead card - Anger Management
+Purpose tag: convert_lead_anger_management
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, steadier responses when the day catches up
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Anger Management on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Anger often spikes when you are depleted - traffic, family, work, unfinished lists. Nightly emotional-health audios rehearse a calmer baseline so the next trigger does not run the whole evening.
+
+This is support for mood and reaction patterns, not a substitute for therapy or medical care. Rank anger-related goals with stress relief if both showed up on your card.
+
+Read more:
+{{siteUrl}}/emotional-health
+
+Related: Stress relief: {{siteUrl}}/stress-relief, Self-awareness: {{siteUrl}}/self-awareness
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 32 of 59
+Name: Convert lead card - Attract Love
+Purpose tag: convert_lead_attract_love
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, become the match you want - at bedtime
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Attract Love on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Attracting love is less a hunt and more how you show up: warmth, confidence, and readiness without desperation. Relationship audios reinforce those qualities while you sleep.
+
+A calmer nervous system also helps. Pair this with emotional health or self-awareness if dating fatigue is part of the story.
+
+Read more:
+{{siteUrl}}/relationship
+
+Related: Emotional health: {{siteUrl}}/emotional-health
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 33 of 59
+Name: Convert lead card - Coaching
+Purpose tag: convert_lead_coaching
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, coaching that does not steal another hour
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Coaching on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+If you want coaching for yourself, nightly guided practice is the follow-through between sessions: goals ranked, then reinforced while you sleep.
+
+If you are the coach, your clients can press Start at bedtime and you can refer with 25% ongoing. Either path starts with the same membership trial.
+
+Read more:
+{{siteUrl}}/inspiration
+
+Related: Affiliates: {{siteUrl}}/affiliates, Balanced Life: {{siteUrl}}/balanced-life
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 34 of 59
+Name: Convert lead card - Confidence
+Purpose tag: convert_lead_confidence
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, quiet confidence trained overnight
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Confidence on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Confidence is a practiced state, not a speech you give yourself in the parking lot. Will-power and emotional-health audios rehearse follow-through, self-trust, and a steadier inner voice at bedtime.
+
+Rank confidence with speaking, sales, or relationship goals if those are how you want it to show up in the day.
+
+Read more:
+{{siteUrl}}/will-power
+
+Related: Emotional health: {{siteUrl}}/emotional-health
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 35 of 59
+Name: Convert lead card - Creativity
+Purpose tag: convert_lead_creativity
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, inspiration on a nightly schedule
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Creativity on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Creative work stalls when the day is all delivery and no recovery. Inspiration-focused audios keep ideas and openness in rotation while you sleep - so flow is not competing with another course.
+
+Pair creativity with wealth or spirituality if that is your mix. Reorder anytime; the lineup updates when you press Start Session.
+
+Read more:
+{{siteUrl}}/inspiration
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 36 of 59
+Name: Convert lead card - End Pain
+Purpose tag: convert_lead_end_pain
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, comfort and sleep as a nightly habit
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked End Pain on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Guided relaxation can ease muscle tension and the stress that amplifies pain - especially at bedtime. Better sleep also supports recovery.
+
+Use this alongside medical care, not instead of it. Facilitators can add a personalized recording when you need extra customization.
+
+Read more:
+{{siteUrl}}/pain-relief
+
+Related: Health: {{siteUrl}}/health
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 37 of 59
+Name: Convert lead card - End Procrastination
+Purpose tag: convert_lead_end_procrastination
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, follow-through that starts tonight
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked End Procrastination on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Procrastination is often empty willpower by evening, not a character flaw. Nightly resolve audios rehearse starting, finishing, and recovering after a slip - when the day already used your grit.
+
+Rank this with time management or motivation if those were on your card too. Consistency beats one heroic Monday.
+
+Read more:
+{{siteUrl}}/will-power
+
+Related: Inspiration: {{siteUrl}}/inspiration
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 38 of 59
+Name: Convert lead card - Energy
+Purpose tag: convert_lead_energy
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, vitality that is not another morning stack
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Energy on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Energy returns when rest, recovery, and kinder body habits get repeated. Health-focused audios at bedtime support vitality without adding a 5 a.m. wellness protocol you will skip on hard weeks.
+
+If sleep is part of the drain, put Sleep Well in the same rotation. Two audios per night is the default for deeper reinforcement.
+
+Read more:
+{{siteUrl}}/health
+
+Related: Sleep: {{siteUrl}}/sleep-meditation
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 39 of 59
+Name: Convert lead card - Explore Past Lives
+Purpose tag: convert_lead_explore_past_lives
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, inner exploration that fits bedtime
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Explore Past Lives on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Curiosity about past lives is part of a wider inner life - meaning, continuity, and a greater spiritual connection. Spirituality audios give that exploration a consistent nightly window.
+
+You choose the goals. The schedule adapts when you update them. No extra daytime ritual required.
+
+Read more:
+{{siteUrl}}/spirituality
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 40 of 59
+Name: Convert lead card - Health & Rejuvenation
+Purpose tag: convert_lead_health_and_rejuvenation
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, health and rejuvenation while you rest
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Health & Rejuvenation on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Health and rejuvenation are more than one cleanse or one gym streak. Nightly health audios reinforce longevity, recovery, and a body you want to delight in - when the mind is most receptive.
+
+Pair with sleep, pain comfort, or energy if those were on your card. Stay with it for weeks, not one inspired evening.
+
+Read more:
+{{siteUrl}}/health
+
+Related: Sleep: {{siteUrl}}/sleep-meditation, Pain relief: {{siteUrl}}/pain-relief
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 41 of 59
+Name: Convert lead card - Life Mission
+Purpose tag: convert_lead_life_mission
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, a clearer mission - rehearsed at night
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Life Mission on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Life mission work fails when it is only a journal you never open. Inspiration and spirituality audios keep purpose, contribution, and direction in nightly rotation.
+
+Balanced Life is the whole-life frame if you also marked health, wealth, or relationship. Rank what matters most; we rotate the rest.
+
+Read more:
+{{siteUrl}}/inspiration
+
+Related: Spirituality: {{siteUrl}}/spirituality, Balanced Life: {{siteUrl}}/balanced-life
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 42 of 59
+Name: Convert lead card - Marketing
+Purpose tag: convert_lead_marketing
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, marketing follow-through after the booth
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Marketing on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Marketing is offers, outreach, and the inner permission to be visible. Wealth and inspiration audios support that mix - asking, following up, and staying creative - while you sleep.
+
+If you market a healing or coaching practice, you can also refer members and earn 25% ongoing. Start with your own trial so you know what you are sharing.
+
+Read more:
+{{siteUrl}}/wealth
+
+Related: Inspiration: {{siteUrl}}/inspiration, Affiliates: {{siteUrl}}/affiliates
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 43 of 59
+Name: Convert lead card - Memory Excellence
+Purpose tag: convert_lead_memory_excellence
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, memory and focus while you sleep
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Memory Excellence on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Sleep supports memory consolidation. Reach For The Stars reinforces learning, recall, and mental clarity with goal-based audios each night - no playlist to maintain.
+
+Useful for work, study, and staying sharp. Rank memory with sleep if nights have been short.
+
+Read more:
+{{siteUrl}}/memory
+
+Related: Memory improvement: {{siteUrl}}/memory-improvement
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 44 of 59
+Name: Convert lead card - Motivation
+Purpose tag: convert_lead_motivation
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, motivation that is not a morning pep talk
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Motivation on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Motivation fades by 9 p.m. when the day already spent it. Nightly will-power and inspiration audios rehearse drive and follow-through in the window you already have: bedtime.
+
+Pair with end-procrastination or raise-income if those were on your card. Press Start Session. Let tonight do the work.
+
+Read more:
+{{siteUrl}}/will-power
+
+Related: Inspiration: {{siteUrl}}/inspiration
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 45 of 59
+Name: Convert lead card - Psychic Abilities
+Purpose tag: convert_lead_psychic_abilities
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, inner perception as a nightly practice
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Psychic Abilities on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Psychic and intuitive development sits with spirituality: presence, inner listening, and a greater connection. Guided audios at bedtime give that practice a consistent cue.
+
+Self-awareness themes pair well if you also want clearer seeing of patterns in daily life.
+
+Read more:
+{{siteUrl}}/spirituality
+
+Related: Self-awareness: {{siteUrl}}/self-awareness
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 46 of 59
+Name: Convert lead card - Quit Smoking
+Purpose tag: convert_lead_quit_smoking
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, habit change that primes the next day
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Quit Smoking on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Quitting smoking is easier when tomorrow's choices are primed the night before. Supportive messages at bedtime and during sleep help replace automatic patterns with calm and control.
+
+This complements medical care and quit programs - it does not replace them. Rank with will power if follow-through is the hard part.
+
+Read more:
+{{siteUrl}}/overcoming-addiction
+
+Related: Will power: {{siteUrl}}/will-power
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 47 of 59
+Name: Convert lead card - Raise Income
+Purpose tag: convert_lead_raise_income
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, income goals trained at night, not another hustle playlist
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Raise Income on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Raising income needs actions and a nervous system that can ask, follow up, and recover after a no. Wealth-focused audios reinforce worth, follow-through, and financial calm while you sleep.
+
+If you also marked sales, marketing, or retirement, put those in the same rotation. Update priorities anytime.
+
+Read more:
+{{siteUrl}}/wealth
+
+Related: Will power: {{siteUrl}}/will-power
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 48 of 59
+Name: Convert lead card - Relationship Joy
+Purpose tag: convert_lead_relationship_joy
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, connection that does not need another dating course
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Relationship Joy on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Relationship joy is patience, warmth, and how you show up - in a new match or a present partnership. Nightly relationship audios reinforce those qualities as you fall asleep.
+
+Bedtime relaxation also lowers reactivity. A calmer nervous system is a better foundation for love.
+
+Read more:
+{{siteUrl}}/relationship
+
+Related: Emotional health: {{siteUrl}}/emotional-health
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 49 of 59
+Name: Convert lead card - Retirement $
+Purpose tag: convert_lead_retirement_money
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, retirement money with a calmer overnight mind
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Retirement $ on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Retirement money is practical and psychological: saving, earning, and not letting money worry steal sleep. Wealth audios keep abundance and steady follow-through in nightly rotation.
+
+Pair with travel or health if those are how you want the next chapter to feel. Rank them. Press Start Session.
+
+Read more:
+{{siteUrl}}/wealth
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 50 of 59
+Name: Convert lead card - Sales Skills
+Purpose tag: convert_lead_sales_skills
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, quota calm that trains after the last call
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Sales Skills on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Sales skills are craft plus composure. Nightly wealth and will-power audios support asking, following up, and bouncing back after rejection - without another daytime podcast.
+
+If you lead a team, partners earn 25% ongoing on referred memberships. Your own trial is the shortest demo.
+
+Read more:
+{{siteUrl}}/wealth
+
+Related: Inspiration: {{siteUrl}}/inspiration, Will power: {{siteUrl}}/will-power
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 51 of 59
+Name: Convert lead card - Sleep Well
+Purpose tag: convert_lead_sleep_well
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, guided sleep that actually has a schedule
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Sleep Well on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+If you checked Sleep Well, this is the low-friction version: intro relaxation music, then your first goal recording as you wind down. Optional second audio during restorative sleep.
+
+Your schedule rotates rest, calm, and related goals so it stays fresh - not one track on repeat.
+
+Read more:
+{{siteUrl}}/sleep-meditation
+
+Related: Stress relief: {{siteUrl}}/stress-relief
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 52 of 59
+Name: Convert lead card - Speaking Skills
+Purpose tag: convert_lead_speaking_skills
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, presence before the next time you speak
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Speaking Skills on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Speaking skills are voice, structure, and nerves. Inspiration and will-power audios rehearse confidence and presence at bedtime so the next meeting, class, or stage is not running on leftover adrenaline.
+
+Rank with confidence or sales if those were on your card. Two audios per night is the default.
+
+Read more:
+{{siteUrl}}/inspiration
+
+Related: Will power: {{siteUrl}}/will-power
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 53 of 59
+Name: Convert lead card - Spiritual Growth
+Purpose tag: convert_lead_spiritual_growth
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, a sacred routine that happens at bedtime
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Spiritual Growth on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Spiritual growth does not have to be one more daytime appointment. Bedtime becomes a consistent practice: peace, presence, and inner alignment, reinforced as you fall asleep and during sleep.
+
+You choose goals that match your path. The schedule adapts when you update them.
+
+Read more:
+{{siteUrl}}/spirituality
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 54 of 59
+Name: Convert lead card - Stop Smoking
+Purpose tag: convert_lead_stop_smoking
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, stop smoking with nightly reinforcement
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Stop Smoking on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Stopping smoking is a next-day decision, repeated. Nightly audios help prime calm, control, and a different automatic response when the old cue shows up.
+
+Use this with medical support and a quit plan you trust. Rank will power beside it if slips have been the pattern.
+
+Read more:
+{{siteUrl}}/overcoming-addiction
+
+Related: Will power: {{siteUrl}}/will-power
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 55 of 59
+Name: Convert lead card - Stress Management
+Purpose tag: convert_lead_stress_management
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, calm at the one window you already have
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Stress Management on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+The transition into sleep is a natural window for relaxation. Stress-management meditation at night reinforces calm without adding a daytime task you will skip when you are already overloaded.
+
+Members often use techniques from sessions to settle themselves during the day. Pair with sleep or resilience if those were checked too.
+
+Read more:
+{{siteUrl}}/stress-relief
+
+Related: Sleep: {{siteUrl}}/sleep-meditation, Resilience: {{siteUrl}}/resilience-meditation
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 56 of 59
+Name: Convert lead card - Time Management
+Purpose tag: convert_lead_time_management
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, priorities that stick after the day is done
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Time Management on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Time management fails when every hour is already claimed. Nightly will-power audios rehearse choosing the aligned next step and finishing what matters - so tomorrow is not the same scramble.
+
+Balanced Life is the frame if you also marked health, wealth, and spirit. Rank up to ten. We rotate them.
+
+Read more:
+{{siteUrl}}/will-power
+
+Related: Balanced Life: {{siteUrl}}/balanced-life
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 57 of 59
+Name: Convert lead card - Travel $
+Purpose tag: convert_lead_travel_money
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, travel money as a nightly wealth goal
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Travel $ on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Travel money is a specific wealth goal: earning, saving, and believing the trip is allowed. Abundance audios keep that picture in rotation while you sleep - not as another vision-board homework pile.
+
+Pair with raise income or retirement if those were on your card. Update the list when the trip is booked and a new goal takes its place.
+
+Read more:
+{{siteUrl}}/wealth
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 58 of 59
+Name: Convert lead card - Vision
+Purpose tag: convert_lead_vision
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, a clearer picture of the life you are building
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Vision on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Vision on a lead card often means the life you want to see clearly - direction, purpose, and follow-through. Inspiration and spirituality audios keep that picture in nightly rotation.
+
+If you meant physical eyesight or body comfort, put Health in the same lineup and mention it to your facilitator. Either way, Start Session is the nightly cue.
+
+Read more:
+{{siteUrl}}/inspiration
+
+Related: Spirituality: {{siteUrl}}/spirituality, Health: {{siteUrl}}/health
+
+Start your 14-day free trial tonight:
+{{siteUrl}}/signup/step-1-subscription-selection
+
+Questions? Call (800) GOAL NOW (462-5669)
+
+Warmly,
+{{yourName}}
+Reach For The Stars
+
+================================================================================
+TEMPLATE 59 of 59
+Name: Convert lead card - Weight Control
+Purpose tag: convert_lead_weight_control
+--------------------------------------------------------------------------------
+Subject:
+{{firstName}}, kinder habits primed before tomorrow's choices
+--------------------------------------------------------------------------------
+Body:
+Hello {{firstName}},
+
+You marked Weight Control on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+
+Weight control is food, movement, and the evening decisions that undo the day. Nightly audios support balanced living and follow-through - a complement to medical and nutrition care, not a replacement.
+
+Rank health and will power beside it. Repetition over weeks matters more than one strict Monday.
+
+Read more:
+{{siteUrl}}/overcoming-addiction
+
+Related: Health: {{siteUrl}}/health, Will power: {{siteUrl}}/will-power
 
 Start your 14-day free trial tonight:
 {{siteUrl}}/signup/step-1-subscription-selection

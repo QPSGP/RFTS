@@ -8,7 +8,7 @@ Gold trial: 14 days, then $19.95/month. Platinum Managed: 30-day trial with faci
 
 Send cadence for the nurture sequence: every 1-2 days. If you know their interest from a lead card, send that **Convert interest** email instead of (or after) nurture 2/3.
 
-Do not send all interest emails to one person. Use the **Convert menu** email when they checked many boxes.
+Do not send all interest emails to one person. Use the **Convert menu** email when they checked many landing-page boxes. Use **Convert menu - Lead card interests** when they checked many paper-card boxes.
 
 ---
 
@@ -223,6 +223,8 @@ Use when a lead checked many goals, or you do not know which page to send.
 
 ## Interest emails (send the matching one)
 
+Landing-page interests (Admin templates named **Convert interest - …**):
+
 | If they care about | Template | Landing |
 | --- | --- | --- |
 | Health / longevity / energy | Convert interest - Health | `/health` |
@@ -242,6 +244,44 @@ Use when a lead checked many goals, or you do not know which page to send.
 | Mood / regulation | Convert interest - Emotional health | `/emotional-health` |
 | Discipline / follow-through | Convert interest - Will power | `/will-power` |
 | Insight / patterns | Convert interest - Self-awareness | `/self-awareness` |
+
+---
+
+## Lead-card checkbox emails
+
+Paper / digital lead cards use `EVENT_LEAD_CARD_GOALS`. Send **Convert lead card - {checkbox}** when they marked that box. If they marked many, send **Convert menu - Lead card interests** instead of blasting every interest email.
+
+| Lead card checkbox | Template | Landing |
+| --- | --- | --- |
+| Anger Management | Convert lead card - Anger Management | `/emotional-health` |
+| Attract Love | Convert lead card - Attract Love | `/relationship` |
+| Coaching | Convert lead card - Coaching | `/inspiration` |
+| Confidence | Convert lead card - Confidence | `/will-power` |
+| Creativity | Convert lead card - Creativity | `/inspiration` |
+| End Pain | Convert lead card - End Pain | `/pain-relief` |
+| End Procrastination | Convert lead card - End Procrastination | `/will-power` |
+| Energy | Convert lead card - Energy | `/health` |
+| Explore Past Lives | Convert lead card - Explore Past Lives | `/spirituality` |
+| Health & Rejuvenation | Convert lead card - Health & Rejuvenation | `/health` |
+| Life Mission | Convert lead card - Life Mission | `/inspiration` |
+| Marketing | Convert lead card - Marketing | `/wealth` |
+| Memory Excellence | Convert lead card - Memory Excellence | `/memory` |
+| Motivation | Convert lead card - Motivation | `/will-power` |
+| Psychic Abilities | Convert lead card - Psychic Abilities | `/spirituality` |
+| Quit Smoking | Convert lead card - Quit Smoking | `/overcoming-addiction` |
+| Raise Income | Convert lead card - Raise Income | `/wealth` |
+| Relationship Joy | Convert lead card - Relationship Joy | `/relationship` |
+| Retirement $ | Convert lead card - Retirement $ | `/wealth` |
+| Sales Skills | Convert lead card - Sales Skills | `/wealth` |
+| Sleep Well | Convert lead card - Sleep Well | `/sleep-meditation` |
+| Speaking Skills | Convert lead card - Speaking Skills | `/inspiration` |
+| Spiritual Growth | Convert lead card - Spiritual Growth | `/spirituality` |
+| Stop Smoking | Convert lead card - Stop Smoking | `/overcoming-addiction` |
+| Stress Management | Convert lead card - Stress Management | `/stress-relief` |
+| Time Management | Convert lead card - Time Management | `/will-power` |
+| Travel $ | Convert lead card - Travel $ | `/wealth` |
+| Vision | Convert lead card - Vision | `/inspiration` |
+| Weight Control | Convert lead card - Weight Control | `/overcoming-addiction` |
 
 ---
 
