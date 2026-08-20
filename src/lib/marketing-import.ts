@@ -79,8 +79,9 @@ function splitCsvLines(text: string): string[] {
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
     if (ch === '"') {
+      current += ch;
       if (inQuotes && text[i + 1] === '"') {
-        current += '"';
+        current += text[i + 1];
         i += 1;
       } else {
         inQuotes = !inQuotes;
@@ -180,10 +181,11 @@ export function normalizeImportRow(row: Record<string, string>): NormalizedImpor
     pickField(row, "fullName", "full_name", "name", "contact", "contactName", "person") ||
     [firstName, lastName].filter(Boolean).join(" ") ||
     null;
+  const split = splitImportedFullName(fullName);
   return {
     fullName,
-    firstName,
-    lastName,
+    firstName: firstName || split.firstName,
+    lastName: lastName || split.lastName,
     email: pickField(row, "email", "e-mail", "emailAddress", "email_address"),
     phoneMobile: pickField(
       row,
@@ -203,10 +205,26 @@ export function normalizeImportRow(row: Record<string, string>): NormalizedImpor
       "businessName",
       "practice"
     ),
-    city: pickField(row, "city"),
-    state: pickField(row, "state", "province", "region"),
-    zip: pickField(row, "zip", "zipcode", "postal", "postalCode"),
-    notes: pickField(row, "notes", "note", "comments", "comment"),
+    city: pickField(row, "city", "signup city", "signupcity"),
+    state: pickField(row, "state", "province", "region", "signup region", "signupregion"),
+    zip: pickField(
+      row,
+      "zip",
+      "zipcode",
+      "postal",
+      "postalCode",
+      "signup postal code",
+      "signuppostalcode"
+    ),
+    notes: pickField(
+      row,
+      "notes",
+      "note",
+      "comments",
+      "comment",
+      "additional notes",
+      "additionalnotes"
+    ),
     persona: pickField(row, "persona"),
     category: pickField(row, "category"),
     interest: pickField(row, "interest"),
@@ -225,10 +243,94 @@ export function normalizeImportRow(row: Record<string, string>): NormalizedImpor
         "goalInterests",
         "goal_interests",
         "interests",
-        "checked"
+        "checked",
+        "tags"
       )
     )
   };
+}
+
+/** Split "Jane Doe" when the file only has a single Name column (AWeber, etc.). */
+export function splitImportedFullName(fullName: string | null): {
+  firstName: string | null;
+  lastName: string | null;
+} {
+  if (!fullName) return { firstName: null, lastName: null };
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return { firstName: null, lastName: null };
+  if (parts.length === 1) return { firstName: parts[0], lastName: null };
+  return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
+}
+
+const OUTREACH_PIPELINE_STATUS_IDS = new Set([
+  "prospect",
+  "process_chosen",
+  "draft_ready",
+  "awaiting_approval",
+  "ready_to_send",
+  "contacted",
+  "in_talks",
+  "active",
+  "declined"
+]);
+
+const MAILING_LIST_STATUS_RE =
+  /^(unsubscribed|subscribed|unconfirmed|bounced|cleaned|complained)$/i;
+
+export function isMailingListStatus(status: string | null): boolean {
+  return !!status && MAILING_LIST_STATUS_RE.test(status.trim());
+}
+
+export function importMarksDoNotEmail(status: string | null): boolean {
+  const s = (status || "").trim().toLowerCase();
+  return (
+    s === "unsubscribed" ||
+    s === "unconfirm" ||
+    s === "unconfirmed" ||
+    s === "bounced" ||
+    s === "complained"
+  );
+}
+
+/** AWeber Subscribed/Unsubscribed is not an outreach pipeline status. */
+export function outreachPipelineStatusFromImport(status: string | null): string {
+  const s = (status || "").trim();
+  if (!s || isMailingListStatus(s)) return "prospect";
+  const key = s.toLowerCase().replace(/[\s-]+/g, "_");
+  if (OUTREACH_PIPELINE_STATUS_IDS.has(key)) return key;
+  if (OUTREACH_PIPELINE_STATUS_IDS.has(s)) return s;
+  return "prospect";
+}
+
+export function looksLikeAweberSubscriberExport(rows: Record<string, string>[]): boolean {
+  const row = rows[0];
+  if (!row) return false;
+  const keys = new Set(Object.keys(row).map((k) => normKey(k)));
+  return (
+    keys.has("email") &&
+    keys.has("signupdate") &&
+    (keys.has("unsubscribedate") || keys.has("tags") || keys.has("signupurl"))
+  );
+}
+
+export function buildOutreachImportNotes(n: NormalizedImportPerson): string | null {
+  const bits: string[] = [];
+  if (n.notes) bits.push(n.notes);
+  if (n.goals?.length) bits.push(`Tags: ${n.goals.join(", ")}`);
+  const loc = [n.city, n.state, n.zip].filter(Boolean).join(", ");
+  if (loc) bits.push(loc);
+  if (importMarksDoNotEmail(n.status)) bits.push("AWeber: unsubscribed");
+  else if (isMailingListStatus(n.status)) bits.push("AWeber list");
+  return bits.length ? bits.join(" | ") : null;
+}
+
+export function mergeOutreachNotes(existing: string | null, incoming: string | null): string | null {
+  const a = (existing || "").trim();
+  const b = (incoming || "").trim();
+  if (!b) return a || null;
+  if (!a) return b;
+  if (a.includes(b)) return a;
+  return `${a}\n${b}`;
 }
 
 function splitGoals(raw: string | null): string[] | null {

@@ -18,6 +18,7 @@ import {
   updateEventLeadStatus
 } from "@/lib/event-leads-db";
 import {
+  looksLikeAweberSubscriberExport,
   normalizeImportRow,
   parseDelimitedTable
 } from "@/lib/marketing-import";
@@ -223,6 +224,15 @@ export async function POST(request: Request) {
     if (!batch.length) {
       return NextResponse.json(
         { error: "No rows to import. Upload CSV/TSV or JSON with name/email columns." },
+        { status: 400 }
+      );
+    }
+    if (looksLikeAweberSubscriberExport(batch)) {
+      return NextResponse.json(
+        {
+          error:
+            "This looks like an AWeber subscriber export. Use Import outreach database in Leads & outreach instead. Event-lead import would tag everyone as a Long Beach Expo card."
+        },
         { status: 400 }
       );
     }

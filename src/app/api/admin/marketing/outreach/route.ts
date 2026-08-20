@@ -7,12 +7,18 @@ import {
   createOutreachTarget,
   deleteOutreachTarget,
   getOutreachTarget,
+  listAllOutreachContacts,
   listOutreachTargets,
+  updateOutreachContact,
   updateOutreachTarget
 } from "@/lib/db";
 import { TERRY_FACILITATOR_REF_CODE } from "@/lib/event-leads";
 import {
+  buildOutreachImportNotes,
+  importMarksDoNotEmail,
+  mergeOutreachNotes,
   normalizeImportRow,
+  outreachPipelineStatusFromImport,
   parseDelimitedTable
 } from "@/lib/marketing-import";
 import { STARTER_OUTREACH_TARGETS } from "@/lib/marketing-reference";
@@ -128,14 +134,30 @@ export async function POST(request: Request) {
     }
 
     const existing = await listOutreachTargets();
+    const contacts = await listAllOutreachContacts();
+    const targetById = new Map(existing.map((t) => [t.id, t]));
     const existingNames = new Set(existing.map((t) => t.organization.trim().toLowerCase()));
-    const results: { organization?: string; id?: string; skipped?: boolean; error?: string }[] =
-      [];
+    const emailToTargetId = new Map<string, string>();
+    const contactByEmail = new Map<string, (typeof contacts)[number]>();
+    for (const contact of contacts) {
+      const email = contact.email?.trim().toLowerCase();
+      if (!email || !targetById.has(contact.targetId)) continue;
+      if (!emailToTargetId.has(email)) emailToTargetId.set(email, contact.targetId);
+      if (!contactByEmail.has(email)) contactByEmail.set(email, contact);
+    }
+    const results: {
+      organization?: string;
+      id?: string;
+      skipped?: boolean;
+      updated?: boolean;
+      error?: string;
+    }[] = [];
     const by = getSessionEmail();
+    const seenEmails = new Set<string>();
 
     for (const row of batch) {
       const n = normalizeImportRow(row);
-      const organization =
+      let organization =
         n.organization ||
         n.fullName ||
         [n.firstName, n.lastName].filter(Boolean).join(" ") ||
@@ -144,11 +166,73 @@ export async function POST(request: Request) {
         results.push({ error: "missing_name" });
         continue;
       }
-      const key = organization.trim().toLowerCase();
-      if (existingNames.has(key)) {
+      const emailKey = n.email?.trim().toLowerCase() || "";
+      if (emailKey && seenEmails.has(emailKey)) {
         results.push({ organization, skipped: true });
         continue;
       }
+      if (emailKey) seenEmails.add(emailKey);
+
+      const matchedId = emailKey ? emailToTargetId.get(emailKey) : undefined;
+      const matchedByName = !matchedId && !emailKey ? existingNames.has(organization.trim().toLowerCase()) : false;
+      const importNotes = buildOutreachImportNotes(n);
+      const doNotEmail = importMarksDoNotEmail(n.status);
+
+      if (matchedId) {
+        const target = targetById.get(matchedId);
+        if (!target) {
+          results.push({ organization, error: "match_failed" });
+          continue;
+        }
+        const notes = mergeOutreachNotes(target.notes, importNotes);
+        const nextDoNotEmail = target.doNotEmail || doNotEmail;
+        const contact = emailKey ? contactByEmail.get(emailKey) : undefined;
+        const contactNotes = contact
+          ? mergeOutreachNotes(contact.notes, importNotes)
+          : importNotes;
+        const changed =
+          notes !== (target.notes || null) ||
+          nextDoNotEmail !== target.doNotEmail ||
+          (contact != null && contactNotes !== (contact.notes || null));
+        if (!changed) {
+          results.push({ organization, id: target.id, skipped: true });
+          continue;
+        }
+        try {
+          const updated = await updateOutreachTarget(target.id, {
+            organization: target.organization,
+            notes,
+            doNotEmail: nextDoNotEmail
+          });
+          if (updated) targetById.set(updated.id, updated);
+          if (contact && contactNotes !== (contact.notes || null)) {
+            const saved = await updateOutreachContact(contact.id, { notes: contactNotes });
+            if (saved && emailKey) contactByEmail.set(emailKey, saved);
+          }
+          await createOutreachActivity({
+            targetId: target.id,
+            kind: "imported",
+            subject: "Matched existing email",
+            bodyPreview: organization,
+            createdByEmail: by
+          });
+          results.push({ organization, id: target.id, updated: true });
+        } catch {
+          results.push({ organization, error: "update_failed" });
+        }
+        continue;
+      }
+
+      if (matchedByName) {
+        results.push({ organization, skipped: true });
+        continue;
+      }
+
+      const nameKey = organization.trim().toLowerCase();
+      if (existingNames.has(nameKey) && emailKey) {
+        organization = `${organization} · ${n.email}`;
+      }
+
       const targetType: "organization" | "individual" =
         n.targetType === "organization"
           ? "organization"
@@ -168,23 +252,26 @@ export async function POST(request: Request) {
           entryPath: n.entryPath || "Facilitator / Managed",
           contact: [n.email, n.phoneMobile].filter(Boolean).join(" · ") || null,
           refCode: n.refCode || TERRY_FACILITATOR_REF_CODE,
-          status: n.status || "prospect",
-          notes: n.notes,
+          status: outreachPipelineStatusFromImport(n.status),
+          notes: importNotes,
           interest: n.interest,
-          doNotEmail: false
+          doNotEmail
         });
-        existingNames.add(key);
+        existingNames.add(target.organization.trim().toLowerCase());
+        targetById.set(target.id, target);
+        if (emailKey) emailToTargetId.set(emailKey, target.id);
         if (n.email || n.fullName || n.firstName || n.phoneMobile) {
-          await createOutreachContact({
+          const createdContact = await createOutreachContact({
             targetId: target.id,
             firstName: n.firstName,
             lastName: n.lastName,
             name: n.fullName,
             email: n.email,
             phoneMobile: n.phoneMobile,
-            notes: n.notes,
+            notes: importNotes,
             isPrimary: true
           });
+          if (emailKey) contactByEmail.set(emailKey, createdContact);
         }
         await createOutreachActivity({
           targetId: target.id,
@@ -213,7 +300,8 @@ export async function POST(request: Request) {
     const targets = await listOutreachTargets();
     return NextResponse.json({
       ok: true,
-      imported: results.filter((r) => r.id && !r.skipped).length,
+      imported: results.filter((r) => r.id && !r.skipped && !r.updated).length,
+      updated: results.filter((r) => r.updated).length,
       skipped: results.filter((r) => r.skipped).length,
       errors: results.filter((r) => r.error).length,
       results,

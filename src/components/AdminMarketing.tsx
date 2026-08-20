@@ -477,10 +477,17 @@ export default function AdminMarketing() {
       if (Array.isArray(data.targets)) setTargets(data.targets);
       else await loadTargets();
       setOutreachStatus(
-        `Imported ${data.imported ?? 0}, skipped ${data.skipped ?? 0}, errors ${data.errors ?? 0}. Default ref: ${TERRY_FACILITATOR_REF_CODE}.`
+        `${[
+          `Imported ${data.imported ?? 0}`,
+          data.updated ? `updated ${data.updated} already in CRM` : null,
+          `skipped ${data.skipped ?? 0}`,
+          `errors ${data.errors ?? 0}`
+        ]
+          .filter(Boolean)
+          .join(", ")}. Default ref: ${TERRY_FACILITATOR_REF_CODE}.`
       );
       setOpenOutreachSubs((prev) => ({ ...prev, outreachList: true }));
-      if ((data.imported ?? 0) > 0) setLeadsStep("sequence");
+      if ((data.imported ?? 0) > 0 || (data.updated ?? 0) > 0) setLeadsStep("sequence");
     } catch {
       setOutreachStatus("Outreach import failed.");
     } finally {
@@ -984,9 +991,10 @@ export default function AdminMarketing() {
           <div className="card" style={{ marginBottom: 12 }}>
             <h3 style={{ margin: "0 0 8px", fontSize: 15 }}>Import outreach database</h3>
             <p style={{ margin: "0 0 8px", fontSize: 14, color: "#4b5563" }}>
-              Upload CSV, TSV, or JSON (columns: name / organization, email, phone, notes,
-              persona, category, ref, goals). Missing refs get Terry&apos;s code. Duplicate
-              organization names are skipped.
+              Upload CSV, TSV, or JSON (name / organization, email, phone, notes, tags).
+              AWeber subscriber exports work here. Missing refs get Terry&apos;s code.
+              Matching emails update the existing CRM row (unsubscribe becomes do-not-email)
+              instead of adding a duplicate. Name-only duplicates without email are skipped.
             </p>
             <input
               ref={outreachImportRef}

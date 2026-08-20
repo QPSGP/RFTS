@@ -591,7 +591,8 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
             <p style={{ margin: "0 0 8px", fontSize: 14, color: "#4b5563" }}>
               Upload a CSV, TSV, or JSON export (columns like name, email, phone, city, notes).
               Missing referral codes get Terry&apos;s facilitator code ({TERRY_FACILITATOR_REF_CODE}).
-              Duplicates by email + event are skipped.
+              Duplicates by email + event are skipped. AWeber subscriber lists belong under
+              Import outreach database, not here.
             </p>
             <input
               ref={importFileRef}
