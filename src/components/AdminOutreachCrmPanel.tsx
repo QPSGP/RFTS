@@ -187,6 +187,7 @@ export default function AdminOutreachCrmPanel({
   });
 
   const [noteText, setNoteText] = useState("");
+  const [nurtureSummary, setNurtureSummary] = useState<string | null>(null);
   const canSend =
     (target.status === "ready_to_send" || target.status === "contacted") &&
     !target.doNotEmail &&
@@ -226,6 +227,39 @@ export default function AdminOutreachCrmPanel({
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/marketing/outreach/nurture", {
+      credentials: "include",
+      cache: "no-store"
+    })
+      .then((res) => (res.ok ? res.json() : { sequences: [] }))
+      .then((data) => {
+        if (cancelled) return;
+        const row = Array.isArray(data.sequences)
+          ? data.sequences.find((s: { targetId: string }) => s.targetId === target.id)
+          : null;
+        if (!row) {
+          setNurtureSummary(null);
+          return;
+        }
+        const next = row.nextInterest
+          ? `Next: ${row.nextInterest} (${row.remaining} left)`
+          : row.status;
+        setNurtureSummary(
+          `Weekly interests: ${(row.plan || [])
+            .map((p: { interest: string }) => p.interest)
+            .join(", ")}. ${next}`
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setNurtureSummary(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [target.id]);
 
   useEffect(() => {
     setCrmForm({
@@ -676,6 +710,9 @@ export default function AdminOutreachCrmPanel({
       {status && (
         <p style={{ margin: "10px 0 0", fontSize: 13, color: "#374151" }}>{status}</p>
       )}
+      {nurtureSummary ? (
+        <p style={{ margin: "10px 0 0", fontSize: 13, color: "#4b5563" }}>{nurtureSummary}</p>
+      ) : null}
       {loading && (
         <p style={{ margin: "10px 0 0", fontSize: 13, color: "#6b7280" }}>Loading…</p>
       )}

@@ -18,6 +18,7 @@ import {
 } from "@/lib/marketing-reference";
 import AdminOutreachCrmPanel from "@/components/AdminOutreachCrmPanel";
 import AdminEventLeadsPanel from "@/components/AdminEventLeadsPanel";
+import AdminOutreachSequencePanel from "@/components/AdminOutreachSequencePanel";
 import { TERRY_FACILITATOR_REF_CODE } from "@/lib/event-leads";
 
 const marketingSections = {
@@ -168,10 +169,13 @@ export default function AdminMarketing() {
   const [savingTemplate, setSavingTemplate] = useState(false);
 
   const [copied, setCopied] = useState<string | null>(null);
+  type LeadsWizardStep = "add" | "crm" | "sequence" | "tools";
+  const [leadsStep, setLeadsStep] = useState<LeadsWizardStep>("add");
 
   type OutreachSubKey =
     | "eventLeads"
     | "importOutreach"
+    | "exportCrm"
     | "emailEvents"
     | "outreachList"
     | "addTarget"
@@ -180,6 +184,7 @@ export default function AdminMarketing() {
   const [openOutreachSubs, setOpenOutreachSubs] = useState<Record<OutreachSubKey, boolean>>({
     eventLeads: false,
     importOutreach: false,
+    exportCrm: false,
     emailEvents: false,
     outreachList: false,
     addTarget: false,
@@ -188,6 +193,14 @@ export default function AdminMarketing() {
   });
   const outreachImportRef = useRef<HTMLInputElement | null>(null);
   const [outreachImportBusy, setOutreachImportBusy] = useState(false);
+  const [exportDataset, setExportDataset] = useState("all");
+  const [exportFormat, setExportFormat] = useState<"csv" | "json">("csv");
+  const [exportStatus, setExportStatusFilter] = useState("all");
+  const [exportDoNotEmail, setExportDoNotEmail] = useState<"any" | "yes" | "no">("any");
+  const [exportEventKey, setExportEventKey] = useState("");
+  const [exportQuery, setExportQuery] = useState("");
+  const [exportBusy, setExportBusy] = useState(false);
+  const [exportMessage, setExportMessage] = useState<string | null>(null);
 
   type EmailDeliveryEvent = {
     id: string;
@@ -467,11 +480,91 @@ export default function AdminMarketing() {
         `Imported ${data.imported ?? 0}, skipped ${data.skipped ?? 0}, errors ${data.errors ?? 0}. Default ref: ${TERRY_FACILITATOR_REF_CODE}.`
       );
       setOpenOutreachSubs((prev) => ({ ...prev, outreachList: true }));
+      if ((data.imported ?? 0) > 0) setLeadsStep("sequence");
     } catch {
       setOutreachStatus("Outreach import failed.");
     } finally {
       setOutreachImportBusy(false);
       if (outreachImportRef.current) outreachImportRef.current.value = "";
+    }
+  };
+
+  const triggerDownload = (filename: string, blob: Blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const filenameFromDisposition = (header: string | null, fallback: string): string => {
+    if (!header) return fallback;
+    const match = /filename="([^"]+)"/i.exec(header);
+    return match?.[1] || fallback;
+  };
+
+  const downloadCrmExport = async (params: URLSearchParams): Promise<string> => {
+    const res = await fetch(`/api/admin/marketing/crm-export?${params.toString()}`, {
+      credentials: "include",
+      cache: "no-store"
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(typeof data.error === "string" ? data.error : "Export failed.");
+    }
+    const format = params.get("format") || "csv";
+    const dataset = params.get("dataset") || "all";
+    const contentType = res.headers.get("Content-Type") || "";
+    if (dataset === "all" && format === "csv" && contentType.includes("application/json")) {
+      const data = (await res.json()) as {
+        files?: { filename: string; csv: string; rowCount: number }[];
+        counts?: { targets?: number; contacts?: number; eventLeads?: number };
+      };
+      const files = Array.isArray(data.files) ? data.files : [];
+      for (let i = 0; i < files.length; i += 1) {
+        const file = files[i];
+        triggerDownload(file.filename, new Blob([file.csv], { type: "text/csv;charset=utf-8" }));
+        if (i < files.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+        }
+      }
+      const counts = data.counts || {};
+      return `Downloaded ${files.length} CSV files (${counts.targets ?? 0} targets, ${counts.contacts ?? 0} contacts, ${counts.eventLeads ?? 0} event leads).`;
+    }
+    const blob = await res.blob();
+    const filename = filenameFromDisposition(
+      res.headers.get("Content-Disposition"),
+      `rfts-crm-${dataset}.${format}`
+    );
+    triggerDownload(filename, blob);
+    return `Downloaded ${filename}.`;
+  };
+
+  const runCrmExport = async (overrides?: Record<string, string>) => {
+    setExportBusy(true);
+    setExportMessage(null);
+    try {
+      const params = new URLSearchParams();
+      params.set("dataset", overrides?.dataset || exportDataset);
+      params.set("format", overrides?.format || exportFormat);
+      const status = overrides?.status || exportStatus;
+      if (status && status !== "all") params.set("status", status);
+      const dne = overrides?.doNotEmail || exportDoNotEmail;
+      if (dne === "yes") params.set("doNotEmail", "true");
+      if (dne === "no") params.set("doNotEmail", "false");
+      const eventKey = overrides?.eventKey ?? exportEventKey;
+      if (eventKey.trim()) params.set("eventKey", eventKey.trim());
+      const q = overrides?.q ?? exportQuery;
+      if (q.trim()) params.set("q", q.trim());
+      const message = await downloadCrmExport(params);
+      setExportMessage(message);
+    } catch (err) {
+      setExportMessage(err instanceof Error ? err.message : "Export failed.");
+    } finally {
+      setExportBusy(false);
     }
   };
 
@@ -837,59 +930,238 @@ export default function AdminMarketing() {
         <section id="marketing-leads-outreach" style={{ marginBottom: 24, minWidth: 0 }}>
           <h2 style={{ marginBottom: 8, fontSize: 18 }}>Leads &amp; outreach</h2>
           <p style={{ color: "#4b5563", marginBottom: 12, fontSize: 14 }}>
-            Capture event leads, import contact databases, then work the outreach CRM. Each process
-            below starts collapsed. New event leads and imports default to Terry Brussel-Rogers
-            facilitator referral code <code>{TERRY_FACILITATOR_REF_CODE}</code> unless you set
-            another.
+            One step at a time. Import or add a lead, confirm it in CRM, then we
+            line up weekly interest emails until they convert or we run out of
+            goals.
           </p>
-
-          <div style={{ marginBottom: 12 }}>
-            <button
-              type="button"
-              className={adminSectionToggleClass(openOutreachSubs.eventLeads, true)}
-              aria-expanded={openOutreachSubs.eventLeads}
-              onClick={() => toggleOutreachSub("eventLeads")}
-            >
-              {openOutreachSubs.eventLeads ? "▼" : "▶"} Event leads &amp; digital cards
-            </button>
-            {openOutreachSubs.eventLeads ? (
-              <div style={{ marginTop: 10 }}>
-                <AdminEventLeadsPanel open={openOutreachSubs.eventLeads} />
-              </div>
-            ) : null}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 8,
+              marginBottom: 16
+            }}
+          >
+            {(
+              [
+                ["add", "1. Add to CRM"],
+                ["crm", "2. Review list"],
+                ["sequence", "3. Weekly emails"],
+                ["tools", "Tools"]
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                className={`button${leadsStep === id ? "" : " button-secondary"}`}
+                style={{ width: "auto", padding: "8px 12px", fontSize: 13 }}
+                onClick={() => {
+                  setLeadsStep(id);
+                  if (id === "crm") {
+                    setOpenOutreachSubs((prev) => ({ ...prev, outreachList: true }));
+                  }
+                }}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
+          {leadsStep === "add" ? (
+            <>
+          <p style={{ margin: "0 0 12px", fontSize: 13, color: "#4b5563" }}>
+            Import a file or add a card. Successful rows land in CRM with Terry&apos;s
+            referral code <code>{TERRY_FACILITATOR_REF_CODE}</code>, and we line up
+            their interest emails automatically.
+          </p>
+          <div style={{ marginBottom: 12 }}>
+            <AdminEventLeadsPanel
+              open
+              onImported={() => setLeadsStep("sequence")}
+            />
+          </div>
+
+          <div className="card" style={{ marginBottom: 12 }}>
+            <h3 style={{ margin: "0 0 8px", fontSize: 15 }}>Import outreach database</h3>
+            <p style={{ margin: "0 0 8px", fontSize: 14, color: "#4b5563" }}>
+              Upload CSV, TSV, or JSON (columns: name / organization, email, phone, notes,
+              persona, category, ref, goals). Missing refs get Terry&apos;s code. Duplicate
+              organization names are skipped.
+            </p>
+            <input
+              ref={outreachImportRef}
+              type="file"
+              accept=".csv,.tsv,.txt,.json,text/csv,application/json"
+              disabled={outreachImportBusy}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void importOutreachDatabase(file);
+              }}
+            />
+            {outreachImportBusy ? (
+              <p style={{ marginTop: 8, fontSize: 13 }}>Importing…</p>
+            ) : null}
+            {outreachStatus ? (
+              <p style={{ marginTop: 10, fontSize: 14 }}>{outreachStatus}</p>
+            ) : null}
+            <div style={{ marginTop: 12 }}>
+              <button
+                type="button"
+                className="button"
+                style={{ width: "auto" }}
+                onClick={() => setLeadsStep("crm")}
+              >
+                Next: review CRM list
+              </button>
+            </div>
+          </div>
+            </>
+          ) : null}
+
+          {leadsStep === "sequence" && !crmTarget ? (
+            <AdminOutreachSequencePanel
+              onOpenCrm={(id) => {
+                setCrmTargetId(id);
+                setLeadsStep("crm");
+              }}
+            />
+          ) : null}
+
+          {leadsStep === "tools" ? (
+            <>
           <div style={{ marginBottom: 12 }}>
             <button
               type="button"
-              className={adminSectionToggleClass(openOutreachSubs.importOutreach, true)}
-              aria-expanded={openOutreachSubs.importOutreach}
-              onClick={() => toggleOutreachSub("importOutreach")}
+              className={adminSectionToggleClass(openOutreachSubs.exportCrm, true)}
+              aria-expanded={openOutreachSubs.exportCrm}
+              onClick={() => toggleOutreachSub("exportCrm")}
             >
-              {openOutreachSubs.importOutreach ? "▼" : "▶"} Import outreach database
+              {openOutreachSubs.exportCrm ? "▼" : "▶"} Export CRM data
             </button>
-            {openOutreachSubs.importOutreach ? (
+            {openOutreachSubs.exportCrm ? (
               <div className="card" style={{ marginTop: 10 }}>
                 <p style={{ margin: "0 0 8px", fontSize: 14, color: "#4b5563" }}>
-                  Upload CSV, TSV, or JSON (columns: name / organization, email, phone, notes,
-                  persona, category, ref). Missing refs get Terry&apos;s code. Duplicate
-                  organization names are skipped.
+                  Download the live CRM: outreach targets, contacts, activity, event leads, bounce
+                  log, and email templates. Use <strong>All CRM</strong> for a full dump,{" "}
+                  <strong>Flat contacts</strong> for a spreadsheet of people on each target, or
+                  filter by status / search and export that query.
                 </p>
-                <input
-                  ref={outreachImportRef}
-                  type="file"
-                  accept=".csv,.tsv,.txt,.json,text/csv,application/json"
-                  disabled={outreachImportBusy}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) void importOutreachDatabase(file);
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                    gap: 10,
+                    marginBottom: 10
                   }}
-                />
-                {outreachImportBusy ? (
-                  <p style={{ marginTop: 8, fontSize: 13 }}>Importing…</p>
+                >
+                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+                    Dataset
+                    <select
+                      value={exportDataset}
+                      onChange={(e) => setExportDataset(e.target.value)}
+                    >
+                      <option value="all">All CRM tables</option>
+                      <option value="flat">Flat contacts spreadsheet</option>
+                      <option value="targets">Outreach targets</option>
+                      <option value="contacts">Contacts</option>
+                      <option value="activities">Activity log</option>
+                      <option value="event_leads">Event leads</option>
+                      <option value="email_events">Email bounces &amp; complaints</option>
+                      <option value="templates">Email templates</option>
+                    </select>
+                  </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+                    Format
+                    <select
+                      value={exportFormat}
+                      onChange={(e) => setExportFormat(e.target.value as "csv" | "json")}
+                    >
+                      <option value="csv">CSV</option>
+                      <option value="json">JSON</option>
+                    </select>
+                  </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+                    Target status
+                    <select
+                      value={exportStatus}
+                      onChange={(e) => setExportStatusFilter(e.target.value)}
+                    >
+                      <option value="all">All statuses</option>
+                      <option value="due">Due this week</option>
+                      {OUTREACH_STATUSES.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+                    Do not email
+                    <select
+                      value={exportDoNotEmail}
+                      onChange={(e) =>
+                        setExportDoNotEmail(e.target.value as "any" | "yes" | "no")
+                      }
+                    >
+                      <option value="any">Any</option>
+                      <option value="yes">Do-not-email only</option>
+                      <option value="no">Email-ok only</option>
+                    </select>
+                  </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+                    Event key (event leads)
+                    <input
+                      value={exportEventKey}
+                      onChange={(e) => setExportEventKey(e.target.value)}
+                      placeholder="optional"
+                    />
+                  </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>
+                    Search query
+                    <input
+                      value={exportQuery}
+                      onChange={(e) => setExportQuery(e.target.value)}
+                      placeholder="name, email, org…"
+                    />
+                  </label>
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <button
+                    type="button"
+                    className="button"
+                    style={{ width: "auto" }}
+                    disabled={exportBusy}
+                    onClick={() => void runCrmExport()}
+                  >
+                    {exportBusy ? "Exporting…" : "Download export"}
+                  </button>
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    style={{ width: "auto" }}
+                    disabled={exportBusy}
+                    onClick={() =>
+                      void runCrmExport({
+                        dataset: "all",
+                        format: "json",
+                        status: "all",
+                        doNotEmail: "any",
+                        q: "",
+                        eventKey: ""
+                      })
+                    }
+                  >
+                    Download all JSON
+                  </button>
+                </div>
+                {exportDataset === "all" && exportFormat === "csv" ? (
+                  <p style={{ margin: "8px 0 0", fontSize: 13, color: "#4b5563" }}>
+                    All + CSV downloads one file per table (including the flat contacts sheet).
+                    Your browser may ask to allow multiple downloads.
+                  </p>
                 ) : null}
-                {outreachStatus && openOutreachSubs.importOutreach ? (
-                  <p style={{ marginTop: 10, fontSize: 14 }}>{outreachStatus}</p>
+                {exportMessage ? (
+                  <p style={{ marginTop: 10, fontSize: 14 }}>{exportMessage}</p>
                 ) : null}
               </div>
             ) : null}
@@ -982,8 +1254,10 @@ export default function AdminMarketing() {
               </div>
             ) : null}
           </div>
+            </>
+          ) : null}
 
-          {!crmTarget ? (
+          {!crmTarget && leadsStep === "tools" ? (
             <>
           <div id="outreach-add-target" style={{ marginBottom: 12 }}>
             <button
@@ -1423,20 +1697,12 @@ export default function AdminMarketing() {
           </div>
             ) : null}
           </div>
+            </>
+          ) : null}
 
+          {!crmTarget && leadsStep === "crm" ? (
+            <>
           <div style={{ marginBottom: 12 }}>
-            <button
-              type="button"
-              className={adminSectionToggleClass(openOutreachSubs.outreachList, true)}
-              aria-expanded={openOutreachSubs.outreachList}
-              onClick={() => toggleOutreachSub("outreachList")}
-            >
-              {openOutreachSubs.outreachList ? "▼" : "▶"} Outreach tracker (
-              {targets.length}
-              {!targetsLoaded ? "…" : ""})
-            </button>
-            {openOutreachSubs.outreachList ? (
-              <div style={{ marginTop: 10 }}>
           <div
             style={{
               display: "flex",
@@ -1474,6 +1740,27 @@ export default function AdminMarketing() {
                 {s.label} ({statusCounts[s.id] ?? 0})
               </button>
             ))}
+          </div>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+            <button
+              type="button"
+              className="button button-secondary"
+              style={{ width: "auto", padding: "6px 10px", fontSize: 13 }}
+              disabled={exportBusy}
+              onClick={() =>
+                void runCrmExport({
+                  dataset: "targets",
+                  format: "csv",
+                  status: statusFilter,
+                  doNotEmail: "any",
+                  q: "",
+                  eventKey: ""
+                })
+              }
+            >
+              {exportBusy ? "Exporting…" : `Export this view (${filteredTargets.length})`}
+            </button>
           </div>
 
           <div className="outreach-pipeline-list">
@@ -1539,8 +1826,16 @@ export default function AdminMarketing() {
             )}
             {!targetsLoaded && <p style={{ padding: 8, color: "#6b7280", margin: 0 }}>Loading…</p>}
           </div>
-              </div>
-            ) : null}
+          <div style={{ marginTop: 12 }}>
+            <button
+              type="button"
+              className="button"
+              style={{ width: "auto" }}
+              onClick={() => setLeadsStep("sequence")}
+            >
+              Next: weekly emails
+            </button>
+          </div>
           </div>
             </>
           ) : null}

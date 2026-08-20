@@ -167,6 +167,27 @@ export async function listEventLeads(options?: {
   return rows.map(mapLeadRow);
 }
 
+export async function listAllEventLeads(): Promise<EventLeadRecord[]> {
+  await ensureEventLeadsTable();
+  const { rows } = await sql<EventLeadRecord>`
+    SELECT
+      id, form_type AS "formType", status,
+      event_name AS "eventName", event_dates AS "eventDates", event_key AS "eventKey",
+      first_name AS "firstName", last_name AS "lastName", full_name AS "fullName",
+      email, phone_mobile AS "phoneMobile", COALESCE(sms_ok, false) AS "smsOk",
+      city, state, zip, country,
+      persona, category, interest, entry_path AS "entryPath",
+      captured_by AS "capturedBy", notes, source_scan_path AS "sourceScanPath",
+      COALESCE(payload, '{}'::jsonb) AS payload,
+      outreach_target_id AS "outreachTargetId",
+      auto_reply_sent_at AS "autoReplySentAt",
+      created_at AS "createdAt", updated_at AS "updatedAt"
+    FROM marketing_event_leads
+    ORDER BY created_at DESC
+  `;
+  return rows.map(mapLeadRow);
+}
+
 export async function getEventLead(id: string): Promise<EventLeadRecord | null> {
   await ensureEventLeadsTable();
   const { rows } = await sql<EventLeadRecord>`
@@ -346,7 +367,25 @@ export async function createEventLead(
       auto_reply_sent_at AS "autoReplySentAt",
       created_at AS "createdAt", updated_at AS "updatedAt"
   `;
-  return mapLeadRow(rows[0]);
+  const lead = mapLeadRow(rows[0]);
+  if (outreachTargetId) {
+    try {
+      const { enrollOutreachNurture } = await import("@/lib/outreach-nurture");
+      await enrollOutreachNurture({
+        targetId: outreachTargetId,
+        payload,
+        interest: input.interest,
+        interests: [
+          ...(input.practice?.goalInterests || []),
+          ...(input.consumer?.goalInterests || [])
+        ],
+        createdByEmail: options?.createdByEmail ?? null
+      });
+    } catch {
+      // Sequence enroll is best-effort after a successful CRM add.
+    }
+  }
+  return lead;
 }
 
 export async function markEventLeadAutoReplied(id: string): Promise<EventLeadRecord | null> {

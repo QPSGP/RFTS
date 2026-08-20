@@ -4235,6 +4235,25 @@ export const listOutreachContacts = async (targetId: string): Promise<OutreachCo
   return rows;
 };
 
+export const listAllOutreachContacts = async (): Promise<OutreachContact[]> => {
+  await ensureMarketingOutreachTable();
+  const { rows } = await sql<OutreachContact>`
+    SELECT
+      id, target_id AS "targetId", name,
+      first_name AS "firstName", last_name AS "lastName",
+      email, phone, phone_mobile AS "phoneMobile",
+      role_title AS "roleTitle", preferred_times AS "preferredTimes",
+      linkedin_url AS "linkedinUrl", instagram_url AS "instagramUrl",
+      facebook_url AS "facebookUrl", x_url AS "xUrl", website_url AS "websiteUrl",
+      notes,
+      COALESCE(is_primary, false) AS "isPrimary",
+      created_at AS "createdAt", updated_at AS "updatedAt"
+    FROM marketing_outreach_contacts
+    ORDER BY created_at ASC
+  `;
+  return rows;
+};
+
 export const getOutreachContact = async (id: string): Promise<OutreachContact | null> => {
   await ensureMarketingOutreachTable();
   const { rows } = await sql<OutreachContact>`
@@ -4433,6 +4452,34 @@ export const listOutreachActivities = async (
     WHERE target_id = ${targetId}
     ORDER BY created_at DESC
     LIMIT ${Math.min(Math.max(limit, 1), 100)}
+  `;
+  return rows.map((r) => ({
+    ...r,
+    meta: (r.meta && typeof r.meta === "object" ? r.meta : {}) as Record<string, unknown>
+  }));
+};
+
+export const listAllOutreachActivities = async (): Promise<OutreachActivity[]> => {
+  await ensureMarketingOutreachTable();
+  const { rows } = await sql<{
+    id: string;
+    targetId: string;
+    contactId: string | null;
+    kind: string;
+    subject: string | null;
+    bodyPreview: string | null;
+    meta: Record<string, unknown> | null;
+    createdByEmail: string | null;
+    createdAt: string;
+  }>`
+    SELECT
+      id, target_id AS "targetId", contact_id AS "contactId",
+      kind, subject, body_preview AS "bodyPreview",
+      COALESCE(meta, '{}'::jsonb) AS meta,
+      created_by_email AS "createdByEmail",
+      created_at AS "createdAt"
+    FROM marketing_outreach_activities
+    ORDER BY created_at DESC
   `;
   return rows.map((r) => ({
     ...r,

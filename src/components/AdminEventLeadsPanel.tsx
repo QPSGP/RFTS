@@ -32,6 +32,7 @@ import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 
 type Props = {
   open: boolean;
+  onImported?: () => void;
 };
 
 type LeadFormState = {
@@ -198,7 +199,7 @@ function bodyFromForm(form: LeadFormState) {
   };
 }
 
-export default function AdminEventLeadsPanel({ open }: Props) {
+export default function AdminEventLeadsPanel({ open, onImported }: Props) {
   const [leads, setLeads] = useState<EventLeadRecord[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
@@ -214,6 +215,7 @@ export default function AdminEventLeadsPanel({ open }: Props) {
   });
   const importFileRef = useRef<HTMLInputElement | null>(null);
   const [importBusy, setImportBusy] = useState(false);
+  const [exportBusy, setExportBusy] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -289,11 +291,47 @@ export default function AdminEventLeadsPanel({ open }: Props) {
       );
       setOpenSubs((prev) => ({ ...prev, list: true }));
       await load();
+      if ((data.imported ?? 0) > 0) onImported?.();
     } catch {
       setMessage("Database import failed.");
     } finally {
       setImportBusy(false);
       if (importFileRef.current) importFileRef.current.value = "";
+    }
+  }
+
+  async function exportLeadsCsv() {
+    setExportBusy(true);
+    setMessage(null);
+    try {
+      const params = new URLSearchParams({ dataset: "event_leads", format: "csv" });
+      if (filterEventKey.trim()) params.set("eventKey", filterEventKey.trim());
+      const res = await fetch(`/api/admin/marketing/crm-export?${params.toString()}`, {
+        credentials: "include",
+        cache: "no-store"
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setMessage(typeof data.error === "string" ? data.error : "Export failed.");
+        return;
+      }
+      const blob = await res.blob();
+      const header = res.headers.get("Content-Disposition") || "";
+      const match = /filename="([^"]+)"/i.exec(header);
+      const filename = match?.[1] || "rfts-crm-event-leads.csv";
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setMessage(`Downloaded ${filename}.`);
+    } catch {
+      setMessage("Export failed.");
+    } finally {
+      setExportBusy(false);
     }
   }
 
@@ -425,6 +463,7 @@ export default function AdminEventLeadsPanel({ open }: Props) {
         return;
       }
       setMessage(mode === "edit" ? "Lead updated." : "Lead created.");
+      if (mode === "add") onImported?.();
       await load();
       if (data.lead?.id) {
         setSelectedId(data.lead.id);
@@ -467,6 +506,7 @@ export default function AdminEventLeadsPanel({ open }: Props) {
         `Imported ${data.imported ?? 0}, skipped ${data.skipped ?? 0}, errors ${data.errors ?? 0}.`
       );
       await load();
+      if ((data.imported ?? 0) > 0) onImported?.();
     } catch {
       setMessage("Batch import failed.");
     }
@@ -964,6 +1004,14 @@ export default function AdminEventLeadsPanel({ open }: Props) {
           />
           <button type="button" className="button button-secondary" onClick={() => void load()}>
             Apply filter
+          </button>
+          <button
+            type="button"
+            className="button button-secondary"
+            disabled={exportBusy}
+            onClick={() => void exportLeadsCsv()}
+          >
+            {exportBusy ? "Exporting…" : "Export CSV"}
           </button>
           <button
             type="button"

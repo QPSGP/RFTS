@@ -618,3 +618,19 @@ CREATE INDEX IF NOT EXISTS marketing_event_leads_email_idx
 CREATE UNIQUE INDEX IF NOT EXISTS marketing_event_leads_email_event_uidx
   ON marketing_event_leads (lower(email), event_key)
   WHERE email IS NOT NULL AND event_key IS NOT NULL;
+
+-- Weekly interest nurture (one email per checked lead-card interest)
+CREATE TABLE IF NOT EXISTS marketing_outreach_nurture (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  target_id uuid NOT NULL REFERENCES marketing_outreach_targets(id) ON DELETE CASCADE,
+  status text NOT NULL DEFAULT 'active',
+  plan jsonb NOT NULL DEFAULT '[]'::jsonb,
+  next_index integer NOT NULL DEFAULT 0,
+  last_sent_at timestamptz,
+  next_send_at timestamptz,
+  stop_reason text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS marketing_outreach_nurture_target_uidx
+  ON marketing_outreach_nurture (target_id);

@@ -84,6 +84,28 @@ export async function listMarketingEmailEvents(options?: {
   return rows;
 }
 
+export async function listAllMarketingEmailEvents(): Promise<MarketingEmailEvent[]> {
+  await ensureMarketingEmailEventsTable();
+  const { rows } = await sql<MarketingEmailEvent>`
+    SELECT
+      id,
+      provider,
+      event_type AS "eventType",
+      svix_id AS "svixId",
+      resend_email_id AS "resendEmailId",
+      recipient_email AS "recipientEmail",
+      subject,
+      bounce_type AS "bounceType",
+      bounce_subtype AS "bounceSubtype",
+      message,
+      outreach_targets_updated AS "outreachTargetsUpdated",
+      created_at AS "createdAt"
+    FROM marketing_email_events
+    ORDER BY created_at DESC
+  `;
+  return rows;
+}
+
 export type InsertMarketingEmailEventInput = {
   eventType: string;
   svixId?: string | null;

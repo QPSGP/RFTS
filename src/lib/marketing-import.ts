@@ -170,6 +170,7 @@ export type NormalizedImportPerson = {
   eventKey: string | null;
   targetType: string | null;
   status: string | null;
+  goals: string[] | null;
 };
 
 export function normalizeImportRow(row: Record<string, string>): NormalizedImportPerson {
@@ -216,6 +217,25 @@ export function normalizeImportRow(row: Record<string, string>): NormalizedImpor
     eventDates: pickField(row, "eventDates", "event_dates", "dates"),
     eventKey: pickField(row, "eventKey", "event_key"),
     targetType: pickField(row, "targetType", "target_type"),
-    status: pickField(row, "status")
+    status: pickField(row, "status"),
+    goals: splitGoals(
+      pickField(
+        row,
+        "goals",
+        "goalInterests",
+        "goal_interests",
+        "interests",
+        "checked"
+      )
+    )
   };
+}
+
+function splitGoals(raw: string | null): string[] | null {
+  if (!raw) return null;
+  const parts = raw
+    .split(/[,;|/]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return parts.length ? parts : null;
 }

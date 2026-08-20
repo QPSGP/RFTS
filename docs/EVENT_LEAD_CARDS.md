@@ -20,6 +20,8 @@ Long Beach Expo practice QR (default):
 
 Each submit also creates an Outreach **individual** target + primary contact for CRM follow-up.
 
+After a successful CRM add, matching **Convert lead card** emails are lined up and sent weekly (Mondays) until the person converts, opts out, or the interest list is finished. Admin → Marketing → Leads & outreach → **3. Weekly emails**.
+
 Lead-card checkbox emails: **Convert lead card - {interest}** (and **Convert menu - Lead card interests** when they marked many). Seed via Admin → Marketing → **Add missing starter templates**. See `docs/MEMBER_CONVERSION_EMAILS.md`.
 
 ## Resend

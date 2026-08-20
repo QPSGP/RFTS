@@ -193,6 +193,17 @@ export async function POST(request: Request) {
           bodyPreview: organization,
           createdByEmail: by
         });
+        try {
+          const { enrollOutreachNurture } = await import("@/lib/outreach-nurture");
+          await enrollOutreachNurture({
+            targetId: target.id,
+            interest: n.interest,
+            interests: n.goals,
+            createdByEmail: by
+          });
+        } catch {
+          // Sequence enroll is best-effort.
+        }
         results.push({ organization, id: target.id, skipped: false });
       } catch {
         results.push({ organization, error: "create_failed" });
