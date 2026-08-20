@@ -1029,6 +1029,7 @@ button.section-title {
   border: 1px solid #cbd5e1;
   color: #64748b;
   background: #f8fafc;
+  cursor: default;
 }
 
 .outreach-pipeline-step.is-active {

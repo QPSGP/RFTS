@@ -4204,7 +4204,24 @@ export const updateOutreachTarget = async (
       COALESCE(do_not_email, false) AS "doNotEmail",
       created_at AS "createdAt", updated_at AS "updatedAt"
   `;
-  return rows[0] ?? null;
+  const updated = rows[0] ?? null;
+  if (updated && doNotEmail && !existing.doNotEmail) {
+    try {
+      const { suppressCampaignsForTarget } = await import("@/lib/outreach-campaigns");
+      await suppressCampaignsForTarget(id, "unsubscribed");
+    } catch {
+      // Campaign suppress is best-effort.
+    }
+  }
+  if (updated && updated.status === "converted" && existing.status !== "converted") {
+    try {
+      const { suppressCampaignsForTarget } = await import("@/lib/outreach-campaigns");
+      await suppressCampaignsForTarget(id, "converted");
+    } catch {
+      // Campaign suppress is best-effort.
+    }
+  }
+  return updated;
 };
 
 export const deleteOutreachTarget = async (id: string): Promise<boolean> => {

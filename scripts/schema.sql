@@ -634,3 +634,36 @@ CREATE TABLE IF NOT EXISTS marketing_outreach_nurture (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS marketing_outreach_nurture_target_uidx
   ON marketing_outreach_nurture (target_id);
+
+CREATE TABLE IF NOT EXISTS marketing_outreach_campaigns (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  template_name text,
+  template_id uuid,
+  query jsonb NOT NULL DEFAULT '{}'::jsonb,
+  status text NOT NULL DEFAULT 'awaiting_approval',
+  created_by_email text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS marketing_outreach_campaign_recipients (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  campaign_id uuid NOT NULL REFERENCES marketing_outreach_campaigns(id) ON DELETE CASCADE,
+  target_id uuid NOT NULL REFERENCES marketing_outreach_targets(id) ON DELETE CASCADE,
+  contact_id uuid REFERENCES marketing_outreach_contacts(id) ON DELETE SET NULL,
+  email text,
+  subject text NOT NULL,
+  body_text text NOT NULL,
+  status text NOT NULL DEFAULT 'draft',
+  skip_reason text,
+  sent_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS marketing_outreach_campaigns_status_idx
+  ON marketing_outreach_campaigns (status, created_at DESC);
+CREATE INDEX IF NOT EXISTS marketing_outreach_campaign_recipients_campaign_idx
+  ON marketing_outreach_campaign_recipients (campaign_id, status);
+CREATE INDEX IF NOT EXISTS marketing_outreach_campaign_recipients_email_idx
+  ON marketing_outreach_campaign_recipients (lower(email))
+  WHERE email IS NOT NULL;

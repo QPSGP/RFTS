@@ -245,5 +245,12 @@ export async function markOutreachDoNotEmailForRecipient(input: {
     updatedCount += 1;
   }
 
+  try {
+    const { suppressCampaignsForEmail } = await import("@/lib/outreach-campaigns");
+    await suppressCampaignsForEmail(input.email, "unsubscribed");
+  } catch {
+    // Campaign suppress is best-effort.
+  }
+
   return { targetIds, updatedCount };
 }

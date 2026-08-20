@@ -106,6 +106,12 @@ export async function POST(request: Request) {
 
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
   const user = await createUser(parsed.data.email, passwordHash);
+  try {
+    const { suppressCampaignsForEmail } = await import("@/lib/outreach-campaigns");
+    await suppressCampaignsForEmail(user.email, "converted");
+  } catch (e) {
+    console.error("[onboarding] Campaign suppress failed:", e);
+  }
   if (parsed.data.affiliateRef?.trim()) {
     try {
       await setUserReferredByAffiliateCode(

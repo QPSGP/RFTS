@@ -19,6 +19,7 @@ import {
 import AdminOutreachCrmPanel from "@/components/AdminOutreachCrmPanel";
 import AdminEventLeadsPanel from "@/components/AdminEventLeadsPanel";
 import AdminOutreachSequencePanel from "@/components/AdminOutreachSequencePanel";
+import AdminOutreachCampaignPanel from "@/components/AdminOutreachCampaignPanel";
 import { TERRY_FACILITATOR_REF_CODE } from "@/lib/event-leads";
 
 const marketingSections = {
@@ -937,9 +938,8 @@ export default function AdminMarketing() {
         <section id="marketing-leads-outreach" style={{ marginBottom: 24, minWidth: 0 }}>
           <h2 style={{ marginBottom: 8, fontSize: 18 }}>Leads &amp; outreach</h2>
           <p style={{ color: "#4b5563", marginBottom: 12, fontSize: 14 }}>
-            One step at a time. Import or add a lead, confirm it in CRM, then we
-            line up weekly interest emails until they convert or we run out of
-            goals.
+            One step at a time. Import or add a lead, query CRM contacts for a
+            campaign, then weekly interest emails until they convert or opt out.
           </p>
           <div
             style={{
@@ -952,7 +952,7 @@ export default function AdminMarketing() {
             {(
               [
                 ["add", "1. Add to CRM"],
-                ["crm", "2. Review list"],
+                ["crm", "2. Query & campaigns"],
                 ["sequence", "3. Weekly emails"],
                 ["tools", "Tools"]
               ] as const
@@ -1710,7 +1710,23 @@ export default function AdminMarketing() {
 
           {!crmTarget && leadsStep === "crm" ? (
             <>
-          <div style={{ marginBottom: 12 }}>
+          <AdminOutreachCampaignPanel
+            templates={templates}
+            onOpenCrm={(id) => {
+              setCrmTargetId(id);
+              requestAnimationFrame(() => {
+                document.getElementById("outreach-crm-panel")?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start"
+                });
+              });
+            }}
+          />
+          <h3 style={{ margin: "0 0 8px", fontSize: 15 }}>Pipeline targets</h3>
+          <p style={{ margin: "0 0 12px", fontSize: 13, color: "#4b5563" }}>
+            Same list as before, by pipeline status. Open CRM for the one-person
+            capture - process - draft flow.
+          </p>
           <div
             style={{
               display: "flex",
@@ -1806,6 +1822,8 @@ export default function AdminMarketing() {
                   >
                     Open CRM
                   </button>
+                  {(t.status === "prospect" || !t.status) ? (
+                    <>
                   <button
                     type="button"
                     className="button button-secondary"
@@ -1822,6 +1840,8 @@ export default function AdminMarketing() {
                   >
                     Delete
                   </button>
+                    </>
+                  ) : null}
                 </div>
               </div>
             ))}
@@ -1843,7 +1863,6 @@ export default function AdminMarketing() {
             >
               Next: weekly emails
             </button>
-          </div>
           </div>
             </>
           ) : null}
