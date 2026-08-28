@@ -73,6 +73,9 @@ export default function AdminContentPage() {
           <p>Manage goals, audio library items, and ordering.</p>
         </div>
         <div className="admin-toolbar">
+          <Link href="/admin/campaigns" className="button" style={{ padding: "8px 12px", fontSize: 13 }}>
+            Campaigns
+          </Link>
           <Link href="/admin/dashboard" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
             Activity Dashboard
           </Link>

@@ -417,6 +417,20 @@ export default function AdminMemberIssuesPage() {
             Activity Dashboard
           </Link>
           <Link
+            href="/admin/marketing"
+            className="button button-secondary"
+            style={{ padding: "8px 12px", fontSize: 13 }}
+          >
+            Marketing
+          </Link>
+          <Link
+            href="/admin/campaigns"
+            className="button"
+            style={{ padding: "8px 12px", fontSize: 13 }}
+          >
+            Campaigns
+          </Link>
+          <Link
             href="/admin/content"
             className="button button-secondary"
             style={{ padding: "8px 12px", fontSize: 13 }}

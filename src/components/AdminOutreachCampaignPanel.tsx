@@ -9,6 +9,7 @@ import {
   OUTREACH_TARGET_TYPES,
   outreachStatusLabel
 } from "@/lib/marketing-reference";
+import { campaignStatusLabel } from "@/lib/outreach-campaign-ui";
 
 type Suggested = {
   canAutoSetup: boolean;
@@ -61,18 +62,6 @@ type CampaignSummary = {
   };
 };
 
-type CampaignRecipient = {
-  id: string;
-  campaignId: string;
-  targetId: string;
-  contactId: string | null;
-  email: string | null;
-  subject: string;
-  bodyText: string;
-  status: string;
-  skipReason: string | null;
-};
-
 type Template = { id: string; name: string };
 
 type QueryState = {
@@ -122,9 +111,16 @@ function toApiQuery(q: QueryState) {
 type Props = {
   templates: Template[];
   onOpenCrm?: (targetId: string) => void;
+  hideCampaignList?: boolean;
+  onCreated?: (campaignId: string) => void;
 };
 
-export default function AdminOutreachCampaignPanel({ templates, onOpenCrm }: Props) {
+export default function AdminOutreachCampaignPanel({
+  templates,
+  onOpenCrm,
+  hideCampaignList,
+  onCreated
+}: Props) {
   const [query, setQuery] = useState<QueryState>(emptyQuery);
   const [rows, setRows] = useState<QueryRow[]>([]);
   const [facets, setFacets] = useState<Facets>({
@@ -138,8 +134,6 @@ export default function AdminOutreachCampaignPanel({ templates, onOpenCrm }: Pro
   const [groups, setGroups] = useState<{ templateName: string; count: number }[]>([]);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [campaigns, setCampaigns] = useState<CampaignSummary[]>([]);
-  const [openCampaignId, setOpenCampaignId] = useState<string | null>(null);
-  const [recipients, setRecipients] = useState<CampaignRecipient[]>([]);
   const [templateName, setTemplateName] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -180,8 +174,8 @@ export default function AdminOutreachCampaignPanel({ templates, onOpenCrm }: Pro
 
   useEffect(() => {
     void loadQuery(emptyQuery);
-    void loadCampaigns();
-  }, [loadQuery, loadCampaigns]);
+    if (!hideCampaignList) void loadCampaigns();
+  }, [loadQuery, loadCampaigns, hideCampaignList]);
 
   const selectedIds = useMemo(
     () => rows.map((r) => r.contactId).filter((id): id is string => !!id && selected[id]),
@@ -219,58 +213,14 @@ export default function AdminOutreachCampaignPanel({ templates, onOpenCrm }: Pro
         created.length
           ? `Drafted ${names.join("; ")}. Skipped ${data.skipped ?? 0}${
               data.needsTemplate ? `, ${data.needsTemplate} need a template pick` : ""
-            }. Approve below before sending.`
+            }. Review in Campaigns to approve and send.`
           : `No drafts created. Skipped ${data.skipped ?? 0}. Pick a template for contacts without a matched interest.`
       );
-      if (created[0]?.id) {
-        setOpenCampaignId(created[0].id);
-        await openCampaign(created[0].id);
+      if (created[0]?.id && onCreated) {
+        onCreated(created[0].id);
       }
     } catch {
       setStatus("Could not set up drafts.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function openCampaign(id: string) {
-    setOpenCampaignId(id);
-    const res = await fetch(`/api/admin/marketing/outreach/campaigns?id=${id}`, {
-      credentials: "include",
-      cache: "no-store"
-    });
-    const data = res.ok ? await res.json() : {};
-    setRecipients(Array.isArray(data.recipients) ? data.recipients : []);
-  }
-
-  async function patchCampaign(body: Record<string, unknown>, okMessage: string) {
-    setBusy(true);
-    setStatus(null);
-    try {
-      const res = await fetch("/api/admin/marketing/outreach/campaigns", {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json().catch(() => ({}));
-      if (Array.isArray(data.campaigns)) setCampaigns(data.campaigns);
-      if (Array.isArray(data.recipients)) setRecipients(data.recipients);
-      if (!res.ok) {
-        setStatus(data.error || "Could not update campaign.");
-        return;
-      }
-      if (typeof data.sent === "number") {
-        setStatus(
-          `Sent ${data.sent}, skipped ${data.skipped ?? 0}${
-            data.errors?.length ? `. Errors: ${data.errors.join("; ")}` : "."
-          }`
-        );
-      } else {
-        setStatus(okMessage);
-      }
-    } catch {
-      setStatus("Could not update campaign.");
     } finally {
       setBusy(false);
     }
@@ -286,10 +236,12 @@ export default function AdminOutreachCampaignPanel({ templates, onOpenCrm }: Pro
 
   return (
     <div className="card" style={{ marginBottom: 16 }}>
-      <h3 style={{ margin: "0 0 8px", fontSize: 15 }}>Query contacts &amp; campaigns</h3>
+      <h3 style={{ margin: "0 0 8px", fontSize: 15 }}>New campaign from CRM</h3>
       <p style={{ margin: "0 0 12px", fontSize: 14, color: "#4b5563" }}>
         Filter by any CRM field, select a group or one person, then set up personalized drafts.
-        Approve before send. Converted members and unsubscribes drop out automatically.
+        Review, approve, and send from{" "}
+        <a href="/admin/campaigns">Campaigns</a>. Converted members and unsubscribes drop out
+        automatically.
       </p>
 
       <div
@@ -591,148 +543,60 @@ export default function AdminOutreachCampaignPanel({ templates, onOpenCrm }: Pro
         </button>
       </div>
 
-      <h4 style={{ margin: "0 0 8px", fontSize: 14 }}>Campaign drafts</h4>
-      {campaigns.length === 0 ? (
-        <p style={{ margin: 0, fontSize: 13, color: "#6b7280" }}>No campaigns yet.</p>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {campaigns.map((c) => (
-            <div key={c.id} style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 10 }}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-                <strong style={{ fontSize: 14 }}>{c.name}</strong>
-                <span style={{ fontSize: 12, color: "#6b7280" }}>
-                  {c.status.replace(/_/g, " ")} · {c.counts.draft} draft · {c.counts.approved}{" "}
-                  approved · {c.counts.sent} sent · {c.counts.skipped} stopped
-                </span>
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-                <button
-                  type="button"
-                  className="button button-secondary"
-                  style={{ width: "auto", padding: "4px 10px", fontSize: 13 }}
-                  onClick={() => {
-                    if (openCampaignId === c.id) {
-                      setOpenCampaignId(null);
-                      setRecipients([]);
-                    } else {
-                      void openCampaign(c.id);
-                    }
+      {hideCampaignList ? null : (
+        <>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 8,
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 8
+            }}
+          >
+            <h4 style={{ margin: 0, fontSize: 14 }}>Campaigns</h4>
+            <a href="/admin/campaigns" className="button" style={{ width: "auto", padding: "6px 12px", fontSize: 13 }}>
+              Open campaigns
+            </a>
+          </div>
+          {campaigns.length === 0 ? (
+            <p style={{ margin: 0, fontSize: 13, color: "#6b7280" }}>No campaigns yet.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 480, overflowY: "auto" }}>
+              {campaigns.map((c) => (
+                <div
+                  key={c.id}
+                  style={{
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 8,
+                    padding: 10,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 8,
+                    alignItems: "center",
+                    justifyContent: "space-between"
                   }}
                 >
-                  {openCampaignId === c.id ? "Hide drafts" : "Review drafts"}
-                </button>
-                {c.counts.draft > 0 ? (
-                  <button
-                    type="button"
-                    className="button"
-                    style={{ width: "auto", padding: "4px 10px", fontSize: 13 }}
-                    disabled={busy}
-                    onClick={() =>
-                      void patchCampaign(
-                        { campaignId: c.id, approveAll: true },
-                        `Approved ${c.counts.draft} draft(s).`
-                      )
-                    }
-                  >
-                    Approve all
-                  </button>
-                ) : null}
-                {c.counts.approved > 0 || c.status === "ready_to_send" ? (
-                  <button
-                    type="button"
-                    className="button"
-                    style={{ width: "auto", padding: "4px 10px", fontSize: 13 }}
-                    disabled={busy}
-                    onClick={() =>
-                      void patchCampaign({ campaignId: c.id, sendAll: true }, "Group send finished.")
-                    }
-                  >
-                    Send approved as group
-                  </button>
-                ) : null}
-                {c.status === "awaiting_approval" || c.status === "draft" ? (
-                  <button
-                    type="button"
+                  <div>
+                    <strong style={{ fontSize: 14 }}>{c.name}</strong>
+                    <div style={{ fontSize: 12, color: "#6b7280" }}>
+                      {campaignStatusLabel(c.status)} · {c.counts?.draft ?? 0} draft · {c.counts?.approved ?? 0}{" "}
+                      approved · {c.counts?.sent ?? 0} sent
+                    </div>
+                  </div>
+                  <a
+                    href={`/admin/campaigns?id=${c.id}`}
                     className="button button-secondary"
                     style={{ width: "auto", padding: "4px 10px", fontSize: 13 }}
-                    disabled={busy}
-                    onClick={() =>
-                      void patchCampaign({ campaignId: c.id, cancel: true }, "Campaign cancelled.")
-                    }
                   >
-                    Cancel
-                  </button>
-                ) : null}
-              </div>
-              {openCampaignId === c.id
-                ? recipients.map((r) => (
-                    <div
-                      key={r.id}
-                      style={{
-                        marginTop: 8,
-                        paddingTop: 8,
-                        borderTop: "1px solid #f3f4f6",
-                        fontSize: 13
-                      }}
-                    >
-                      <div>
-                        <strong>{r.email || "No email"}</strong> · {r.status.replace(/_/g, " ")}
-                        {r.skipReason ? ` (${r.skipReason})` : ""}
-                      </div>
-                      <div style={{ color: "#4b5563", marginTop: 4 }}>{r.subject}</div>
-                      <pre
-                        style={{
-                          margin: "6px 0 0",
-                          whiteSpace: "pre-wrap",
-                          fontFamily: "inherit",
-                          fontSize: 12,
-                          color: "#4b5563",
-                          maxHeight: 120,
-                          overflow: "auto"
-                        }}
-                      >
-                        {r.bodyText}
-                      </pre>
-                      <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-                        {r.status === "draft" ? (
-                          <button
-                            type="button"
-                            className="button button-secondary"
-                            style={{ width: "auto", padding: "4px 8px", fontSize: 12 }}
-                            disabled={busy}
-                            onClick={() =>
-                              void patchCampaign(
-                                { campaignId: c.id, approveRecipientId: r.id },
-                                "Draft approved."
-                              )
-                            }
-                          >
-                            Approve this one
-                          </button>
-                        ) : null}
-                        {r.status === "draft" || r.status === "approved" ? (
-                          <button
-                            type="button"
-                            className="button"
-                            style={{ width: "auto", padding: "4px 8px", fontSize: 12 }}
-                            disabled={busy}
-                            onClick={() =>
-                              void patchCampaign(
-                                { campaignId: c.id, sendRecipientId: r.id },
-                                "Sent to this contact."
-                              )
-                            }
-                          >
-                            Send this one
-                          </button>
-                        ) : null}
-                      </div>
-                    </div>
-                  ))
-                : null}
+                    Manage
+                  </a>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
       {status ? <p style={{ margin: "10px 0 0", fontSize: 14 }}>{status}</p> : null}
     </div>

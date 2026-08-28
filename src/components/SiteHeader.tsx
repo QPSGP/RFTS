@@ -45,6 +45,7 @@ export default async function SiteHeader() {
                 <a href="/affiliates">Affiliates</a>
                 {consoleType === "admin" && <a href="/facilitator">Facilitators</a>}
                 {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
+                {consoleType === "admin" && <a href="/admin/campaigns">Campaigns</a>}
                 {memberConsoleLink && <a href={memberConsoleLink.href}>{memberConsoleLink.label}</a>}
                 {showMemberReportIssue && <a href="/member/report-issue">Report an issue</a>}
                 {showAdminReportIssue && <a href="/admin/member-issues#file-issue">Report an issue</a>}
@@ -71,6 +72,7 @@ export default async function SiteHeader() {
             <a href="/affiliates">Affiliates</a>
             {consoleType === "admin" && <a href="/facilitator">Facilitators</a>}
             {consoleLink && <a href={consoleLink.href}>{consoleLink.label}</a>}
+            {consoleType === "admin" && <a href="/admin/campaigns">Campaigns</a>}
             {memberConsoleLink && <a href={memberConsoleLink.href}>{memberConsoleLink.label}</a>}
             {showMemberReportIssue && <a href="/member/report-issue">Report an issue</a>}
             {showAdminReportIssue && <a href="/admin/member-issues#file-issue">Report an issue</a>}

@@ -3,14 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import AdminLogoutButton from "@/components/AdminLogoutButton";
-import AdminClarityLink from "@/components/AdminClarityLink";
-import AdminMarketing from "@/components/AdminMarketing";
+import AdminCampaignsHub from "@/components/AdminCampaignsHub";
 
-export default function AdminMarketingPage() {
+export default function AdminCampaignsPage() {
   const [status, setStatus] = useState<"loading" | "ready" | "unauthorized">("loading");
 
   useEffect(() => {
-    fetch("/api/admin/marketing", { credentials: "include", cache: "no-store" })
+    fetch("/api/admin/marketing/outreach/campaigns", { credentials: "include", cache: "no-store" })
       .then((res) => {
         setStatus(res.ok ? "ready" : "unauthorized");
       })
@@ -21,7 +20,7 @@ export default function AdminMarketingPage() {
     return (
       <main className="admin-page">
         <section style={{ marginBottom: 24 }}>
-          <h1>Marketing</h1>
+          <h1>Campaigns</h1>
           <p>Admin login required.</p>
           <Link href="/login" className="button">
             Log in
@@ -44,16 +43,19 @@ export default function AdminMarketingPage() {
         }}
       >
         <div>
-          <h1>Marketing</h1>
-          <p>Overview, blog cadence, share links, event leads, outreach tracker, affiliate snapshot, and reference.</p>
+          <h1>Campaigns</h1>
+          <p style={{ color: "#4b5563", maxWidth: 640 }}>
+            Review, rename, edit, approve, and send outreach drafts. New campaigns start from a CRM
+            query. Converted members and unsubscribes drop out automatically.
+          </p>
         </div>
         <div className="admin-toolbar">
           <Link
-            href="/admin/campaigns"
-            className="button"
+            href="/admin/marketing"
+            className="button button-secondary"
             style={{ padding: "8px 12px", fontSize: 13 }}
           >
-            Campaigns
+            Marketing
           </Link>
           <Link
             href="/admin/dashboard"
@@ -69,19 +71,11 @@ export default function AdminMarketingPage() {
           >
             Content Console
           </Link>
-          <AdminClarityLink />
           <AdminLogoutButton />
         </div>
       </section>
 
-      {status === "loading" ? (
-        <p>Loading…</p>
-      ) : (
-        <>
-          <AdminClarityLink variant="card" />
-          <AdminMarketing />
-        </>
-      )}
+      {status === "loading" ? <p>Loading…</p> : <AdminCampaignsHub />}
     </main>
   );
 }

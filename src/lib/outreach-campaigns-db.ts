@@ -44,6 +44,19 @@ export type OutreachCampaignRecipient = {
   updatedAt: string;
 };
 
+export type OutreachCampaignCounts = {
+  total: number;
+  draft: number;
+  approved: number;
+  sent: number;
+  skipped: number;
+  error: number;
+};
+
+export type OutreachCampaignSummary = OutreachCampaign & {
+  counts: OutreachCampaignCounts;
+};
+
 let campaignTablesReady = false;
 
 export async function ensureOutreachCampaignTables() {
@@ -124,6 +137,18 @@ type CampaignSqlRow = {
   updatedAt: string;
 };
 
+function toIso(value: unknown): string {
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "string" && value) return value;
+  return "";
+}
+
+function toIsoOrNull(value: unknown): string | null {
+  if (value == null || value === "") return null;
+  const iso = toIso(value);
+  return iso || null;
+}
+
 type RecipientSqlRow = {
   id: string;
   campaignId: string;
@@ -155,8 +180,8 @@ function mapCampaign(row: CampaignSqlRow): OutreachCampaign {
     query,
     status,
     createdByEmail: row.createdByEmail,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt
+    createdAt: toIso(row.createdAt),
+    updatedAt: toIso(row.updatedAt)
   };
 }
 
@@ -176,9 +201,9 @@ function mapRecipient(row: RecipientSqlRow): OutreachCampaignRecipient {
     bodyText: row.bodyText,
     status,
     skipReason: row.skipReason,
-    sentAt: row.sentAt,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt
+    sentAt: toIsoOrNull(row.sentAt),
+    createdAt: toIso(row.createdAt),
+    updatedAt: toIso(row.updatedAt)
   };
 }
 
@@ -229,9 +254,73 @@ export async function listOutreachCampaigns(): Promise<OutreachCampaign[]> {
       updated_at AS "updatedAt"
     FROM marketing_outreach_campaigns
     ORDER BY created_at DESC
-    LIMIT 50
+    LIMIT 500
   `;
   return rows.map((row) => mapCampaign(row as CampaignSqlRow));
+}
+
+type CampaignSummarySqlRow = CampaignSqlRow & {
+  total: number | string | null;
+  draft: number | string | null;
+  approved: number | string | null;
+  sent: number | string | null;
+  skipped: number | string | null;
+  error: number | string | null;
+};
+
+function toCount(value: number | string | null | undefined): number {
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+export async function listOutreachCampaignSummaries(): Promise<OutreachCampaignSummary[]> {
+  await ensureOutreachCampaignTables();
+  const { rows } = await sql`
+    SELECT
+      c.id, c.name,
+      c.template_name AS "templateName",
+      c.template_id AS "templateId",
+      COALESCE(c.query, '{}'::jsonb) AS query,
+      c.status,
+      c.created_by_email AS "createdByEmail",
+      c.created_at AS "createdAt",
+      c.updated_at AS "updatedAt",
+      COALESCE(s.total, 0)::int AS total,
+      COALESCE(s.draft, 0)::int AS draft,
+      COALESCE(s.approved, 0)::int AS approved,
+      COALESCE(s.sent, 0)::int AS sent,
+      COALESCE(s.skipped, 0)::int AS skipped,
+      COALESCE(s.error, 0)::int AS error
+    FROM marketing_outreach_campaigns c
+    LEFT JOIN (
+      SELECT
+        campaign_id,
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE status = 'draft')::int AS draft,
+        COUNT(*) FILTER (WHERE status = 'approved')::int AS approved,
+        COUNT(*) FILTER (WHERE status = 'sent')::int AS sent,
+        COUNT(*) FILTER (WHERE status LIKE 'skipped_%')::int AS skipped,
+        COUNT(*) FILTER (WHERE status = 'error')::int AS error
+      FROM marketing_outreach_campaign_recipients
+      GROUP BY campaign_id
+    ) s ON s.campaign_id = c.id
+    ORDER BY c.created_at DESC
+    LIMIT 500
+  `;
+  return rows.map((row) => {
+    const summary = row as CampaignSummarySqlRow;
+    return {
+      ...mapCampaign(summary),
+      counts: {
+        total: toCount(summary.total),
+        draft: toCount(summary.draft),
+        approved: toCount(summary.approved),
+        sent: toCount(summary.sent),
+        skipped: toCount(summary.skipped),
+        error: toCount(summary.error)
+      }
+    };
+  });
 }
 
 export async function getOutreachCampaign(id: string): Promise<OutreachCampaign | null> {

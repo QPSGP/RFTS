@@ -5,7 +5,8 @@ import {
   approveCampaignRecipients,
   createCampaignsFromSelection,
   listCampaignSummaries,
-  sendCampaignRecipients
+  sendCampaignRecipients,
+  updateCampaignRecipientCopy
 } from "@/lib/outreach-campaigns";
 import {
   getOutreachCampaign,
@@ -41,7 +42,10 @@ const patchSchema = z.object({
   approveAll: z.boolean().optional(),
   approveRecipientId: z.string().uuid().optional(),
   sendAll: z.boolean().optional(),
-  sendRecipientId: z.string().uuid().optional()
+  sendRecipientId: z.string().uuid().optional(),
+  recipientId: z.string().uuid().optional(),
+  subject: z.string().max(500).optional(),
+  bodyText: z.string().max(20000).optional()
 });
 
 export async function GET(request: Request) {
@@ -51,19 +55,29 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
   if (id) {
-    const campaign = await getOutreachCampaign(id);
-    if (!campaign) {
-      return NextResponse.json({ error: "Not found." }, { status: 404 });
+    try {
+      const campaign = await getOutreachCampaign(id);
+      if (!campaign) {
+        return NextResponse.json({ error: "Not found." }, { status: 404 });
+      }
+      const recipients = await listOutreachCampaignRecipients(id);
+      const res = NextResponse.json({ campaign, recipients });
+      res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+      return res;
+    } catch (err) {
+      console.error("[GET /api/admin/marketing/outreach/campaigns?id]", err);
+      return NextResponse.json({ error: "Could not load campaign." }, { status: 500 });
     }
-    const recipients = await listOutreachCampaignRecipients(id);
-    const res = NextResponse.json({ campaign, recipients });
+  }
+  try {
+    const campaigns = await listCampaignSummaries();
+    const res = NextResponse.json({ campaigns });
     res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
     return res;
+  } catch (err) {
+    console.error("[GET /api/admin/marketing/outreach/campaigns]", err);
+    return NextResponse.json({ error: "Could not load campaigns." }, { status: 500 });
   }
-  const campaigns = await listCampaignSummaries();
-  const res = NextResponse.json({ campaigns });
-  res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
-  return res;
 }
 
 export async function POST(request: Request) {
@@ -118,7 +132,22 @@ export async function PATCH(request: Request) {
   if (parsed.data.cancel) {
     await updateOutreachCampaign(campaign.id, { status: "cancelled" });
     const campaigns = await listCampaignSummaries();
-    return NextResponse.json({ ok: true, campaigns });
+    const recipients = await listOutreachCampaignRecipients(campaign.id);
+    return NextResponse.json({ ok: true, campaigns, recipients });
+  }
+  if (parsed.data.recipientId && (parsed.data.subject != null || parsed.data.bodyText != null)) {
+    const result = await updateCampaignRecipientCopy({
+      campaignId: campaign.id,
+      recipientId: parsed.data.recipientId,
+      subject: parsed.data.subject,
+      bodyText: parsed.data.bodyText
+    });
+    if ("error" in result) {
+      return NextResponse.json({ error: result.error }, { status: 400 });
+    }
+    const campaigns = await listCampaignSummaries();
+    const recipients = await listOutreachCampaignRecipients(campaign.id);
+    return NextResponse.json({ ok: true, campaigns, recipients });
   }
   if (parsed.data.name) {
     await updateOutreachCampaign(campaign.id, { name: parsed.data.name });

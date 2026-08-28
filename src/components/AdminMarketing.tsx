@@ -940,6 +940,8 @@ export default function AdminMarketing() {
           <p style={{ color: "#4b5563", marginBottom: 12, fontSize: 14 }}>
             One step at a time. Import or add a lead, query CRM contacts for a
             campaign, then weekly interest emails until they convert or opt out.
+            Manage drafts, approval, and sends on{" "}
+            <Link href="/admin/campaigns">Campaigns</Link>.
           </p>
           <div
             style={{
@@ -972,6 +974,13 @@ export default function AdminMarketing() {
                 {label}
               </button>
             ))}
+            <Link
+              href="/admin/campaigns"
+              className="button"
+              style={{ width: "auto", padding: "8px 12px", fontSize: 13 }}
+            >
+              Campaigns
+            </Link>
           </div>
 
           {leadsStep === "add" ? (

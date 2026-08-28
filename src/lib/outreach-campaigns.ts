@@ -31,12 +31,13 @@ import {
   listOpenCampaignRecipientsByEmail,
   listOpenCampaignRecipientsByTarget,
   listOutreachCampaignRecipients,
-  listOutreachCampaigns,
+  listOutreachCampaignSummaries,
   updateOutreachCampaign,
   updateOutreachCampaignRecipient,
   type OutreachCampaign,
   type OutreachCampaignRecipient,
-  type OutreachCampaignRecipientStatus
+  type OutreachCampaignRecipientStatus,
+  type OutreachCampaignSummary
 } from "@/lib/outreach-campaigns-db";
 
 export const CAMPAIGN_MAX_RECIPIENTS = 200;
@@ -450,22 +451,32 @@ export async function suppressCampaignsForTarget(
   return open.length;
 }
 
-export async function listCampaignSummaries() {
-  const campaigns = await listOutreachCampaigns();
-  const out = [];
-  for (const campaign of campaigns) {
-    const recipients = await listOutreachCampaignRecipients(campaign.id);
-    out.push({
-      ...campaign,
-      counts: {
-        total: recipients.length,
-        draft: recipients.filter((r) => r.status === "draft").length,
-        approved: recipients.filter((r) => r.status === "approved").length,
-        sent: recipients.filter((r) => r.status === "sent").length,
-        skipped: recipients.filter((r) => r.status.startsWith("skipped_")).length,
-        error: recipients.filter((r) => r.status === "error").length
-      }
-    });
+export async function listCampaignSummaries(): Promise<OutreachCampaignSummary[]> {
+  return listOutreachCampaignSummaries();
+}
+
+export async function updateCampaignRecipientCopy(input: {
+  campaignId: string;
+  recipientId: string;
+  subject?: string;
+  bodyText?: string;
+}): Promise<{ recipient: OutreachCampaignRecipient } | { error: string }> {
+  const recipient = await getOutreachCampaignRecipient(input.recipientId);
+  if (!recipient || recipient.campaignId !== input.campaignId) {
+    return { error: "Recipient not found." };
   }
-  return out;
+  if (recipient.status !== "draft" && recipient.status !== "approved") {
+    return { error: "Only unsent drafts can be edited." };
+  }
+  const subject = input.subject?.trim();
+  const bodyText = input.bodyText?.trim();
+  if (subject === "" || bodyText === "") {
+    return { error: "Subject and body cannot be empty." };
+  }
+  const updated = await updateOutreachCampaignRecipient(recipient.id, {
+    subject: subject ?? recipient.subject,
+    bodyText: bodyText ?? recipient.bodyText
+  });
+  if (!updated) return { error: "Could not save draft." };
+  return { recipient: updated };
 }
