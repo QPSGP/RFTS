@@ -23,7 +23,149 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "burnout-recovery-guided-meditation-rest-sleep",
+    title:
+      "Burnout recovery without another chore: guided meditation that restores you while you sleep",
+    metaTitle: "Burnout Recovery Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "Recover from burnout with guided meditation at bedtime and during sleep. Nightly nervous-system reset without another daytime self-care chore. Free trial.",
+    publishedAt: "2026-08-25",
+    readMinutes: 6,
+    excerpt:
+      "Burnout recovery fails when it asks for energy you do not have. Guided meditation at bedtime and during sleep rebuilds rest, calm, and balance when the day is already over.",
+    topicSlug: "burnout-recovery",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for burnout recovery usually already know they are running on empty: flat mood, poor sleep, irritability, and a calendar that never lets up. What they cannot spare is another daytime wellness plan. The energy required for a morning meditation streak is the same energy burnout already spent.",
+          "Reach For The Stars supports burnout recovery through guided meditation while you fall asleep and, if you choose two audios per night, again during sleep. Recovery becomes a nightly cue instead of a self-care project competing with work and family."
+        ]
+      },
+      {
+        heading: "Empty tanks cannot run another protocol",
+        paragraphs: [
+          "Burnout is not laziness. It is a nervous system that stayed in high alert too long. Daytime apps, weekend resets, and heroic self-care often fail for the same reason: they require motivation when depletion has already taken it.",
+          "When rest, calm, and balanced life sit among your priorities, your rotation includes recovery-aligned recordings automatically. Explore our burnout recovery page for how that landing path frames a low-friction nightly reset."
+        ]
+      },
+      {
+        heading: "Why bedtime is the only window that still works",
+        paragraphs: [
+          "Caregivers, clinicians, managers, and parents often have no spare hour. The day ends, and rumination starts. A fixed Start Session flow - intro relaxation music, then a recovery-related audio as you drift, then optional reinforcement later in the night - meets you when willpower is lowest and rest is already scheduled.",
+          "That pattern supports people rebuilding after a hard season, anyone whose sleep collapsed under load, and members who need stress, sleep, and balance in the same practice instead of three separate programs."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits high-responsibility roles, caregivers who put themselves last, and anyone who tried intensive self-care weekends and still felt empty on Monday.",
+          "Visit the burnout recovery landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Permission to restore (excerpt)",
+      quote:
+        "You have given enough for today… the body can downshift now… rest is allowed… balance returns in quiet layers… you wake a little more restored, night by night…"
+    }
+  },
+  {
+    slug: "relationship-guided-meditation-connection-sleep",
+    title:
+      "Relationship goals at night: guided meditation for connection, warmth, and a calmer you",
+    metaTitle: "Relationship Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "Support a joyful new or deeper present relationship with guided meditation at bedtime and during sleep. Nightly connection without another daytime workshop. Free trial.",
+    publishedAt: "2026-08-25",
+    readMinutes: 6,
+    excerpt:
+      "Relationship goals stall when leftover stress walks in the door. Guided meditation at bedtime and during sleep reinforces warmth, patience, and emotional openness in the same nightly practice.",
+    goalSlug: "relationship",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for better relationships usually already know the advice: listen more, put the phone down, go on a date. The gap is overnight. Residual tension, scorekeeping, or loneliness keeps the nervous system braced, and the next conversation starts depleted. Another daytime workshop rarely survives a hard week.",
+          "Reach For The Stars treats Relationship as a prioritized goal. When relationship is in your rotation, guided meditations play while you fall asleep and, if you choose two audios per night, again during sleep - so connection, warmth, and steadier showing-up get reinforced without another chore."
+        ]
+      },
+      {
+        heading: "How you relate is trained by what you rehearse",
+        paragraphs: [
+          "Patience, confidence, and emotional openness are patterns. They respond to repetition in a receptive state. Nightly suggestion can support both a joyful new relationship and a deeper present one: less reactivity, more warmth, and a calmer baseline before you speak.",
+          "When Relationship sits among your goals, your personalized lineup includes connection-aligned recordings automatically. Explore our relationship page for how that landing path frames nightly reinforcement."
+        ]
+      },
+      {
+        heading: "Why sleep-side practice beats more daytime advice",
+        paragraphs: [
+          "Daytime relationship content competes with work, kids, and fatigue. Bedtime is already reserved. A fixed Start Session cue installs relationship-related language when defenses are down, then optional later-night playback deepens the same themes.",
+          "That pattern fits couples rebuilding after a rough stretch, singles who want to show up more open, and anyone whose leftover stress keeps leaking into the people they care about."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits partners who want more ease at home, people dating again after a long pause, and anyone who wants connection goals without turning every evening into more advice to consume.",
+          "Visit the relationship landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Warmth, patience, and open connection (excerpt)",
+      quote:
+        "You soften… warmth is available… you listen with ease… connection feels safer and more natural… night by night you show up calmer, kinder, and more present…"
+    }
+  },
+  {
+    slug: "memory-enhancement-guided-meditation-recall-sleep",
+    title:
+      "Memory enhancement while you sleep: guided meditation for recall, learning, and mental clarity",
+    metaTitle: "Memory Enhancement Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "Enhance memory and recall with guided meditation at bedtime and during sleep. Nightly learning support without another daytime brain-training app. Free trial.",
+    publishedAt: "2026-08-25",
+    readMinutes: 6,
+    excerpt:
+      "Memory enhancement is not another quiz app at 10 p.m. Guided meditation at bedtime and during sleep reinforces recall and mental clarity in the window when the brain already consolidates learning.",
+    topicSlug: "memory-improvement",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for memory enhancement often already tried flashcards, supplements, or brain-training games. Names still slip. Details from meetings fade. What they need is not more daytime drills. They need the brain's own consolidation window - sleep - to work with them instead of against them.",
+          "Reach For The Stars supports memory enhancement through guided meditation while you fall asleep and, if you choose two audios per night, again during sleep. Recall practice becomes part of bedtime instead of competing with work, study, or caregiving."
+        ]
+      },
+      {
+        heading: "Sleep is when memory actually sticks",
+        paragraphs: [
+          "Learning during the day is only half the job. Sleep helps lock in what you want to keep. Nightly suggestion can support clearer recall, mental excellence, and the feeling that your mind is available when you need it.",
+          "When memory and learning sit among your goals, your rotation includes memory-aligned recordings automatically. Explore our memory improvement page for how that landing path frames brain support while you sleep."
+        ]
+      },
+      {
+        heading: "Why bedtime beats another daytime brain game",
+        paragraphs: [
+          "Daytime memory apps fail for the same reason daytime meditation often fails: the people who need them most are already overloaded. The quiet window is late at night - exactly when the nervous system can settle and the brain can consolidate.",
+          "A fixed Start Session cue helps: intro relaxation music, then your memory-related recording as you drift, then optional reinforcement about 2.5 hours later during restorative sleep. You train recall when the day can no longer interrupt you."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits professionals who cannot afford to lose names and details, students and exam prep, and anyone who wants sharper recall now and lifelong without another homework assignment.",
+          "Visit the memory and focus landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Clear recall and mental excellence (excerpt)",
+      quote:
+        "Your mind is clear… what you choose to remember is easier to find… details settle into place… recall feels natural… you trust your memory to serve you, night by night…"
+    }
+  },
+  {
     slug: "health-guided-meditation-vitality-sleep",
+
     title:
       "Health goals at night: guided meditation that supports vitality while you sleep",
     metaTitle: "Health Guided Meditation at Night | RFTS Blog",
