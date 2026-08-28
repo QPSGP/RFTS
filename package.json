@@ -41,7 +41,8 @@
     "brief:thursday": "node scripts/wednesday-tech-brief.mjs",
 
     "schedule:spreadsheet": "tsx scripts/schedule-spreadsheet-export.ts",
-    "blog:check-cadence": "tsx scripts/check-blog-cadence.ts"
+    "blog:check-cadence": "tsx scripts/check-blog-cadence.ts",
+    "crm:import-aweber": "tsx scripts/import-aweber-lists-to-crm.ts"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

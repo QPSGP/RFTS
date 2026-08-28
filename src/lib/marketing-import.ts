@@ -178,7 +178,17 @@ export function normalizeImportRow(row: Record<string, string>): NormalizedImpor
   const firstName = pickField(row, "firstName", "first_name", "firstname", "first");
   const lastName = pickField(row, "lastName", "last_name", "lastname", "last");
   const fullName =
-    pickField(row, "fullName", "full_name", "name", "contact", "contactName", "person") ||
+    pickField(
+      row,
+      "fullName",
+      "full_name",
+      "name",
+      "name1",
+      "name 1",
+      "contact",
+      "contactName",
+      "person"
+    ) ||
     [firstName, lastName].filter(Boolean).join(" ") ||
     null;
   const split = splitImportedFullName(fullName);
@@ -275,7 +285,7 @@ const OUTREACH_PIPELINE_STATUS_IDS = new Set([
 ]);
 
 const MAILING_LIST_STATUS_RE =
-  /^(unsubscribed|subscribed|unconfirmed|bounced|cleaned|complained)$/i;
+  /^(unsubscribed|subscribed|unconfirmed|bounced|cleaned|complained|active|inactive)$/i;
 
 export function isMailingListStatus(status: string | null): boolean {
   return !!status && MAILING_LIST_STATUS_RE.test(status.trim());
@@ -285,6 +295,7 @@ export function importMarksDoNotEmail(status: string | null): boolean {
   const s = (status || "").trim().toLowerCase();
   return (
     s === "unsubscribed" ||
+    s === "inactive" ||
     s === "unconfirm" ||
     s === "unconfirmed" ||
     s === "bounced" ||
@@ -306,11 +317,15 @@ export function looksLikeAweberSubscriberExport(rows: Record<string, string>[]):
   const row = rows[0];
   if (!row) return false;
   const keys = new Set(Object.keys(row).map((k) => normKey(k)));
-  return (
+  const listExport =
+    keys.has("email") &&
+    (keys.has("name1") || keys.has("dateadded") || keys.has("addurl")) &&
+    (keys.has("status") || keys.has("tags") || keys.has("inactivedate"));
+  const subscriberExport =
     keys.has("email") &&
     keys.has("signupdate") &&
-    (keys.has("unsubscribedate") || keys.has("tags") || keys.has("signupurl"))
-  );
+    (keys.has("unsubscribedate") || keys.has("tags") || keys.has("signupurl"));
+  return listExport || subscriberExport;
 }
 
 export function buildOutreachImportNotes(n: NormalizedImportPerson): string | null {

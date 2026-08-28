@@ -71,4 +71,21 @@ describe("marketing-import", () => {
       "Event lead\nAWeber list"
     );
   });
+
+  it("maps AWeber list-folder exports (Name 1 + Active)", () => {
+    const csv = [
+      "Email,Name 1,Additional Notes,Status,Verified,Message,Add Method,IP Address,Add URL,Date Added,tags",
+      "pat@example.com,PAT LEE,,Active,Verified,1001,,,,2017-08-27 00:44:50,"
+    ].join("\n");
+    const rows = parseDelimitedTable(csv);
+    expect(looksLikeAweberSubscriberExport(rows)).toBe(true);
+    const n = normalizeImportRow(rows[0]);
+    expect(n.email).toBe("pat@example.com");
+    expect(n.fullName).toBe("PAT LEE");
+    expect(n.status).toBe("Active");
+    expect(isMailingListStatus(n.status)).toBe(true);
+    expect(importMarksDoNotEmail(n.status)).toBe(false);
+    expect(importMarksDoNotEmail("Inactive")).toBe(true);
+    expect(outreachPipelineStatusFromImport(n.status)).toBe("prospect");
+  });
 });
