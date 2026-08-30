@@ -4,6 +4,7 @@ import {
   metaFromAweberFolder,
   parseAweberLeadsCsv,
   parseAweberListFolderName,
+  PARTNER_CAMPAIGN_TEMPLATE,
   titleCasePersonName
 } from "./aweber-list-import";
 import { DEFAULT_CAMPAIGN_TEMPLATE } from "./crm-query";
@@ -26,6 +27,9 @@ describe("aweber-list-import", () => {
     );
     expect(metaFromAweberFolder("awlist5876797_Virtual Small Business Expo 1220").kind).toBe(
       "partner"
+    );
+    expect(metaFromAweberFolder("awlist6929683_Clients Grow 2025").templateName).toBe(
+      PARTNER_CAMPAIGN_TEMPLATE
     );
     expect(metaFromAweberFolder("awlist4050557_Your Success Newsletter").templateName).toBe(
       DEFAULT_CAMPAIGN_TEMPLATE

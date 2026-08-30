@@ -49,7 +49,7 @@ Many {{organization}} members juggle stress, irregular sleep, and burnout. We pa
 - Affiliate referrals (25% ongoing), or
 - Facilitator / managed enrollment for cohorts
 
-Happy to share a short overview, a free-trial path for your community, and sample messaging for {{persona}}.
+Happy to share a short overview, a free-trial path for your community, and sample messaging you can share.
 
 Would a brief call this week work?
 
@@ -122,7 +122,7 @@ Useful pages to share:
 - Stress: {{siteUrl}}/stress-relief
 - Sleep: {{siteUrl}}/sleep-meditation
 
-Happy to set you up with a referral code and sample messaging for {{persona}}.
+Happy to set you up with a referral code and sample messaging you can share.
 
 Would a brief call this week work?
 

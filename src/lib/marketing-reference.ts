@@ -112,6 +112,25 @@ export type OutreachTemplateVars = {
   refCode?: string;
 };
 
+/** Collapse leftover "for ." / extra spaces after an empty {{placeholder}} merge. */
+export function tidyMergedOutreachText(text: string): string {
+  return text
+    .replace(/\s+for\s+([.?!])/g, "$1")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/[ \t]+\n/g, "\n");
+}
+
+/**
+ * Finish the partner-intro close when {{persona}} was empty or left as a token.
+ * Leaves "sample messaging for Alex - Burned-Out Professional." unchanged.
+ */
+export function completeEmptyPersonaMessaging(text: string): string {
+  return text.replace(
+    /sample messaging for(?:\s+\{\{\s*persona\s*\}\})?\s*\./gi,
+    "sample messaging you can share."
+  );
+}
+
 /** Replace {{placeholders}} in outreach email templates. Unknown keys become empty. */
 export function mergeOutreachTemplate(
   text: string,
@@ -133,7 +152,8 @@ export function mergeOutreachTemplate(
     yourName: vars.yourName ?? "",
     refCode: vars.refCode ?? ""
   };
-  return text.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key: string) => map[key] ?? "");
+  const merged = text.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key: string) => map[key] ?? "");
+  return tidyMergedOutreachText(completeEmptyPersonaMessaging(merged));
 }
 
 /** Personas from docs/personas.md, used to tag outreach targets. */
@@ -496,7 +516,7 @@ Many {{organization}} members juggle stress, irregular sleep, and burnout. We pa
 - Affiliate referrals (25% ongoing), or
 - Facilitator / managed enrollment for cohorts
 
-Happy to share a short overview, a free-trial path for your community, and sample messaging for {{persona}}.
+Happy to share a short overview, a free-trial path for your community, and sample messaging you can share.
 
 Would a brief call this week work?
 
@@ -554,7 +574,7 @@ Useful pages to share:
 - Stress: {{siteUrl}}/stress-relief
 - Sleep: {{siteUrl}}/sleep-meditation
 
-Happy to set you up with a referral code and sample messaging for {{persona}}.
+Happy to set you up with a referral code and sample messaging you can share.
 
 Would a brief call this week work?
 
