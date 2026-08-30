@@ -10,8 +10,8 @@ import { config } from "dotenv";
 config({ path: path.join(process.cwd(), ".env.local") });
 config({ path: path.join(process.cwd(), ".env.vercel.production") });
 
-const TO = (process.env.SAMPLE_EMAIL_TO || "richard@richardleeweatherman.com").trim();
-const REQUESTED_TO = "richard@visimon.app";
+const TO = (process.env.SAMPLE_EMAIL_TO || "richard@visimon.app").trim();
+const FROM = "Reach For The Stars <noreply@reachforthestars.today>";
 const DELAY_MS = 450;
 
 function sleep(ms: number) {
@@ -56,7 +56,7 @@ async function main() {
     getEventLeadPracticeAutoReplyContent,
     getEventLeadConsumerAutoReplyContent
   } = await import("../src/lib/email-templates");
-  const { getUserByEmail, listAllOutreachContacts, createOutreachTarget, createOutreachContact } =
+  const { listAllOutreachContacts, createOutreachTarget, createOutreachContact } =
     await import("../src/lib/db");
   const {
     createOutreachCampaign,
@@ -166,16 +166,7 @@ async function main() {
     });
   }
 
-  console.log(
-    `Requested inbox: ${REQUESTED_TO}. Delivering to ${TO} because Resend is still on the test sender (EMAIL_FROM empty / onboarding@resend.dev).`
-  );
-  const member = await getUserByEmail(TO);
-  console.log(
-    member
-      ? `Note: ${TO} is a member account. Live campaign Send would skip it as converted, so these samples go out directly.`
-      : `${TO} is not a member; campaign Send would not skip for conversion.`
-  );
-  console.log(`Sending ${jobs.length} samples to ${TO} (no staff BCC, no live lists).\n`);
+  console.log(`Sending ${jobs.length} samples to ${TO} from ${FROM} (no staff BCC, no live lists).\n`);
 
   let ok = 0;
   let failed = 0;
@@ -188,6 +179,7 @@ async function main() {
     }
     const result = await sendEmail({
       to: TO,
+      from: FROM,
       subject: `[SAMPLE] ${job.subject}`,
       text: job.text,
       html: job.html,
