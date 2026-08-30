@@ -22,10 +22,21 @@ describe("mergeOutreachTemplate", () => {
     ).toBe("and sample messaging for Alex - Burned-Out Professional.");
   });
 
-  it("collapses leftover 'for .' from any empty placeholder", () => {
-    expect(tidyMergedOutreachText("Open to a short intro call for .")).toBe(
-      "Open to a short intro call."
+  it("rewrites empty-org partner sentences so they stay complete", () => {
+    const merged = mergeOutreachTemplate(
+      "Many {{organization}} members juggle stress.\nOpen to a short intro call for {{organization}}?",
+      { organization: "" }
     );
+    expect(merged).toContain("People you work with often juggle");
+    expect(merged).toContain("Open to a short intro call?");
+  });
+
+  it("keeps Many {{organization}} members when an org name is present", () => {
+    expect(
+      mergeOutreachTemplate("Many {{organization}} members juggle stress.", {
+        organization: "Acme Wellness"
+      })
+    ).toBe("Many Acme Wellness members juggle stress.");
   });
 });
 
@@ -45,9 +56,10 @@ describe("completeEmptyPersonaMessaging", () => {
 });
 
 describe("starter partner templates", () => {
-  it("do not trail off on {{persona}}", () => {
+  it("do not trail off on {{persona}} or {{organization}}", () => {
     const bodies = STARTER_OUTREACH_EMAIL_TEMPLATES.map((t) => t.bodyText).join("\n");
     expect(bodies).not.toMatch(/sample messaging for \{\{persona\}\}/);
     expect(bodies).toContain("sample messaging you can share.");
+    expect(bodies).not.toContain("{{organization}}");
   });
 });

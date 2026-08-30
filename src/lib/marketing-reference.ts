@@ -131,6 +131,30 @@ export function completeEmptyPersonaMessaging(text: string): string {
   );
 }
 
+/**
+ * Finish partner sentences that used {{organization}} in a way that breaks
+ * when the CRM record is a person with no org name.
+ */
+export function completeFragilePartnerPhrases(text: string): string {
+  return text
+    .replace(
+      /Many \{\{\s*organization\s*\}\} members juggle/gi,
+      "People you work with often juggle"
+    )
+    .replace(
+      /We can tailor onboarding and support for \{\{\s*organization\s*\}\}\./gi,
+      "We can tailor onboarding and support for your group."
+    )
+    .replace(
+      /Quick partnership idea for \{\{\s*organization\s*\}\}\./gi,
+      "Quick partnership idea."
+    )
+    .replace(
+      /Open to a short intro call for \{\{\s*organization\s*\}\}\?/gi,
+      "Open to a short intro call?"
+    );
+}
+
 /** Replace {{placeholders}} in outreach email templates. Unknown keys become empty. */
 export function mergeOutreachTemplate(
   text: string,
@@ -152,7 +176,13 @@ export function mergeOutreachTemplate(
     yourName: vars.yourName ?? "",
     refCode: vars.refCode ?? ""
   };
-  const merged = text.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key: string) => map[key] ?? "");
+  const prepared = !(vars.organization || "").trim()
+    ? completeFragilePartnerPhrases(text)
+    : text;
+  const merged = prepared.replace(
+    /\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g,
+    (_, key: string) => map[key] ?? ""
+  );
   return tidyMergedOutreachText(completeEmptyPersonaMessaging(merged));
 }
 
@@ -512,7 +542,7 @@ Open your console: {{siteUrl}}/play-options`
 
 I'm reaching out about Reach For The Stars (ReachForTheStars.Today) - guided meditations that play while people fall asleep and during sleep, so goal work happens without another daytime chore.
 
-Many {{organization}} members juggle stress, irregular sleep, and burnout. We partner with organizations through:
+People you work with often juggle stress, irregular sleep, and burnout. We partner with organizations through:
 - Affiliate referrals (25% ongoing), or
 - Facilitator / managed enrollment for cohorts
 
@@ -533,7 +563,7 @@ Warmly,
 
 Reach For The Stars offers facilitator-managed memberships so your organization can enroll people in a nightly audio program without asking them to build another daytime habit.
 
-Members press Start at bedtime; recordings reinforce goals while falling asleep and during sleep. We can tailor onboarding and support for {{organization}}.
+Members press Start at bedtime; recordings reinforce goals while falling asleep and during sleep. We can tailor onboarding and support for your group.
 
 If useful, I can send a one-page overview and trial options.
 
@@ -564,7 +594,7 @@ Warmly,
     subject: "25% ongoing + a resilience tool that fits shift work",
     bodyText: `Hello {{contactName}},
 
-Quick partnership idea for {{organization}}.
+Quick partnership idea.
 
 Reach For The Stars gives people guided meditations that run at bedtime and during sleep - resilience, stress relief, and sleep support without another daytime wellness chore. Affiliates earn 25% ongoing for as long as referred members stay subscribed.
 
@@ -597,7 +627,7 @@ Overview: {{siteUrl}}/affiliates
 Wealth angle: {{siteUrl}}/wealth
 Resilience: {{siteUrl}}/resilience-meditation
 
-Open to a short intro call for {{organization}}?
+Open to a short intro call?
 
 Thank you,
 {{yourName}}

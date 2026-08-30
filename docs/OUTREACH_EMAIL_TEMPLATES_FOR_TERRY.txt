@@ -45,7 +45,7 @@ Hello {{contactName}},
 
 I'm reaching out about Reach For The Stars (ReachForTheStars.Today) - guided meditations that play while people fall asleep and during sleep, so goal work happens without another daytime chore.
 
-Many {{organization}} members juggle stress, irregular sleep, and burnout. We partner with organizations through:
+People you work with often juggle stress, irregular sleep, and burnout. We partner with organizations through:
 - Affiliate referrals (25% ongoing), or
 - Facilitator / managed enrollment for cohorts
 
@@ -71,7 +71,7 @@ Hello {{contactName}},
 
 Reach For The Stars offers facilitator-managed memberships so your organization can enroll people in a nightly audio program without asking them to build another daytime habit.
 
-Members press Start at bedtime; recordings reinforce goals while falling asleep and during sleep. We can tailor onboarding and support for {{organization}}.
+Members press Start at bedtime; recordings reinforce goals while falling asleep and during sleep. We can tailor onboarding and support for your group.
 
 If useful, I can send a one-page overview and trial options.
 
@@ -112,7 +112,7 @@ Subject:
 Body:
 Hello {{contactName}},
 
-Quick partnership idea for {{organization}}.
+Quick partnership idea.
 
 Reach For The Stars gives people guided meditations that run at bedtime and during sleep - resilience, stress relief, and sleep support without another daytime wellness chore. Affiliates earn 25% ongoing for as long as referred members stay subscribed.
 
@@ -150,7 +150,7 @@ Overview: {{siteUrl}}/affiliates
 Wealth angle: {{siteUrl}}/wealth
 Resilience: {{siteUrl}}/resilience-meditation
 
-Open to a short intro call for {{organization}}?
+Open to a short intro call?
 
 Thank you,
 {{yourName}}

@@ -22,6 +22,10 @@ import {
   type CrmContactQuery
 } from "@/lib/crm-query";
 import { mergeOutreachTemplate } from "@/lib/marketing-reference";
+import {
+  findOutreachCopyProblems,
+  formatOutreachCopyBlockReason
+} from "@/lib/outreach-copy-check";
 import { MEMBER_CONVERSION_EMAIL_TEMPLATES } from "@/lib/member-conversion-emails";
 import {
   createOutreachCampaign,
@@ -353,6 +357,13 @@ export async function sendCampaignRecipients(input: {
 
   for (const row of queue) {
     if (row.status === "sent") continue;
+    const copyProblems = findOutreachCopyProblems(row.subject, row.bodyText);
+    if (copyProblems.length) {
+      const reason = formatOutreachCopyBlockReason(copyProblems);
+      errors.push(`${row.email || "no-email"}: ${reason}`);
+      skipped += 1;
+      continue;
+    }
     const block = await skipIfConvertedOrUnsubscribed(row);
     if (block) {
       await updateOutreachCampaignRecipient(row.id, {

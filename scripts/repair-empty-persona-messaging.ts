@@ -11,6 +11,7 @@ import { config } from "dotenv";
 config({ path: path.join(process.cwd(), ".env.local") });
 
 const DRY_RUN = process.argv.includes("--dry-run");
+const TEMPLATES_ONLY = process.argv.includes("--templates-only");
 
 async function main() {
   if (!process.env.POSTGRES_URL && !process.env.DATABASE_URL) {
@@ -18,7 +19,9 @@ async function main() {
     process.exit(1);
   }
 
-  const { completeEmptyPersonaMessaging } = await import("../src/lib/marketing-reference");
+  const { completeEmptyPersonaMessaging, completeFragilePartnerPhrases } = await import(
+    "../src/lib/marketing-reference"
+  );
   const { listOutreachEmailTemplates, updateOutreachEmailTemplate } = await import("../src/lib/db");
   const {
     listOutreachCampaigns,
@@ -29,7 +32,9 @@ async function main() {
   const templates = await listOutreachEmailTemplates();
   let templatesUpdated = 0;
   for (const template of templates) {
-    const bodyText = completeEmptyPersonaMessaging(template.bodyText);
+    const bodyText = completeFragilePartnerPhrases(
+      completeEmptyPersonaMessaging(template.bodyText)
+    );
     if (bodyText === template.bodyText) continue;
     console.log(`${DRY_RUN ? "[dry-run] " : ""}Template "${template.name}"`);
     if (!DRY_RUN) {
@@ -43,30 +48,32 @@ async function main() {
     templatesUpdated += 1;
   }
 
-  const campaigns = await listOutreachCampaigns();
   let recipientsUpdated = 0;
   let campaignsTouched = 0;
-  for (const campaign of campaigns) {
-    if (campaign.status === "cancelled" || campaign.status === "completed") continue;
-    const recipients = await listOutreachCampaignRecipients(campaign.id);
-    let changedHere = 0;
-    for (const row of recipients) {
-      if (row.status === "sent" || row.status.startsWith("skipped_")) continue;
-      const bodyText = completeEmptyPersonaMessaging(row.bodyText);
-      if (bodyText === row.bodyText) continue;
-      if (!DRY_RUN) {
-        await updateOutreachCampaignRecipient(row.id, { bodyText });
+  if (!TEMPLATES_ONLY) {
+    const campaigns = await listOutreachCampaigns();
+    for (const campaign of campaigns) {
+      if (campaign.status === "cancelled" || campaign.status === "completed") continue;
+      const recipients = await listOutreachCampaignRecipients(campaign.id);
+      let changedHere = 0;
+      for (const row of recipients) {
+        if (row.status === "sent" || row.status.startsWith("skipped_")) continue;
+        const bodyText = completeEmptyPersonaMessaging(row.bodyText);
+        if (bodyText === row.bodyText) continue;
+        if (!DRY_RUN) {
+          await updateOutreachCampaignRecipient(row.id, { bodyText });
+        }
+        recipientsUpdated += 1;
+        changedHere += 1;
       }
-      recipientsUpdated += 1;
-      changedHere += 1;
-    }
-    if (changedHere) {
-      campaignsTouched += 1;
-      console.log(
-        `${DRY_RUN ? "[dry-run] " : ""}${campaign.name}: ${changedHere} draft${
-          changedHere === 1 ? "" : "s"
-        }`
-      );
+      if (changedHere) {
+        campaignsTouched += 1;
+        console.log(
+          `${DRY_RUN ? "[dry-run] " : ""}${campaign.name}: ${changedHere} draft${
+            changedHere === 1 ? "" : "s"
+          }`
+        );
+      }
     }
   }
 

@@ -12,6 +12,10 @@ import {
   recipientStatusLabel,
   type CampaignFilterId
 } from "@/lib/outreach-campaign-ui";
+import {
+  findOutreachCopyProblems,
+  hasIncompleteOutreachCopy
+} from "@/lib/outreach-copy-check";
 
 type CampaignCounts = {
   total: number;
@@ -49,7 +53,7 @@ type CampaignRecipient = {
 
 type Template = { id: string; name: string };
 
-type RecipientFilter = "all" | "draft" | "approved" | "sent" | "stopped";
+type RecipientFilter = "all" | "draft" | "approved" | "sent" | "stopped" | "incomplete";
 
 function formatWhen(iso: string | null | undefined): string {
   if (!iso) return "-";
@@ -289,8 +293,20 @@ export default function AdminCampaignsHub() {
   const visibleRecipients = recipients.filter((r) => {
     if (recipientFilter === "all") return true;
     if (recipientFilter === "stopped") return r.status.startsWith("skipped_") || r.status === "error";
+    if (recipientFilter === "incomplete") {
+      return (
+        (r.status === "draft" || r.status === "approved") &&
+        hasIncompleteOutreachCopy(r.subject, r.bodyText)
+      );
+    }
     return r.status === recipientFilter;
   });
+
+  const incompleteCount = recipients.filter(
+    (r) =>
+      (r.status === "draft" || r.status === "approved") &&
+      hasIncompleteOutreachCopy(r.subject, r.bodyText)
+  ).length;
 
   const filterCounts: Record<CampaignFilterId, number> = {
     needs_action: counts.needsAction,
@@ -443,6 +459,23 @@ export default function AdminCampaignsHub() {
             </p>
           ) : null}
 
+          {incompleteCount > 0 ? (
+            <p
+              style={{
+                margin: "12px 0 0",
+                padding: "8px 10px",
+                background: "#fffbeb",
+                color: "#92400e",
+                fontSize: 13,
+                borderRadius: 8
+              }}
+            >
+              {incompleteCount} draft{incompleteCount === 1 ? "" : "s"} will not send - empty merge
+              tokens or leftover holes. Edit the copy, or add the missing name / organization /
+              persona on the CRM record.
+            </p>
+          ) : null}
+
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
             {selected.counts.draft > 0 ? (
               <button
@@ -469,7 +502,7 @@ export default function AdminCampaignsHub() {
                 onClick={() => {
                   if (
                     !window.confirm(
-                      `Send ${selected.counts.approved || "the approved"} email(s) now? This cannot be undone.`
+                      `Send ${selected.counts.approved || "the approved"} email(s) now? Drafts with empty tokens will be held and not sent. This cannot be undone.`
                     )
                   ) {
                     return;
@@ -499,6 +532,7 @@ export default function AdminCampaignsHub() {
                 ["all", "All"],
                 ["draft", "Drafts"],
                 ["approved", "Approved"],
+                ["incomplete", "Incomplete copy"],
                 ["sent", "Sent"],
                 ["stopped", "Stopped"]
               ] as const
@@ -522,6 +556,7 @@ export default function AdminCampaignsHub() {
           {visibleRecipients.map((r) => {
             const canEdit = r.status === "draft" || r.status === "approved";
             const editing = editingId === r.id;
+            const copyProblems = canEdit ? findOutreachCopyProblems(r.subject, r.bodyText) : [];
             return (
               <div
                 key={r.id}
@@ -579,6 +614,26 @@ export default function AdminCampaignsHub() {
                 ) : (
                   <>
                     <div style={{ color: "#4b5563", marginTop: 4 }}>{r.subject}</div>
+                    {copyProblems.length ? (
+                      <div
+                        style={{
+                          marginTop: 8,
+                          padding: "8px 10px",
+                          background: "#fffbeb",
+                          color: "#92400e",
+                          borderRadius: 8,
+                          fontSize: 12
+                        }}
+                      >
+                        <strong>Will not send.</strong> {copyProblems[0].summary}{" "}
+                        {copyProblems[0].howToFix}
+                        {copyProblems.length > 1
+                          ? ` ${copyProblems.length - 1} more issue${
+                              copyProblems.length === 2 ? "" : "s"
+                            }.`
+                          : ""}
+                      </div>
+                    ) : null}
                     <pre
                       style={{
                         margin: "6px 0 0",
@@ -630,7 +685,12 @@ export default function AdminCampaignsHub() {
                       type="button"
                       className="button"
                       style={{ width: "auto", padding: "4px 8px", fontSize: 12 }}
-                      disabled={busy}
+                      disabled={busy || copyProblems.length > 0}
+                      title={
+                        copyProblems.length
+                          ? `${copyProblems[0].summary} ${copyProblems[0].howToFix}`
+                          : undefined
+                      }
                       onClick={() =>
                         void patchCampaign(
                           { campaignId: selected.id, sendRecipientId: r.id },

@@ -10,6 +10,10 @@ import {
 } from "@/lib/db";
 import { sendEmail, getBaseUrl } from "@/lib/email";
 import { mergeOutreachTemplate } from "@/lib/marketing-reference";
+import {
+  findOutreachCopyProblems,
+  formatOutreachCopyBlockReason
+} from "@/lib/outreach-copy-check";
 
 const sendSchema = z.object({
   targetId: z.string().uuid(),
@@ -87,6 +91,14 @@ export async function POST(request: Request) {
   };
   subject = mergeOutreachTemplate(subject, vars);
   bodyText = mergeOutreachTemplate(bodyText, vars);
+
+  const copyProblems = findOutreachCopyProblems(subject, bodyText);
+  if (copyProblems.length) {
+    return NextResponse.json(
+      { error: formatOutreachCopyBlockReason(copyProblems) },
+      { status: 400 }
+    );
+  }
 
   const html = `<pre style="font-family:Georgia,serif;font-size:15px;line-height:1.5;white-space:pre-wrap;">${escapeHtml(
     bodyText
