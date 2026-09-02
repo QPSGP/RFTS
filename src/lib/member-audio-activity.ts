@@ -5,7 +5,7 @@
 export const MEMBER_AUDIO_NONLINEAR_OUTCOME_MARKER = "skipped ahead (non-linear playback)";
 
 /**
- * Client-only: POST member activity when audio actually starts playing.
+ * Client-only: POST member activity when audio or video actually starts playing.
  * Dedupes rapid repeat "playing" events for the same label (pause/resume).
  */
 let lastPlayedLog: { key: string; at: number } | null = null;
@@ -59,26 +59,39 @@ export function logMemberAudioOutcome(details: string): void {
 }
 
 export function logMemberPlayedAudio(details: string): void {
+  logPlayedMedia("played_audio", details);
+}
+
+/** Client-only: POST when a marketing / explainer video actually starts playing. */
+export function logMemberPlayedVideo(details: string): void {
+  logPlayedMedia("played_video", details);
+}
+
+function logPlayedMedia(action: "played_audio" | "played_video", details: string): void {
   if (typeof window === "undefined") return;
   const trimmed = details.trim().slice(0, 950);
   if (!trimmed) return;
   const now = Date.now();
-  if (lastPlayedLog && lastPlayedLog.key === trimmed && now - lastPlayedLog.at < 5000) {
+  const key = `${action}:${trimmed}`;
+  if (lastPlayedLog && lastPlayedLog.key === key && now - lastPlayedLog.at < 5000) {
     return;
   }
-  lastPlayedLog = { key: trimmed, at: now };
-  void postActivity("played_audio", trimmed, true)
+  lastPlayedLog = { key, at: now };
+  void postActivity(action, trimmed, true)
     .then(async (res) => {
       if (res?.ok) return;
       if (!res) return;
       const errText = await res.text().catch(() => "");
       console.warn(
-        "[logMemberPlayedAudio] POST /api/user/activity failed:",
+        `[${action === "played_video" ? "logMemberPlayedVideo" : "logMemberPlayedAudio"}] POST /api/user/activity failed:`,
         res.status,
         errText || res.statusText
       );
     })
     .catch((err) => {
-      console.warn("[logMemberPlayedAudio] network error:", err);
+      console.warn(
+        `[${action === "played_video" ? "logMemberPlayedVideo" : "logMemberPlayedAudio"}] network error:`,
+        err
+      );
     });
 }

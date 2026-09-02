@@ -69,6 +69,7 @@ function formatDateTime(iso: string | null): string {
 
 function formatMemberActivityAction(action: string): string {
   if (action === "played_audio") return "Played audio";
+  if (action === "played_video") return "Played video";
   if (action === "audio_playback_outcome") return "Playback result";
   return action.replace(/_/g, " ");
 }

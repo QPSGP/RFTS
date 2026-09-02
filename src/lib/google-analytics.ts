@@ -8,3 +8,13 @@ export function isGoogleAnalyticsEnabled(): boolean {
   if (flag === "false" || flag === "0" || flag === "off") return false;
   return Boolean(GA_MEASUREMENT_ID);
 }
+
+type GtagFn = (...args: unknown[]) => void;
+
+/** Custom GA4 event (no-op when gtag is not loaded). */
+export function trackGaEvent(name: string, params?: Record<string, string>): void {
+  if (typeof window === "undefined") return;
+  const gtag = (window as Window & { gtag?: GtagFn }).gtag;
+  if (typeof gtag !== "function") return;
+  gtag("event", name, params);
+}

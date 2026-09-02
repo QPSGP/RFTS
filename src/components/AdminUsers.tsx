@@ -339,6 +339,8 @@ function formatActivityAction(action: string): string {
       return "Updated audios per night (1 or 2)";
     case "played_audio":
       return "Played audio";
+    case "played_video":
+      return "Played video";
     case "audio_playback_outcome":
       return "Playback result";
     case "session_gap":
@@ -444,6 +446,10 @@ function formatActivityDetails(action: string, details: string | null): string {
   if (action === "played_audio") {
     const ctx = formatPlayedAudioContext(action, details);
     return ctx || "-";
+  }
+  if (action === "played_video") {
+    const page = outcomeTextFromActivityDetails(details);
+    return page ? `Page: ${page}` : "Explainer video started";
   }
   if (action === "login" && details.startsWith("to:")) {
     return `First destination: ${details.slice(3)}`;
@@ -2907,6 +2913,7 @@ export default function AdminUsers() {
                                           maxWidth: 220,
                                           fontWeight:
                                             row.action === "played_audio" ||
+                                            row.action === "played_video" ||
                                             row.action === "audio_playback_outcome"
                                               ? 500
                                               : 400
@@ -2915,7 +2922,9 @@ export default function AdminUsers() {
                                         {row.action === "played_audio" ||
                                         row.action === "audio_playback_outcome"
                                           ? playedAudioTitleForAdminCell(row.action, row.details) || "-"
-                                          : row.action === "session_gap"
+                                          : row.action === "played_video"
+                                            ? activityDetailsBaseLine(row.details) || "Video"
+                                            : row.action === "session_gap"
                                             ? "Gap / schedule"
                                             : "-"}
                                       </td>
