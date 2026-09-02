@@ -23,7 +23,149 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "memory-goal-guided-meditation-names-recall-sleep",
+    title:
+      "When names slip: a memory goal you reinforce at night instead of another brain-training app",
+    metaTitle: "Memory Goal Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "Keep names, details, and lifelong focus with a nightly memory goal. Guided meditation at bedtime and during sleep - not another daytime brain-training app. Free trial.",
+    publishedAt: "2026-09-02",
+    readMinutes: 6,
+    excerpt:
+      "Memory goals stall when recall practice is one more task after work. Guided meditation at bedtime and during sleep reinforces names, details, and mental focus in the window the brain already uses to consolidate.",
+    goalSlug: "memory",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for better memory usually already know the pattern: a name vanishes in the hallway, a meeting detail fades by dinner, and worry about lifelong recall starts to sit in the background. Flashcards and brain-training apps ask for attention when the day has already spent it. What they need is repetition at a receptive time, not another quiz at 10 p.m.",
+          "Reach For The Stars treats Memory as a prioritized goal - the memory and mental focus you want now and lifelong. When memory is in your rotation, guided meditations play while you fall asleep and, if you choose two audios per night, again during sleep, so recall gets rehearsed without competing with work or family."
+        ]
+      },
+      {
+        heading: "Recall is trained by what you rehearse while you rest",
+        paragraphs: [
+          "Names, facts, and focus are patterns. They respond to consistent suggestion in a quiet state. Nightly practice can support clearer recall, steadier attention, and the feeling that your mind is available when you need it - at a meeting, a gathering, or a conversation you care about.",
+          "When Memory sits among your goals, your personalized lineup includes memory-aligned recordings automatically. Explore our memory page for how that landing path frames nightly reinforcement for focus and lifelong recall."
+        ]
+      },
+      {
+        heading: "Why bedtime beats another daytime drill",
+        paragraphs: [
+          "Daytime memory tools fail for the same reason daytime meditation often fails: the people who need them most are already overloaded. Sleep is when the brain consolidates what you want to keep. A fixed Start Session flow - intro relaxation music, then a memory-related audio as you drift, then optional reinforcement about 2.5 hours later - meets you when willpower is lowest and learning is already underway.",
+          "That pattern fits professionals who cannot afford to lose details, anyone noticing names slip more often, and members who want memory, health, and inspiration in the same nightly practice instead of three separate programs."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits people who used to trust their memory and want that confidence back, students and professionals who need recall under load, and anyone who wants lifelong mental focus without turning every evening into more training.",
+          "Visit the memory landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Names, details, and clear recall (excerpt)",
+      quote:
+        "Your mind is calm and ready… names come when you need them… details settle into place… focus feels available now and lifelong… night by night your memory serves you with ease…"
+    }
+  },
+  {
+    slug: "blood-pressure-guided-meditation-nightly-calm",
+    title:
+      "Blood pressure and a calmer night: guided meditation that downshifts stress while you sleep",
+    metaTitle: "Blood Pressure Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "Support blood pressure regulation with guided meditation at bedtime and during sleep. Nightly calm for stress-related spikes, alongside your doctor's care. Free trial.",
+    publishedAt: "2026-09-02",
+    readMinutes: 6,
+    excerpt:
+      "Blood pressure support is not another daytime wellness chore. Guided meditation at bedtime and during sleep helps the nervous system downshift when residual stress would otherwise keep the body braced overnight.",
+    topicSlug: "blood-pressure-regulation",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for blood pressure help often already know the medical basics: checkups, medication when prescribed, movement, and less salt. What still sits with them at night is residual stress - a braced body, a busy mind, and a cardiovascular system that never quite gets the all-clear. Another daytime relaxation protocol rarely survives a hard week.",
+          "Reach For The Stars supports blood pressure regulation through guided meditation while you fall asleep and, if you choose two audios per night, again during sleep. Calm becomes a nightly cue instead of a self-care project competing with work and family. This is a mind-body support alongside medical care, not a replacement for your doctor."
+        ]
+      },
+      {
+        heading: "Stress arousal and overnight blood pressure",
+        paragraphs: [
+          "Elevated blood pressure is not only about numbers on a cuff. For many people, sympathetic arousal - the fight-or-flight leftover from the day - keeps pressure higher than it needs to be. Guided relaxation can activate the body's rest response, which research has linked with lower stress-related blood pressure over time when practice is consistent.",
+          "When rest, calm, and health sit among your priorities, your rotation includes relaxation-aligned recordings automatically. Explore our blood pressure regulation page for how that landing path frames cardiovascular calm at night."
+        ]
+      },
+      {
+        heading: "Why a fixed bedtime practice is the window that works",
+        paragraphs: [
+          "Daytime calm apps fail when the calendar wins. Bedtime is already reserved. A fixed Start Session flow - intro relaxation music, then a health-related audio as you drift, then optional reinforcement later in the night - meets you when the nervous system can finally downshift.",
+          "Pair blood-pressure support with sleep and stress goals so the same nightly practice covers rest, reduced arousal, and cardiovascular calm instead of three separate programs."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits people tracking blood pressure with their clinician, anyone whose numbers rise in a hard season, and members who want health and stress support without adding another daytime chore. Keep your checkups, take prescribed care as directed, and use nightly audios as the consistency layer around that plan.",
+          "Visit the blood pressure regulation landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Calm circulation and rest (excerpt)",
+      quote:
+        "The body downshifts now… breath is easy… vessels rest with you… pressure eases as calm takes the lead… night by night the system remembers how to settle…"
+    }
+  },
+  {
+    slug: "inspiration-goal-guided-meditation-ideas-while-you-sleep",
+    title:
+      "Inspiration that survives a full calendar: guided meditation for ideas that arrive by morning",
+    metaTitle: "Inspiration Goal Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "Keep inspiration at will when the day is packed. Guided meditation at bedtime and during sleep primes ideas and follow-through for creative and entrepreneurial work. Free trial.",
+    publishedAt: "2026-09-02",
+    readMinutes: 6,
+    excerpt:
+      "Inspiration goals stall when the only creative window is already full. Guided meditation at bedtime and during sleep primes ideas and entrepreneurial follow-through while you rest, so morning has something to work with.",
+    goalSlug: "inspiration",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for inspiration usually already know they are capable. The gap is timing. The calendar is full, the inbox wins, and the spark is supposed to appear at a desk that never gets a quiet hour. Waiting for a blank afternoon is not a plan. Overnight incubation is.",
+          "Reach For The Stars treats Inspiration as a prioritized goal - inspiration at will for creative and entrepreneurial endeavors. When inspiration is in your rotation, guided meditations play while you fall asleep and, if you choose two audios per night, again during sleep, so ideas and follow-through get rehearsed without competing with the day."
+        ]
+      },
+      {
+        heading: "Sleep is when unused ideas surface",
+        paragraphs: [
+          "Creative and entrepreneurial work needs two things: openness and action. Nightly suggestion can support both - a mind that is willing to receive a new angle, and the confidence to start tomorrow instead of postponing again.",
+          "When Inspiration sits among your goals, your personalized lineup includes creativity-aligned recordings automatically. Explore our inspiration page for how that landing path frames nightly priming for writers, builders, and anyone whose work depends on fresh ideas."
+        ]
+      },
+      {
+        heading: "Why bedtime beats trying to force a spark after dinner",
+        paragraphs: [
+          "Daytime inspiration competes with fatigue and other people's urgency. By evening, willpower is already spent. A fixed Start Session cue installs inspiration-related language when the conscious mind is quiet, then optional later-night playback deepens the same themes during restorative sleep.",
+          "That pattern fits founders and freelancers who create after a day job, artists returning after a long pause, and members who want inspiration paired with wealth or memory so drive, recall, and ideas travel together."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits people whose best ideas used to arrive in the shower and then vanished into a packed week, anyone building something that needs consistent creative energy, and members who want inspiration at will without another daytime workshop.",
+          "Visit the inspiration landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Ideas ready by morning (excerpt)",
+      quote:
+        "The mind opens while you rest… ideas arrive with ease… you trust the next step… inspiration is available at will… morning finds you ready to begin…"
+    }
+  },
+  {
     slug: "burnout-recovery-guided-meditation-rest-sleep",
+
     title:
       "Burnout recovery without another chore: guided meditation that restores you while you sleep",
     metaTitle: "Burnout Recovery Guided Meditation at Night | RFTS Blog",
