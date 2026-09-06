@@ -170,6 +170,36 @@ async function testBillingReturn() {
   }
 }
 
+async function testLegacySignupRedirect() {
+  for (const path of ["/sign-up", "/signup"]) {
+    const { res } = await fetchStatus(`${BASE}${path}`);
+    const loc = res.headers.get("location") || "";
+    if (
+      (res.status === 308 || res.status === 301 || res.status === 307 || res.status === 302) &&
+      loc.includes("/signup/step-1-subscription-selection")
+    ) {
+      pass(`${path} → signup step 1`, loc);
+    } else {
+      fail(`${path} → signup step 1`, `status ${res.status} loc ${loc || "none"}`);
+    }
+  }
+
+  const withRef = await fetchStatus(`${BASE}/sign-up?ref=ABCD1234`);
+  const refLoc = withRef.res.headers.get("location") || "";
+  if (
+    (withRef.res.status === 308 ||
+      withRef.res.status === 301 ||
+      withRef.res.status === 307 ||
+      withRef.res.status === 302) &&
+    refLoc.includes("/signup/step-1-subscription-selection") &&
+    refLoc.includes("ref=ABCD1234")
+  ) {
+    pass("/sign-up preserves ?ref=", refLoc);
+  } else {
+    fail("/sign-up preserves ?ref=", `status ${withRef.res.status} loc ${refLoc || "none"}`);
+  }
+}
+
 async function testSignupRefParam() {
   const { res, text } = await fetchStatus(
     `${BASE}/signup/step-1-subscription-selection?ref=ABCD1234`
@@ -246,6 +276,7 @@ async function main() {
   await testBillingReturn();
 
   console.log("\nSignup flow");
+  await testLegacySignupRedirect();
   await testSignupRefParam();
   await testOnboardingCheckoutPath();
 

@@ -1,5 +1,6 @@
 import { getModeratorApplicationBySlug } from "@/lib/db";
 import { LGD_SEVEN_KEYS } from "@/lib/lgd-intake";
+import { SIGNUP_PATH } from "@/lib/marketing-signup";
 import SiteFooter from "@/components/SiteFooter";
 
 export default async function TerryBrusselRogersPage() {
@@ -171,7 +172,7 @@ export default async function TerryBrusselRogersPage() {
           <a className="button" href="/life-guidance-discovery">
             Life Guidance Discovery
           </a>
-          <a className="button button-secondary" href="/signup">
+          <a className="button button-secondary" href={SIGNUP_PATH}>
             Join Reach For The Stars
           </a>
         </div>
