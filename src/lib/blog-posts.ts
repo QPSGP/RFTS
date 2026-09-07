@@ -23,6 +23,147 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "pain-louder-at-night-guided-meditation-comfort-sleep",
+    title:
+      "When pain is louder at night: guided meditation for comfort while you rest",
+    metaTitle: "Pain Relief Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "When discomfort spikes at bedtime, guided meditation at night and during sleep can ease tension and support rest - alongside your doctor's care. Free trial.",
+    publishedAt: "2026-09-07",
+    readMinutes: 6,
+    excerpt:
+      "Pain often feels louder once the day goes quiet. Guided meditation at bedtime and during sleep helps the body downshift tension so rest and comfort can travel together - alongside medical care, not instead of it.",
+    topicSlug: "pain-relief",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for pain relief meditation already know the medical basics: keep the appointments, follow the plan, use what was prescribed. What still sits with them at lights-out is the volume change. Daytime noise, work, and movement can mask discomfort. Lying still in a dark room does the opposite. Attention lands on the ache, muscles brace, and sleep becomes another thing pain interrupts.",
+          "Reach For The Stars supports natural pain management through guided meditation while you fall asleep and, if you choose two audios per night, again during sleep. Comfort becomes a nightly cue instead of a daytime coping drill you are too tired to run. This is mind-body support alongside medical care, not a replacement for your clinician."
+        ]
+      },
+      {
+        heading: "Tension and attention make night pain feel bigger",
+        paragraphs: [
+          "Pain is not only a signal in tissue. Stress, bracing, and a busy mind can amplify what you feel. Guided relaxation can ease muscle tension and give the nervous system a rest response - the same window clinical overviews often link with better pain coping when practice is consistent.",
+          "When comfort, rest, and health sit among your priorities, your rotation includes relaxation-aligned recordings automatically. Explore our pain relief page for how that landing path frames nightly support for tension, chronic discomfort, and sleep-related pain."
+        ]
+      },
+      {
+        heading: "Why bedtime is the window that still works",
+        paragraphs: [
+          "Daytime pain apps fail for the same reason daytime meditation often fails: the people who need them most are already spent. A fixed Start Session flow - intro relaxation music, then a comfort-related audio as you drift, then optional reinforcement about 2.5 hours later - meets you when you are already in bed, which is when pain and sleeplessness feed each other.",
+          "That pattern fits people whose discomfort spikes once they lie down, anyone whose sleep collapsed around an injury or chronic condition, and members who want pain support paired with sleep and stress so one nightly practice covers rest, reduced arousal, and ease."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits people living with ongoing tension or chronic pain who still want a calmer night, anyone whose clinician has suggested mind-body tools alongside treatment, and members who cannot add another daytime protocol. Keep your care plan, take prescribed treatment as directed, and use nightly audios as the consistency layer around that plan.",
+          "Visit the pain relief landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Ease, warmth, and rest (excerpt)",
+      quote:
+        "The body can soften now… breath is easy… tension loosens its hold… comfort spreads with each quiet breath… night by night rest and ease remember how to travel together…"
+    }
+  },
+  {
+    slug: "spirituality-goal-without-morning-ritual-guided-meditation-sleep",
+    title:
+      "Spiritual connection without a 5 a.m. ritual: guided meditation that meets you at bedtime",
+    metaTitle: "Spirituality Goal Guided Meditation at Night | RFTS Blog",
+    metaDescription:
+      "Deepen spirituality when morning practice keeps slipping. Guided meditation at bedtime and during sleep for peace, presence, and inner connection. Free trial.",
+    publishedAt: "2026-09-07",
+    readMinutes: 6,
+    excerpt:
+      "Spirituality goals stall when the only practice window is a morning you never actually get. Guided meditation at bedtime and during sleep restores peace, presence, and inner connection without another dawn ritual.",
+    goalSlug: "spirituality",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for a greater spiritual connection usually already care. The gap is the calendar. Dawn sits, journal streaks, and another 5 a.m. commitment sound meaningful until the week is loud again. Missing the ritual then feels like failing the path. What they need is a practice that happens in a window they already keep: bedtime.",
+          "Reach For The Stars treats Spirituality as a prioritized goal - a greater connection with your spirituality. When spirituality is in your rotation, guided meditations play while you fall asleep and, if you choose two audios per night, again during sleep, so peace and presence get rehearsed without competing with mornings you do not control."
+        ]
+      },
+      {
+        heading: "Connection is trained by what you return to, not by the alarm",
+        paragraphs: [
+          "Inner alignment is a pattern. It responds to consistent intention in a quiet state: presence, trust, compassion, and a sense that you are not only your inbox. Nightly suggestion can support that without prescribing one theology or asking you to sit upright after a long day.",
+          "When Spirituality sits among your goals, your personalized lineup includes spirit-focused recordings automatically. Explore our spirituality page for how that landing path frames nightly practice for peace, presence, and a personal path."
+        ]
+      },
+      {
+        heading: "Why bedtime is already a spiritual window",
+        paragraphs: [
+          "Night has long been associated with prayer, reflection, and releasing the day. The transition into sleep is also when the mind is highly receptive. A fixed Start Session flow - intro relaxation music, then a spirituality-related audio as you drift, then optional reinforcement later in the night - turns lights-out into a sacred cue instead of another missed morning.",
+          "That pattern fits people returning after a dry season, anyone whose faith or inner life got crowded out by work, and members who want spirituality paired with health or relationship so body, heart, and meaning travel in the same nightly practice."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits seekers who want consistency without a rigid dawn routine, people who feel spiritually disconnected after a noisy season, and members who value guided imagery as a mind-body tool for peace. Your beliefs remain yours. The platform schedules the practice.",
+          "Visit the spirituality landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Peace and inner alignment (excerpt)",
+      quote:
+        "You are connected to what matters… peace settles through you… presence is here in the quiet… trust deepens with each breath… you rest in alignment with your true self…"
+    }
+  },
+  {
+    slug: "waking-at-3am-guided-sleep-meditation-second-audio",
+    title:
+      "Waking at 3 a.m.: how a second guided audio supports sleep after the first drop-off",
+    metaTitle: "Waking at 3am Guided Sleep Meditation | RFTS Blog",
+    metaDescription:
+      "If you fall asleep then wake in the night, a second guided audio during sleep can restore calm without another daytime sleep plan. Free trial.",
+    publishedAt: "2026-09-07",
+    readMinutes: 6,
+    excerpt:
+      "Falling asleep is only half the night. If you surface around 3 a.m., a second guided audio during sleep can restore calm in the later stretch - without another daytime sleep-hygiene project.",
+    topicSlug: "sleep-meditation",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for better sleep often already fall asleep. The problem is the second half. Around 3 a.m. the house is quiet, the mind is not, and every unfinished thought has a clear runway. Sleep-hygiene lists and morning wind-down apps do not help from that hour. What they need is support already scheduled for the later stretch of the night.",
+          "Reach For The Stars supports better sleep with guided meditation while you fall asleep and, if you choose two audios per night, again during sleep - about 2.5 hours later. That second play is not something you stay awake for. It is gentle repetition in the window when many people otherwise surface and start problem-solving."
+        ]
+      },
+      {
+        heading: "The night has two windows, not one",
+        paragraphs: [
+          "Bedtime handles the first drop-off: intro relaxation music, then a rest-related audio as you drift. The later window is different. The body may still be in restorative sleep, or it may be close enough to waking that a calm cue matters. A scheduled second audio keeps sleep-friendly language in that stretch so 3 a.m. is not left to rumination.",
+          "When rest, calm, and balance sit among your priorities, your rotation includes sleep-aligned recordings automatically. Explore our guided sleep meditation page for how that landing path frames bedtime wind-down plus reinforcement during sleep."
+        ]
+      },
+      {
+        heading: "Why another daytime sleep plan will not fix 3 a.m.",
+        paragraphs: [
+          "Willpower is lowest in the middle of the night. You will not open an app, pick a track, and run a protocol from a dark bedroom. A fixed Start Session cue at bedtime is the whole decision. The schedule handles the rest, including the later audio if you keep the two-per-night default.",
+          "That pattern fits people who sleep, then wake, then watch the clock; anyone whose stressful week shows up as a 3 a.m. brain; and members who want sleep paired with stress relief so the same nightly practice covers falling asleep and staying resourced through the later hours."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits people whose first sleep is fine and whose second stretch is not, caregivers and professionals who wake with tomorrow already queued, and anyone tired of sleep-hygiene lists that ignore the middle of the night. Guided meditation supports healthier sleep habits. It is not a substitute for medical care when insomnia, apnea, pain, or mood need clinical attention.",
+          "Visit the sleep meditation landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Return to rest in the later night (excerpt)",
+      quote:
+        "The night is still safe… the body knows how to rest again… thoughts can wait until morning… calm returns in quiet layers… sleep continues, easy and deep…"
+    }
+  },
+  {
     slug: "memory-goal-guided-meditation-names-recall-sleep",
     title:
       "When names slip: a memory goal you reinforce at night instead of another brain-training app",
