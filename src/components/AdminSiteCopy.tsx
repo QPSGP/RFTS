@@ -192,8 +192,7 @@ export default function AdminSiteCopy() {
 
   return (
     <div className="card">
-      <h2 style={{ marginTop: 0 }}>Page copy</h2>
-      <p style={{ color: "#64748b", marginBottom: 16 }}>
+      <p style={{ color: "#64748b", marginTop: 0, marginBottom: 16 }}>
         Search or scroll the titles, then select one to edit the wording underneath. Layout stays
         the same.
       </p>

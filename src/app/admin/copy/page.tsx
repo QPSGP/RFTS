@@ -33,18 +33,15 @@ export default function AdminCopyPage() {
     <main className="admin-page">
       <section
         style={{
-          marginBottom: 24,
+          marginBottom: 16,
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "flex-start",
+          alignItems: "center",
           flexWrap: "wrap",
           gap: 12
         }}
       >
-        <div>
-          <h1>Page copy</h1>
-          <p>Edit landing page and article wording without GitHub.</p>
-        </div>
+        <h1 style={{ margin: 0 }}>Page copy</h1>
         <div className="admin-toolbar">
           <Link href="/admin/content" className="button button-secondary" style={{ padding: "8px 12px", fontSize: 13 }}>
             Content Console
