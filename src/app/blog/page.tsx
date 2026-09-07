@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import BlogExploreNav from "@/components/BlogExploreNav";
 import SiteFooter from "@/components/SiteFooter";
-import { getBlogPostsNewestFirst } from "@/lib/blog-posts";
 import { getTopicLandingPage } from "@/lib/topic-landing-pages";
+import { resolveBlogPostsNewestFirst } from "@/lib/site-copy";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Wellness Blog - Sleep, Stress, Pain & Memory | Reach For The Stars",
@@ -23,8 +25,8 @@ function formatDate(iso: string): string {
   });
 }
 
-export default function BlogPage() {
-  const posts = getBlogPostsNewestFirst();
+export default async function BlogPage() {
+  const posts = await resolveBlogPostsNewestFirst();
 
   return (
     <main>

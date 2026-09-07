@@ -1,5 +1,7 @@
-import { buildTopicLandingPage } from "@/lib/topic-landing-route";
+﻿import { buildTopicLandingPage } from "@/lib/topic-landing-route";
 
-const { metadata, Page } = buildTopicLandingPage("stress-relief");
-export { metadata };
+export const dynamic = "force-dynamic";
+
+const { generateMetadata, Page } = buildTopicLandingPage("stress-relief");
+export { generateMetadata };
 export default Page;

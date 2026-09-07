@@ -667,3 +667,14 @@ CREATE INDEX IF NOT EXISTS marketing_outreach_campaign_recipients_campaign_idx
 CREATE INDEX IF NOT EXISTS marketing_outreach_campaign_recipients_email_idx
   ON marketing_outreach_campaign_recipients (lower(email))
   WHERE email IS NOT NULL;
+
+-- Admin-editable text overlays for landing pages and blog articles
+CREATE TABLE IF NOT EXISTS site_copy_overrides (
+  path text PRIMARY KEY,
+  kind text NOT NULL,
+  content jsonb NOT NULL DEFAULT '{}'::jsonb,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  updated_by text
+);
+CREATE INDEX IF NOT EXISTS site_copy_overrides_kind_idx
+  ON site_copy_overrides (kind);

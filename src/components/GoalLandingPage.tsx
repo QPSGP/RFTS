@@ -7,11 +7,8 @@ import {
 import RelatedAudioLandings from "@/components/RelatedAudioLandings";
 import { isMemberLoggedIn } from "@/lib/member-session";
 import type { AudioLandingCard } from "@/lib/audio-landing-relations";
-import {
-  getRelatedGoalPages,
-  GOAL_SIGNUP_HREF,
-  type GoalLandingContent
-} from "@/lib/goal-landing-pages";
+import { GOAL_SIGNUP_HREF, type GoalLandingContent } from "@/lib/goal-landing-pages";
+import { resolveRelatedGoalPages } from "@/lib/site-copy";
 
 export default async function GoalLandingPage({
   content,
@@ -23,7 +20,7 @@ export default async function GoalLandingPage({
   signupHref?: string;
 }) {
   const showSignupCta = !(await isMemberLoggedIn());
-  const related = getRelatedGoalPages(content.relatedSlugs);
+  const related = await resolveRelatedGoalPages(content.relatedSlugs);
 
   return (
     <main>

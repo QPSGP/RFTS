@@ -1,5 +1,7 @@
-import { buildTopicLandingPage } from "@/lib/topic-landing-route";
+﻿import { buildTopicLandingPage } from "@/lib/topic-landing-route";
 
-const { metadata, Page } = buildTopicLandingPage("blood-pressure-regulation");
-export { metadata };
+export const dynamic = "force-dynamic";
+
+const { generateMetadata, Page } = buildTopicLandingPage("blood-pressure-regulation");
+export { generateMetadata };
 export default Page;

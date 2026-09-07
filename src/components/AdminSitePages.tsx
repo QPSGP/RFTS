@@ -71,7 +71,8 @@ export default function AdminSitePages() {
       <h2 style={{ marginTop: 0 }}>Site &amp; landing pages</h2>
       <p style={{ color: "#64748b", marginBottom: 8 }}>
         {data.total} URLs - marketing, goals, wellness, blog, and audio track landings. Open
-        links to preview; audio landings are not on the public menu yet.
+        links to preview. To change wording on landings and blog articles, use{" "}
+        <a href="/admin/copy">Page copy</a>.
       </p>
       {data.audioLandingNote && (
         <p style={{ color: "#0f766e", fontSize: 14, marginBottom: 16 }}>{data.audioLandingNote}</p>

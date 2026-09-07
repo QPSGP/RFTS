@@ -5383,3 +5383,143 @@ export const setLgdIntakeOwnVoiceAudioUrl = async (
   `;
   return (rowCount ?? 0) > 0;
 };
+
+export type SiteCopyKind = "goal" | "topic" | "blog";
+
+export type SiteCopyOverrideRecord = {
+  path: string;
+  kind: SiteCopyKind;
+  content: Record<string, unknown>;
+  updatedAt: string;
+  updatedBy: string | null;
+};
+
+let siteCopyOverridesReady = false;
+
+const ensureSiteCopyOverridesTable = async () => {
+  if (siteCopyOverridesReady) return;
+  await sql`
+    CREATE TABLE IF NOT EXISTS site_copy_overrides (
+      path text PRIMARY KEY,
+      kind text NOT NULL,
+      content jsonb NOT NULL DEFAULT '{}'::jsonb,
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      updated_by text
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS site_copy_overrides_kind_idx ON site_copy_overrides (kind)`;
+  siteCopyOverridesReady = true;
+};
+
+function parseSiteCopyRow(row: {
+  path: string;
+  kind: string;
+  content: unknown;
+  updatedAt: string;
+  updatedBy: string | null;
+}): SiteCopyOverrideRecord {
+  const content =
+    row.content && typeof row.content === "object" && !Array.isArray(row.content)
+      ? (row.content as Record<string, unknown>)
+      : {};
+  const kind: SiteCopyKind =
+    row.kind === "goal" || row.kind === "topic" || row.kind === "blog" ? row.kind : "blog";
+  return {
+    path: row.path,
+    kind,
+    content,
+    updatedAt: row.updatedAt,
+    updatedBy: row.updatedBy
+  };
+}
+
+export const listSiteCopyOverrides = async (): Promise<SiteCopyOverrideRecord[]> => {
+  await ensureSiteCopyOverridesTable();
+  const { rows } = await sql<{
+    path: string;
+    kind: string;
+    content: unknown;
+    updatedAt: string;
+    updatedBy: string | null;
+  }>`
+    SELECT
+      path,
+      kind,
+      content,
+      updated_at AS "updatedAt",
+      updated_by AS "updatedBy"
+    FROM site_copy_overrides
+    ORDER BY path ASC
+  `;
+  return rows.map(parseSiteCopyRow);
+};
+
+export const getSiteCopyOverride = async (
+  path: string
+): Promise<SiteCopyOverrideRecord | null> => {
+  await ensureSiteCopyOverridesTable();
+  const { rows } = await sql<{
+    path: string;
+    kind: string;
+    content: unknown;
+    updatedAt: string;
+    updatedBy: string | null;
+  }>`
+    SELECT
+      path,
+      kind,
+      content,
+      updated_at AS "updatedAt",
+      updated_by AS "updatedBy"
+    FROM site_copy_overrides
+    WHERE path = ${path}
+    LIMIT 1
+  `;
+  return rows[0] ? parseSiteCopyRow(rows[0]) : null;
+};
+
+export const upsertSiteCopyOverride = async (input: {
+  path: string;
+  kind: SiteCopyKind;
+  content: Record<string, unknown>;
+  updatedBy: string | null;
+}): Promise<SiteCopyOverrideRecord> => {
+  await ensureSiteCopyOverridesTable();
+  const contentJson = JSON.stringify(input.content);
+  const { rows } = await sql<{
+    path: string;
+    kind: string;
+    content: unknown;
+    updatedAt: string;
+    updatedBy: string | null;
+  }>`
+    INSERT INTO site_copy_overrides (path, kind, content, updated_by, updated_at)
+    VALUES (
+      ${input.path},
+      ${input.kind},
+      CAST(${contentJson} AS jsonb),
+      ${input.updatedBy},
+      now()
+    )
+    ON CONFLICT (path) DO UPDATE SET
+      kind = EXCLUDED.kind,
+      content = EXCLUDED.content,
+      updated_by = EXCLUDED.updated_by,
+      updated_at = now()
+    RETURNING
+      path,
+      kind,
+      content,
+      updated_at AS "updatedAt",
+      updated_by AS "updatedBy"
+  `;
+  return parseSiteCopyRow(rows[0]);
+};
+
+export const deleteSiteCopyOverride = async (path: string): Promise<boolean> => {
+  await ensureSiteCopyOverridesTable();
+  const { rowCount } = await sql`
+    DELETE FROM site_copy_overrides WHERE path = ${path}
+  `;
+  return (rowCount ?? 0) > 0;
+};

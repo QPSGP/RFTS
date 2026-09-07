@@ -873,9 +873,9 @@ export default function AdminMarketing() {
                 </Link>
               </p>
               <p style={{ margin: 0, color: "#4b5563", fontSize: 13 }}>
-                Add the next article in <code>src/lib/blog-posts.ts</code>, then run{" "}
-                <code>npm run blog:check-cadence</code>. See{" "}
-                <code>docs/BLOG_WEEKLY_CADENCE.md</code>.
+                Change wording on existing articles from{" "}
+                <Link href="/admin/copy">Page copy</Link>. Add a new article in code (
+                <code>src/lib/blog-posts.ts</code>), then run <code>npm run blog:check-cadence</code>.
               </p>
             </div>
           ) : (

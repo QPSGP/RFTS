@@ -1,5 +1,7 @@
-import { buildGoalLandingPage } from "@/lib/goal-landing-route";
+﻿import { buildGoalLandingPage } from "@/lib/goal-landing-route";
 
-const { metadata, Page } = buildGoalLandingPage("spirituality");
-export { metadata };
+export const dynamic = "force-dynamic";
+
+const { generateMetadata, Page } = buildGoalLandingPage("spirituality");
+export { generateMetadata };
 export default Page;

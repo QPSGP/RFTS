@@ -5,14 +5,13 @@ import {
   LandingTrialCtaButtons
 } from "@/components/LandingTrialCta";
 import RelatedAudioLandings from "@/components/RelatedAudioLandings";
-import { getBlogPostsNewestFirst } from "@/lib/blog-posts";
 import { isMemberLoggedIn } from "@/lib/member-session";
 import type { AudioLandingCard } from "@/lib/audio-landing-relations";
+import { TOPIC_SIGNUP_HREF, type TopicLandingContent } from "@/lib/topic-landing-pages";
 import {
-  getRelatedTopicPages,
-  TOPIC_SIGNUP_HREF,
-  type TopicLandingContent
-} from "@/lib/topic-landing-pages";
+  resolveBlogPostsNewestFirst,
+  resolveRelatedTopicPages
+} from "@/lib/site-copy";
 
 export default async function TopicLandingPage({
   content,
@@ -24,8 +23,8 @@ export default async function TopicLandingPage({
   signupHref?: string;
 }) {
   const showSignupCta = !(await isMemberLoggedIn());
-  const related = getRelatedTopicPages(content.relatedSlugs);
-  const relatedArticles = getBlogPostsNewestFirst().filter(
+  const related = await resolveRelatedTopicPages(content.relatedSlugs);
+  const relatedArticles = (await resolveBlogPostsNewestFirst()).filter(
     (post) => post.topicSlug === content.slug
   );
 

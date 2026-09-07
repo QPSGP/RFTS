@@ -49,8 +49,15 @@ export default function AdminMarketingPage() {
         </div>
         <div className="admin-toolbar">
           <Link
-            href="/admin/campaigns"
+            href="/admin/copy"
             className="button"
+            style={{ padding: "8px 12px", fontSize: 13 }}
+          >
+            Page copy
+          </Link>
+          <Link
+            href="/admin/campaigns"
+            className="button button-secondary"
             style={{ padding: "8px 12px", fontSize: 13 }}
           >
             Campaigns

@@ -2,11 +2,11 @@ import BlogExploreNav from "@/components/BlogExploreNav";
 import AffiliateSignupLink from "@/components/AffiliateSignupLink";
 import RelatedAudioLandings from "@/components/RelatedAudioLandings";
 import SiteFooter from "@/components/SiteFooter";
-import { GOAL_SIGNUP_HREF, getGoalLandingPage } from "@/lib/goal-landing-pages";
+import { GOAL_SIGNUP_HREF } from "@/lib/goal-landing-pages";
 import { isMemberLoggedIn } from "@/lib/member-session";
-import { getTopicLandingPage } from "@/lib/topic-landing-pages";
 import type { AudioLandingCard } from "@/lib/audio-landing-relations";
 import type { BlogPost } from "@/lib/blog-posts";
+import { resolveGoalLandingPage, resolveTopicLandingPage } from "@/lib/site-copy";
 
 function formatDate(iso: string): string {
   return new Date(`${iso}T12:00:00`).toLocaleDateString("en-US", {
@@ -26,8 +26,8 @@ export default async function BlogPostView({
   signupHref?: string;
 }) {
   const showSignupCta = !(await isMemberLoggedIn());
-  const topicPage = post.topicSlug ? getTopicLandingPage(post.topicSlug) : null;
-  const goalPage = post.goalSlug ? getGoalLandingPage(post.goalSlug) : null;
+  const topicPage = post.topicSlug ? await resolveTopicLandingPage(post.topicSlug) : null;
+  const goalPage = post.goalSlug ? await resolveGoalLandingPage(post.goalSlug) : null;
 
   return (
     <main>
