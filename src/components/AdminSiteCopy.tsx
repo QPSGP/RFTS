@@ -19,6 +19,25 @@ type EditorPayload = {
 
 const KIND_ORDER: EditorKind[] = ["goal", "topic", "blog"];
 
+function copyEditorHref(path: string | null): string {
+  if (!path) return "/admin/copy";
+  return `/admin/copy?path=${encodeURIComponent(path)}`;
+}
+
+function syncCopyEditorPath(path: string | null) {
+  if (typeof window === "undefined") return;
+  const next = copyEditorHref(path);
+  const current = `${window.location.pathname}${window.location.search}`;
+  if (current !== next) {
+    window.history.replaceState(null, "", next);
+  }
+}
+
+function pathFromCopyEditorUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get("path");
+}
+
 const TYPE_HEADINGS: Record<EditorKind, string> = {
   goal: "Landing",
   topic: "Wellness",
@@ -79,7 +98,7 @@ export default function AdminSiteCopy() {
     loadList();
   }, [loadList]);
 
-  const openEditor = async (path: string) => {
+  const openEditor = useCallback(async (path: string) => {
     setStatus(null);
     setSelectedPath(path);
     setLoadingEditor(true);
@@ -96,7 +115,15 @@ export default function AdminSiteCopy() {
     setEditor(data as EditorPayload);
     setDraft(data.current);
     setLoadingEditor(false);
-  };
+    syncCopyEditorPath(path);
+  }, []);
+
+  useEffect(() => {
+    const path = pathFromCopyEditorUrl();
+    if (path) {
+      void openEditor(path);
+    }
+  }, [openEditor]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -243,6 +270,7 @@ export default function AdminSiteCopy() {
               setDraft(null);
               setSelectedPath(null);
               setStatus(null);
+              syncCopyEditorPath(null);
             }}
           />
         </div>
@@ -278,7 +306,18 @@ function CopyEditorForm({
           <p style={{ color: "#64748b", margin: 0 }}>{editor.path}</p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <a className="button button-secondary" href={editor.path} target="_blank" rel="noreferrer">
+          <a
+            className="button button-secondary"
+            href={editor.path}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(event) => {
+              const preview = window.open(editor.path, "_blank", "noopener,noreferrer");
+              if (preview) {
+                event.preventDefault();
+              }
+            }}
+          >
             Preview live page
           </a>
           <button type="button" className="button button-secondary" onClick={onClose}>

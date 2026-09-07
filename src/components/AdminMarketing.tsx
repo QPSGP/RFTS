@@ -868,7 +868,12 @@ export default function AdminMarketing() {
               <p style={{ margin: "0 0 12px" }}>
                 <strong>Suggested next topic</strong> ({overview.blogCadence.nextTopic.kind}):{" "}
                 {overview.blogCadence.nextTopic.label}{" "}
-                <Link href={overview.blogCadence.nextTopic.path} style={{ color: "#2563eb" }}>
+                <Link
+                  href={overview.blogCadence.nextTopic.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#2563eb" }}
+                >
                   {overview.blogCadence.nextTopic.path}
                 </Link>
               </p>

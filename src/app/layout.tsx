@@ -5,6 +5,7 @@ import AffiliateRefSync from "@/components/AffiliateRefSync";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import MicrosoftClarity from "@/components/MicrosoftClarity";
 import SiteHeader from "@/components/SiteHeader";
+import CopyEditorReturnBanner from "@/components/CopyEditorReturnBanner";
 import { getPublicSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
@@ -28,6 +29,7 @@ export default function RootLayout({
       <body>
         <AffiliateRefSync />
         <SiteHeader />
+        <CopyEditorReturnBanner />
         {stripeMode === "demo" && (
           <div
             style={{
