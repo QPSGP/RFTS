@@ -916,6 +916,52 @@ button.section-title {
   margin: 0;
 }
 
+.admin-copy-picker {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.admin-copy-picker-heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  background: #f3f4f6;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-copy-picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border: 0;
+  border-bottom: 1px solid #f3f4f6;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+}
+
+.admin-copy-picker-item:hover {
+  background: #f8fafc;
+}
+
+.admin-copy-picker-item.is-selected {
+  background: #ecfdf5;
+  font-weight: 600;
+}
+
 .admin-page .card {
   min-width: 0;
   max-width: 100%;

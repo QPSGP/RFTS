@@ -19,6 +19,12 @@ type EditorPayload = {
 
 const KIND_ORDER: EditorKind[] = ["goal", "topic", "blog"];
 
+const TYPE_HEADINGS: Record<EditorKind, string> = {
+  goal: "Landing",
+  topic: "Wellness",
+  blog: "Blogs"
+};
+
 function fieldLabel(name: string): string {
   const labels: Record<string, string> = {
     label: "Short name",
@@ -51,12 +57,12 @@ export default function AdminSiteCopy() {
   const [pages, setPages] = useState<SiteCopyCatalogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [kindFilter, setKindFilter] = useState<EditorKind | "all">("all");
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [editor, setEditor] = useState<EditorPayload | null>(null);
   const [draft, setDraft] = useState<GoalCopyOverlay | TopicCopyOverlay | BlogCopyOverlay | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loadingEditor, setLoadingEditor] = useState(false);
 
   const loadList = useCallback(() => {
     fetch("/api/admin/site-copy", { credentials: "include", cache: "no-store" })
@@ -76,8 +82,7 @@ export default function AdminSiteCopy() {
   const openEditor = async (path: string) => {
     setStatus(null);
     setSelectedPath(path);
-    setEditor(null);
-    setDraft(null);
+    setLoadingEditor(true);
     const res = await fetch(`/api/admin/site-copy?path=${encodeURIComponent(path)}`, {
       credentials: "include",
       cache: "no-store"
@@ -85,24 +90,25 @@ export default function AdminSiteCopy() {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       setStatus(`Error: ${data.error || "Could not load page copy."}`);
+      setLoadingEditor(false);
       return;
     }
     setEditor(data as EditorPayload);
     setDraft(data.current);
+    setLoadingEditor(false);
   };
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return pages.filter((page) => {
-      if (kindFilter !== "all" && page.kind !== kindFilter) return false;
       if (!term) return true;
       return (
         page.label.toLowerCase().includes(term) ||
         page.path.toLowerCase().includes(term) ||
-        page.kindLabel.toLowerCase().includes(term)
+        TYPE_HEADINGS[page.kind].toLowerCase().includes(term)
       );
     });
-  }, [pages, search, kindFilter]);
+  }, [pages, search]);
 
   const grouped = useMemo(() => {
     const groups: Record<EditorKind, SiteCopyCatalogEntry[]> = { goal: [], topic: [], blog: [] };
@@ -158,91 +164,88 @@ export default function AdminSiteCopy() {
   }
 
   return (
-    <div className="grid" style={{ gap: 16 }}>
-      <div className="card">
-        <h2 style={{ marginTop: 0 }}>Page copy</h2>
-        <p style={{ color: "#64748b", marginBottom: 16 }}>
-          Change wording on goal landings, wellness landings, and blog articles. Layout stays the
-          same. New pages still need to be added in code.
-        </p>
-        <div className="admin-filter-row" style={{ marginBottom: 12 }}>
-          <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: "1 1 180px" }}>
-            <span style={{ fontSize: 13, fontWeight: 600 }}>Search</span>
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Title or path"
-              style={inputStyle()}
-            />
-          </label>
-          <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: "0 1 200px" }}>
-            <span style={{ fontSize: 13, fontWeight: 600 }}>Type</span>
-            <select
-              value={kindFilter}
-              onChange={(e) => setKindFilter(e.target.value as EditorKind | "all")}
-              style={inputStyle()}
-            >
-              <option value="all">All</option>
-              <option value="goal">Goal landings</option>
-              <option value="topic">Wellness landings</option>
-              <option value="blog">Blog articles</option>
-            </select>
-          </label>
-        </div>
+    <div className="card">
+      <h2 style={{ marginTop: 0 }}>Page copy</h2>
+      <p style={{ color: "#64748b", marginBottom: 16 }}>
+        Search or scroll the titles, then select one to edit the wording underneath. Layout stays
+        the same.
+      </p>
+      <label style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
+        <span style={{ fontSize: 13, fontWeight: 600 }}>Search pages</span>
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Filter Landing, Wellness, or Blogs titles"
+          style={inputStyle()}
+        />
+      </label>
+      <div className="admin-copy-picker" role="listbox" aria-label="Pages by type">
         {KIND_ORDER.map((kind) => {
           const rows = grouped[kind];
-          if (!rows.length) return null;
           return (
-            <div key={kind} style={{ marginBottom: 16 }}>
-              <h3 style={{ fontSize: 15, margin: "0 0 8px" }}>{rows[0].kindLabel}</h3>
-              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                {rows.map((page) => (
-                  <li key={page.path} style={{ marginBottom: 6 }}>
-                    <button
-                      type="button"
-                      className="button button-secondary"
-                      style={{
-                        width: "100%",
-                        textAlign: "left",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: 8,
-                        background: selectedPath === page.path ? "#ecfdf5" : undefined
-                      }}
-                      onClick={() => openEditor(page.path)}
-                    >
-                      <span>
-                        {page.label}{" "}
-                        <span style={{ color: "#6b7280", fontWeight: 400 }}>{page.path}</span>
-                      </span>
-                      {page.customized && (
-                        <span style={{ fontSize: 12, color: "#0f766e", fontWeight: 600 }}>Edited</span>
-                      )}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+            <div key={kind}>
+              <h3 className="admin-copy-picker-heading">
+                {TYPE_HEADINGS[kind]} ({rows.length})
+              </h3>
+              {rows.length === 0 ? (
+                <p style={{ margin: 0, padding: "8px 12px", color: "#6b7280", fontSize: 13 }}>
+                  No matching titles
+                </p>
+              ) : (
+                rows.map((page) => (
+                  <button
+                    key={page.path}
+                    type="button"
+                    role="option"
+                    aria-selected={selectedPath === page.path}
+                    className={
+                      selectedPath === page.path
+                        ? "admin-copy-picker-item is-selected"
+                        : "admin-copy-picker-item"
+                    }
+                    onClick={() => openEditor(page.path)}
+                  >
+                    <span>{page.label}</span>
+                    {page.customized && (
+                      <span style={{ fontSize: 12, color: "#0f766e", fontWeight: 600 }}>Edited</span>
+                    )}
+                  </button>
+                ))
+              )}
             </div>
           );
         })}
       </div>
-
+      {loadingEditor && (
+        <p style={{ margin: "12px 0 0", color: "#64748b" }}>Opening editor...</p>
+      )}
+      {status && !editor && (
+        <p
+          className={`status-message ${status.startsWith("Error:") ? "status-message--error" : "status-message--success"}`}
+          role="status"
+        >
+          {status}
+        </p>
+      )}
       {editor && draft && (
-        <CopyEditorForm
-          editor={editor}
-          draft={draft}
-          setDraft={setDraft}
-          saving={saving}
-          status={status}
-          onSave={save}
-          onReset={reset}
-          onClose={() => {
-            setEditor(null);
-            setDraft(null);
-            setSelectedPath(null);
-          }}
-        />
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #e5e7eb" }}>
+          <CopyEditorForm
+            editor={editor}
+            draft={draft}
+            setDraft={setDraft}
+            saving={saving}
+            status={status}
+            onSave={save}
+            onReset={reset}
+            onClose={() => {
+              setEditor(null);
+              setDraft(null);
+              setSelectedPath(null);
+              setStatus(null);
+            }}
+          />
+        </div>
       )}
     </div>
   );
@@ -268,10 +271,10 @@ function CopyEditorForm({
   onClose: () => void;
 }) {
   return (
-    <div className="card">
+    <div>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <h2 style={{ marginTop: 0, marginBottom: 4 }}>{editor.label}</h2>
+          <h3 style={{ marginTop: 0, marginBottom: 4 }}>{editor.label}</h3>
           <p style={{ color: "#64748b", margin: 0 }}>{editor.path}</p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
