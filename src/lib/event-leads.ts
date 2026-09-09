@@ -371,3 +371,22 @@ export function displayLeadName(lead: Pick<EventLeadRecord, "fullName" | "firstN
     "Unnamed lead"
   );
 }
+
+export function eventLeadHasScan(
+  lead: Pick<EventLeadRecord, "sourceScanPath"> | null | undefined
+): boolean {
+  return Boolean(lead?.sourceScanPath?.trim());
+}
+
+/** Admin URL for the original card image, or a stored https URL if one was saved. */
+export function eventLeadScanHref(
+  lead: Pick<EventLeadRecord, "id" | "sourceScanPath">,
+  options?: { full?: boolean }
+): string | null {
+  const raw = lead.sourceScanPath?.trim() || "";
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  const params = new URLSearchParams({ id: lead.id });
+  if (options?.full) params.set("full", "1");
+  return `/api/admin/marketing/event-leads/scan?${params.toString()}`;
+}

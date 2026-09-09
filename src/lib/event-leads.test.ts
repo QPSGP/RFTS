@@ -1,6 +1,8 @@
 import {
   SARAH_ROSE_LONG_BEACH_EXTRACT,
   applyLeadDefaults,
+  eventLeadHasScan,
+  eventLeadScanHref,
   eventLeadSubmitSchema,
   normalizeLeadEmail,
   normalizeLeadPhone,
@@ -78,6 +80,32 @@ describe("event-leads", () => {
     });
     expect(consumer.refCode).toBe("6051C794");
     expect(consumer.entryPath).toBe("Facilitator / Managed");
+  });
+
+  it("builds an admin scan compare link for stored file paths", () => {
+    expect(eventLeadHasScan(SARAH_ROSE_LONG_BEACH_EXTRACT)).toBe(true);
+    expect(
+      eventLeadScanHref({
+        id: "lead-1",
+        sourceScanPath: SARAH_ROSE_LONG_BEACH_EXTRACT.sourceScanPath ?? null
+      })
+    ).toBe("/api/admin/marketing/event-leads/scan?id=lead-1");
+    expect(
+      eventLeadScanHref(
+        {
+          id: "lead-1",
+          sourceScanPath: SARAH_ROSE_LONG_BEACH_EXTRACT.sourceScanPath ?? null
+        },
+        { full: true }
+      )
+    ).toBe("/api/admin/marketing/event-leads/scan?id=lead-1&full=1");
+    expect(eventLeadScanHref({ id: "lead-2", sourceScanPath: null })).toBeNull();
+    expect(
+      eventLeadScanHref({
+        id: "lead-3",
+        sourceScanPath: "https://example.com/scans/card.jpg"
+      })
+    ).toBe("https://example.com/scans/card.jpg");
   });
 
   it("keeps an explicit referral override", () => {

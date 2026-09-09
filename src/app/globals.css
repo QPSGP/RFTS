@@ -997,6 +997,46 @@ button.section-title {
   min-width: 0;
 }
 
+.event-lead-compare {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  margin-top: 12px;
+}
+
+.event-lead-compare > :first-child {
+  flex: 1 1 360px;
+  min-width: 0;
+}
+
+.event-lead-scan-compare {
+  flex: 1 1 280px;
+  max-width: 520px;
+  position: sticky;
+  top: 12px;
+}
+
+.event-lead-scan-compare img {
+  display: block;
+  margin-top: 8px;
+  width: 100%;
+  height: auto;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+@media (max-width: 800px) {
+  .event-lead-scan-compare {
+    order: -1;
+    position: static;
+    max-width: none;
+  }
+}
+
 .event-lead-goal-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

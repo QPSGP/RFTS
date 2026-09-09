@@ -19,6 +19,8 @@ import {
   TERRY_FACILITATOR_REF_CODE,
   TERRY_FACILITATOR_REF_LABEL,
   displayLeadName,
+  eventLeadHasScan,
+  eventLeadScanHref,
   type EventLeadFormTypeId,
   type EventLeadRecord
 } from "@/lib/event-leads";
@@ -63,6 +65,67 @@ type LeadFormState = {
   wantFullTime: boolean;
   goalInterests: string[];
 };
+
+function EventLeadScanHotLink({
+  lead,
+  children
+}: {
+  lead: Pick<EventLeadRecord, "id" | "sourceScanPath">;
+  children?: React.ReactNode;
+}) {
+  const href = eventLeadScanHref(lead, { full: true });
+  if (!href) return null;
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer">
+      {children ?? lead.sourceScanPath}
+    </a>
+  );
+}
+
+function EventLeadScanCompare({
+  lead
+}: {
+  lead: Pick<EventLeadRecord, "id" | "sourceScanPath">;
+}) {
+  const href = eventLeadScanHref(lead);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    setFailed(false);
+  }, [href]);
+  if (!href) return null;
+  return (
+    <aside className="event-lead-scan-compare">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 8,
+          flexWrap: "wrap",
+          alignItems: "baseline"
+        }}
+      >
+        <strong style={{ fontSize: 13 }}>Original scan</strong>
+        <EventLeadScanHotLink lead={lead}>Open scan to compare</EventLeadScanHotLink>
+      </div>
+      <p style={{ margin: "4px 0 0", fontSize: 12, color: "#6b7280" }}>
+        Open the card beside these fields and correct anything we misread.
+      </p>
+      {failed ? (
+        <p style={{ fontSize: 13, color: "#6b7280", margin: "8px 0 0" }}>
+          Scan file is not on this server. Keep the JPEG under docs/lead-card-scans to compare
+          here.
+        </p>
+      ) : (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={href}
+          alt="Original scanned lead card"
+          onError={() => setFailed(true)}
+        />
+      )}
+    </aside>
+  );
+}
 
 function emptyAddForm(): LeadFormState {
   return {
@@ -346,6 +409,14 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
     setSelectedId(lead.id);
     setMode("view");
     setMessage(null);
+  }
+
+  function openLead(lead: EventLeadRecord) {
+    if (eventLeadHasScan(lead)) {
+      openEdit(lead);
+      return;
+    }
+    openView(lead);
   }
 
   function closeLead() {
@@ -654,6 +725,17 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
               >
                 Next →
               </button>
+              {mode === "edit" && selected && eventLeadHasScan(selected) ? (
+                <a
+                  href={eventLeadScanHref(selected, { full: true }) || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="button"
+                  style={{ textDecoration: "none" }}
+                >
+                  Open scan to compare
+                </a>
+              ) : null}
               <button
                 type="button"
                 className="button button-secondary"
@@ -670,6 +752,8 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
               </button>
             </div>
           </div>
+          <div className="event-lead-compare">
+          <div>
           <div className="event-lead-form-grid">
             <label>
               Form type
@@ -980,6 +1064,11 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
               {saving ? "Saving…" : mode === "edit" ? "Save changes" : "Create lead"}
             </button>
           </div>
+          </div>
+          {mode === "edit" && selected && eventLeadHasScan(selected) ? (
+            <EventLeadScanCompare lead={selected} />
+          ) : null}
+          </div>
         </div>
       )}
 
@@ -1042,7 +1131,7 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
               {leads.map((lead) => (
                 <tr
                   key={lead.id}
-                  onClick={() => openView(lead)}
+                  onClick={() => openLead(lead)}
                   style={{ cursor: "pointer" }}
                 >
                   <td>{displayLeadName(lead)}</td>
@@ -1051,16 +1140,33 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
                   <td>{lead.persona || "-"}</td>
                   <td>{lead.status}</td>
                   <td style={{ whiteSpace: "nowrap" }}>
+                    {eventLeadHasScan(lead) ? (
+                      <a
+                        href={eventLeadScanHref(lead, { full: true }) || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="button button-secondary"
+                        style={{
+                          padding: "4px 8px",
+                          fontSize: 12,
+                          marginRight: 4,
+                          textDecoration: "none"
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Scan
+                      </a>
+                    ) : null}
                     <button
                       type="button"
                       className="button button-secondary"
                       style={{ padding: "4px 8px", fontSize: 12, marginRight: 4 }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        openView(lead);
+                        openLead(lead);
                       }}
                     >
-                      View
+                      {eventLeadHasScan(lead) ? "Compare & edit" : "View"}
                     </button>
                     <button
                       type="button"
@@ -1103,7 +1209,10 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
         >
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <div>
-              <strong>Digital lead - {displayLeadName(selected)}</strong>
+              <strong>
+                {eventLeadHasScan(selected) ? "Scanned lead" : "Digital lead"} -{" "}
+                {displayLeadName(selected)}
+              </strong>
               <div style={{ fontSize: 13, color: "#6b7280", marginTop: 4 }}>
                 {selectedIndex + 1} of {leads.length}
                 {" · "}
@@ -1130,18 +1239,30 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
               <button type="button" className="button" onClick={() => openEdit(selected)}>
                 Edit
               </button>
+              {eventLeadHasScan(selected) ? (
+                <a
+                  href={eventLeadScanHref(selected, { full: true }) || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="button button-secondary"
+                  style={{ textDecoration: "none" }}
+                >
+                  Open scan to compare
+                </a>
+              ) : null}
               <button type="button" className="button button-secondary" onClick={closeLead}>
                 Back to list
               </button>
             </div>
           </div>
+          <div className="event-lead-compare">
           <dl
             style={{
               display: "grid",
               gridTemplateColumns: "160px 1fr",
               gap: "6px 12px",
               fontSize: 14,
-              marginTop: 12,
+              marginTop: 0,
               userSelect: "text"
             }}
           >
@@ -1173,7 +1294,11 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
             <dd>{selected.notes || "-"}</dd>
             <dt>Scan</dt>
             <dd>
-              <code>{selected.sourceScanPath || "-"}</code>
+              {eventLeadHasScan(selected) ? (
+                <EventLeadScanHotLink lead={selected} />
+              ) : (
+                "-"
+              )}
             </dd>
             <dt>Outreach target</dt>
             <dd>
@@ -1186,6 +1311,8 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
               </pre>
             </dd>
           </dl>
+          {eventLeadHasScan(selected) ? <EventLeadScanCompare lead={selected} /> : null}
+          </div>
           <label style={{ display: "block", marginTop: 12, userSelect: "text" }}>
             Status
             <select
