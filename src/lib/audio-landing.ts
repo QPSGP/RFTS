@@ -1,4 +1,5 @@
 import type { LibraryItem } from "@/lib/types";
+import { firstSentence } from "@/lib/first-sentence";
 import { lookupRecordingDescription } from "@/lib/library-metadata";
 import { stripSkuHyphens } from "@/lib/sku-code";
 import { buildMarketingSignupHref } from "@/lib/marketing-signup";
@@ -88,7 +89,7 @@ export function libraryItemsForIndexableAudioLanding(library: LibraryItem[]): Li
   return library.filter(isIndexableAudioLanding);
 }
 
-function summaryForItem(item: LibraryItem): string {
+function fullDescriptionForItem(item: LibraryItem): string {
   const fromItem = (item.description || "").trim();
   if (fromItem) return fromItem;
   if (item.skuCode) {
@@ -98,11 +99,16 @@ function summaryForItem(item: LibraryItem): string {
   return "A guided audio session from the Reach For The Stars library - personalized for your nightly goals.";
 }
 
+function summaryForItem(item: LibraryItem): string {
+  const full = fullDescriptionForItem(item);
+  return firstSentence(full) || full;
+}
+
 const SEO_META_HOOK = "14-day free trial - hear it in your nightly rotation.";
 
 /** Meta description with trial hook for search snippets. */
 export function buildSeoMetaDescription(summary: string): string {
-  const trimmed = summary.trim();
+  const trimmed = firstSentence(summary) || summary.trim();
   const maxSummaryLen = Math.max(60, 160 - SEO_META_HOOK.length - 1);
   const base =
     trimmed.length > maxSummaryLen ? `${trimmed.slice(0, maxSummaryLen - 1).trim()}…` : trimmed;

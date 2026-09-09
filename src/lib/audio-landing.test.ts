@@ -40,6 +40,23 @@ describe("audio-landing", () => {
     expect(slug.startsWith("t-14-")).toBe(true);
   });
 
+  it("uses the first sentence as the landing summary", () => {
+    const library = [
+      item({
+        id: "x",
+        title: "Abundance",
+        skuCode: "T18",
+        description:
+          "This recording brings you material abundance plus joy. Specific hypnotic suggestions help you get a job."
+      })
+    ];
+    const content = buildAudioLandingContent(library[0], library);
+    expect(content.summary).toBe("This recording brings you material abundance plus joy.");
+    expect(content.summary).not.toContain("Specific hypnotic");
+    expect(content.metaDescription).toContain("material abundance");
+    expect(content.metaDescription).not.toContain("Specific hypnotic");
+  });
+
   it("includes summary and transcript snippet", () => {
     const library = [
       item({

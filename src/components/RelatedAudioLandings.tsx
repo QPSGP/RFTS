@@ -26,7 +26,7 @@ export default function RelatedAudioLandings({ heading, audios }: RelatedAudioLa
               {audio.skuCode ? `${audio.skuCode} - ${audio.title}` : audio.title}
             </h3>
             <p style={{ margin: 0, color: "#64748b", fontSize: 14, lineHeight: 1.6 }}>
-              {audio.summary.length > 180 ? `${audio.summary.slice(0, 177).trim()}…` : audio.summary}
+              {audio.summary}
             </p>
           </a>
         ))}
