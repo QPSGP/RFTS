@@ -7,7 +7,7 @@ import { fetchEventLeadScanFromBlob } from "@/lib/event-lead-scan-blob";
 import { leadScanContentType, resolveEventLeadScanFile } from "@/lib/event-lead-scan";
 
 function imageResponse(buffer: Buffer, contentType: string, filename: string) {
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     status: 200,
     headers: {
       "Content-Type": contentType,
