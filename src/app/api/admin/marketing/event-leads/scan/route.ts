@@ -3,7 +3,20 @@ import path from "path";
 import { NextResponse } from "next/server";
 import { isAdminSession } from "@/lib/auth";
 import { getEventLead } from "@/lib/event-leads-db";
+import { fetchEventLeadScanFromBlob } from "@/lib/event-lead-scan-blob";
 import { leadScanContentType, resolveEventLeadScanFile } from "@/lib/event-lead-scan";
+
+function imageResponse(buffer: Buffer, contentType: string, filename: string) {
+  return new NextResponse(buffer, {
+    status: 200,
+    headers: {
+      "Content-Type": contentType,
+      "Content-Length": String(buffer.length),
+      "Content-Disposition": `inline; filename="${filename}"`,
+      "Cache-Control": "private, no-store"
+    }
+  });
+}
 
 export async function GET(request: Request) {
   if (!(await isAdminSession())) {
@@ -26,25 +39,21 @@ export async function GET(request: Request) {
 
   const preferPreview = url.searchParams.get("full") !== "1";
   const filePath = resolveEventLeadScanFile(lead.sourceScanPath, { preferPreview });
-  if (!filePath) {
-    return NextResponse.json(
-      {
-        error:
-          "Scan file is not on this server. Images live under docs/lead-card-scans and are not deployed to Vercel."
-      },
-      { status: 404 }
-    );
+  if (filePath) {
+    const buffer = fs.readFileSync(filePath);
+    return imageResponse(buffer, leadScanContentType(filePath), path.basename(filePath));
   }
 
-  const buffer = fs.readFileSync(filePath);
-  const filename = path.basename(filePath);
-  return new NextResponse(buffer, {
-    status: 200,
-    headers: {
-      "Content-Type": leadScanContentType(filePath),
-      "Content-Length": String(buffer.length),
-      "Content-Disposition": `inline; filename="${filename}"`,
-      "Cache-Control": "private, no-store"
-    }
-  });
+  const fromBlob = await fetchEventLeadScanFromBlob(lead.sourceScanPath, { preferPreview });
+  if (fromBlob) {
+    return imageResponse(fromBlob.buffer, fromBlob.contentType, fromBlob.filename);
+  }
+
+  return NextResponse.json(
+    {
+      error:
+        "Scan file is not on this server. Upload the JPEGs with npm run upload:lead-scans so production can open them."
+    },
+    { status: 404 }
+  );
 }

@@ -1,5 +1,6 @@
 import {
   isSafeEventLeadScanRelativePath,
+  leadScanBlobPathnames,
   leadScanContentType,
   resolveEventLeadScanFile
 } from "./event-lead-scan";
@@ -35,5 +36,24 @@ describe("event-lead-scan", () => {
 
   it("returns null when the scan file is missing", () => {
     expect(resolveEventLeadScanFile("docs/lead-card-scans/missing-no-such-file.jpg")).toBeNull();
+  });
+
+  it("maps stored scan paths to Blob pathnames", () => {
+    expect(
+      leadScanBlobPathnames(
+        "docs/lead-card-scans/long-beach-2026-08/jpg/20260803_124059.jpg",
+        { preferPreview: true }
+      )
+    ).toEqual([
+      "lead-card-scans/long-beach-2026-08/preview/20260803_124059.jpg",
+      "lead-card-scans/long-beach-2026-08/jpg/20260803_124059.jpg"
+    ]);
+    expect(
+      leadScanBlobPathnames("docs/lead-card-scans/20260803_124059-1.jpg", { preferPreview: false })
+    ).toEqual([
+      "lead-card-scans/20260803_124059-1.jpg",
+      "lead-card-scans/long-beach-2026-08/jpg/20260803_124059.jpg",
+      "lead-card-scans/long-beach-2026-08/preview/20260803_124059.jpg"
+    ]);
   });
 });

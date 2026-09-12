@@ -38,6 +38,7 @@ Pipeline:
 2. Hand/vision extracts → `docs/lead-card-scans/long-beach-2026-08/extracts.json` (admin-only; served via `GET /api/admin/marketing/event-leads?extracts=long-beach-2026-08`)
 3. Admin → Event leads → **Import extracts JSON batch**
 4. Optional bulk vision: add `OPENAI_API_KEY` to `.env.local`, then `npx tsx scripts/extract-lead-card-scans.ts`
+5. Upload JPEGs to Vercel Blob so production admin can open them: `npm run upload:lead-scans` (needs `BLOB_READ_WRITE_TOKEN` in `.env.local`). The scan API still requires admin login.
 
 **Security:** Do not put extracts under `public/` (PII). Public `POST /api/lead/submit` is rate-limited.
 

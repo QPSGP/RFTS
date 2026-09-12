@@ -42,7 +42,8 @@
 
     "schedule:spreadsheet": "tsx scripts/schedule-spreadsheet-export.ts",
     "blog:check-cadence": "tsx scripts/check-blog-cadence.ts",
-    "crm:import-aweber": "tsx scripts/import-aweber-lists-to-crm.ts"
+    "crm:import-aweber": "tsx scripts/import-aweber-lists-to-crm.ts",
+    "upload:lead-scans": "tsx scripts/upload-lead-card-scans.ts"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
