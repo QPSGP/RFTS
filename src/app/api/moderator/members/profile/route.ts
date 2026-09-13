@@ -47,6 +47,7 @@ export async function GET(request: Request) {
       subscriptionStatus: profile?.subscriptionStatus ?? null,
       goalIds: profile?.goalIds ?? [],
       playsPerNight: profile?.playsPerNight ?? 2,
+      createdAt: profile?.createdAt ?? user.created_at ?? null,
       profile: memberProfile
     }
   });

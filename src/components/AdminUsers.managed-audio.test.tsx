@@ -18,7 +18,8 @@ const MANAGED_USER = {
   goalIds: [] as string[],
   subscriptionStatus: "active" as const,
   subscriptionTier: "platinum_managed" as const,
-  playsPerNight: 2
+  playsPerNight: 2,
+  createdAt: "2026-09-13T12:00:00.000Z"
 };
 
 /** Valid UUIDs - API route validates POST bodies with z.string().uuid(). */

@@ -5,6 +5,7 @@ import {
   memberDraftShowsAdultContentOptions,
   type MemberProfileDraft
 } from "@/lib/member-profile-form";
+import { formatSignupDate } from "@/lib/format-signup-date";
 
 const defaultInputStyle = {
   padding: 12,
@@ -18,13 +19,15 @@ type MemberProfileEditorProps = {
   onChange: (draft: MemberProfileDraft) => void;
   inputStyle?: React.CSSProperties;
   showIncomeFields?: boolean;
+  createdAt?: string | null;
 };
 
 export default function MemberProfileEditor({
   draft,
   onChange,
   inputStyle = defaultInputStyle,
-  showIncomeFields = true
+  showIncomeFields = true,
+  createdAt
 }: MemberProfileEditorProps) {
   const setField = <K extends keyof MemberProfileDraft>(key: K, value: MemberProfileDraft[K]) => {
     onChange({ ...draft, [key]: value });
@@ -50,6 +53,19 @@ export default function MemberProfileEditor({
           value={draft.lastName}
           onChange={(event) => setField("lastName", event.target.value)}
         />
+        {formatSignupDate(createdAt) ? (
+          <div style={{ gridColumn: "1 / -1" }}>
+            <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, marginBottom: 4 }}>
+              Signed up
+            </p>
+            <input
+              style={{ ...inputStyle, backgroundColor: "#f3f4f6", cursor: "not-allowed" }}
+              readOnly
+              value={formatSignupDate(createdAt)}
+              aria-label="Signed up"
+            />
+          </div>
+        ) : null}
         <div style={{ minWidth: 0 }}>
           <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, marginBottom: 4 }}>
             Birthdate (optional). Required for mature content access 18+.

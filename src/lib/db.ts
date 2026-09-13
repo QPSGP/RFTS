@@ -99,6 +99,7 @@ export type UserProfile = {
   subscriptionTier: DbSubscription["tier"] | null;
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
+  createdAt: string;
 };
 
 /** Canonical form for member emails in `users` and matching related data. */
@@ -867,7 +868,8 @@ export const getUserProfile = async (email: string) => {
       s.status AS "subscriptionStatus",
       s.tier AS "subscriptionTier",
       s.stripe_customer_id AS "stripeCustomerId",
-      s.stripe_subscription_id AS "stripeSubscriptionId"
+      s.stripe_subscription_id AS "stripeSubscriptionId",
+      u.created_at AS "createdAt"
     FROM users u
     LEFT JOIN subscriptions s ON s.user_id = u.id
     WHERE LOWER(u.email) = LOWER(${email})
@@ -898,7 +900,8 @@ export const listUsers = async (): Promise<UserRowWithName[]> => {
       mp.first_name AS "firstName",
       mp.last_name AS "lastName",
       u.affiliate_code AS "affiliateCode",
-      u.referred_by_affiliate_code AS "referredByAffiliateCode"
+      u.referred_by_affiliate_code AS "referredByAffiliateCode",
+      u.created_at AS "createdAt"
     FROM users u
     LEFT JOIN subscriptions s ON s.user_id = u.id
     LEFT JOIN member_profiles mp ON mp.user_id = u.id
@@ -3224,7 +3227,8 @@ export const listUsersByEmails = async (emails: string[]): Promise<UserRowWithNa
       s.stripe_customer_id AS "stripeCustomerId",
       s.stripe_subscription_id AS "stripeSubscriptionId",
       mp.first_name AS "firstName",
-      mp.last_name AS "lastName"
+      mp.last_name AS "lastName",
+      u.created_at AS "createdAt"
     FROM users u
     LEFT JOIN subscriptions s ON s.user_id = u.id
     LEFT JOIN member_profiles mp ON mp.user_id = u.id

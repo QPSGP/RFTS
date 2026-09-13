@@ -8,6 +8,7 @@ import MemberBillingSection, {
 import MemberAffiliateSection, {
   type MemberAffiliateInfo
 } from "@/components/MemberAffiliateSection";
+import { formatSignupDate } from "@/lib/format-signup-date";
 
 const TIME_ZONES = [
   "Pacific Time",
@@ -118,6 +119,7 @@ export default function MemberProfilePage() {
   const [affiliate, setAffiliate] = useState<MemberAffiliateInfo | null>(null);
   const [facilitator, setFacilitator] = useState<{ name: string; email: string } | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [createdAt, setCreatedAt] = useState<string | null>(null);
 
   const profileSummaryName = useMemo(() => {
     const name = [profile.firstName, profile.lastName].filter(Boolean).join(" ").trim();
@@ -141,10 +143,12 @@ export default function MemberProfilePage() {
     if (!res.ok) {
       setStatus("ready");
       setProfile(emptyProfile);
+      setCreatedAt(null);
       return;
     }
     const data = await res.json();
     setProfile(toState(data.profile ?? {}));
+    setCreatedAt(data.profile?.createdAt ?? null);
     setBilling(data.billing ?? null);
     setAffiliate(data.affiliate ?? null);
     setFacilitator(data.facilitator ?? null);
@@ -248,6 +252,7 @@ export default function MemberProfilePage() {
                 <p style={{ margin: "6px 0 0", fontSize: 14, color: "#4b5563" }}>
                   {profileSummaryName}
                   {profile.email ? ` · ${profile.email}` : ""}
+                  {formatSignupDate(createdAt) ? ` · Signed up ${formatSignupDate(createdAt)}` : ""}
                 </p>
               )}
             </div>
@@ -295,6 +300,19 @@ export default function MemberProfilePage() {
               aria-label="Email"
             />
           </div>
+          {formatSignupDate(createdAt) ? (
+            <div style={{ gridColumn: "1 / -1" }}>
+              <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, marginBottom: 4 }}>
+                Signed up
+              </p>
+              <input
+                style={{ ...inputStyle, backgroundColor: "#f3f4f6", cursor: "not-allowed" }}
+                readOnly
+                value={formatSignupDate(createdAt)}
+                aria-label="Signed up"
+              />
+            </div>
+          ) : null}
           <div style={{ minWidth: 0 }}>
             <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, marginBottom: 4 }}>
               Birthdate (optional). Required for mature content access 18+.

@@ -10,6 +10,7 @@ import {
   memberProfileToDraft,
   type MemberProfileDraft
 } from "@/lib/member-profile-form";
+import { formatSignupDate } from "@/lib/format-signup-date";
 import { MANAGED_MAX_SLOTS_PER_AUDIO } from "@/lib/managed-rotation-limits";
 
 function sanitizePathSegment(name: string): string {
@@ -210,6 +211,7 @@ export default function FacilitatorMembers() {
     playsPerNight: number;
     profile: MemberProfileDetail | null;
     registered: boolean;
+    createdAt: string | null;
   } | null>(null);
   const [activity, setActivity] = useState<ActivityRow[]>([]);
   const [scheduleProgress, setScheduleProgress] = useState<{
@@ -529,7 +531,8 @@ export default function FacilitatorMembers() {
           goalIds: data.member?.goalIds ?? [],
           playsPerNight: data.member?.playsPerNight ?? 2,
           profile: data.member?.profile ?? null,
-          registered: data.member?.registered ?? true
+          registered: data.member?.registered ?? true,
+          createdAt: data.member?.createdAt ?? null
         });
         setGoalDraftIds((prev) => ({
           ...prev,
@@ -1665,6 +1668,11 @@ export default function FacilitatorMembers() {
                         ? "Half session (1 audio/night)"
                         : "Full session (2 audios/night)"}
                     </p>
+                    {formatSignupDate(profileDetail.createdAt) ? (
+                      <p>
+                        <strong>Signed up:</strong> {formatSignupDate(profileDetail.createdAt)}
+                      </p>
+                    ) : null}
                   </div>
                 )}
                     </div>
@@ -1697,6 +1705,7 @@ export default function FacilitatorMembers() {
                               }))
                             }
                             inputStyle={inputStyle}
+                            createdAt={profileDetail?.createdAt}
                           />
                           <button
                             type="button"

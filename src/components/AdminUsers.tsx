@@ -10,6 +10,7 @@ import type { LibraryItem } from "@/lib/types";
 import { stripSkuHyphens } from "@/lib/sku-code";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 import ScheduleAlgorithmTool from "@/components/ScheduleAlgorithmTool";
+import { formatSignupDate } from "@/lib/format-signup-date";
 
 type MemberAdminSection =
   | "profile"
@@ -57,6 +58,7 @@ type UserRow = {
   stripeSubscriptionId?: string | null;
   affiliateCode?: string | null;
   referredByAffiliateCode?: string | null;
+  createdAt?: string | null;
 };
 
 /** Sort key: last name, first name, then email. */
@@ -2082,6 +2084,11 @@ export default function AdminUsers() {
                           : user.email}
                       </h3>
                       <p style={{ margin: "4px 0 0", color: "#64748b" }}>{user.email}</p>
+                      {formatSignupDate(user.createdAt) ? (
+                        <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
+                          Signed up {formatSignupDate(user.createdAt)}
+                        </p>
+                      ) : null}
                       <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
                         Goals: {user.goalIds?.length || 0} ·{" "}
                         {effectiveTier === "platinum_managed"
@@ -2198,6 +2205,19 @@ export default function AdminUsers() {
                           <p style={{ color: "#4b5563", fontSize: 14, marginBottom: 12 }}>
                             Before selecting your goals we need some basic information to start your customization and better service you.
                           </p>
+                          {formatSignupDate(user.createdAt) ? (
+                            <div style={{ marginBottom: 12 }}>
+                              <p style={{ fontSize: 12, color: "#64748b", marginTop: 0, marginBottom: 4 }}>
+                                Signed up
+                              </p>
+                              <input
+                                style={{ ...inputStyle, backgroundColor: "#f3f4f6", cursor: "not-allowed" }}
+                                readOnly
+                                value={formatSignupDate(user.createdAt)}
+                                aria-label="Signed up"
+                              />
+                            </div>
+                          ) : null}
                           <div className="grid grid-2">
                             <input
                               style={inputStyle}

@@ -81,6 +81,7 @@ export async function GET() {
       facilitator,
       profile: {
         email: user.email,
+        createdAt: user.createdAt ?? null,
         firstName: null,
         lastName: null,
         gender: null,
@@ -107,6 +108,7 @@ export async function GET() {
     facilitator,
     profile: {
       email: user.email,
+      createdAt: user.createdAt ?? null,
       firstName: memberProfile.firstName ?? null,
       lastName: memberProfile.lastName ?? null,
       gender: memberProfile.gender ?? null,
