@@ -1,10 +1,14 @@
 import { getModeratorApplicationBySlug } from "@/lib/db";
 import { LGD_SEVEN_KEYS } from "@/lib/lgd-intake";
 import { SIGNUP_PATH } from "@/lib/marketing-signup";
+import { getPublicLgdOfferEnabled } from "@/lib/lgd-access";
 import SiteFooter from "@/components/SiteFooter";
 
 export default async function TerryBrusselRogersPage() {
-  const profile = await getModeratorApplicationBySlug("terry-brussel-rogers");
+  const [profile, showLifeGuidance] = await Promise.all([
+    getModeratorApplicationBySlug("terry-brussel-rogers"),
+    getPublicLgdOfferEnabled()
+  ]);
   const contactEmail = profile?.email || "";
   const contactPhone = profile?.phone || "";
   const contactWebsite = profile?.website || "https://www.acesuccess.com";
@@ -104,7 +108,8 @@ export default async function TerryBrusselRogersPage() {
           Most coaches collect goals. Terry built a <strong>complete system</strong> - the Seven
           Keys to Self-Actualization - so clients move from problem resolution to their highest
           potential <em>physically, mentally, emotionally, spiritually, and financially</em>. That
-          system is the backbone of Life Guidance Discovery on Reach For The Stars.
+          system is the backbone of Life Guidance Discovery on Reach For The Stars Platinum
+          membership, including the Customized Goal Manifestation recording.
         </p>
         <ul style={{ lineHeight: 1.55 }}>
           <li>
@@ -169,9 +174,11 @@ export default async function TerryBrusselRogersPage() {
           on Reach For The Stars.
         </p>
         <div className="cta-row" style={{ gap: 8, flexWrap: "wrap" }}>
-          <a className="button" href="/life-guidance-discovery">
-            Life Guidance Discovery
-          </a>
+          {showLifeGuidance ? (
+            <a className="button" href="/life-guidance-discovery">
+              Life Guidance Discovery
+            </a>
+          ) : null}
           <a className="button button-secondary" href={SIGNUP_PATH}>
             Join Reach For The Stars
           </a>

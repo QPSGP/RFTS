@@ -367,8 +367,8 @@ export default function PlayOptionsPage() {
         <section className="card" style={{ marginBottom: 16 }}>
           <h3>Life Guidance Discovery</h3>
           <p>
-            Complete an electronic Life Guidance Discovery to prepare your facilitator and draft a
-            customized Goal Manifestation script specific to you.
+            Life Guidance Discovery is how Reach For The Stars Platinum membership prepares your
+            facilitator and drafts a Customized Goal Manifestation recording specific to you.
             {lgdPriceLabel ? ` Reference packaging: ${lgdPriceLabel}.` : ""}
           </p>
           <a className="button" href="/member/lgd">
@@ -490,7 +490,8 @@ export default function PlayOptionsPage() {
           <div className="card">
             <h3>Life Guidance Discovery</h3>
             <p>
-              Structured intake for your Goal Manifestation audio - session brief and script draft.
+              Structured intake inside Reach For The Stars for Platinum membership: session brief
+              and a Customized Goal Manifestation script draft.
             </p>
             <a className="button button-secondary" href="/member/lgd">
               Open LGD intake

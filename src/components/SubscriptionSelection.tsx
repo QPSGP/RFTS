@@ -22,7 +22,7 @@ export default function SubscriptionSelection({ plans }: SubscriptionSelectionPr
     "Includes a 15-minute Goal Changing & Progress Evaluation consultation every 90 days with a Success Center hypnotherapist or coach. Call 800-GOAL-NOW to set your appointment today."
   ];
   const membershipNote =
-    "Recommend a private Life Guidance Discovery Session for full access to Member benefits.";
+    "A private Life Guidance Discovery Session on Reach For The Stars is how Platinum membership designs your Customized Goal Manifestation recording.";
 
   const visiblePlans = useMemo(() => {
     const membershipOnly = plans.filter((plan) => plan.id === "platinum");

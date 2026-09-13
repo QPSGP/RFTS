@@ -46,7 +46,7 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
     "Includes a 15-minute Goal Changing & Progress Evaluation consultation every 90 days with a Success Center hypnotherapist or coach. Call 800-GOAL-NOW to set your appointment today."
   ];
   const membershipNote =
-    'For best results for reprogramming your subconscious with our system is to have a private "Life Guidance Discovery Session" allowing you to really discover where you are, where you want to go, and how to get there! We then design a customized audio specifically designed by you, for you!';
+    'For best results on Reach For The Stars, a private Life Guidance Discovery Session is how Platinum membership clarifies where you are, where you want to go, and how to get there - then we design a Customized Goal Manifestation recording specifically by you, for you.';
   const [goalIds, setGoalIds] = useState<string[]>([]);
   const [playsPerNight, setPlaysPerNight] = useState<1 | 2>(2);
   const [searchTerm, setSearchTerm] = useState("");

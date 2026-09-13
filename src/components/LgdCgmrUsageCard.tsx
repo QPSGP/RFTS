@@ -18,6 +18,10 @@ export default function LgdCgmrUsageCard({ compact = false }: Props) {
     >
       <h3 style={{ marginTop: 0 }}>{LGD_CGMR_USAGE.title}</h3>
       <p style={{ color: "#334155" }}>{LGD_CGMR_USAGE.lead}</p>
+      <p style={{ color: "#334155" }}>
+        Life Guidance Discovery on Reach For The Stars is how Platinum membership creates this
+        Customized Goal Manifestation recording around your goals.
+      </p>
       <ul style={{ margin: "0 0 12px", paddingLeft: 18, color: "#475569", lineHeight: 1.5 }}>
         {LGD_CGMR_USAGE.bullets.map((b) => (
           <li key={b}>{b}</li>
@@ -25,9 +29,7 @@ export default function LgdCgmrUsageCard({ compact = false }: Props) {
       </ul>
       <p style={{ fontSize: 14, color: "#0f766e", marginBottom: 0 }}>{LGD_CGMR_USAGE.contactNote}</p>
       <p style={{ fontSize: 13, margin: "10px 0 0" }}>
-        <a href="/life-guidance-discovery">About Life Guidance Discovery</a>
-        {" · "}
-        <a href="/member/lgd">Open LGD intake</a>
+        <a href="/member/lgd">Open Life Guidance Discovery intake</a>
       </p>
     </section>
   );

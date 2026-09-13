@@ -6,7 +6,7 @@ import { getLgdPriceDisplay, getPublicLgdOfferEnabled } from "@/lib/lgd-access";
 export const metadata = {
   title: "Life Guidance Discovery | Reach For The Stars",
   description:
-    "Discover where you are, where you want to go, and how to get there - then receive a customized Goal Manifestation audio designed for you."
+    "Life Guidance Discovery is how Reach For The Stars Platinum membership clarifies your goals and produces a Customized Goal Manifestation recording for nightly listening."
 };
 
 export default async function LifeGuidanceDiscoveryPage() {
@@ -19,11 +19,13 @@ export default async function LifeGuidanceDiscoveryPage() {
   return (
     <main>
       <section className="hero section">
-        <span className="pill">Life Guidance Discovery</span>
+        <span className="pill">Reach For The Stars</span>
         <h1>Life Guidance Discovery</h1>
         <p>
-          A structured path to clarify where you are, where you want to go, and how you get there -
-          so your facilitator can craft a customized Goal Manifestation recording in your words.
+          Inside Reach For The Stars, Life Guidance Discovery is the session that shapes{" "}
+          <strong>Platinum membership</strong>: you and your facilitator clarify where you are,
+          where you want to go, and how you get there, then produce a{" "}
+          <strong>Customized Goal Manifestation</strong> recording in your words for nightly listening.
         </p>
         <div className="cta-row" style={{ marginTop: 16, flexWrap: "wrap", gap: 12 }}>
           <a className="button" href="/member/login?next=/member/lgd">
@@ -110,8 +112,9 @@ export default async function LifeGuidanceDiscoveryPage() {
         <div className="card glow" style={{ textAlign: "center", padding: 28 }}>
           <h2 style={{ marginTop: 0 }}>Ready for your customized audio?</h2>
           <p>
-            Start with membership to unlock nightly sessions, then complete Life Guidance Discovery
-            for your personal Goal Manifestation recording.
+            Start Reach For The Stars membership for nightly sessions. Life Guidance Discovery is how
+            Platinum membership designs your Customized Goal Manifestation recording around your
+            goals.
           </p>
           <LandingTrialCtaButtons />
         </div>

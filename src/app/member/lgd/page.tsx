@@ -43,8 +43,9 @@ export default async function MemberLgdPage() {
         <span className="pill">Life Guidance Discovery</span>
         <h1>Electronic Life Guidance Discovery</h1>
         <p>
-          Share where you are, where you want to go, and how you get there. Your answers prepare
-          your facilitator and help draft a customized Goal Manifestation script in your words.
+          Life Guidance Discovery is how Reach For The Stars Platinum membership captures where you
+          are, where you want to go, and how you get there. Your answers prepare your facilitator and
+          help draft a Customized Goal Manifestation script in your words.
         </p>
         <a className="button button-secondary" href="/play-options" style={{ marginTop: 12 }}>
           ← Back to Console
