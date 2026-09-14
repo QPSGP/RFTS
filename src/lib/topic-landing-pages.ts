@@ -224,12 +224,12 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
     slug: "memory-improvement",
     path: "/memory-improvement",
     pill: "Memory & focus",
-    title: "Memory improvement meditation and better focus",
-    metaTitle: "Memory Improvement Meditation & Better Focus | Reach For The Stars",
+    title: "Memory improvement enhancement meditation: focus and recall while you sleep",
+    metaTitle: "Memory Improvement Meditation: Focus and Recall While You Sleep | Reach For The Stars",
     metaDescription:
-      "Improve memory and focus with guided meditation and nightly goal audios. Brain training while you sleep with Reach For The Stars.",
+      "Memory improvement meditation searches often pair with questions about focus and brain training. Sleep plays a central role in consolidation - reinforcing learning messages at night can support both.",
     heroLead:
-      "Searching for memory improvement meditation, how to improve memory and focus, or brain training while you sleep? Reach For The Stars reinforces learning and mental clarity through personalized nightly audios.",
+      "Memory improvement meditation searches often pair with questions about focus and brain training. Sleep plays a central role in consolidation - reinforcing learning messages at night can support both.",
     eyebrow: "Memory & focus",
     sectionTitle: "Build focus and memory with repetition",
     sectionSubtitle:
