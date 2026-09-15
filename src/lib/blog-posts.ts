@@ -23,6 +23,147 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "craving-after-a-good-day-habit-change-guided-meditation-sleep",
+    title:
+      "When the craving shows up after a good day: habit change you rehearse at bedtime",
+    metaTitle: "Night Cravings and Habit Change Guided Meditation | RFTS Blog",
+    metaDescription:
+      "Cravings often arrive after a good daytime. Guided meditation at bedtime and during sleep supports habit change for smoking, overeating, and other loops. Free trial.",
+    publishedAt: "2026-09-14",
+    readMinutes: 6,
+    excerpt:
+      "The slip is rarely at noon. It is the evening, after you already did well, when the old loop asks for one more. Guided meditation at bedtime and during sleep rehearses the next choice before that window opens again.",
+    goalSlug: "overcoming-addiction",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for help with overcoming addiction often already had a decent day. They skipped the cigarette, held the line on food, stayed off the drink, or closed the app. Then evening arrives. Tired, alone, and less supervised by the calendar, the old cue feels reasonable: you earned it, you can start again tomorrow. That is the window that undoes a week of effort.",
+          "Reach For The Stars treats Overcoming Addiction as a prioritized goal - freedom from smoking, overeating, and other unwanted habits. When that goal is in your rotation, guided meditations play while you fall asleep and, if you choose two audios per night, again during sleep, so calm, control, and a new pattern get rehearsed before the next evening cue."
+        ]
+      },
+      {
+        heading: "The habit is trained at the hour it usually wins",
+        paragraphs: [
+          "Automatic loops do not wait for a morning meeting. They show up when willpower is spent. Nightly suggestion can support a different response: urge as something that passes, a body that can settle, and a next-day identity that does not need the old reward to feel complete.",
+          "When Overcoming Addiction sits among your goals, your personalized lineup includes habit-change recordings automatically. Explore our overcoming addiction page for how that landing path frames nightly support for smoking cessation, overeating, and other automatic patterns."
+        ]
+      },
+      {
+        heading: "Why fighting it at 9 p.m. is the wrong fight",
+        paragraphs: [
+          "White-knuckling in the kitchen or on the porch asks the tired brain to win a debate it has already lost many times. A fixed Start Session flow - intro relaxation music, then a habit-related audio as you drift, then optional reinforcement about 2.5 hours later - uses the same evening hours for rehearsal instead of argument.",
+          "That pattern fits people who do well until night, anyone rebuilding after a slip, and members who want habit change paired with health or balanced life so body, daily structure, and freedom travel in the same practice."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits people quitting smoking or changing overeating, anyone whose slip happens after a good daytime, and members who have tried daytime programs but could not stay consistent when the evening got quiet. Guided meditation supports wellness and habit change. It is not a substitute for medical detox, addiction medicine, therapy, or crisis care. If you are in acute withdrawal, danger, or active substance dependence that needs clinical supervision, get professional help first - then consider nightly guided audios as one supportive layer.",
+          "Visit the overcoming addiction landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "The urge can pass (excerpt)",
+      quote:
+        "The old cue can rise and leave… you stay calm… the body does not need that loop tonight… you rest in a new choice… morning arrives with more control, not another restart…"
+    }
+  },
+  {
+    slug: "still-depleted-next-morning-resilience-meditation-sleep",
+    title:
+      "Still depleted the next morning: resilience you rebuild while you sleep",
+    metaTitle: "Resilience Meditation When You Are Still Depleted | RFTS Blog",
+    metaDescription:
+      "If you wake still spent after a hard day, guided meditation at bedtime and during sleep can rebuild physical and psychological resilience without a daytime workshop. Free trial.",
+    publishedAt: "2026-09-14",
+    readMinutes: 6,
+    excerpt:
+      "Resilience is not bouncing back by 7 a.m. If you wake still depleted, guided meditation at bedtime and during sleep rebuilds recovery capacity in the window the body already uses to restore.",
+    topicSlug: "resilience-meditation",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for physical and psychological resilience often already got through the hard day. They finished the shift, the caregiving, the deadline, or the family crisis. What they notice the next morning is that they are still spent. Sleep happened, but recovery did not. Another motivational talk will not refill what the nervous system did not restore overnight.",
+          "Reach For The Stars supports resilience through guided meditation while you fall asleep and, if you choose two audios per night, again during sleep. Recovery becomes a nightly practice instead of a workshop you are too depleted to attend."
+        ]
+      },
+      {
+        heading: "Bouncing back is a capacity, not a mood",
+        paragraphs: [
+          "Resilience is the ability to recover from stress, adapt, and keep functioning without emptying the tank every week. Mindfulness research links regular practice with better stress recovery over time. One good night of rest is not the same as training a calmer baseline.",
+          "When resilience, rest, and calm sit among your priorities, your rotation includes recovery-aligned recordings automatically. Explore our resilience meditation page for how that landing path frames nightly support for caregivers, high-stress work, and the day after a hard stretch."
+        ]
+      },
+      {
+        heading: "Why the morning-after test is the one that matters",
+        paragraphs: [
+          "If you still feel braced at breakfast, the night did not complete the recovery loop. A fixed Start Session flow - intro relaxation music, then a resilience-related audio as you drift, then optional reinforcement about 2.5 hours later - gives the body a recovery cue while it is already in rest mode.",
+          "That pattern fits people who crash after a demanding job, anyone whose caregiving never clocks out, and members who want resilience paired with sleep and stress relief so one nightly practice covers downshift, restoration, and the next day's steadiness."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits caregivers, shift workers, and high-pressure professionals who wake still depleted, people coming off a hard week who do not have a spare hour for a daytime reset, and members who want mind-body recovery without another self-care chore.",
+          "Visit the resilience meditation landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Restore tonight, meet tomorrow (excerpt)",
+      quote:
+        "The day can end now… the body restores… stress leaves in quiet layers… you adapt with calm strength… morning finds you steadier, not still empty…"
+    }
+  },
+  {
+    slug: "work-ate-the-week-balanced-life-guided-meditation-sleep",
+    title:
+      "When work ate the week: a balanced life you restore at bedtime, not with five more apps",
+    metaTitle: "Balanced Life Guided Meditation After a Work-Heavy Week | RFTS Blog",
+    metaDescription:
+      "When work crowds out health, relationships, spirit, and money goals, nightly guided meditation can restore whole-life balance while you sleep. Free trial.",
+    publishedAt: "2026-09-14",
+    readMinutes: 6,
+    excerpt:
+      "A balanced life fails when one area - usually work - eats the other four. Guided meditation at bedtime and during sleep restores highest potential across body, mind, emotions, spirit, and finances without five extra programs.",
+    goalSlug: "balanced-life",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for a balanced life usually know which area stole the week. Work ran long. Health slipped. The relationship got leftovers. Spirit waited. Money stayed noisy in the background. Five separate apps then ask you to fix each lane after you already have nothing left. That is how balance becomes another project you postpone until a quieter month that never comes.",
+          "Reach For The Stars frames Balanced Life as reaching your highest potential physically, mentally, emotionally, spiritually, and financially. When that goal is in your rotation, guided meditations play while you fall asleep and, if you choose two audios per night, again during sleep, so whole-life growth does not need a spare afternoon."
+        ]
+      },
+      {
+        heading: "Balance is rotation, not a perfect daily split",
+        paragraphs: [
+          "You do not need equal hours in every area every day. You need a practice that keeps all five in the conversation so the loudest one cannot erase the rest. Nightly goal rotation can include health, calm, purpose, connection, and abundance themes in one schedule instead of five competing self-help tracks.",
+          "When Balanced Life sits among your goals, your personalized lineup includes whole-life recordings automatically. Explore our Balanced Life page for how that landing path frames highest potential across body, mind, emotions, spirit, and finances."
+        ]
+      },
+      {
+        heading: "Why bedtime is when the crowded week can still reset",
+        paragraphs: [
+          "You will not recover a stolen week with a Sunday planning session you skip. Bedtime is already reserved. A fixed Start Session flow - intro relaxation music, then a balanced-life audio as you drift, then optional reinforcement later in the night - returns the missing areas to the subconscious when daytime willpower is gone.",
+          "That pattern fits people whose work ate health and home, spiritual entrepreneurs who need profit and peace in the same practice, and members who have tried siloed programs and still felt one-dimensional."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits overloaded professionals, coaches, and anyone who wants body, mind, spirit, and finances to stop competing. Choose Balanced Life among your goals and reorder related priorities anytime - your lineup updates when you press Start Session.",
+          "Visit the Balanced Life landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "Whole life, one night (excerpt)",
+      quote:
+        "Work can rest now… the body is included… mind and heart have room… spirit and finances grow with integrity… you return to a full life, not one crowded lane…"
+    }
+  },
+  {
     slug: "pain-louder-at-night-guided-meditation-comfort-sleep",
     title:
       "When pain is louder at night: guided meditation for comfort while you rest",
