@@ -80,4 +80,36 @@ describe("member-listen-progress", () => {
       }
     ]);
   });
+
+  it("sorts the audio list by date then title", () => {
+    const report = buildListenProgressReport([
+      {
+        action: "played_audio",
+        details: "Library - Zeta",
+        createdAt: "2026-07-10T10:00:00.000Z"
+      },
+      {
+        action: "played_audio",
+        details: "Library - Beta",
+        createdAt: "2026-07-14T10:00:00.000Z"
+      },
+      {
+        action: "played_audio",
+        details: "Library - Alpha",
+        createdAt: "2026-07-14T10:00:00.000Z"
+      },
+      {
+        action: "played_audio",
+        details: "Library - Gamma",
+        createdAt: "2026-07-15T10:00:00.000Z"
+      }
+    ]);
+    expect(report.tracks.map((t) => t.title)).toEqual(["Gamma", "Alpha", "Beta", "Zeta"]);
+    expect(report.recentPlays.map((item) => item.title)).toEqual([
+      "Gamma",
+      "Alpha",
+      "Beta",
+      "Zeta"
+    ]);
+  });
 });

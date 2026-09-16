@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { ListenProgressReport } from "@/lib/member-listen-progress";
+import type { ListenProgressRecent, ListenProgressReport } from "@/lib/member-listen-progress";
+
+const RECENT_PLAYS_PAGE_SIZE = 10;
 
 function formatWhen(iso: string): string {
   try {
@@ -25,6 +27,7 @@ export default function MemberListenProgress() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [recentPage, setRecentPage] = useState(0);
 
   const load = useCallback(async () => {
     setError(null);
@@ -51,6 +54,10 @@ export default function MemberListenProgress() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    setRecentPage(0);
+  }, [report]);
 
   useEffect(() => {
     const onCompleted = () => {
@@ -183,21 +190,11 @@ export default function MemberListenProgress() {
               )}
 
               {report.recentPlays.length > 0 ? (
-                <div style={{ marginTop: 16 }}>
-                  <strong style={{ fontSize: 14 }}>Recently played</strong>
-                  <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#374151", fontSize: 14 }}>
-                    {report.recentPlays.map((item, idx) => (
-                      <li key={`${item.title}-${item.at}-${idx}`} style={{ marginBottom: 4 }}>
-                        {item.title}
-                        <span style={{ color: "#64748b" }}>
-                          {" "}
-                          · {item.source === "library" ? "Library" : "Sessions"} ·{" "}
-                          {formatWhen(item.at)} · {item.completed ? "Completed" : "Started"}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <RecentlyPlayedList
+                  items={report.recentPlays}
+                  page={recentPage}
+                  onPageChange={setRecentPage}
+                />
               ) : null}
             </>
           ) : (
@@ -205,6 +202,75 @@ export default function MemberListenProgress() {
               Open the report for a full list of each audio and completion counts.
             </p>
           )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function RecentlyPlayedList({
+  items,
+  page,
+  onPageChange
+}: {
+  items: ListenProgressRecent[];
+  page: number;
+  onPageChange: (page: number) => void;
+}) {
+  const pageCount = Math.max(1, Math.ceil(items.length / RECENT_PLAYS_PAGE_SIZE));
+  const safePage = Math.min(Math.max(0, page), pageCount - 1);
+  const start = safePage * RECENT_PLAYS_PAGE_SIZE;
+  const visible = items.slice(start, start + RECENT_PLAYS_PAGE_SIZE);
+  const from = items.length === 0 ? 0 : start + 1;
+  const to = start + visible.length;
+  const showPager = items.length > RECENT_PLAYS_PAGE_SIZE;
+
+  return (
+    <div style={{ marginTop: 16 }}>
+      <strong style={{ fontSize: 14 }}>Recently played</strong>
+      <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#374151", fontSize: 14 }}>
+        {visible.map((item, idx) => (
+          <li key={`${item.title}-${item.at}-${start + idx}`} style={{ marginBottom: 4 }}>
+            {item.title}
+            <span style={{ color: "#64748b" }}>
+              {" "}
+              · {item.source === "library" ? "Library" : "Sessions"} · {formatWhen(item.at)} ·{" "}
+              {item.completed ? "Completed" : "Started"}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {showPager ? (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexWrap: "wrap",
+            marginTop: 10
+          }}
+        >
+          <button
+            type="button"
+            className="button button-secondary"
+            style={{ fontSize: 13, padding: "6px 10px" }}
+            disabled={safePage <= 0}
+            onClick={() => onPageChange(safePage - 1)}
+          >
+            Newer
+          </button>
+          <span style={{ fontSize: 13, color: "#64748b" }}>
+            {from}-{to} of {items.length} (newest first)
+          </span>
+          <button
+            type="button"
+            className="button button-secondary"
+            style={{ fontSize: 13, padding: "6px 10px" }}
+            disabled={safePage >= pageCount - 1}
+            onClick={() => onPageChange(safePage + 1)}
+          >
+            Older
+          </button>
         </div>
       ) : null}
     </div>

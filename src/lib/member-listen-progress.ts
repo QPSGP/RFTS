@@ -149,10 +149,15 @@ export function buildListenProgressReport(
     timesStarted: number;
     timesCompleted: number;
     lastCompletedAt: string | null;
+    lastPlayedAt: string | null;
   };
   const byKey = new Map<string, Acc>();
   const recentPlays: ListenProgressRecent[] = [];
   const unmatchedStartIndexes = new Map<string, number[]>();
+
+  const touchLastPlayed = (acc: Acc, at: string) => {
+    if (!acc.lastPlayedAt || at > acc.lastPlayedAt) acc.lastPlayedAt = at;
+  };
 
   const chronological = [...rows].sort((a, b) => {
     const byTime = a.createdAt.localeCompare(b.createdAt);
@@ -171,7 +176,8 @@ export function buildListenProgressReport(
         sources: new Set(),
         timesStarted: 0,
         timesCompleted: 0,
-        lastCompletedAt: null
+        lastCompletedAt: null,
+        lastPlayedAt: null
       };
       byKey.set(key, acc);
     }
@@ -179,6 +185,7 @@ export function buildListenProgressReport(
 
     if (row.action === "played_audio") {
       acc.timesStarted += 1;
+      touchLastPlayed(acc, row.createdAt);
       recentPlays.push({
         title: parsed.title,
         source: parsed.source,
@@ -190,6 +197,7 @@ export function buildListenProgressReport(
       unmatchedStartIndexes.set(key, pending);
     } else if (row.action === "audio_playback_outcome" && isCompletedFullListenOutcome(row.details)) {
       acc.timesCompleted += 1;
+      touchLastPlayed(acc, row.createdAt);
       if (!acc.lastCompletedAt || row.createdAt > acc.lastCompletedAt) {
         acc.lastCompletedAt = row.createdAt;
       }
@@ -209,8 +217,19 @@ export function buildListenProgressReport(
   }
 
   recentPlays.reverse();
+  recentPlays.sort((a, b) => {
+    const byDate = b.at.localeCompare(a.at);
+    if (byDate !== 0) return byDate;
+    return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+  });
 
   const tracks: ListenTrackStat[] = [...byKey.values()]
+    .sort((a, b) => {
+      const dateA = a.lastPlayedAt || "";
+      const dateB = b.lastPlayedAt || "";
+      if (dateA !== dateB) return dateB.localeCompare(dateA);
+      return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+    })
     .map((acc) => {
       const sources = [...acc.sources].filter((s) => s === "library" || s === "session") as (
         | "library"
@@ -227,11 +246,6 @@ export function buildListenProgressReport(
         timesCompleted: acc.timesCompleted,
         lastCompletedAt: acc.lastCompletedAt
       };
-    })
-    .sort((a, b) => {
-      if (b.timesCompleted !== a.timesCompleted) return b.timesCompleted - a.timesCompleted;
-      if (b.timesStarted !== a.timesStarted) return b.timesStarted - a.timesStarted;
-      return a.title.localeCompare(b.title);
     });
 
   return {
