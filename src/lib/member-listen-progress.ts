@@ -21,11 +21,12 @@ export type ListenProgressRecent = {
   title: string;
   source: "library" | "session" | "other";
   at: string;
+  completed: boolean;
 };
 
 export type ListenProgressReport = {
   tracks: ListenTrackStat[];
-  recentCompletions: ListenProgressRecent[];
+  recentPlays: ListenProgressRecent[];
   totalStarts: number;
   totalCompletions: number;
   scheduleStepsCompleted: number;
@@ -150,9 +151,16 @@ export function buildListenProgressReport(
     lastCompletedAt: string | null;
   };
   const byKey = new Map<string, Acc>();
-  const recentCompletions: ListenProgressRecent[] = [];
+  const recentPlays: ListenProgressRecent[] = [];
+  const unmatchedStartIndexes = new Map<string, number[]>();
 
-  for (const row of rows) {
+  const chronological = [...rows].sort((a, b) => {
+    const byTime = a.createdAt.localeCompare(b.createdAt);
+    if (byTime !== 0) return byTime;
+    return 0;
+  });
+
+  for (const row of chronological) {
     const parsed = parseMemberListenTitle(row.action, row.details);
     if (!parsed) continue;
     const key = parsed.title.toLowerCase();
@@ -171,20 +179,36 @@ export function buildListenProgressReport(
 
     if (row.action === "played_audio") {
       acc.timesStarted += 1;
+      recentPlays.push({
+        title: parsed.title,
+        source: parsed.source,
+        at: row.createdAt,
+        completed: false
+      });
+      const pending = unmatchedStartIndexes.get(key) ?? [];
+      pending.push(recentPlays.length - 1);
+      unmatchedStartIndexes.set(key, pending);
     } else if (row.action === "audio_playback_outcome" && isCompletedFullListenOutcome(row.details)) {
       acc.timesCompleted += 1;
       if (!acc.lastCompletedAt || row.createdAt > acc.lastCompletedAt) {
         acc.lastCompletedAt = row.createdAt;
       }
-      if (recentCompletions.length < 12) {
-        recentCompletions.push({
+      const pending = unmatchedStartIndexes.get(key);
+      if (pending?.length) {
+        const idx = pending.pop();
+        if (idx != null) recentPlays[idx].completed = true;
+      } else {
+        recentPlays.push({
           title: parsed.title,
           source: parsed.source,
-          at: row.createdAt
+          at: row.createdAt,
+          completed: true
         });
       }
     }
   }
+
+  recentPlays.reverse();
 
   const tracks: ListenTrackStat[] = [...byKey.values()]
     .map((acc) => {
@@ -212,7 +236,7 @@ export function buildListenProgressReport(
 
   return {
     tracks,
-    recentCompletions,
+    recentPlays,
     totalStarts: tracks.reduce((n, t) => n + t.timesStarted, 0),
     totalCompletions: tracks.reduce((n, t) => n + t.timesCompleted, 0),
     scheduleStepsCompleted

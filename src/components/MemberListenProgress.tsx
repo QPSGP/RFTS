@@ -182,17 +182,17 @@ export default function MemberListenProgress() {
                 </div>
               )}
 
-              {report.recentCompletions.length > 0 ? (
+              {report.recentPlays.length > 0 ? (
                 <div style={{ marginTop: 16 }}>
-                  <strong style={{ fontSize: 14 }}>Recently completed</strong>
+                  <strong style={{ fontSize: 14 }}>Recently played</strong>
                   <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "#374151", fontSize: 14 }}>
-                    {report.recentCompletions.map((item, idx) => (
+                    {report.recentPlays.map((item, idx) => (
                       <li key={`${item.title}-${item.at}-${idx}`} style={{ marginBottom: 4 }}>
                         {item.title}
                         <span style={{ color: "#64748b" }}>
                           {" "}
                           · {item.source === "library" ? "Library" : "Sessions"} ·{" "}
-                          {formatWhen(item.at)}
+                          {formatWhen(item.at)} · {item.completed ? "Completed" : "Started"}
                         </span>
                       </li>
                     ))}

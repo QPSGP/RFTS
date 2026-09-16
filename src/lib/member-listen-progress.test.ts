@@ -65,5 +65,19 @@ describe("member-listen-progress", () => {
       timesStarted: 2,
       timesCompleted: 1
     });
+    expect(report.recentPlays).toEqual([
+      {
+        title: "T1 – Alpha",
+        source: "session",
+        at: "2026-07-14T11:00:00.000Z",
+        completed: true
+      },
+      {
+        title: "T1 – Alpha",
+        source: "library",
+        at: "2026-07-13T11:00:00.000Z",
+        completed: false
+      }
+    ]);
   });
 });
