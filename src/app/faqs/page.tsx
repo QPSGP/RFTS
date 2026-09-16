@@ -156,7 +156,7 @@ export default function FaqsPage() {
               <li>
                 {isMember === true ? (
                   <>
-                    Open your <a href="/play-options">Play Options</a> page.
+                    Open your <a href="/play-options">Sessions</a> page.
                   </>
                 ) : (
                   <>
@@ -166,7 +166,7 @@ export default function FaqsPage() {
                 )}
               </li>
               <li>Select up to 10 goals (in priority order).</li>
-              <li>Tap Start Session on your Play Options page.</li>
+              <li>Tap Start Session on your Sessions page.</li>
             </ol>
           </div>
 

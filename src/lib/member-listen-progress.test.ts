@@ -10,6 +10,9 @@ describe("member-listen-progress", () => {
       parseMemberListenTitle("played_audio", "Play Options - First: T12 – Sleep Deep")
     ).toEqual({ title: "T12 – Sleep Deep", source: "session" });
     expect(
+      parseMemberListenTitle("played_audio", "Sessions - First: T12 – Sleep Deep")
+    ).toEqual({ title: "T12 – Sleep Deep", source: "session" });
+    expect(
       parseMemberListenTitle("played_audio", "Library - T08 – Calm Focus")
     ).toEqual({ title: "T08 – Calm Focus", source: "library" });
     expect(

@@ -278,7 +278,7 @@ function buildPlayOptionsLogLine(
   } else {
     kind = `First: ${label}`;
   }
-  return `Play Options - ${kind}`.replace(/\s+/g, " ").trim();
+  return `Sessions - ${kind}`.replace(/\s+/g, " ").trim();
 }
 
 const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(function SessionPlayer(
@@ -753,7 +753,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       secondFromGapInFlightRef.current = false;
       clearPendingSecondHalf();
       setMessage(
-        "No second recording was scheduled. Reload Play Options or check your lineup has two tracks for tonight."
+        "No second recording was scheduled. Reload Sessions or check your lineup has two tracks for tonight."
       );
       setPhase("idle");
       dispatchRftsSessionEnd();

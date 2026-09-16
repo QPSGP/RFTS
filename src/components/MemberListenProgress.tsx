@@ -16,8 +16,8 @@ function formatWhen(iso: string): string {
 
 function sourceLabel(source: "library" | "session" | "both"): string {
   if (source === "library") return "Library";
-  if (source === "session") return "Play Options";
-  return "Play Options & Library";
+  if (source === "session") return "Sessions";
+  return "Sessions and library";
 }
 
 export default function MemberListenProgress() {
@@ -148,8 +148,8 @@ export default function MemberListenProgress() {
                       <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
                         <th style={{ padding: "8px 6px" }}>Audio</th>
                         <th style={{ padding: "8px 6px" }}>Where</th>
-                        <th style={{ padding: "8px 6px" }}>Completed</th>
                         <th style={{ padding: "8px 6px" }}>Started</th>
+                        <th style={{ padding: "8px 6px" }}>Completed</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -173,8 +173,8 @@ export default function MemberListenProgress() {
                           <td style={{ padding: "8px 6px", color: "#4b5563" }}>
                             {sourceLabel(track.source)}
                           </td>
-                          <td style={{ padding: "8px 6px", fontWeight: 600 }}>{track.timesCompleted}</td>
                           <td style={{ padding: "8px 6px" }}>{track.timesStarted}</td>
+                          <td style={{ padding: "8px 6px", fontWeight: 600 }}>{track.timesCompleted}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -191,7 +191,7 @@ export default function MemberListenProgress() {
                         {item.title}
                         <span style={{ color: "#64748b" }}>
                           {" "}
-                          · {item.source === "library" ? "Library" : "Play Options"} ·{" "}
+                          · {item.source === "library" ? "Library" : "Sessions"} ·{" "}
                           {formatWhen(item.at)}
                         </span>
                       </li>

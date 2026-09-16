@@ -243,8 +243,8 @@ function normalizeActivityDetailsString(raw: string): string {
  */
 function extractPlayOptionsAudioTitle(d: string): string | null {
   const t = normalizeActivityDetailsString(d);
-  if (!/^Play\s+Options\b/i.test(t)) return null;
-  let rest = t.replace(/^Play\s+Options\s*/i, "").trim();
+  if (!/^(?:Play\s+Options|Sessions)\b/i.test(t)) return null;
+  let rest = t.replace(/^(?:Play\s+Options|Sessions)\s*/i, "").trim();
   rest = rest.replace(PLAYED_AUDIO_LOC_SEP, "").trim();
   if (isIntroRelaxationMusicLogLabel(rest)) return INTRO_RELAXATION_MUSIC_LABEL;
   const fs = /^(First|Second)\s*[:：]\s*(.+)$/is.exec(rest);
@@ -258,7 +258,7 @@ function extractPlayOptionsAudioTitle(d: string): string | null {
 
 function playedAudioLocation(details: string): "library" | "play_options" | null {
   const t = normalizeActivityDetailsString(details);
-  if (/^Play\s+Options\b/i.test(t)) return "play_options";
+  if (/^(?:Play\s+Options|Sessions)\b/i.test(t)) return "play_options";
   if (/^Library\b/i.test(t)) return "library";
   return null;
 }
@@ -271,7 +271,7 @@ function playedAudioLocation(details: string): "library" | "play_options" | null
  */
 function playedAudioAfterLocationPrefix(details: string): { where: "library" | "play_options"; rest: string } | null {
   const t = normalizeActivityDetailsString(details);
-  const playHead = t.match(/^Play\s+Options\b/i);
+  const playHead = t.match(/^(?:Play\s+Options|Sessions)\b/i);
   if (playHead) {
     let rest = t.slice(playHead[0].length);
     rest = rest.replace(PLAYED_AUDIO_LOC_SEP, "");
@@ -312,7 +312,7 @@ function classifyMemberActivityRow(row: MemberActivityRow): "library" | "session
   if (row.action === "session_gap" && row.details?.trim()) return "session";
   if (row.action === "audio_playback_outcome" && row.details?.trim()) {
     const t = String(row.details).trim();
-    if (/^Play\s+Options/i.test(t)) return "session";
+    if (/^(?:Play\s+Options|Sessions)/i.test(t)) return "session";
     if (/^Library\b/i.test(t)) return "library";
     return "other";
   }
@@ -332,7 +332,7 @@ function formatActivityAction(action: string): string {
     case "page_view":
       return "Page view";
     case "viewed_console":
-      return "Opened Play Options";
+      return "Opened Sessions";
     case "viewed_library":
       return "Opened Audio Library";
     case "updated_goals":
@@ -346,7 +346,7 @@ function formatActivityAction(action: string): string {
     case "audio_playback_outcome":
       return "Playback result";
     case "session_gap":
-      return "Play Options · gap";
+      return "Sessions · gap";
     case "admin_schedule_adjusted":
       return "Admin: schedule progress";
     default:
@@ -394,13 +394,13 @@ function formatPlayedAudioContext(action: string, details: string | null): strin
   if (loc) {
     if (loc.where === "library") return "Audio library";
     const rest = loc.rest.trim();
-    if (isIntroRelaxationMusicLogLabel(rest)) return "Play Options · intro relaxation music";
+    if (isIntroRelaxationMusicLogLabel(rest)) return "Sessions · intro relaxation music";
     const fs = /^(First|Second)\s*:/i.exec(rest);
-    if (fs) return `Play Options · ${fs[1].toLowerCase()} recording`;
-    return "Play Options";
+    if (fs) return `Sessions · ${fs[1].toLowerCase()} recording`;
+    return "Sessions";
   }
   if (/^Library\b/i.test(d)) return "Audio library";
-  if (/^Play\s+Options\b/i.test(d)) return "Play Options";
+  if (/^(?:Play\s+Options|Sessions)\b/i.test(d)) return "Sessions";
   return "Playback";
 }
 
@@ -422,9 +422,9 @@ function playedAudioTitleForAdminCell(action: string, details: string | null | u
 function activityDetailFallback(action: string): string | null {
   switch (action) {
     case "logout":
-      return "Play Options ended";
+      return "Sessions ended";
     case "viewed_console":
-      return "Play Options page";
+      return "Sessions page";
     case "viewed_library":
       return "Audio library index";
     case "login":
@@ -1202,7 +1202,7 @@ export default function AdminUsers() {
               ? `Global initial tracks set to ${pb.initialTracks}. `
               : `Global initial tracks unchanged (${pb.initialTracks}). `
             : "") +
-          "Have them open Play Options once to anchor the rotation date."
+          "Have them open Sessions once to anchor the rotation date."
       );
       await loadMemberActivity(email);
     } finally {
@@ -2643,7 +2643,7 @@ export default function AdminUsers() {
                                 >
                                   <option value="all">All activity</option>
                                   <option value="library">Library plays</option>
-                                  <option value="session">Play Options plays</option>
+                                  <option value="session">Sessions plays</option>
                                   <option value="other">Other</option>
                                 </select>
                               </label>
@@ -2677,8 +2677,8 @@ export default function AdminUsers() {
                           </div>
                           <p style={{ color: "#64748b", fontSize: 13, marginTop: 0, marginBottom: 12 }}>
                             Sign-ins (with first page they head to), sign-outs, page views, played audio (library
-                            and Play Options - each row lists the recording name), goal and console updates, and
-                            admin schedule changes. Use <strong>Filter</strong> for library vs Play Options playback vs
+                            and Sessions - each row lists the recording name), goal and console updates, and
+                            admin schedule changes. Use <strong>Filter</strong> for library vs Sessions playback vs
                             everything else; <strong>Rows</strong> caps how many matching rows appear (newest first).
                             Refresh loads up to 500 recent events. Rows with a <strong style={{ color: "#b91c1c" }}>red</strong>{" "}
                             background indicate the member jumped ahead in the player (seek / fast-forward), not

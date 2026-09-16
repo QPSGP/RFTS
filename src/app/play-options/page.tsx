@@ -299,7 +299,7 @@ export default function PlayOptionsPage() {
         <p style={{ marginBottom: 8, color: "var(--color-muted, #64748b)", fontSize: 14 }}>
           {membershipLabel}
         </p>
-        <h1>Play Options</h1>
+        <h1>Sessions</h1>
         <p>
           Tap to start your session and keep exploring your personalized tools below.
         </p>

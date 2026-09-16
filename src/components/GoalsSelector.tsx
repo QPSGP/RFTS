@@ -129,7 +129,7 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
           If you need to make changes, please contact your administrator.
         </p>
         <a className="button button-secondary" href="/play-options">
-          Back to Play Options
+          Back to Sessions
         </a>
       </div>
     );

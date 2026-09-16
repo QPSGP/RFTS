@@ -51,7 +51,7 @@ export default function PlayOptionsAndroidTips({
               <strong>Start second audio now</strong>.
             </li>
             <li>
-              If you reopen Play Options in the morning and the second audio never played, look for{" "}
+              If you reopen Sessions in the morning and the second audio never played, look for{" "}
               <strong>Second audio ready to finish</strong> and tap <strong>Start second audio now</strong>
               - we save that unfinished night so a killed Chrome tab does not lose it.
             </li>

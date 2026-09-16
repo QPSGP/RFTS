@@ -220,7 +220,7 @@ export default function MemberProfilePage() {
       <div className="card" style={{ maxWidth: 720, margin: "0 auto" }}>
         <p style={{ marginTop: 0, marginBottom: 16 }}>
           <Link href="/play-options" className="button button-secondary">
-            Back to Play Options
+            Back to Sessions
           </Link>
         </p>
         <h1>My Profile</h1>
@@ -546,7 +546,7 @@ export default function MemberProfilePage() {
 
         <p style={{ marginTop: 24, marginBottom: 0 }}>
           <Link href="/play-options" className="button button-secondary">
-            Back to Play Options
+            Back to Sessions
           </Link>
         </p>
       </div>

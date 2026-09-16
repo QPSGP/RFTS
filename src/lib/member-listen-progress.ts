@@ -61,7 +61,7 @@ function playedAudioAfterLocationPrefix(
   details: string
 ): { where: "library" | "play_options"; rest: string } | null {
   const t = normalizeActivityDetailsString(details);
-  const playHead = t.match(/^Play\s+Options\b/i);
+  const playHead = t.match(/^(?:Play\s+Options|Sessions)\b/i);
   if (playHead) {
     let rest = t.slice(playHead[0].length);
     rest = rest.replace(PLAYED_AUDIO_LOC_SEP, "");

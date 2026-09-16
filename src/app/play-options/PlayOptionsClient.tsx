@@ -166,7 +166,7 @@ export default function PlayOptionsClient({
     <main className="play-options-main">
       <section className="hero section">
         <span className="pill">Nightly Sessions</span>
-        <h1>Play Options</h1>
+        <h1>Sessions</h1>
         <p>
           Tap to start your session and keep exploring your personalized tools below.
         </p>

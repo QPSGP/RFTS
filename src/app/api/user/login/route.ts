@@ -90,7 +90,7 @@ async function doPost(request: Request) {
   });
 
   if (isFormLogin) {
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=${successUrl}"></head><body>Signed in. Taking you to Play Options…</body></html>`;
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=${successUrl}"></head><body>Signed in. Taking you to Sessions…</body></html>`;
     const response = new NextResponse(html, {
       status: 200,
       headers: {
