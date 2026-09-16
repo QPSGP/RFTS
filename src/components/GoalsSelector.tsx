@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Interest } from "@/lib/types";
+import { normalizePlaysPerNight } from "@/lib/session-progress-format";
 
 type GoalsSelectorProps = {
   interests: Interest[];
@@ -56,7 +57,7 @@ export default function GoalsSelector({ interests }: GoalsSelectorProps) {
         setIsManaged(data.isManaged ?? false);
         setCanEdit(data.isManaged ? false : (data.canEdit ?? true));
         setNextAllowedAt(data.nextAllowedAt || null);
-        setPlaysPerNight(data.playsPerNight === 1 ? 1 : 2);
+        setPlaysPerNight(normalizePlaysPerNight(data.playsPerNight));
         setStatus("ready");
       })
       .catch(() => setStatus("loggedOut"));

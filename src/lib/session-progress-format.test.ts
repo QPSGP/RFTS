@@ -1,4 +1,18 @@
-import { formatFullSessionsFraction } from "./session-progress-format";
+import { formatFullSessionsFraction, normalizePlaysPerNight } from "./session-progress-format";
+
+describe("normalizePlaysPerNight", () => {
+  it("keeps one-per-night for number or string 1", () => {
+    expect(normalizePlaysPerNight(1)).toBe(1);
+    expect(normalizePlaysPerNight("1")).toBe(1);
+  });
+
+  it("defaults anything else to two per night", () => {
+    expect(normalizePlaysPerNight(2)).toBe(2);
+    expect(normalizePlaysPerNight("2")).toBe(2);
+    expect(normalizePlaysPerNight(null)).toBe(2);
+    expect(normalizePlaysPerNight(undefined)).toBe(2);
+  });
+});
 
 describe("formatFullSessionsFraction", () => {
   it("full session mode uses whole nights", () => {

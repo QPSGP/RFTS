@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { getSessionRole } from "@/lib/auth";
 import { getUserSessionEmail } from "@/lib/user-auth";
 import { getMemberProfileByUserId, getUserProfile } from "@/lib/db";
+import { normalizePlaysPerNight } from "@/lib/session-progress-format";
 
 export async function GET() {
   try {
+    const email = await getUserSessionEmail();
     const role = await getSessionRole();
-    if (role === "admin") {
+    if (!email && role === "admin") {
       const res = NextResponse.json({
         isAdmin: true,
         profile: {
@@ -23,7 +25,6 @@ export async function GET() {
       res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
       return res;
     }
-    const email = await getUserSessionEmail();
     if (!email) {
       const res = NextResponse.json({ error: "Unauthorized." }, { status: 401 });
       res.headers.set("Cache-Control", "no-store");
@@ -61,6 +62,7 @@ export async function GET() {
       isAdmin: false,
       profile: {
         ...profile,
+        playsPerNight: normalizePlaysPerNight(profile.playsPerNight),
         firstName,
         lastName,
         adultConsent,

@@ -10,7 +10,6 @@ import {
   getLgdPriceDisplay,
   isLgdAdminOnlyMode
 } from "@/lib/lgd-access";
-import { isAdminSession } from "@/lib/auth";
 
 /** Lightweight flags/price for console CTAs (does not create an intake draft). */
 export async function GET() {
@@ -22,15 +21,23 @@ export async function GET() {
   if (!user) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
-  if (isLgdAdminOnlyMode() && !(await isAdminSession())) {
+  if (isLgdAdminOnlyMode()) {
+    const memberProfile = await getMemberProfileByUserId(user.id);
+    const intake = await getLatestLgdIntakeForUser(user.id);
+    const hadLgdSession = memberProfile?.hadLgdSession ?? false;
+    const intakePastDraft =
+      !!intake &&
+      intake.status !== "draft" &&
+      intake.status !== "cancelled";
     return NextResponse.json({
-      hadLgdSession: false,
+      hadLgdSession,
       adminOnly: true,
       electronicIntakeEnabled: false,
       consoleOffer: false,
-      showCgmrUsage: false,
+      showCgmrUsage: hadLgdSession || intakePastDraft || !!intake?.scriptDraftText,
       priceLabel: getLgdPriceDisplay().label,
-      priceCents: getLgdPriceDisplay().priceCents
+      priceCents: getLgdPriceDisplay().priceCents,
+      intakeStatus: intake?.status ?? null
     });
   }
   const memberProfile = await getMemberProfileByUserId(user.id);

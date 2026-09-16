@@ -1,6 +1,11 @@
 /** 1 = half session (one main audio per schedule step; two steps = one full session). 2 = full session per schedule night. */
 export type PlaysPerNightSetting = 1 | 2;
 
+/** Coerce API/DB values so `"1"` and `1` both keep one-per-night. */
+export function normalizePlaysPerNight(value: unknown): PlaysPerNightSetting {
+  return Number(value) === 1 ? 1 : 2;
+}
+
 /**
  * How many full sessions (first + second main audio) are complete, as a friendly string.
  * Half-session mode uses Unicode fractions: ½, 1, 1½, 2, 2½, …

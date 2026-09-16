@@ -7,6 +7,7 @@ import SessionPlayer, { SessionPlayerHandle } from "@/components/SessionPlayer";
 import MemberListenProgress from "@/components/MemberListenProgress";
 import LgdCgmrUsageCard from "@/components/LgdCgmrUsageCard";
 import { getMemberTonightTrackItems } from "@/lib/schedule-progress";
+import { normalizePlaysPerNight } from "@/lib/session-progress-format";
 
 export default function PlayOptionsPage() {
   const [status, setStatus] = useState<"loading" | "loggedOut" | "inactive" | "active">(
@@ -23,8 +24,8 @@ export default function PlayOptionsPage() {
     isManaged?: boolean;
     hadLgdSession?: boolean;
   } | null>(null);
-  const [lgdConsoleOffer, setLgdConsoleOffer] = useState(true);
-  const [lgdIntakeEnabled, setLgdIntakeEnabled] = useState(true);
+  const [lgdConsoleOffer, setLgdConsoleOffer] = useState(false);
+  const [lgdIntakeEnabled, setLgdIntakeEnabled] = useState(false);
   const [lgdPriceLabel, setLgdPriceLabel] = useState<string | null>(null);
   const [showCgmrUsage, setShowCgmrUsage] = useState(false);
   const [schedule, setSchedule] = useState<
@@ -90,7 +91,24 @@ export default function PlayOptionsPage() {
     });
   }, [currentNight, loadSchedule, nextAudioNeedsAdvance]);
 
-  const playsPerNightSetting = (profile?.playsPerNight ?? 2) === 1 ? 1 : 2;
+  const savePlaysPerNight = async (playsPerNight: 1 | 2) => {
+    if (!profile) return;
+    const previous = normalizePlaysPerNight(profile.playsPerNight);
+    setProfile({ ...profile, playsPerNight });
+    const res = await fetch("/api/user/goals", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ playsPerNight }),
+      credentials: "include"
+    });
+    if (!res.ok) {
+      setProfile({ ...profile, playsPerNight: previous });
+      return;
+    }
+    await loadSchedule();
+  };
+
+  const playsPerNightSetting = normalizePlaysPerNight(profile?.playsPerNight);
   const currentPlaylist = nextInCue;
 
   const tonightTrackItems = useMemo(
@@ -134,8 +152,8 @@ export default function PlayOptionsPage() {
       .then(async (res) => {
         if (!res.ok) return;
         const data = await res.json().catch(() => ({}));
-        setLgdConsoleOffer(data.consoleOffer !== false);
-        setLgdIntakeEnabled(data.electronicIntakeEnabled !== false);
+        setLgdConsoleOffer(!!data.consoleOffer);
+        setLgdIntakeEnabled(!!data.electronicIntakeEnabled);
         setShowCgmrUsage(!!data.showCgmrUsage);
         if (data.priceLabel) setLgdPriceLabel(data.priceLabel);
       })
@@ -194,7 +212,7 @@ export default function PlayOptionsPage() {
   useEffect(() => {
     if (!playSecondFromUrlRef.current) return;
     if (status !== "active" || !profile || schedule.length === 0) return;
-    if ((profile.playsPerNight ?? 2) === 1) {
+    if (normalizePlaysPerNight(profile.playsPerNight) === 1) {
       playSecondFromUrlRef.current = false;
       return;
     }
@@ -363,7 +381,7 @@ export default function PlayOptionsPage() {
           </a>
         </section>
       )}
-      {profile && !profile.hadLgdSession && lgdConsoleOffer && (
+      {profile && !profile.hadLgdSession && (lgdConsoleOffer || lgdIntakeEnabled) && (
         <section className="card" style={{ marginBottom: 16 }}>
           <h3>Life Guidance Discovery</h3>
           <p>
@@ -486,18 +504,6 @@ export default function PlayOptionsPage() {
             </a>
           </div>
         )}
-        {lgdIntakeEnabled ? (
-          <div className="card">
-            <h3>Life Guidance Discovery</h3>
-            <p>
-              Structured intake inside Reach For The Stars for Platinum membership: session brief
-              and a Customized Goal Manifestation script draft.
-            </p>
-            <a className="button button-secondary" href="/member/lgd">
-              Open LGD intake
-            </a>
-          </div>
-        ) : null}
         <div className="card">
           <h3>Current audios play list</h3>
           <p>
@@ -535,44 +541,8 @@ export default function PlayOptionsPage() {
                 <input
                   type="radio"
                   name="playsPerNightConsole"
-                  checked={(profile?.playsPerNight ?? 2) === 2}
-                  onChange={async () => {
-                    const res = await fetch("/api/user/goals", {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ playsPerNight: 2 }),
-                      credentials: "include"
-                    });
-                    if (res.ok && profile) {
-                      const scheduleRes = await fetch(
-                        `/api/user/schedule?nights=21&_t=${Date.now()}`,
-                        { credentials: "include", cache: "no-store" }
-                      );
-                      if (scheduleRes.ok) {
-                        const data = await scheduleRes.json();
-                        setSchedule(data?.schedule || []);
-                        setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
-                        setCurrentAudioNumber(
-                          typeof data?.currentAudioNumber === "number"
-                            ? data.currentAudioNumber
-                            : typeof data?.completedScheduleNights === "number"
-                              ? data.completedScheduleNights + 1
-                              : 1
-                        );
-                        setCompletedScheduleNights(
-                          typeof data?.completedScheduleNights === "number"
-                            ? data.completedScheduleNights
-                            : Math.max(
-                                0,
-                                (typeof data?.currentAudioNumber === "number" ? data.currentAudioNumber : 1) -
-                                  1
-                              )
-                        );
-                        setNextInCue(Array.isArray(data?.nextInCue) ? data.nextInCue : []);
-                        setProfile({ ...profile, playsPerNight: 2 });
-                      }
-                    }
-                  }}
+                  checked={playsPerNightSetting === 2}
+                  onChange={() => void savePlaysPerNight(2)}
                 />
                 2 per night (recommended)
               </label>
@@ -580,44 +550,8 @@ export default function PlayOptionsPage() {
                 <input
                   type="radio"
                   name="playsPerNightConsole"
-                  checked={(profile?.playsPerNight ?? 2) === 1}
-                  onChange={async () => {
-                    const res = await fetch("/api/user/goals", {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ playsPerNight: 1 }),
-                      credentials: "include"
-                    });
-                    if (res.ok && profile) {
-                      const scheduleRes = await fetch(
-                        `/api/user/schedule?nights=21&_t=${Date.now()}`,
-                        { credentials: "include", cache: "no-store" }
-                      );
-                      if (scheduleRes.ok) {
-                        const data = await scheduleRes.json();
-                        setSchedule(data?.schedule || []);
-                        setCurrentNight(typeof data?.currentNight === "number" ? data.currentNight : 1);
-                        setCurrentAudioNumber(
-                          typeof data?.currentAudioNumber === "number"
-                            ? data.currentAudioNumber
-                            : typeof data?.completedScheduleNights === "number"
-                              ? data.completedScheduleNights + 1
-                              : 1
-                        );
-                        setCompletedScheduleNights(
-                          typeof data?.completedScheduleNights === "number"
-                            ? data.completedScheduleNights
-                            : Math.max(
-                                0,
-                                (typeof data?.currentAudioNumber === "number" ? data.currentAudioNumber : 1) -
-                                  1
-                              )
-                        );
-                        setNextInCue(Array.isArray(data?.nextInCue) ? data.nextInCue : []);
-                        setProfile({ ...profile, playsPerNight: 1 });
-                      }
-                    }
-                  }}
+                  checked={playsPerNightSetting === 1}
+                  onChange={() => void savePlaysPerNight(1)}
                 />
                 1 per night
               </label>

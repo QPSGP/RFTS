@@ -9,6 +9,7 @@ import {
   setUserPlaysPerNight
 } from "@/lib/db";
 import { goalIdsSequenceEqual } from "@/lib/goal-ids";
+import { normalizePlaysPerNight } from "@/lib/session-progress-format";
 
 const schema = z.object({
   goalIds: z.array(z.string()).min(1).max(10).optional(),
@@ -48,7 +49,7 @@ export async function GET() {
     nextAllowedAt: editState.nextAllowedAt,
     subscriptionTier: profile.subscriptionTier,
     subscriptionStatus: profile.subscriptionStatus,
-    playsPerNight: profile.playsPerNight || 2,
+    playsPerNight: normalizePlaysPerNight(profile.playsPerNight),
     isManaged // Flag to indicate this is a managed member
   });
 }
@@ -94,8 +95,8 @@ export async function PUT(request: Request) {
     }
   }
   if (typeof parsed.data.playsPerNight === "number") {
-    const nextPpn = parsed.data.playsPerNight === 1 ? 1 : 2;
-    const currentPpn = profile.playsPerNight === 1 ? 1 : 2;
+    const nextPpn = normalizePlaysPerNight(parsed.data.playsPerNight);
+    const currentPpn = normalizePlaysPerNight(profile.playsPerNight);
     if (nextPpn !== currentPpn) {
       await setUserPlaysPerNight(profile.id, nextPpn);
       await recordMemberActivity(profile.id, "updated_plays_per_night");
