@@ -224,12 +224,12 @@ export const TOPIC_LANDING_PAGES: TopicLandingContent[] = [
     slug: "memory-improvement",
     path: "/memory-improvement",
     pill: "Memory & focus",
-    title: "Memory improvement enhancement meditation: focus and recall while you sleep",
-    metaTitle: "Memory Improvement Meditation: Focus and Recall While You Sleep | Reach For The Stars",
+    title: "Memory enhancement meditation: focus and recall while you sleep",
+    metaTitle: "Memory Enhancement Meditation: Focus and Recall While You Sleep | Reach For The Stars",
     metaDescription:
-      "Memory improvement meditation searches often pair with questions about focus and brain training. Sleep plays a central role in consolidation - reinforcing learning messages at night can support both.",
+      "Memory enhancement meditation searches often pair with questions about focus and brain training. Sleep plays a central role in consolidation - reinforcing learning messages at night can support both.",
     heroLead:
-      "Memory improvement meditation searches often pair with questions about focus and brain training. Sleep plays a central role in consolidation - reinforcing learning messages at night can support both.",
+      "Memory enhancement meditation searches often pair with questions about focus and brain training. Sleep plays a central role in consolidation - reinforcing learning messages at night can support both.",
     eyebrow: "Memory & focus",
     sectionTitle: "Build focus and memory with repetition",
     sectionSubtitle:

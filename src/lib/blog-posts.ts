@@ -563,7 +563,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: "Sleep is when memory actually sticks",
         paragraphs: [
           "Learning during the day is only half the job. Sleep helps lock in what you want to keep. Nightly suggestion can support clearer recall, mental excellence, and the feeling that your mind is available when you need it.",
-          "When memory and learning sit among your goals, your rotation includes memory-aligned recordings automatically. Explore our memory improvement page for how that landing path frames brain support while you sleep."
+          "When memory and learning sit among your goals, your rotation includes memory-aligned recordings automatically. Explore our memory enhancement page for how that landing path frames brain support while you sleep."
         ]
       },
       {
@@ -893,7 +893,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: "Focus is a skill you reinforce, not a mood you wait for",
         paragraphs: [
           "Attention span improves when the same calm cues return regularly. Research on meditation links steady practice with better working memory and sustained attention over weeks - not from a single heroic session, but from repetition that sticks.",
-          "When memory, learning, and mental clarity sit among your goals, your nightly rotation includes focus-aligned recordings automatically. Explore our memory improvement page for how that landing path frames brain training while you sleep."
+          "When memory, learning, and mental clarity sit among your goals, your nightly rotation includes focus-aligned recordings automatically. Explore our memory enhancement page for how that landing path frames brain training while you sleep."
         ]
       },
       {
@@ -1384,7 +1384,7 @@ export const BLOG_POSTS: BlogPost[] = [
     sections: [
       {
         paragraphs: [
-          "People search for memory improvement meditation, brain training, and sharper focus - often while juggling too many apps and playlists. Reach For The Stars treats memory as one of up to ten prioritized goals. When memory is in your rotation, relevant guided audios play automatically while you fall asleep and, if you choose two audios per night, again during sleep.",
+          "People search for memory enhancement meditation, brain training, and sharper focus - often while juggling too many apps and playlists. Reach For The Stars treats memory as one of up to ten prioritized goals. When memory is in your rotation, relevant guided audios play automatically while you fall asleep and, if you choose two audios per night, again during sleep.",
           "That matches how many members think about mental excellence: steady repetition at a receptive time, aligned with what you actually want to remember and focus on - not generic background audio."
         ]
       },
@@ -1515,14 +1515,14 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "memory-improvement-meditation-sleep",
-    title: "Memory improvement meditation: focus and recall while you sleep",
-    metaTitle: "Memory Improvement Meditation While You Sleep | RFTS Blog",
+    title: "Memory enhancement meditation: focus and recall while you sleep",
+    metaTitle: "Memory Enhancement Meditation While You Sleep | RFTS Blog",
     metaDescription:
-      "Memory improvement meditation and brain training through nightly goal audios. How sleep, repetition, and focus goals work together.",
+      "Memory enhancement meditation and brain training through nightly goal audios. How sleep, repetition, and focus goals work together.",
     publishedAt: "2026-03-15",
     readMinutes: 5,
     excerpt:
-      "Memory improvement meditation searches often pair with questions about focus and brain training. Sleep plays a central role in consolidation - reinforcing learning messages at night can support both.",
+      "Memory enhancement meditation searches often pair with questions about focus and brain training. Sleep plays a central role in consolidation - reinforcing learning messages at night can support both.",
     topicSlug: "memory-improvement",
     sections: [
       {

@@ -222,7 +222,7 @@ export const LEAD_CARD_INTEREST_SPECS: LeadCardInterestSpec[] = [
     label: "Memory Excellence",
     subject: "{{firstName}}, memory and focus while you sleep",
     path: "/memory",
-    related: [{ label: "Memory improvement", path: "/memory-improvement" }],
+    related: [{ label: "Memory enhancement", path: "/memory-improvement" }],
     paragraphs: [
       "Sleep supports memory consolidation. Reach For The Stars reinforces learning, recall, and mental clarity with goal-based audios each night - no playlist to maintain.",
       "Useful for work, study, and staying sharp. Rank memory with sleep if nights have been short."

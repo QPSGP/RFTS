@@ -265,7 +265,7 @@ Sleep supports memory consolidation. Reach For The Stars reinforces learning, re
 Read the memory goal page:
 {{siteUrl}}/memory
 
-And the memory-improvement wellness page:
+And the memory enhancement wellness page:
 {{siteUrl}}/memory-improvement`
   ),
   convertEmail(
