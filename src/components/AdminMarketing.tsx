@@ -170,7 +170,7 @@ export default function AdminMarketing() {
   const [savingTemplate, setSavingTemplate] = useState(false);
 
   const [copied, setCopied] = useState<string | null>(null);
-  type LeadsWizardStep = "add" | "crm" | "sequence" | "tools";
+  type LeadsWizardStep = "add" | "crm" | "sequence" | "templates" | "tools";
   const [leadsStep, setLeadsStep] = useState<LeadsWizardStep>("add");
 
   type OutreachSubKey =
@@ -614,6 +614,7 @@ export default function AdminMarketing() {
   };
 
   const startEditTemplate = (t: OutreachEmailTemplate) => {
+    setLeadsStep("templates");
     setEditingTemplateId(t.id);
     setOpenOutreachSubs((prev) => ({ ...prev, addTemplate: true, savedTemplates: true }));
     setTemplateForm({
@@ -946,7 +947,8 @@ export default function AdminMarketing() {
             One step at a time. Import or add a lead, query CRM contacts for a
             campaign, then weekly interest emails until they convert or opt out.
             Manage drafts, approval, and sends on{" "}
-            <Link href="/admin/campaigns">Campaigns</Link>.
+            <Link href="/admin/campaigns">Campaigns</Link>. Create and edit outreach
+            copy under <strong>Email templates</strong>.
           </p>
           <div
             style={{
@@ -961,6 +963,7 @@ export default function AdminMarketing() {
                 ["add", "1. Add to CRM"],
                 ["crm", "2. Query & campaigns"],
                 ["sequence", "3. Weekly emails"],
+                ["templates", "Email templates"],
                 ["tools", "Tools"]
               ] as const
             ).map(([id, label]) => (
@@ -973,6 +976,14 @@ export default function AdminMarketing() {
                   setLeadsStep(id);
                   if (id === "crm") {
                     setOpenOutreachSubs((prev) => ({ ...prev, outreachList: true }));
+                  }
+                  if (id === "templates") {
+                    setCrmTargetId(null);
+                    setOpenOutreachSubs((prev) => ({
+                      ...prev,
+                      addTemplate: true,
+                      savedTemplates: true
+                    }));
                   }
                 }}
               >
@@ -1513,7 +1524,11 @@ export default function AdminMarketing() {
           </div>
             ) : null}
           </div>
+            </>
+          ) : null}
 
+          {!crmTarget && leadsStep === "templates" ? (
+            <>
           <div id="outreach-email-templates" style={{ marginBottom: 12 }}>
             <button
               type="button"
