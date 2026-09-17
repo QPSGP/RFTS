@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionEmail, isAdminSession } from "@/lib/auth";
+import { getSessionActorLabel, getSessionEmail, isAdminSession } from "@/lib/auth";
 import {
   EVENT_LEAD_FORM_TYPES,
   EVENT_LEAD_STATUSES,
@@ -7,6 +7,7 @@ import {
   SARAH_ROSE_LONG_BEACH_EXTRACT,
   TERRY_FACILITATOR_REF_CODE,
   eventLeadSubmitSchema,
+  eventLeadHasScan,
   type EventLeadFormTypeId
 } from "@/lib/event-leads";
 import {
@@ -14,6 +15,8 @@ import {
   findEventLeadByEmailAndEvent,
   getEventLead,
   listEventLeads,
+  markEventLeadScanCorrected,
+  markEventLeadScanViewed,
   updateEventLead,
   updateEventLeadStatus
 } from "@/lib/event-leads-db";
@@ -288,6 +291,29 @@ export async function PATCH(request: Request) {
   if (!id) {
     return NextResponse.json({ error: "id required." }, { status: 400 });
   }
+  const actorLabel = (await getSessionActorLabel()) || "Unknown admin";
+
+  if (body?.markScanViewed === true) {
+    const existing = await getEventLead(id);
+    if (!existing) return NextResponse.json({ error: "Not found." }, { status: 404 });
+    if (!eventLeadHasScan(existing)) {
+      return NextResponse.json({ error: "This lead has no scan image." }, { status: 400 });
+    }
+    const lead = await markEventLeadScanViewed(id, actorLabel);
+    if (!lead) return NextResponse.json({ error: "Not found." }, { status: 404 });
+    return NextResponse.json({ lead });
+  }
+
+  if (body?.markScanCorrected === true && !body?.formType && !body?.eventName) {
+    const existing = await getEventLead(id);
+    if (!existing) return NextResponse.json({ error: "Not found." }, { status: 404 });
+    if (!eventLeadHasScan(existing)) {
+      return NextResponse.json({ error: "This lead has no scan image." }, { status: 400 });
+    }
+    const lead = await markEventLeadScanCorrected(id, actorLabel);
+    if (!lead) return NextResponse.json({ error: "Not found." }, { status: 404 });
+    return NextResponse.json({ lead });
+  }
 
   // Status-only shortcut (list dropdown).
   if (body?.status && !body?.formType && !body?.eventName && !body?.fullName) {
@@ -317,10 +343,14 @@ export async function PATCH(request: Request) {
     }
     nextStatus = status;
   }
-  const lead = await updateEventLead(id, {
-    ...parsed.data,
-    status: nextStatus
-  });
+  const lead = await updateEventLead(
+    id,
+    {
+      ...parsed.data,
+      status: nextStatus
+    },
+    { actorLabel }
+  );
   if (!lead) return NextResponse.json({ error: "Not found." }, { status: 404 });
   return NextResponse.json({ lead });
 }

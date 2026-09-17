@@ -278,9 +278,15 @@ export type EventLeadRecord = {
   payload: Record<string, unknown>;
   outreachTargetId: string | null;
   autoReplySentAt: string | null;
+  scanViewedAt: string | null;
+  scanViewedBy: string | null;
+  scanCorrectedAt: string | null;
+  scanCorrectedBy: string | null;
   createdAt: string;
   updatedAt: string;
 };
+
+export type EventLeadScanReviewStatus = "none" | "needs_review" | "viewed" | "corrected";
 
 /** Verified extract from docs/20260803_124059.PDF (Long Beach Expo practice survey). */
 export const SARAH_ROSE_LONG_BEACH_EXTRACT: EventLeadSubmitInput = {
@@ -376,6 +382,86 @@ export function eventLeadHasScan(
   lead: Pick<EventLeadRecord, "sourceScanPath"> | null | undefined
 ): boolean {
   return Boolean(lead?.sourceScanPath?.trim());
+}
+
+export function eventLeadScanReviewStatus(
+  lead: Pick<
+    EventLeadRecord,
+    "sourceScanPath" | "scanViewedAt" | "scanCorrectedAt"
+  > | null | undefined
+): EventLeadScanReviewStatus {
+  if (!eventLeadHasScan(lead)) return "none";
+  if (lead?.scanCorrectedAt) return "corrected";
+  if (lead?.scanViewedAt) return "viewed";
+  return "needs_review";
+}
+
+function whoSuffix(who: string | null | undefined): string {
+  const trimmed = (who || "").trim();
+  return trimmed ? ` - ${trimmed}` : "";
+}
+
+export function formatScanReviewStamp(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
+export function eventLeadScanReviewLabel(
+  lead: Pick<
+    EventLeadRecord,
+    | "sourceScanPath"
+    | "scanViewedAt"
+    | "scanViewedBy"
+    | "scanCorrectedAt"
+    | "scanCorrectedBy"
+  > | null | undefined
+): string {
+  const status = eventLeadScanReviewStatus(lead);
+  if (status === "none") return "-";
+  if (status === "corrected") {
+    return `Corrected${whoSuffix(lead?.scanCorrectedBy)}`;
+  }
+  if (status === "viewed") {
+    return `Viewed${whoSuffix(lead?.scanViewedBy)}`;
+  }
+  return "Needs review";
+}
+
+export function eventLeadScanReviewDetail(
+  lead: Pick<
+    EventLeadRecord,
+    | "sourceScanPath"
+    | "scanViewedAt"
+    | "scanViewedBy"
+    | "scanCorrectedAt"
+    | "scanCorrectedBy"
+  > | null | undefined
+): string | null {
+  if (!eventLeadHasScan(lead)) return null;
+  const viewedWhen = formatScanReviewStamp(lead?.scanViewedAt);
+  const correctedWhen = formatScanReviewStamp(lead?.scanCorrectedAt);
+  const viewed = lead?.scanViewedBy
+    ? `Viewed by ${lead.scanViewedBy}${viewedWhen ? ` on ${viewedWhen}` : ""}`
+    : viewedWhen
+      ? `Viewed on ${viewedWhen}`
+      : null;
+  const corrected = lead?.scanCorrectedBy
+    ? `Corrected by ${lead.scanCorrectedBy}${correctedWhen ? ` on ${correctedWhen}` : ""}`
+    : correctedWhen
+      ? `Corrected on ${correctedWhen}`
+      : null;
+  if (corrected && viewed) return `${corrected}. ${viewed}.`;
+  if (corrected) return `${corrected}.`;
+  if (viewed) return `${viewed}. Not corrected yet.`;
+  return "Needs review - open the scan and save or mark as corrected.";
 }
 
 /** Admin URL for the original card image, or a stored https URL if one was saved. */

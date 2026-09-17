@@ -17,6 +17,7 @@ Long Beach Expo practice QR (default):
 - **Add lead** and **Edit** (syncs linked Outreach target/contact when present)
 - Detail view (payload, scan path, outreach target id) with status dropdown
 - Scanned leads open in **Compare & edit** with an **Open scan to compare** link so staff can check the card image against the fields that were read
+- Opening a scanned card marks it **Viewed** (who + when). Saving the form or clicking **Mark as corrected** marks it **Corrected** (who + when). The list shows Needs review / Viewed / Corrected so you can see what still needs a look.
 - **Import extracts JSON batch** for Long Beach Expo scans
 
 Each submit also creates an Outreach **individual** target + primary contact for CRM follow-up.

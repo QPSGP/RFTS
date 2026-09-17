@@ -46,9 +46,29 @@ const ensureEventLeadsTable = async () => {
       payload jsonb NOT NULL DEFAULT '{}'::jsonb,
       outreach_target_id uuid,
       auto_reply_sent_at timestamptz,
+      scan_viewed_at timestamptz,
+      scan_viewed_by text,
+      scan_corrected_at timestamptz,
+      scan_corrected_by text,
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
     )
+  `;
+  await sql`
+    ALTER TABLE marketing_event_leads
+    ADD COLUMN IF NOT EXISTS scan_viewed_at timestamptz
+  `;
+  await sql`
+    ALTER TABLE marketing_event_leads
+    ADD COLUMN IF NOT EXISTS scan_viewed_by text
+  `;
+  await sql`
+    ALTER TABLE marketing_event_leads
+    ADD COLUMN IF NOT EXISTS scan_corrected_at timestamptz
+  `;
+  await sql`
+    ALTER TABLE marketing_event_leads
+    ADD COLUMN IF NOT EXISTS scan_corrected_by text
   `;
   await sql`
     CREATE INDEX IF NOT EXISTS marketing_event_leads_event_key_idx
@@ -71,7 +91,14 @@ function mapLeadRow(row: EventLeadRecord): EventLeadRecord {
     row.payload && typeof row.payload === "object" && !Array.isArray(row.payload)
       ? row.payload
       : {};
-  return { ...row, payload };
+  return {
+    ...row,
+    payload,
+    scanViewedAt: row.scanViewedAt ?? null,
+    scanViewedBy: row.scanViewedBy ?? null,
+    scanCorrectedAt: row.scanCorrectedAt ?? null,
+    scanCorrectedBy: row.scanCorrectedBy ?? null
+  };
 }
 
 export async function listEventLeads(options?: {
@@ -97,6 +124,10 @@ export async function listEventLeads(options?: {
         COALESCE(payload, '{}'::jsonb) AS payload,
         outreach_target_id AS "outreachTargetId",
         auto_reply_sent_at AS "autoReplySentAt",
+        scan_viewed_at AS "scanViewedAt",
+        scan_viewed_by AS "scanViewedBy",
+        scan_corrected_at AS "scanCorrectedAt",
+        scan_corrected_by AS "scanCorrectedBy",
         created_at AS "createdAt", updated_at AS "updatedAt"
       FROM marketing_event_leads
       WHERE event_key = ${eventKey} AND form_type = ${formType}
@@ -118,6 +149,10 @@ export async function listEventLeads(options?: {
         COALESCE(payload, '{}'::jsonb) AS payload,
         outreach_target_id AS "outreachTargetId",
         auto_reply_sent_at AS "autoReplySentAt",
+        scan_viewed_at AS "scanViewedAt",
+        scan_viewed_by AS "scanViewedBy",
+        scan_corrected_at AS "scanCorrectedAt",
+        scan_corrected_by AS "scanCorrectedBy",
         created_at AS "createdAt", updated_at AS "updatedAt"
       FROM marketing_event_leads
       WHERE event_key = ${eventKey}
@@ -139,6 +174,10 @@ export async function listEventLeads(options?: {
         COALESCE(payload, '{}'::jsonb) AS payload,
         outreach_target_id AS "outreachTargetId",
         auto_reply_sent_at AS "autoReplySentAt",
+        scan_viewed_at AS "scanViewedAt",
+        scan_viewed_by AS "scanViewedBy",
+        scan_corrected_at AS "scanCorrectedAt",
+        scan_corrected_by AS "scanCorrectedBy",
         created_at AS "createdAt", updated_at AS "updatedAt"
       FROM marketing_event_leads
       WHERE form_type = ${formType}
@@ -159,6 +198,10 @@ export async function listEventLeads(options?: {
       COALESCE(payload, '{}'::jsonb) AS payload,
       outreach_target_id AS "outreachTargetId",
       auto_reply_sent_at AS "autoReplySentAt",
+      scan_viewed_at AS "scanViewedAt",
+      scan_viewed_by AS "scanViewedBy",
+      scan_corrected_at AS "scanCorrectedAt",
+      scan_corrected_by AS "scanCorrectedBy",
       created_at AS "createdAt", updated_at AS "updatedAt"
     FROM marketing_event_leads
     ORDER BY created_at DESC
@@ -181,6 +224,10 @@ export async function listAllEventLeads(): Promise<EventLeadRecord[]> {
       COALESCE(payload, '{}'::jsonb) AS payload,
       outreach_target_id AS "outreachTargetId",
       auto_reply_sent_at AS "autoReplySentAt",
+      scan_viewed_at AS "scanViewedAt",
+      scan_viewed_by AS "scanViewedBy",
+      scan_corrected_at AS "scanCorrectedAt",
+      scan_corrected_by AS "scanCorrectedBy",
       created_at AS "createdAt", updated_at AS "updatedAt"
     FROM marketing_event_leads
     ORDER BY created_at DESC
@@ -202,6 +249,10 @@ export async function getEventLead(id: string): Promise<EventLeadRecord | null> 
       COALESCE(payload, '{}'::jsonb) AS payload,
       outreach_target_id AS "outreachTargetId",
       auto_reply_sent_at AS "autoReplySentAt",
+      scan_viewed_at AS "scanViewedAt",
+      scan_viewed_by AS "scanViewedBy",
+      scan_corrected_at AS "scanCorrectedAt",
+      scan_corrected_by AS "scanCorrectedBy",
       created_at AS "createdAt", updated_at AS "updatedAt"
     FROM marketing_event_leads
     WHERE id = ${id}
@@ -230,6 +281,10 @@ export async function findEventLeadByEmailAndEvent(
         COALESCE(payload, '{}'::jsonb) AS payload,
         outreach_target_id AS "outreachTargetId",
         auto_reply_sent_at AS "autoReplySentAt",
+        scan_viewed_at AS "scanViewedAt",
+        scan_viewed_by AS "scanViewedBy",
+        scan_corrected_at AS "scanCorrectedAt",
+        scan_corrected_by AS "scanCorrectedBy",
         created_at AS "createdAt", updated_at AS "updatedAt"
       FROM marketing_event_leads
       WHERE lower(email) = ${normalized} AND event_key = ${eventKey}
@@ -250,6 +305,10 @@ export async function findEventLeadByEmailAndEvent(
       COALESCE(payload, '{}'::jsonb) AS payload,
       outreach_target_id AS "outreachTargetId",
       auto_reply_sent_at AS "autoReplySentAt",
+      scan_viewed_at AS "scanViewedAt",
+      scan_viewed_by AS "scanViewedBy",
+      scan_corrected_at AS "scanCorrectedAt",
+      scan_corrected_by AS "scanCorrectedBy",
       created_at AS "createdAt", updated_at AS "updatedAt"
     FROM marketing_event_leads
     WHERE lower(email) = ${normalized}
@@ -365,6 +424,10 @@ export async function createEventLead(
       COALESCE(payload, '{}'::jsonb) AS payload,
       outreach_target_id AS "outreachTargetId",
       auto_reply_sent_at AS "autoReplySentAt",
+      scan_viewed_at AS "scanViewedAt",
+      scan_viewed_by AS "scanViewedBy",
+      scan_corrected_at AS "scanCorrectedAt",
+      scan_corrected_by AS "scanCorrectedBy",
       created_at AS "createdAt", updated_at AS "updatedAt"
   `;
   const lead = mapLeadRow(rows[0]);
@@ -408,6 +471,10 @@ export async function markEventLeadAutoReplied(id: string): Promise<EventLeadRec
       COALESCE(payload, '{}'::jsonb) AS payload,
       outreach_target_id AS "outreachTargetId",
       auto_reply_sent_at AS "autoReplySentAt",
+      scan_viewed_at AS "scanViewedAt",
+      scan_viewed_by AS "scanViewedBy",
+      scan_corrected_at AS "scanCorrectedAt",
+      scan_corrected_by AS "scanCorrectedBy",
       created_at AS "createdAt", updated_at AS "updatedAt"
   `;
   return rows[0] ? mapLeadRow(rows[0]) : null;
@@ -442,6 +509,10 @@ export async function updateEventLeadStatus(
       COALESCE(payload, '{}'::jsonb) AS payload,
       outreach_target_id AS "outreachTargetId",
       auto_reply_sent_at AS "autoReplySentAt",
+      scan_viewed_at AS "scanViewedAt",
+      scan_viewed_by AS "scanViewedBy",
+      scan_corrected_at AS "scanCorrectedAt",
+      scan_corrected_by AS "scanCorrectedBy",
       created_at AS "createdAt", updated_at AS "updatedAt"
   `;
   return rows[0] ? mapLeadRow(rows[0]) : null;
@@ -449,7 +520,8 @@ export async function updateEventLeadStatus(
 
 export async function updateEventLead(
   id: string,
-  raw: EventLeadSubmitInput & { status?: string | null }
+  raw: EventLeadSubmitInput & { status?: string | null },
+  options?: { actorLabel?: string | null }
 ): Promise<EventLeadRecord | null> {
   await ensureEventLeadsTable();
   const existing = await getEventLead(id);
@@ -462,6 +534,10 @@ export async function updateEventLead(
   };
   const payloadJson = JSON.stringify(payload);
   const nextStatus = (raw.status || existing.status || "new").trim() || existing.status;
+  const nextScanPath = input.sourceScanPath ?? existing.sourceScanPath;
+  const hasScan = Boolean(nextScanPath?.trim());
+  const actor = options?.actorLabel?.trim() || null;
+  const markCorrected = hasScan && Boolean(actor);
 
   const { rows } = await sql<EventLeadRecord>`
     UPDATE marketing_event_leads
@@ -487,8 +563,24 @@ export async function updateEventLead(
       entry_path = ${input.entryPath ?? null},
       captured_by = ${input.capturedBy ?? null},
       notes = ${input.notes ?? null},
-      source_scan_path = ${input.sourceScanPath ?? existing.sourceScanPath},
+      source_scan_path = ${nextScanPath},
       payload = CAST(${payloadJson} AS jsonb),
+      scan_viewed_at = CASE
+        WHEN ${markCorrected} THEN COALESCE(scan_viewed_at, now())
+        ELSE scan_viewed_at
+      END,
+      scan_viewed_by = CASE
+        WHEN ${markCorrected} THEN COALESCE(scan_viewed_by, ${actor})
+        ELSE scan_viewed_by
+      END,
+      scan_corrected_at = CASE
+        WHEN ${markCorrected} THEN now()
+        ELSE scan_corrected_at
+      END,
+      scan_corrected_by = CASE
+        WHEN ${markCorrected} THEN ${actor}
+        ELSE scan_corrected_by
+      END,
       updated_at = now()
     WHERE id = ${id}
     RETURNING
@@ -502,6 +594,10 @@ export async function updateEventLead(
       COALESCE(payload, '{}'::jsonb) AS payload,
       outreach_target_id AS "outreachTargetId",
       auto_reply_sent_at AS "autoReplySentAt",
+      scan_viewed_at AS "scanViewedAt",
+      scan_viewed_by AS "scanViewedBy",
+      scan_corrected_at AS "scanCorrectedAt",
+      scan_corrected_by AS "scanCorrectedBy",
       created_at AS "createdAt", updated_at AS "updatedAt"
   `;
   const lead = rows[0] ? mapLeadRow(rows[0]) : null;
@@ -546,4 +642,78 @@ export async function updateEventLead(
     // Lead save succeeded; outreach sync is best-effort.
   }
   return lead;
+}
+
+export async function markEventLeadScanViewed(
+  id: string,
+  actorLabel: string
+): Promise<EventLeadRecord | null> {
+  await ensureEventLeadsTable();
+  const actor = actorLabel.trim();
+  if (!actor) return getEventLead(id);
+  const { rows } = await sql<EventLeadRecord>`
+    UPDATE marketing_event_leads
+    SET
+      scan_viewed_at = now(),
+      scan_viewed_by = ${actor},
+      updated_at = now()
+    WHERE id = ${id}
+      AND source_scan_path IS NOT NULL
+      AND BTRIM(source_scan_path) <> ''
+    RETURNING
+      id, form_type AS "formType", status,
+      event_name AS "eventName", event_dates AS "eventDates", event_key AS "eventKey",
+      first_name AS "firstName", last_name AS "lastName", full_name AS "fullName",
+      email, phone_mobile AS "phoneMobile", COALESCE(sms_ok, false) AS "smsOk",
+      city, state, zip, country,
+      persona, category, interest, entry_path AS "entryPath",
+      captured_by AS "capturedBy", notes, source_scan_path AS "sourceScanPath",
+      COALESCE(payload, '{}'::jsonb) AS payload,
+      outreach_target_id AS "outreachTargetId",
+      auto_reply_sent_at AS "autoReplySentAt",
+      scan_viewed_at AS "scanViewedAt",
+      scan_viewed_by AS "scanViewedBy",
+      scan_corrected_at AS "scanCorrectedAt",
+      scan_corrected_by AS "scanCorrectedBy",
+      created_at AS "createdAt", updated_at AS "updatedAt"
+  `;
+  return rows[0] ? mapLeadRow(rows[0]) : getEventLead(id);
+}
+
+export async function markEventLeadScanCorrected(
+  id: string,
+  actorLabel: string
+): Promise<EventLeadRecord | null> {
+  await ensureEventLeadsTable();
+  const actor = actorLabel.trim();
+  if (!actor) return getEventLead(id);
+  const { rows } = await sql<EventLeadRecord>`
+    UPDATE marketing_event_leads
+    SET
+      scan_viewed_at = COALESCE(scan_viewed_at, now()),
+      scan_viewed_by = COALESCE(scan_viewed_by, ${actor}),
+      scan_corrected_at = now(),
+      scan_corrected_by = ${actor},
+      updated_at = now()
+    WHERE id = ${id}
+      AND source_scan_path IS NOT NULL
+      AND BTRIM(source_scan_path) <> ''
+    RETURNING
+      id, form_type AS "formType", status,
+      event_name AS "eventName", event_dates AS "eventDates", event_key AS "eventKey",
+      first_name AS "firstName", last_name AS "lastName", full_name AS "fullName",
+      email, phone_mobile AS "phoneMobile", COALESCE(sms_ok, false) AS "smsOk",
+      city, state, zip, country,
+      persona, category, interest, entry_path AS "entryPath",
+      captured_by AS "capturedBy", notes, source_scan_path AS "sourceScanPath",
+      COALESCE(payload, '{}'::jsonb) AS payload,
+      outreach_target_id AS "outreachTargetId",
+      auto_reply_sent_at AS "autoReplySentAt",
+      scan_viewed_at AS "scanViewedAt",
+      scan_viewed_by AS "scanViewedBy",
+      scan_corrected_at AS "scanCorrectedAt",
+      scan_corrected_by AS "scanCorrectedBy",
+      created_at AS "createdAt", updated_at AS "updatedAt"
+  `;
+  return rows[0] ? mapLeadRow(rows[0]) : getEventLead(id);
 }

@@ -608,9 +608,17 @@ CREATE TABLE IF NOT EXISTS marketing_event_leads (
   payload jsonb NOT NULL DEFAULT '{}'::jsonb,
   outreach_target_id uuid,
   auto_reply_sent_at timestamptz,
+  scan_viewed_at timestamptz,
+  scan_viewed_by text,
+  scan_corrected_at timestamptz,
+  scan_corrected_by text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE marketing_event_leads ADD COLUMN IF NOT EXISTS scan_viewed_at timestamptz;
+ALTER TABLE marketing_event_leads ADD COLUMN IF NOT EXISTS scan_viewed_by text;
+ALTER TABLE marketing_event_leads ADD COLUMN IF NOT EXISTS scan_corrected_at timestamptz;
+ALTER TABLE marketing_event_leads ADD COLUMN IF NOT EXISTS scan_corrected_by text;
 CREATE INDEX IF NOT EXISTS marketing_event_leads_event_key_idx
   ON marketing_event_leads (event_key);
 CREATE INDEX IF NOT EXISTS marketing_event_leads_email_idx

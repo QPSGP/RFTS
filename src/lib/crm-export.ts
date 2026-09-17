@@ -161,6 +161,10 @@ export const CRM_EXPORT_COLUMNS: Record<Exclude<CrmExportDataset, "all">, string
     "payload",
     "outreachTargetId",
     "autoReplySentAt",
+    "scanViewedAt",
+    "scanViewedBy",
+    "scanCorrectedAt",
+    "scanCorrectedBy",
     "createdAt",
     "updatedAt"
   ],

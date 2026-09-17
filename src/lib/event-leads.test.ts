@@ -3,6 +3,9 @@ import {
   applyLeadDefaults,
   eventLeadHasScan,
   eventLeadScanHref,
+  eventLeadScanReviewDetail,
+  eventLeadScanReviewLabel,
+  eventLeadScanReviewStatus,
   eventLeadSubmitSchema,
   normalizeLeadEmail,
   normalizeLeadPhone,
@@ -106,6 +109,41 @@ describe("event-leads", () => {
         sourceScanPath: "https://example.com/scans/card.jpg"
       })
     ).toBe("https://example.com/scans/card.jpg");
+  });
+
+  it("labels scanned cards as needs review, viewed, or corrected with who", () => {
+    const base = {
+      sourceScanPath: "docs/lead-card-scans/card.jpg",
+      scanViewedAt: null as string | null,
+      scanViewedBy: null as string | null,
+      scanCorrectedAt: null as string | null,
+      scanCorrectedBy: null as string | null
+    };
+    expect(eventLeadScanReviewStatus(base)).toBe("needs_review");
+    expect(eventLeadScanReviewLabel(base)).toBe("Needs review");
+    expect(eventLeadScanReviewDetail(base)).toContain("Needs review");
+
+    const viewed = {
+      ...base,
+      scanViewedAt: "2026-09-17T17:00:00.000Z",
+      scanViewedBy: "Terry (terry@example.com)"
+    };
+    expect(eventLeadScanReviewStatus(viewed)).toBe("viewed");
+    expect(eventLeadScanReviewLabel(viewed)).toBe("Viewed - Terry (terry@example.com)");
+    expect(eventLeadScanReviewDetail(viewed)).toContain("Not corrected yet");
+
+    const corrected = {
+      ...viewed,
+      scanCorrectedAt: "2026-09-17T18:00:00.000Z",
+      scanCorrectedBy: "Richard (richard@example.com)"
+    };
+    expect(eventLeadScanReviewStatus(corrected)).toBe("corrected");
+    expect(eventLeadScanReviewLabel(corrected)).toBe(
+      "Corrected - Richard (richard@example.com)"
+    );
+    expect(eventLeadScanReviewDetail(corrected)).toContain("Corrected by Richard");
+    expect(eventLeadScanReviewStatus({ ...base, sourceScanPath: null })).toBe("none");
+    expect(eventLeadScanReviewLabel({ ...base, sourceScanPath: null })).toBe("-");
   });
 
   it("keeps an explicit referral override", () => {

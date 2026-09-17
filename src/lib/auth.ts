@@ -159,6 +159,16 @@ export const getSessionEmail = () => {
   return email;
 };
 
+/** Admin display name plus email for audit fields, or email alone. */
+export const getSessionActorLabel = async () => {
+  const email = getSessionEmail();
+  if (!email) return null;
+  const admin = await getAdminByEmail(email);
+  const name = [admin?.firstName, admin?.lastName].filter(Boolean).join(" ").trim();
+  if (name) return `${name} (${email})`;
+  return email;
+};
+
 export const getSessionRole = async () => {
   const email = getSessionEmail();
   if (!email) {

@@ -21,8 +21,12 @@ import {
   displayLeadName,
   eventLeadHasScan,
   eventLeadScanHref,
+  eventLeadScanReviewDetail,
+  eventLeadScanReviewLabel,
+  eventLeadScanReviewStatus,
   type EventLeadFormTypeId,
-  type EventLeadRecord
+  type EventLeadRecord,
+  type EventLeadScanReviewStatus
 } from "@/lib/event-leads";
 import {
   OUTREACH_CATEGORIES,
@@ -108,7 +112,8 @@ function EventLeadScanCompare({
         <EventLeadScanHotLink lead={lead}>Open scan to compare</EventLeadScanHotLink>
       </div>
       <p style={{ margin: "4px 0 0", fontSize: 12, color: "#6b7280" }}>
-        Open the card beside these fields and correct anything we misread.
+        Open the card beside these fields and correct anything we misread. Save changes or mark as
+        corrected so we know who reviewed it.
       </p>
       {failed ? (
         <p style={{ fontSize: 13, color: "#6b7280", margin: "8px 0 0" }}>
@@ -124,6 +129,29 @@ function EventLeadScanCompare({
         />
       )}
     </aside>
+  );
+}
+
+function ScanReviewBanner({ lead }: { lead: EventLeadRecord }) {
+  if (!eventLeadHasScan(lead)) return null;
+  const status = eventLeadScanReviewStatus(lead);
+  const color =
+    status === "corrected" ? "#166534" : status === "viewed" ? "#9a3412" : "#9f1239";
+  const background =
+    status === "corrected" ? "#dcfce7" : status === "viewed" ? "#ffedd5" : "#ffe4e6";
+  return (
+    <p
+      style={{
+        margin: "8px 0 0",
+        fontSize: 13,
+        color,
+        background,
+        padding: "8px 10px",
+        borderRadius: 8
+      }}
+    >
+      {eventLeadScanReviewDetail(lead)}
+    </p>
   );
 }
 
@@ -280,6 +308,9 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
   const [importBusy, setImportBusy] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [scanReviewFilter, setScanReviewFilter] = useState<
+    "all" | EventLeadScanReviewStatus
+  >("all");
 
   const load = useCallback(async () => {
     setStatus("loading");
@@ -306,9 +337,38 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
     }
   }, [filterEventKey]);
 
+  const leadsRef = useRef(leads);
+  leadsRef.current = leads;
+
   useEffect(() => {
     if (open) void load();
   }, [open, load]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    if (mode !== "view" && mode !== "edit") return;
+    const current = leadsRef.current.find((row) => row.id === selectedId);
+    if (!current || !eventLeadHasScan(current)) return;
+    let cancelled = false;
+    void (async () => {
+      const res = await fetch("/api/admin/marketing/event-leads", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: selectedId, markScanViewed: true })
+      });
+      if (cancelled || !res.ok) return;
+      const data = await res.json().catch(() => ({}));
+      if (data.lead) {
+        setLeads((prev) =>
+          prev.map((row) => (row.id === data.lead.id ? (data.lead as EventLeadRecord) : row))
+        );
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId, mode]);
 
   const selectedIndex = useMemo(
     () => (selectedId ? leads.findIndex((l) => l.id === selectedId) : -1),
@@ -317,6 +377,18 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
   const selected = selectedIndex >= 0 ? leads[selectedIndex] : null;
   const showingLead = Boolean(selectedId) && (mode === "view" || mode === "edit");
   const showingList = !showingLead && mode !== "add";
+  const visibleLeads = useMemo(() => {
+    if (scanReviewFilter === "all") return leads;
+    return leads.filter((lead) => eventLeadScanReviewStatus(lead) === scanReviewFilter);
+  }, [leads, scanReviewFilter]);
+  const needsReviewCount = useMemo(
+    () => leads.filter((lead) => eventLeadScanReviewStatus(lead) === "needs_review").length,
+    [leads]
+  );
+
+  function mergeLead(next: EventLeadRecord) {
+    setLeads((prev) => prev.map((row) => (row.id === next.id ? next : row)));
+  }
 
   const swipeStartX = useRef<number | null>(null);
   const swipeStartY = useRef<number | null>(null);
@@ -533,7 +605,13 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
         setSaving(false);
         return;
       }
-      setMessage(mode === "edit" ? "Lead updated." : "Lead created.");
+      setMessage(
+        mode === "edit"
+          ? eventLeadHasScan(data.lead)
+            ? "Lead updated and marked as corrected."
+            : "Lead updated."
+          : "Lead created."
+      );
       if (mode === "add") onImported?.();
       await load();
       if (data.lead?.id) {
@@ -591,6 +669,30 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
       body: JSON.stringify({ id, status: next })
     });
     if (res.ok) await load();
+  }
+
+  async function markScanCorrected(id: string) {
+    setSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/admin/marketing/event-leads", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, markScanCorrected: true })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage(data.error || "Could not mark as corrected.");
+        return;
+      }
+      if (data.lead) mergeLead(data.lead as EventLeadRecord);
+      setMessage("Marked as corrected.");
+    } catch {
+      setMessage("Could not mark as corrected.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!open) return null;
@@ -705,6 +807,7 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
                     ? `${leads.length} in list - Next/Previous opens a saved lead`
                     : "No saved leads yet"}
               </div>
+              {mode === "edit" && selected ? <ScanReviewBanner lead={selected} /> : null}
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <button
@@ -1054,14 +1157,20 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
               style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
             />
           </label>
-          <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+          <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button
               type="button"
               className="button"
               disabled={saving}
               onClick={() => void saveForm()}
             >
-              {saving ? "Saving…" : mode === "edit" ? "Save changes" : "Create lead"}
+              {saving
+                ? "Saving…"
+                : mode === "edit"
+                  ? eventLeadHasScan(selected)
+                    ? "Save and mark corrected"
+                    : "Save changes"
+                  : "Create lead"}
             </button>
           </div>
           </div>
@@ -1081,6 +1190,7 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
           onClick={() => toggleSub("list")}
         >
           {openSubs.list ? "▼" : "▶"} Saved event leads ({leads.length}
+          {needsReviewCount ? ` · ${needsReviewCount} need scan review` : ""}
           {status === "loading" ? "…" : ""})
         </button>
         {openSubs.list ? (
@@ -1110,6 +1220,20 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
           >
             Long Beach Expo key
           </button>
+          <select
+            aria-label="Filter scan review"
+            value={scanReviewFilter}
+            onChange={(e) =>
+              setScanReviewFilter(e.target.value as "all" | EventLeadScanReviewStatus)
+            }
+            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db" }}
+          >
+            <option value="all">All scan reviews</option>
+            <option value="needs_review">Needs review</option>
+            <option value="viewed">Viewed, not corrected</option>
+            <option value="corrected">Corrected</option>
+            <option value="none">No scan (digital)</option>
+          </select>
         </div>
 
         {status === "loading" && <p>Loading leads…</p>}
@@ -1124,21 +1248,29 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
                 <th>Type</th>
                 <th>Persona</th>
                 <th>Status</th>
+                <th>Scan review</th>
                 <th />
               </tr>
             </thead>
             <tbody>
-              {leads.map((lead) => (
+              {visibleLeads.map((lead) => (
                 <tr
                   key={lead.id}
                   onClick={() => openLead(lead)}
-                  style={{ cursor: "pointer" }}
+                  style={{
+                    cursor: "pointer",
+                    background:
+                      eventLeadScanReviewStatus(lead) === "needs_review" ? "#fff1f2" : undefined
+                  }}
                 >
                   <td>{displayLeadName(lead)}</td>
                   <td>{lead.eventName}</td>
                   <td>{lead.formType}</td>
                   <td>{lead.persona || "-"}</td>
                   <td>{lead.status}</td>
+                  <td style={{ fontSize: 13, color: "#4b5563" }}>
+                    {eventLeadScanReviewLabel(lead)}
+                  </td>
                   <td style={{ whiteSpace: "nowrap" }}>
                     {eventLeadHasScan(lead) ? (
                       <a
@@ -1182,9 +1314,13 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
                   </td>
                 </tr>
               ))}
-              {leads.length === 0 && status !== "loading" && (
+              {visibleLeads.length === 0 && status !== "loading" && (
                 <tr>
-                  <td colSpan={6}>No event leads yet.</td>
+                  <td colSpan={7}>
+                    {leads.length === 0
+                      ? "No event leads yet."
+                      : "No event leads match this scan review filter."}
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -1218,6 +1354,7 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
                 {" · "}
                 Swipe or use ← → to move · Esc for list
               </div>
+              <ScanReviewBanner lead={selected} />
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <button
@@ -1249,6 +1386,16 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
                 >
                   Open scan to compare
                 </a>
+              ) : null}
+              {eventLeadHasScan(selected) && eventLeadScanReviewStatus(selected) !== "corrected" ? (
+                <button
+                  type="button"
+                  className="button"
+                  disabled={saving}
+                  onClick={() => void markScanCorrected(selected.id)}
+                >
+                  {saving ? "Saving…" : "Mark as corrected"}
+                </button>
               ) : null}
               <button type="button" className="button button-secondary" onClick={closeLead}>
                 Back to list
@@ -1292,6 +1439,8 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
             <dd>{selected.interest || "-"}</dd>
             <dt>Notes</dt>
             <dd>{selected.notes || "-"}</dd>
+            <dt>Scan review</dt>
+            <dd>{eventLeadScanReviewDetail(selected) || "-"}</dd>
             <dt>Scan</dt>
             <dd>
               {eventLeadHasScan(selected) ? (
