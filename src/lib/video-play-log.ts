@@ -1,8 +1,8 @@
 import { logMemberPlayedVideo } from "@/lib/member-audio-activity";
 import { trackGaEvent } from "@/lib/google-analytics";
 
-export const WHY_IT_WORKS_VIDEO_TITLE = "Why it works - Terry sizzle reel";
-export const WHY_IT_WORKS_VIDEO_SRC = "/Images/Terry-Sizzle-Reel-Website.mp4";
+export const WHY_IT_WORKS_VIDEO_TITLE = "Why it works - Terry RFTS short";
+export const WHY_IT_WORKS_VIDEO_SRC = "/Images/Terry-RFTS-short-for-web-T3.mp4";
 /** @deprecated Prefer WHY_IT_WORKS_VIDEO_SRC */
 export const TERRY_WHY_IT_WORKS_VIDEO_SRC = WHY_IT_WORKS_VIDEO_SRC;
 
