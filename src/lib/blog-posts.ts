@@ -23,6 +23,147 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "reread-the-same-line-focus-attention-guided-meditation-sleep",
+    title:
+      "When you reread the same line: focus and attention you rebuild while you sleep",
+    metaTitle: "Rereading the Same Line? Focus Guided Meditation | RFTS Blog",
+    metaDescription:
+      "If your eyes move and the meaning does not stick, guided meditation at bedtime can rebuild focus and attention span while you sleep. Free trial.",
+    publishedAt: "2026-09-23",
+    readMinutes: 6,
+    excerpt:
+      "You already read the sentence. The eyes moved. The meaning did not stay. Guided meditation at bedtime and during sleep rebuilds focus and attention span in the window the day no longer interrupts.",
+    topicSlug: "memory-improvement",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for increased focus and attention span often notice it in one small failure: they reread the same line, the same email, the same page. The task is open. The time is gone. That is not laziness. It is attention that spent itself earlier and has nothing left for the work that still matters.",
+          "Reach For The Stars supports focus through guided meditation while you fall asleep and, if you choose two audios per night, again during sleep. Concentration practice becomes part of rest instead of another daytime brain-training block you will skip."
+        ]
+      },
+      {
+        heading: "Attention returns with repetition, not with a harder stare",
+        paragraphs: [
+          "Staring harder at the paragraph does not restore a spent attention span. Research on meditation links regular practice with better sustained attention and working memory over weeks. Sleep is also when the brain consolidates what it is trying to hold.",
+          "When memory, learning, and mental clarity sit among your priorities, your rotation includes focus-aligned recordings automatically. Explore our memory enhancement page for how that landing path frames focus and recall while you sleep."
+        ]
+      },
+      {
+        heading: "Why the reread happens at the hour you saved for real work",
+        paragraphs: [
+          "The important task often waits until the inbox is clear, the kids are down, or the meeting block ends. By then the nervous system is already noisy. A fixed Start Session flow - intro relaxation music, then a focus-related audio as you drift, then optional reinforcement about 2.5 hours later - trains attention when the day can no longer pull you into another tab.",
+          "That pattern fits people whose deep work always lands at the tired end of the day, students who reread notes without them sticking, and members who want focus paired with memory so recall and concentration travel in the same nightly practice."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits knowledge workers who lose the thread in the last hour, students and exam prep when rereading replaces learning, and creatives who sit down to make something and watch twenty minutes vanish. Guided meditation supports attention. It does not replace sleep disorders care, ADHD treatment, or a workload that is simply too large.",
+          "Visit the memory enhancement landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "One line, then the next (excerpt)",
+      quote:
+        "The eyes can rest… the meaning stays… one clear line, then the next… distractions soften… attention gathers and holds… morning finds the mind ready to stay with what matters…"
+    }
+  },
+  {
+    slug: "fine-in-the-room-undone-at-the-door-emotional-health-sleep",
+    title:
+      "Fine in the room, undone at the door: emotional health you settle at bedtime",
+    metaTitle: "Fine in the Room, Undone Later? Emotional Health | RFTS Blog",
+    metaDescription:
+      "If you hold it together with people and unravel once you are alone, guided meditation at bedtime can steady emotional health while you sleep. Free trial.",
+    publishedAt: "2026-09-23",
+    readMinutes: 6,
+    excerpt:
+      "You were steady in the meeting, with the kids, on the call. The feeling arrived after the door closed. Guided meditation at bedtime and during sleep settles emotional health in the hour the performance ends.",
+    topicSlug: "emotional-health",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for improved emotional health are often competent in public and flooded in private. They answer calmly, smile on time, and keep the room together. Then the car, the kitchen, or the dark bedroom is where the day actually lands. Another pep talk about positivity misses that the regulation already happened. What failed was the recovery afterward.",
+          "Reach For The Stars supports emotional health through guided meditation while you fall asleep and, if you choose two audios per night, again during sleep. Mood recovery becomes part of bedtime instead of a second shift of emotional labor after you are already done performing."
+        ]
+      },
+      {
+        heading: "Steadiness after the room, not only inside it",
+        paragraphs: [
+          "Emotional health is the ability to feel what happened and still come back to a workable calm. Meditation research links regular practice with better mood and emotional regulation over time. The useful repetition is the one that meets you after you have already been strong for everyone else.",
+          "When emotional balance sits among your priorities, your rotation includes mood and recovery recordings automatically. Explore our emotional health page for how that landing path frames nightly support for regulation, optimism, and balance."
+        ]
+      },
+      {
+        heading: "Why the unravel shows up when nobody needs you",
+        paragraphs: [
+          "Holding it together uses the same energy you would have used to process the day. Once the audience leaves, the backlog arrives at once. A fixed Start Session flow - intro relaxation music, then an emotional-health audio as you drift, then optional reinforcement about 2.5 hours later - gives that backlog a calm place to land instead of a spiral that runs until 1 a.m.",
+          "That pattern fits people who are fine at work and raw at home, caregivers who decompress only after everyone else is asleep, and members who want emotional health paired with stress relief so the nervous system gets both the downshift and the kinder recovery."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits professionals who stay composed in hard conversations and fall apart later, parents and caregivers whose private hour is the only honest one, and anyone whose mood is manageable until they are alone with it. Guided meditation supports emotional wellness. It is not a substitute for therapy, psychiatric care, or crisis help. If you are in danger or cannot stay safe, get professional support first.",
+          "Visit the emotional health landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "The room can end, you can settle (excerpt)",
+      quote:
+        "You were steady for them… now the day can land softly… feelings move through and ease… you return to yourself… rest arrives kinder than the spiral… morning finds you whole, not still braced…"
+    }
+  },
+  {
+    slug: "already-decided-then-the-easy-hour-will-power-sleep",
+    title:
+      "You already decided, then the easy hour arrived: will power you rehearse at bedtime",
+    metaTitle: "The Easy Hour and Will Power Guided Meditation | RFTS Blog",
+    metaDescription:
+      "If the morning decision collapses in the easy evening hour, guided meditation at bedtime can strengthen will power and follow-through while you sleep. Free trial.",
+    publishedAt: "2026-09-23",
+    readMinutes: 6,
+    excerpt:
+      "Breakfast already chose. The easy hour treats that choice as optional. Guided meditation at bedtime and during sleep rehearses will power before the evening version of you gets a vote.",
+    topicSlug: "will-power",
+    sections: [
+      {
+        paragraphs: [
+          "People searching for enhanced will power usually do not lack a plan. They made it clearly, often early, when the day still felt manageable. Then the easy hour arrives: the couch, the snack, the scroll, the skip, the one exception that does not feel like breaking anything. Follow-through fails in that quiet window, not in the moment the decision was made.",
+          "Reach For The Stars supports will power through guided meditation while you fall asleep and, if you choose two audios per night, again during sleep. Resolve gets rehearsed at night so the next easy hour meets a pattern, not a debate."
+        ]
+      },
+      {
+        heading: "The decision is not the hard part",
+        paragraphs: [
+          "Will power is follow-through after the feeling of deciding has worn off. Repeating a calm commitment - finish what you started, take the aligned next step, recover after a slip without making the slip your identity - works better than another morning speech you will not remember at 8 p.m.",
+          "When determination and habit change sit among your priorities, your rotation includes will-power recordings automatically. Explore our will power page for how that landing path frames discipline, follow-through, and healthier routines while you sleep."
+        ]
+      },
+      {
+        heading: "Why arguing with yourself at 8 p.m. keeps losing",
+        paragraphs: [
+          "The easy hour is tired, rewarded for stopping, and very good at calling an exception reasonable. White-knuckling then asks a depleted brain to defend a promise it made when it was fresher. A fixed Start Session flow - intro relaxation music, then a will-power audio as you drift, then optional reinforcement about 2.5 hours later - places the rehearsal before that hour returns, instead of inside the argument.",
+          "That pattern fits people who keep weekday promises until evening, anyone rebuilding a routine after a string of exceptions, and members who want will power paired with stress relief or habit change so calm and follow-through share one nightly practice."
+        ]
+      },
+      {
+        heading: "Who this helps most",
+        paragraphs: [
+          "This approach fits habit change that dies after dark, study and work plans that look solid at breakfast, and anyone who is reliable in public and negotiates with themselves once they are home. Guided meditation supports follow-through. It is not a substitute for medical care when a habit involves substances, withdrawal, or a condition that needs clinical supervision.",
+          "Visit the will power landing page for how nightly rotation works, or use Start your journey below to begin your free trial tonight."
+        ]
+      }
+    ],
+    transcriptExcerpt: {
+      sessionTitle: "The choice already stands (excerpt)",
+      quote:
+        "You already decided… the easy hour can arrive and pass… the aligned step feels natural… exceptions soften… follow-through holds… morning meets a promise you kept while you slept…"
+    }
+  },
+  {
     slug: "craving-after-a-good-day-habit-change-guided-meditation-sleep",
     title:
       "When the craving shows up after a good day: habit change you rehearse at bedtime",
