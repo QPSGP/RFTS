@@ -46,7 +46,11 @@ export default function PlayOptionsAndroidTips({
           <>
             <li>
               Your second audio is scheduled about <strong>{gapHours} hours</strong> after the first.
-              On Android, the second half often starts the <strong>goal audio directly</strong> (skips a
+              A very quiet keep-alive stays playing during that wait so Chrome can start the second
+              track while the screen is locked. Do not swipe that session off the notification shade.
+            </li>
+            <li>
+              On Android, the second half starts the <strong>goal audio directly</strong> (skips a
               second intro) so Chrome is less likely to stop after the lock screen.
             </li>
             <li>

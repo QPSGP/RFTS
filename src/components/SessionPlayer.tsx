@@ -205,10 +205,15 @@ function startPlaybackWithIOSAutoplayGuard(
 
 let silentGapLoopDataUriCache: string | null = null;
 
+/** Element gain for the gap keep-alive. Combined with the low tone, this stays below hearing on a phone speaker. */
+const GAP_KEEPALIVE_VOLUME = 0.06;
+
 /**
- * Short looping silence during the first→second gap keeps `<audio>` in a playing state for mobile autoplay handoff.
- * Uses 16-bit signed PCM at zero - correct digital silence. (Older builds used 8-bit WAV with sample bytes left at 0;
- * in unsigned 8-bit WAV silence is 128, so 0 caused DC offset / rhythmic clicks when looping - often heard as a “heartbeat”.)
+ * Short looping keep-alive during the first-to-second gap so `<audio>` stays in a playing state.
+ * Android Chrome suspends muted or all-zero audio when the screen locks, which freezes the gap and
+ * the second track never starts. A 40 Hz tone (10 exact cycles in 250 ms at 8 kHz) is below typical
+ * phone-speaker response, so the OS still sees real audio. Older 8-bit WAVs used sample 0 as silence;
+ * unsigned 8-bit silence is 128, and that DC offset looped as a click.
  */
 function getSilentGapLoopDataUri(): string {
   if (silentGapLoopDataUriCache) return silentGapLoopDataUriCache;
@@ -251,8 +256,11 @@ function getSilentGapLoopDataUri(): string {
   write("data");
   v.setUint32(o, dataSize, true);
   o += 4;
+  const freq = 40;
+  const amp = 180;
   for (let i = 0; i < numSamples; i++) {
-    v.setInt16(o, 0, true);
+    const sample = Math.round(amp * Math.sin((2 * Math.PI * freq * i) / sampleRate));
+    v.setInt16(o, sample, true);
     o += 2;
   }
   const u8 = new Uint8Array(buffer);
@@ -422,11 +430,10 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     sessionAudioMounted
   ]);
 
-  /** Refresh scrubber position on lock screen while playing (metadata title already updates from state). */
+  /** Refresh lock-screen state while a track plays, and during the gap so Android keeps the session "playing". */
   useEffect(() => {
-    if (phase === "idle" || phase === "waiting" || !isPlaying || !sessionAudioMounted) {
-      return;
-    }
+    if (!sessionAudioMounted || phase === "idle") return;
+    if (phase !== "waiting" && !isPlaying) return;
     const id = window.setInterval(() => {
       syncSessionMediaSession({
         phase: phaseRef.current,
@@ -499,7 +506,10 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     };
   }, [sessionAudioMounted, current?.url, phase, prepAudio?.url]);
 
-  /** Between first and second half (2/night): loop inaudible WAV so the media element stays active for autoplay. */
+  /**
+   * Between first and second half (2/night): loop a quiet keep-alive so the media element stays
+   * active. Must not be muted or at volume 0 - Android drops silent audio when the screen locks.
+   */
   useLayoutEffect(() => {
     if (phase !== "waiting" || playsPerNight !== 2) return;
     const audio = audioRef.current;
@@ -508,21 +518,41 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
     if (!silent) return;
     const epoch = sessionEpochRef.current;
     audio.loop = true;
-    audio.volume = 0;
-    audio.muted = true;
+    audio.muted = false;
+    audio.volume = GAP_KEEPALIVE_VOLUME;
     if (audio.src !== silent) {
       audio.src = silent;
       audio.load();
     }
+    const resumeKeepAlive = () => {
+      if (sessionEpochRef.current !== epoch) return;
+      if (phaseRef.current !== "waiting") return;
+      if (!audio.paused && !audio.ended) return;
+      audio.muted = false;
+      audio.volume = GAP_KEEPALIVE_VOLUME;
+      audio.loop = true;
+      void audio.play().catch(() => {
+        if (phaseRef.current !== "waiting") return;
+        setMessage("Tap Play once so this page can start your second audio while the screen is locked.");
+        setNeedsUserPlay(true);
+      });
+    };
+    const onPause = () => {
+      window.setTimeout(resumeKeepAlive, 250);
+    };
+    audio.addEventListener("pause", onPause);
     const cancel = startPlaybackWithIOSAutoplayGuard(
       audio,
       () => sessionEpochRef.current === epoch && phaseRef.current === "waiting",
       () => {
-        setMessage("Tap Play once so the silent bridge can keep this page ready for your second audio.");
+        setMessage("Tap Play once so this page can start your second audio while the screen is locked.");
         setNeedsUserPlay(true);
       }
     );
-    return () => cancel();
+    return () => {
+      audio.removeEventListener("pause", onPause);
+      cancel();
+    };
   }, [phase, playsPerNight]);
 
   useEffect(() => {
@@ -755,10 +785,13 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
       setMessage(
         "No second recording was scheduled. Reload Sessions or check your lineup has two tracks for tonight."
       );
+      phaseRef.current = "idle";
       setPhase("idle");
       dispatchRftsSessionEnd();
       return;
     }
+    /** Before the keep-alive element changes src, so a pause during the handoff does not restart the gap loop. */
+    phaseRef.current = "second";
     clearPendingSecondHalf();
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("rfts-second-half-started"));
@@ -1639,7 +1672,7 @@ const SessionPlayer = forwardRef<SessionPlayerHandle, SessionPlayerProps>(functi
           )}
           {phase === "waiting" && playsPerNight === 2 && (
             <p style={{ fontSize: 13, color: "#64748b", marginBottom: 8, marginTop: 0 }}>
-              Silent playback runs until your second audio starts (nothing audible - it keeps the session active on phones).
+              A very quiet keep-alive plays until your second audio starts. Leave it running so Android can start the second track with the screen locked.
             </p>
           )}
           <audio

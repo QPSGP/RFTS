@@ -113,8 +113,15 @@ export function syncSessionMediaSession(p: SyncSessionMediaSessionParams): void 
     }
   }
 
+  const gapKeepAlivePlaying =
+    p.phase === "waiting" &&
+    p.playsPerNight === 2 &&
+    !!p.audio &&
+    !p.audio.paused &&
+    !p.audio.ended;
   try {
-    navigator.mediaSession.playbackState = p.isPlaying ? "playing" : "paused";
+    navigator.mediaSession.playbackState =
+      gapKeepAlivePlaying || p.isPlaying ? "playing" : "paused";
   } catch {
     // ignore
   }
