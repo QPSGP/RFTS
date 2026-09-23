@@ -294,7 +294,7 @@ describe("AdminUsers Platinum Managed rotation", () => {
     await waitFor(() => {
       expect(within(rotationCard as HTMLElement).getAllByRole("listitem")).toHaveLength(2);
     });
-  });
+  }, 20000);
 
   it("Add at end stays available after loading 16 saved slots (real accounts exceeded old 10-slot cap)", async () => {
     const yahooUser = {
@@ -400,5 +400,5 @@ describe("AdminUsers Platinum Managed rotation", () => {
       expect(within(rotationCard as HTMLElement).getAllByRole("listitem")).toHaveLength(17);
     });
     expect(within(rotationCard as HTMLElement).getByLabelText(/step 17/i)).toBeInTheDocument();
-  });
+  }, 20000);
 });

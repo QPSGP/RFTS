@@ -12,6 +12,7 @@ import {
 } from "@/lib/member-profile-form";
 import { formatSignupDate } from "@/lib/format-signup-date";
 import { MANAGED_MAX_SLOTS_PER_AUDIO } from "@/lib/managed-rotation-limits";
+import { NEW_PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 
 function sanitizePathSegment(name: string): string {
   return name
@@ -1010,8 +1011,10 @@ export default function FacilitatorMembers() {
 
   const createAssignedMember = async () => {
     const email = newMemberEmail.trim();
-    if (!email || newMemberPassword.length < 6) {
-      setNewMemberSaveStatus("Email and password (6+ characters) are required.");
+    if (!email || newMemberPassword.length < NEW_PASSWORD_MIN_LENGTH) {
+      setNewMemberSaveStatus(
+        `Email and a new password (${NEW_PASSWORD_MIN_LENGTH}+ characters) are required.`
+      );
       return;
     }
     setNewMemberSaveStatus(null);
@@ -1385,7 +1388,7 @@ export default function FacilitatorMembers() {
                   />
                   <input
                     style={inputStyle}
-                    placeholder="Temporary password (min 6 characters) *"
+                    placeholder={`Temporary password (min ${NEW_PASSWORD_MIN_LENGTH} characters) *`}
                     type="password"
                     autoComplete="new-password"
                     value={newMemberPassword}

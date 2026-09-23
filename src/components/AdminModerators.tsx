@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import ModerationQueue from "@/components/ModerationQueue";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
+import { NEW_PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 
 type FacilitatorAdminSection =
   | "activeFacilitators"
@@ -310,7 +311,7 @@ export default function AdminModerators() {
       await load();
       return;
     }
-    setStatus("Approval failed. Add a 6+ character access code.");
+    setStatus(`Approval failed. Add a ${NEW_PASSWORD_MIN_LENGTH}+ character access code.`);
   };
 
   const getApplicationDraft = (app: ModeratorApplication) =>
@@ -722,7 +723,7 @@ export default function AdminModerators() {
                     <h4 style={{ marginTop: 0 }}>Account access</h4>
                     <input
                       style={inputStyle}
-                      placeholder="Reset access code (optional, 6+ chars)"
+                      placeholder={`Reset access code (optional, ${NEW_PASSWORD_MIN_LENGTH}+ chars)`}
                       value={resets[moderator.id] || ""}
                       onChange={(event) =>
                         setResets({ ...resets, [moderator.id]: event.target.value })
@@ -900,7 +901,7 @@ export default function AdminModerators() {
                       <>
                         <input
                           style={inputStyle}
-                          placeholder="Temporary access code (6+ chars)"
+                          placeholder={`Temporary access code (${NEW_PASSWORD_MIN_LENGTH}+ chars)`}
                           value={accessCodes[app.id] || ""}
                           onChange={(event) =>
                             setAccessCodes({ ...accessCodes, [app.id]: event.target.value })

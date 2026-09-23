@@ -90,12 +90,12 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
   const { email, newPassword, firstName, lastName } = parsed.data;
-  const hasPw = newPassword !== undefined && newPassword.length >= 6;
+  const hasPw = newPassword !== undefined && newPassword.length >= NEW_PASSWORD_MIN_LENGTH;
   const hasFn = firstName !== undefined;
   const hasLn = lastName !== undefined;
   if (!hasPw && !hasFn && !hasLn) {
     return NextResponse.json(
-      { error: "Provide newPassword (6+ chars) and/or firstName and/or lastName." },
+      { error: `Provide newPassword (${NEW_PASSWORD_MIN_LENGTH}+ chars) and/or firstName and/or lastName.` },
       { status: 400 }
     );
   }

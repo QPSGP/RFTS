@@ -100,9 +100,9 @@ export async function POST(request: Request) {
     });
   }
 
-  if (!parsed.data.password || parsed.data.password.length < 6) {
+  if (!parsed.data.password || parsed.data.password.length < NEW_PASSWORD_MIN_LENGTH) {
     return NextResponse.json(
-      { error: "Password is required (6+ characters) for new members." },
+      { error: `Password is required (${NEW_PASSWORD_MIN_LENGTH}+ characters) for new members.` },
       { status: 400 }
     );
   }

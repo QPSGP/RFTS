@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { NEW_PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 
 type AdminAccount = {
   id: string;
@@ -108,15 +109,21 @@ export default function AdminAdmins() {
   const saveAdmin = async (adminEmail: string) => {
     const d = drafts[adminEmail] || emptyDraft();
     const pw = d.newPassword.trim();
-    const hasPw = pw.length >= 6;
+    const hasPw = pw.length >= NEW_PASSWORD_MIN_LENGTH;
     const fn = d.firstName.trim();
     const ln = d.lastName.trim();
     const orig = admins.find((a) => a.email === adminEmail);
     const fnChanged = fn !== (orig?.firstName ?? "").trim();
     const lnChanged = ln !== (orig?.lastName ?? "").trim();
+    if (pw && pw.length < NEW_PASSWORD_MIN_LENGTH) {
+      setStatus(
+        `Error: A new password must be at least ${NEW_PASSWORD_MIN_LENGTH} characters. The current password was not changed.`
+      );
+      return;
+    }
     if (!hasPw && !fnChanged && !lnChanged) {
       setStatus(
-        "Error: Enter a new password (6+ characters) and/or change first or last name, then Save."
+        `Error: Enter a new password (${NEW_PASSWORD_MIN_LENGTH}+ characters) and/or change first or last name, then Save.`
       );
       return;
     }
@@ -171,11 +178,11 @@ export default function AdminAdmins() {
         />
         <input
           type="password"
-          placeholder="Password (6+ chars)"
+          placeholder={`Password (${NEW_PASSWORD_MIN_LENGTH}+ chars)`}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          minLength={6}
+          minLength={NEW_PASSWORD_MIN_LENGTH}
           className="input"
           autoComplete="new-password"
         />
@@ -269,7 +276,7 @@ export default function AdminAdmins() {
                   </div>
                   <input
                     type="password"
-                    placeholder="New password (optional, min 6 characters)"
+                    placeholder={`New password (optional, min ${NEW_PASSWORD_MIN_LENGTH} characters)`}
                     className="input"
                     autoComplete="new-password"
                     value={d.newPassword}

@@ -11,6 +11,7 @@ import { stripSkuHyphens } from "@/lib/sku-code";
 import { adminSectionToggleClass } from "@/components/admin-section-toggle";
 import ScheduleAlgorithmTool from "@/components/ScheduleAlgorithmTool";
 import { formatSignupDate } from "@/lib/format-signup-date";
+import { NEW_PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 
 type MemberAdminSection =
   | "profile"
@@ -869,13 +870,21 @@ export default function AdminUsers() {
     }
     const update = updates[email];
     const newPassword = (resetPasswords[email] || "").trim();
-    const hasPasswordChange = newPassword.length >= 6;
+    if (newPassword && newPassword.length < NEW_PASSWORD_MIN_LENGTH) {
+      setStatus(
+        `A new password must be at least ${NEW_PASSWORD_MIN_LENGTH} characters. The current password was not changed.`
+      );
+      return;
+    }
+    const hasPasswordChange = newPassword.length >= NEW_PASSWORD_MIN_LENGTH;
     const stripeDraft = stripeEdits[email];
     const hasStripeEdit =
       stripeDraft?.stripeCustomerId !== undefined ||
       stripeDraft?.stripeSubscriptionId !== undefined;
     if (!update && !hasPasswordChange && !hasStripeEdit) {
-      setStatus("Change tier/status, Stripe IDs, or enter a new password (6+ characters), then Save.");
+      setStatus(
+        `Change tier/status, Stripe IDs, or enter a new password (${NEW_PASSWORD_MIN_LENGTH}+ characters), then Save.`
+      );
       return;
     }
     const body: Record<string, unknown> = {
@@ -2124,7 +2133,7 @@ export default function AdminUsers() {
                       <input
                         id={`member-pw-${user.email}`}
                         style={{ ...inputStyle, flex: "1 1 200px", maxWidth: 280 }}
-                        placeholder="New password (min 6 characters)"
+                        placeholder={`New password (min ${NEW_PASSWORD_MIN_LENGTH} characters)`}
                         type="password"
                         autoComplete="new-password"
                         value={resetPasswords[user.email] || ""}
@@ -3019,8 +3028,7 @@ export default function AdminUsers() {
                       {memberSectionIsOpen(user.email, "membership") && (
                         <div className="card" style={{ marginTop: 8 }}>
                         <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
-                          Current password cannot be shown (one-way hash). Enter a new password (6+ characters) and click
-                          Save to reset member login-you can update password alone without changing tier or goals.
+                          Current password cannot be shown (one-way hash). Leave this blank to keep the password they already have. A new password must be {NEW_PASSWORD_MIN_LENGTH}+ characters. You can update the password alone without changing tier or goals.
                         </p>
                         <p style={{ fontSize: 12, color: "#0f766e", marginBottom: 8 }}>
                           <strong>Existing Stripe members:</strong> paste Customer ID (<code>cus_…</code>) and Subscription ID (<code>sub_…</code>) from the Stripe Dashboard before they sign up or pay again. That links their current billing and prevents a second subscription.
@@ -3128,7 +3136,7 @@ export default function AdminUsers() {
                         <input
                           id={`member-pw-${user.email}`}
                           style={inputStyle}
-                          placeholder="New member password (optional, min 6 characters)"
+                          placeholder={`New member password (optional, min ${NEW_PASSWORD_MIN_LENGTH} characters)`}
                           type="password"
                           autoComplete="new-password"
                           value={resetPasswords[user.email] || ""}

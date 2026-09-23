@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState, Suspense, useEffect, type CSSProperties } from "react";
 import SiteFooter from "@/components/SiteFooter";
+import { NEW_PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 
 const inputStyle = {
   padding: 10,
@@ -53,8 +54,8 @@ function ResetPasswordForm() {
       setStatus("error");
       return;
     }
-    if (password.length < 6) {
-      setMessage("Password must be at least 10 characters.");
+    if (password.length < NEW_PASSWORD_MIN_LENGTH) {
+      setMessage(`Password must be at least ${NEW_PASSWORD_MIN_LENGTH} characters.`);
       setStatus("error");
       return;
     }
@@ -114,7 +115,7 @@ function ResetPasswordForm() {
     <div className="card">
       <h2>Set a new password</h2>
       <p style={{ marginBottom: 16 }}>
-        Enter your new password below. Use at least 10 characters.
+        Enter your new password below. Use at least {NEW_PASSWORD_MIN_LENGTH} characters. Your current password still works until you save a new one.
       </p>
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 320 }}>
         {!tokenFromUrl && (
@@ -136,7 +137,7 @@ function ResetPasswordForm() {
             placeholder="New password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            minLength={6}
+            minLength={NEW_PASSWORD_MIN_LENGTH}
             required
             autoComplete="new-password"
             style={{ ...inputStyle, paddingRight: 56 }}
@@ -157,7 +158,7 @@ function ResetPasswordForm() {
             placeholder="Confirm new password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            minLength={6}
+            minLength={NEW_PASSWORD_MIN_LENGTH}
             required
             autoComplete="new-password"
             style={{ ...inputStyle, paddingRight: 56 }}
