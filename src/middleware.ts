@@ -1,19 +1,19 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { PRODUCTION_SITE_HOST, PRODUCTION_SITE_URL } from "@/lib/site-url";
+import { canonicalHostRedirectUrl } from "@/lib/site-url";
 
 /**
  * Exposes pathname to Server Components (e.g. SiteHeader) and enforces canonical production host.
  */
 export function middleware(request: NextRequest) {
-  const host = request.headers.get("host")?.split(":")[0]?.toLowerCase();
-
-  if (host === `www.${PRODUCTION_SITE_HOST}`) {
-    const destination = new URL(
-      `${request.nextUrl.pathname}${request.nextUrl.search}`,
-      PRODUCTION_SITE_URL
-    );
-    return NextResponse.redirect(destination, 308);
+  const host = request.headers.get("host");
+  const canonical = canonicalHostRedirectUrl(
+    host,
+    request.nextUrl.pathname,
+    request.nextUrl.search
+  );
+  if (canonical) {
+    return NextResponse.redirect(canonical, 308);
   }
 
   const requestHeaders = new Headers(request.headers);

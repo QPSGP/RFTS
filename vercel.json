@@ -26,6 +26,12 @@
       "permanent": true
     },
     {
+      "source": "/",
+      "has": [{ "type": "host", "value": "rfts-7d4w.vercel.app" }],
+      "destination": "https://reachforthestars.today/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [{ "type": "host", "value": "rfts-7d4w.vercel.app" }],
       "destination": "https://reachforthestars.today/:path*",
