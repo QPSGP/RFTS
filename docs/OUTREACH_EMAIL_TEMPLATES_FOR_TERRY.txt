@@ -946,7 +946,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Anger Management on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Anger Management. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Anger often spikes when you are depleted - traffic, family, work, unfinished lists. Nightly emotional-health audios rehearse a calmer baseline so the next trigger does not run the whole evening.
 
@@ -977,7 +977,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Attract Love on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Attract Love. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Attracting love is less a hunt and more how you show up: warmth, confidence, and readiness without desperation. Relationship audios reinforce those qualities while you sleep.
 
@@ -1008,7 +1008,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Coaching on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Coaching. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 If you want coaching for yourself, nightly guided practice is the follow-through between sessions: goals ranked, then reinforced while you sleep.
 
@@ -1039,7 +1039,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Confidence on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Confidence. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Confidence is a practiced state, not a speech you give yourself in the parking lot. Will-power and emotional-health audios rehearse follow-through, self-trust, and a steadier inner voice at bedtime.
 
@@ -1070,7 +1070,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Creativity on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Creativity. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Creative work stalls when the day is all delivery and no recovery. Inspiration-focused audios keep ideas and openness in rotation while you sleep - so flow is not competing with another course.
 
@@ -1099,7 +1099,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked End Pain on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to End Pain. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Guided relaxation can ease muscle tension and the stress that amplifies pain - especially at bedtime. Better sleep also supports recovery.
 
@@ -1130,7 +1130,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked End Procrastination on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to End Procrastination. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Procrastination is often empty willpower by evening, not a character flaw. Nightly resolve audios rehearse starting, finishing, and recovering after a slip - when the day already used your grit.
 
@@ -1161,7 +1161,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Energy on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Energy. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Energy returns when rest, recovery, and kinder body habits get repeated. Health-focused audios at bedtime support vitality without adding a 5 a.m. wellness protocol you will skip on hard weeks.
 
@@ -1192,7 +1192,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Explore Past Lives on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Explore Past Lives. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Curiosity about past lives is part of a wider inner life - meaning, continuity, and a greater spiritual connection. Spirituality audios give that exploration a consistent nightly window.
 
@@ -1221,7 +1221,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Health & Rejuvenation on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Health & Rejuvenation. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Health and rejuvenation are more than one cleanse or one gym streak. Nightly health audios reinforce longevity, recovery, and a body you want to delight in - when the mind is most receptive.
 
@@ -1252,7 +1252,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Life Mission on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Life Mission. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Life mission work fails when it is only a journal you never open. Inspiration and spirituality audios keep purpose, contribution, and direction in nightly rotation.
 
@@ -1283,7 +1283,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Marketing on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Marketing. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Marketing is offers, outreach, and the inner permission to be visible. Wealth and inspiration audios support that mix - asking, following up, and staying creative - while you sleep.
 
@@ -1314,7 +1314,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Memory Excellence on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Memory Excellence. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Sleep supports memory consolidation. Reach For The Stars reinforces learning, recall, and mental clarity with goal-based audios each night - no playlist to maintain.
 
@@ -1345,7 +1345,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Motivation on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Motivation. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Motivation fades by 9 p.m. when the day already spent it. Nightly will-power and inspiration audios rehearse drive and follow-through in the window you already have: bedtime.
 
@@ -1376,7 +1376,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Psychic Abilities on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Psychic Abilities. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Psychic and intuitive development sits with spirituality: presence, inner listening, and a greater connection. Guided audios at bedtime give that practice a consistent cue.
 
@@ -1407,7 +1407,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Quit Smoking on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Quit Smoking. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Quitting smoking is easier when tomorrow's choices are primed the night before. Supportive messages at bedtime and during sleep help replace automatic patterns with calm and control.
 
@@ -1438,7 +1438,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Raise Income on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Raise Income. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Raising income needs actions and a nervous system that can ask, follow up, and recover after a no. Wealth-focused audios reinforce worth, follow-through, and financial calm while you sleep.
 
@@ -1469,7 +1469,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Relationship Joy on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Relationship Joy. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Relationship joy is patience, warmth, and how you show up - in a new match or a present partnership. Nightly relationship audios reinforce those qualities as you fall asleep.
 
@@ -1500,7 +1500,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Retirement $ on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Retirement $. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Retirement money is practical and psychological: saving, earning, and not letting money worry steal sleep. Wealth audios keep abundance and steady follow-through in nightly rotation.
 
@@ -1529,7 +1529,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Sales Skills on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Sales Skills. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Sales skills are craft plus composure. Nightly wealth and will-power audios support asking, following up, and bouncing back after rejection - without another daytime podcast.
 
@@ -1560,7 +1560,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Sleep Well on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Sleep Well. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 If you checked Sleep Well, this is the low-friction version: intro relaxation music, then your first goal recording as you wind down. Optional second audio during restorative sleep.
 
@@ -1591,7 +1591,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Speaking Skills on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Speaking Skills. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Speaking skills are voice, structure, and nerves. Inspiration and will-power audios rehearse confidence and presence at bedtime so the next meeting, class, or stage is not running on leftover adrenaline.
 
@@ -1622,7 +1622,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Spiritual Growth on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Spiritual Growth. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Spiritual growth does not have to be one more daytime appointment. Bedtime becomes a consistent practice: peace, presence, and inner alignment, reinforced as you fall asleep and during sleep.
 
@@ -1651,7 +1651,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Stop Smoking on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Stop Smoking. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Stopping smoking is a next-day decision, repeated. Nightly audios help prime calm, control, and a different automatic response when the old cue shows up.
 
@@ -1682,7 +1682,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Stress Management on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Stress Management. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 The transition into sleep is a natural window for relaxation. Stress-management meditation at night reinforces calm without adding a daytime task you will skip when you are already overloaded.
 
@@ -1713,7 +1713,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Time Management on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Time Management. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Time management fails when every hour is already claimed. Nightly will-power audios rehearse choosing the aligned next step and finishing what matters - so tomorrow is not the same scramble.
 
@@ -1744,7 +1744,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Travel $ on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Travel $. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Travel money is a specific wealth goal: earning, saving, and believing the trip is allowed. Abundance audios keep that picture in rotation while you sleep - not as another vision-board homework pile.
 
@@ -1773,7 +1773,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Vision on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Vision. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Vision on a lead card often means the life you want to see clearly - direction, purpose, and follow-through. Inspiration and spirituality audios keep that picture in nightly rotation.
 
@@ -1804,7 +1804,7 @@ Subject:
 Body:
 Hello {{firstName}},
 
-You marked Weight Control on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to Weight Control. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 Weight control is food, movement, and the evening decisions that undo the day. Nightly audios support balanced living and follow-through - a complement to medical and nutrition care, not a replacement.
 

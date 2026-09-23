@@ -85,7 +85,7 @@ describe("member conversion emails", () => {
     for (const label of EVENT_LEAD_CARD_GOALS) {
       const email = getLeadCardInterestEmail(label);
       expect(email?.name).toBe(leadCardInterestTemplateName(label));
-      expect(email?.bodyText).toContain(`You marked ${label} on your lead card.`);
+      expect(email?.bodyText).toContain(`You showed interest to ${label}.`);
       expect(email?.bodyText).toContain("{{siteUrl}}/signup/step-1-subscription-selection");
     }
     expect(MEMBER_CONVERT_LEAD_CARD_MENU_EMAIL.bodyText).toContain(

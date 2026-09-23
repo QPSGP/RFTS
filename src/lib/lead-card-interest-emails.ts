@@ -68,7 +68,7 @@ function relatedBlock(related?: { label: string; path: string }[]): string {
 function fromSpec(spec: LeadCardInterestSpec): ConversionEmailTemplate {
   const body = `Hello {{firstName}},
 
-You marked ${spec.label} on your lead card. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+You showed interest to ${spec.label}. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 ${spec.paragraphs.join("\n\n")}
 
