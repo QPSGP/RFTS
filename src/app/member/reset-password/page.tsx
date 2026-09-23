@@ -54,7 +54,7 @@ function ResetPasswordForm() {
       return;
     }
     if (password.length < 6) {
-      setMessage("Password must be at least 6 characters.");
+      setMessage("Password must be at least 10 characters.");
       setStatus("error");
       return;
     }
@@ -114,7 +114,7 @@ function ResetPasswordForm() {
     <div className="card">
       <h2>Set a new password</h2>
       <p style={{ marginBottom: 16 }}>
-        Enter your new password below. Use at least 6 characters.
+        Enter your new password below. Use at least 10 characters.
       </p>
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 320 }}>
         {!tokenFromUrl && (

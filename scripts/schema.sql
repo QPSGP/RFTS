@@ -222,6 +222,30 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 CREATE INDEX IF NOT EXISTS password_reset_tokens_expires_at
   ON password_reset_tokens (expires_at);
 
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at timestamptz;
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS password_changed_at timestamptz;
+ALTER TABLE moderators ADD COLUMN IF NOT EXISTS password_changed_at timestamptz;
+
+CREATE TABLE IF NOT EXISTS auth_sessions (
+  id text PRIMARY KEY,
+  email text NOT NULL,
+  kind text NOT NULL,
+  expires_at timestamptz NOT NULL
+);
+CREATE INDEX IF NOT EXISTS auth_sessions_email_kind ON auth_sessions (email, kind);
+
+CREATE TABLE IF NOT EXISTS used_auth_tokens (
+  token_hash text PRIMARY KEY,
+  kind text NOT NULL,
+  expires_at timestamptz NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS request_rate_limits (
+  bucket text PRIMARY KEY,
+  hits integer NOT NULL,
+  window_start timestamptz NOT NULL
+);
+
 -- Migration: admin notes on member profiles (safe to run on existing DBs)
 ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS notes text;
 

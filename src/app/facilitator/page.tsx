@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import FormBotFields, { readBotFields } from "@/components/FormBotFields";
 import SiteFooter from "@/components/SiteFooter";
 
 const inputStyle = {
@@ -32,7 +33,8 @@ export default function FacilitatorPage() {
       phone: str("phone"),
       website: str("website"),
       socialLinks: str("socialLinks"),
-      photoUrl: str("photoUrl")
+      photoUrl: str("photoUrl"),
+      ...readBotFields(form)
     };
     try {
       const response = await fetch("/api/moderators", {
@@ -180,7 +182,8 @@ export default function FacilitatorPage() {
           affiliate terms. If you plan to upload your own recordings, review our{" "}
           <a href="/creator-content-license">Creator Content License Agreement</a>.
         </p>
-        <form onSubmit={submit} className="grid" style={{ marginTop: 16 }}>
+        <form onSubmit={submit} className="grid" style={{ marginTop: 16, position: "relative" }}>
+          <FormBotFields />
           <input name="name" placeholder="Full name" required style={inputStyle} />
           <input
             name="email"

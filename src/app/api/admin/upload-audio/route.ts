@@ -51,7 +51,7 @@ export async function POST(request: Request) {
   const pathname = `audios/${baseName}${ext}`;
   try {
     const blob = await put(pathname, file, {
-      access: "public",
+      access: "private",
       contentType: contentType.startsWith("audio/") ? contentType : "audio/mpeg",
       addRandomSuffix: true
     });

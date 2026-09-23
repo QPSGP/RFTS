@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  consumeMemberHandoffToken,
   createUserSessionToken,
   setUserSessionCookieOnResponse,
   verifyBillingReturnToken
@@ -16,13 +17,13 @@ export async function GET(request: Request) {
   }
 
   const email = verifyBillingReturnToken(token);
-  if (!email) {
+  if (!email || !(await consumeMemberHandoffToken(token, "member-billing-return"))) {
     const loginUrl = new URL("/member/login", url.origin);
     loginUrl.searchParams.set("next", "/play-options");
     return NextResponse.redirect(loginUrl);
   }
 
-  const sessionToken = createUserSessionToken(email);
+  const sessionToken = await createUserSessionToken(email);
   consoleUrl.searchParams.set("billing", "success");
   const response = NextResponse.redirect(consoleUrl);
   setUserSessionCookieOnResponse(response, sessionToken, request);

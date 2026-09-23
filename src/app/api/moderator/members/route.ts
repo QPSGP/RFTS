@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { requireActiveModerator } from "@/lib/moderator-member-access";
+import { NEW_PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 import { getWelcomeEmailCcRecipients, sendEmail, getBaseUrl } from "@/lib/email";
 import { getFacilitatorCreatedMemberEmailContent } from "@/lib/email-templates";
 import { recordModeratorStaffActivity } from "@/lib/facilitator-staff-activity";
@@ -18,7 +19,7 @@ import {
 
 const createSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6).optional(),
+  password: z.string().min(NEW_PASSWORD_MIN_LENGTH).optional(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   tier: z.enum(["platinum", "platinum_managed"]).default("platinum"),

@@ -8,6 +8,7 @@ import {
   formatAffiliatePayoutThresholdPolicy,
   type AffiliatePayoutMethod
 } from "@/lib/affiliate-payout";
+import FormBotFields, { readBotFields } from "@/components/FormBotFields";
 
 export default function AffiliateForm() {
   const [status, setStatus] = useState<string | null>(null);
@@ -23,7 +24,8 @@ export default function AffiliateForm() {
       name: formData.get("name"),
       email: formData.get("email"),
       payoutMethod: formData.get("payoutMethod"),
-      payoutDetail: formData.get("payoutDetail")
+      payoutDetail: formData.get("payoutDetail"),
+      ...readBotFields(event.currentTarget)
     };
     const response = await fetch("/api/affiliates", {
       method: "POST",
@@ -52,7 +54,8 @@ export default function AffiliateForm() {
       <p style={{ fontSize: 13, color: "#4b5563", marginBottom: 12 }}>
         {formatAffiliatePayoutThresholdPolicy()}
       </p>
-      <form onSubmit={onSubmit} className="grid">
+      <form onSubmit={onSubmit} className="grid" style={{ position: "relative" }}>
+        <FormBotFields />
         <input
           name="name"
           placeholder="Full name"

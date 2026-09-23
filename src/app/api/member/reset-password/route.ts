@@ -6,10 +6,11 @@ import {
   deletePasswordResetToken,
   updateUserPassword
 } from "@/lib/db";
+import { NEW_PASSWORD_HINT, NEW_PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 
 const schema = z.object({
   token: z.string().min(1),
-  newPassword: z.string().trim().min(6)
+  newPassword: z.string().trim().min(NEW_PASSWORD_MIN_LENGTH)
 });
 
 export async function POST(request: Request) {
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid input. Password must be at least 6 characters." },
+        { error: `Invalid input. ${NEW_PASSWORD_HINT}` },
         { status: 400 }
       );
     }

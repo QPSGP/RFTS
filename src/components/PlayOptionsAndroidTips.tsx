@@ -37,7 +37,10 @@ export default function PlayOptionsAndroidTips({
       <ul style={{ margin: "12px 0 0", paddingLeft: 20, color: "#92400e", lineHeight: 1.55 }}>
         <li>Use <strong>Chrome</strong> (not an in-app browser from email or social apps).</li>
         <li>Tap <strong>Start Session</strong> on this page and let the first audio finish completely.</li>
-        <li>Tap <strong>Enable Screen Wake</strong> above if it is not already on.</li>
+        <li>
+          Screen wake turns on with the session. If a message says it did not start, tap{" "}
+          <strong>Enable Screen Wake</strong> and leave this tab in front.
+        </li>
         <li>Leave this <strong>Reach For The Stars tab open</strong> - do not close Chrome overnight.</li>
         {playsPerNight === 2 && (
           <>

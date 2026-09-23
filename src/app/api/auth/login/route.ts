@@ -7,13 +7,23 @@ import {
   verifyModeratorCredentials
 } from "@/lib/auth";
 import { getModeratorByEmail, recordStaffActivity } from "@/lib/db";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
   email: z.string().email(),
   password: z.string().min(6)
 });
 
+const STAFF_LOGIN_MAX_PER_MINUTE = 10;
+
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  if (!(await rateLimit(`staff-login:${ip}`, STAFF_LOGIN_MAX_PER_MINUTE))) {
+    return NextResponse.json(
+      { error: "Too many login attempts. Please try again in a minute." },
+      { status: 429 }
+    );
+  }
   const body = await request.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
@@ -25,7 +35,7 @@ export async function POST(request: Request) {
   if (!isAdmin && !isModerator) {
     return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
   }
-  const token = createSessionToken(email);
+  const token = await createSessionToken(email);
   setSession(token);
 
   const actorType = isAdmin ? "admin" : "moderator";

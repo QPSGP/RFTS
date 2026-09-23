@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { automatedSubmissionError, honeypotTripped } from "@/lib/bot-check";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import {
   applyLeadDefaults,
@@ -23,7 +24,7 @@ const LEAD_SUBMIT_MAX_PER_MINUTE = 5;
  */
 export async function POST(request: Request) {
   const ip = getClientIp(request);
-  if (!rateLimit(`lead-submit:${ip}`, LEAD_SUBMIT_MAX_PER_MINUTE)) {
+  if (!(await rateLimit(`lead-submit:${ip}`, LEAD_SUBMIT_MAX_PER_MINUTE))) {
     return NextResponse.json(
       { error: "Too many submissions. Please try again in a minute." },
       { status: 429 }
@@ -31,6 +32,17 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}));
+  const botError = await automatedSubmissionError(body);
+  if (botError) {
+    if (honeypotTripped(body)) {
+      return NextResponse.json({
+        ok: true,
+        alreadySubmitted: false,
+        message: "Thanks! Your information was received."
+      });
+    }
+    return NextResponse.json({ error: botError }, { status: 400 });
+  }
   const parsed = eventLeadSubmitSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(

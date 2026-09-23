@@ -1,6 +1,8 @@
+import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
+import { signaturesMatch } from "@/lib/session-token";
 import {
   createModerationItem,
   listModerationQueue,
@@ -27,8 +29,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const submissionKey = request.headers.get("x-submission-key");
-  if (process.env.SUBMISSION_KEY && submissionKey !== process.env.SUBMISSION_KEY) {
+  const requiredKey = process.env.SUBMISSION_KEY?.trim() || "";
+  const submissionKey = request.headers.get("x-submission-key")?.trim() || "";
+  const requiredHash = crypto.createHash("sha256").update(requiredKey).digest("hex");
+  const givenHash = crypto.createHash("sha256").update(submissionKey).digest("hex");
+  if (!requiredKey || !signaturesMatch(requiredHash, givenHash)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const body = await request.json();

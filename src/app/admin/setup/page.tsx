@@ -69,14 +69,16 @@ export default function AdminSetupPage() {
           <input name="email" placeholder="Email" type="email" required style={inputStyle} />
           <input
             name="password"
-            placeholder="Password (6+ chars)"
+            placeholder="Password (10+ characters)"
+            minLength={10}
             type="password"
             required
             style={inputStyle}
           />
           <input
             name="setupToken"
-            placeholder="Setup token (if required)"
+            placeholder="Setup token"
+            required
             type="text"
             style={inputStyle}
           />

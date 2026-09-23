@@ -29,6 +29,7 @@ import {
   getLgdInterestEmailContent,
   getTherapistHealerCoachEmailContent
 } from "@/lib/email-templates";
+import { NEW_PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 const SIGNUP_MAX_PER_MINUTE = 5;
@@ -37,7 +38,7 @@ const schema = z.object({
   planId: z.string(),
   skipPayment: z.boolean().optional().default(false),
   email: z.string().email(),
-  password: z.string().trim().min(6),
+  password: z.string().trim().min(NEW_PASSWORD_MIN_LENGTH),
   goalIds: z.array(z.string()).min(1).max(10),
   playsPerNight: z.number().int().min(1).max(2).default(2),
   affiliateRef: z.string().optional(),
@@ -65,7 +66,7 @@ const schema = z.object({
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
-  if (!rateLimit(`signup:${ip}`, SIGNUP_MAX_PER_MINUTE)) {
+  if (!(await rateLimit(`signup:${ip}`, SIGNUP_MAX_PER_MINUTE))) {
     return apiError("Too many signup attempts. Please try again in a minute.", 429);
   }
   const body = await request.json();
@@ -94,9 +95,8 @@ export async function POST(request: Request) {
   const noStripeKey = !process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === "sk_test_replace";
   const isDemoSkip =
     demoSkipEnv ||
-    noStripeKey ||
-    (parsed.data.skipPayment && (stripeIsDemo || demoSkipEnv)) ||
-    !plan.priceId;
+    (process.env.NODE_ENV !== "production" && (noStripeKey || !plan.priceId)) ||
+    (parsed.data.skipPayment && (stripeIsDemo || demoSkipEnv));
   if (!isDemoSkip && !plan.priceId) {
     return NextResponse.json(
       { error: "Stripe Price ID not configured. Add it in Admin → Subscriptions, or use Skip Payment in demo mode." },
@@ -218,7 +218,7 @@ export async function POST(request: Request) {
     if (!thcResult.ok) console.error("[onboarding] Therapist/healer/coach email failed:", thcResult.error);
   }
 
-  const token = createUserSessionToken(user.email);
+  const token = await createUserSessionToken(user.email);
   const baseUrl = getPublicSiteUrl();
 
   if (isDemoSkip) {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { isAdminSession } from "@/lib/auth";
+import { NEW_PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 import {
   createModeratorAccount,
   createModeratorApplication,
@@ -20,7 +21,7 @@ import {
 
 const approveSchema = z.object({
   applicationId: z.string(),
-  accessCode: z.string().min(6),
+  accessCode: z.string().min(NEW_PASSWORD_MIN_LENGTH),
   assignedUserEmails: z.array(z.string().email()).optional().default([])
 });
 
@@ -32,7 +33,7 @@ const updateSchema = z.object({
   moderatorId: z.string(),
   assignedUserEmails: z.array(z.string().email()).optional(),
   status: z.enum(["active", "paused"]).optional(),
-  resetAccessCode: z.string().min(6).optional()
+  resetAccessCode: z.string().min(NEW_PASSWORD_MIN_LENGTH).optional()
 });
 
 const updateApplicationSchema = z.object({

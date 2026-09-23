@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { parseAffiliatePayoutInput } from "@/lib/affiliate-payout";
 import { isAdminSession } from "@/lib/auth";
+import { automatedSubmissionError, honeypotTripped } from "@/lib/bot-check";
 import { createAffiliate, listAffiliates, updateAffiliateStatus } from "@/lib/db";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 const createSchema = z.object({
   name: z.string().min(2),
@@ -25,7 +27,21 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  if (!(await rateLimit(`affiliate-apply:${ip}`, 5))) {
+    return NextResponse.json(
+      { error: "Too many submissions. Please try again in a minute." },
+      { status: 429 }
+    );
+  }
   const body = await request.json();
+  const botError = await automatedSubmissionError(body);
+  if (botError) {
+    if (honeypotTripped(body)) {
+      return NextResponse.json({ ok: true });
+    }
+    return NextResponse.json({ error: botError }, { status: 400 });
+  }
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input." }, { status: 400 });

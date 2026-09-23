@@ -57,7 +57,7 @@ export async function POST(request: Request) {
         : "webm";
   const pathname = `lgd-own-voice/${user.id}/${intake.id}-${Date.now()}.${ext}`;
   const blob = await put(pathname, file, {
-    access: "public",
+    access: "private",
     contentType: file.type || `audio/${ext}`
   });
   const ok = await setLgdIntakeOwnVoiceAudioUrl(intake.id, user.id, blob.url);

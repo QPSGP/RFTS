@@ -2,14 +2,34 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import {
+  authSessionActive,
+  deleteAuthSession,
+  insertAuthSession,
+  legacyCredentialAllows,
+  newSessionId
+} from "@/lib/auth-sessions";
 import { getAdminByEmail, getModeratorByEmail, getUserByEmail } from "@/lib/db";
+import {
+  buildSessionToken,
+  getSessionSecret,
+  parseSessionToken,
+  signPayload,
+  signaturesMatch
+} from "@/lib/session-token";
 import { getProductionCookieDomain } from "@/lib/site-url";
 
 const sessionCookie = "rfts_session";
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
 const ADMIN_BILLING_RETURN_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
-const getSecret = () => process.env.SESSION_SECRET || "dev-secret";
+const sign = (value: string) => {
+  const secret = getSessionSecret();
+  if (!secret) {
+    throw new Error("SESSION_SECRET is not set.");
+  }
+  return signPayload(value, secret);
+};
 
 export const verifyAdminCredentials = async (
   email: string,
@@ -41,20 +61,16 @@ export const verifyModeratorCredentials = async (
   return bcrypt.compare(password, moderator.passwordHash);
 };
 
-const sign = (value: string) => {
-  return crypto
-    .createHmac("sha256", getSecret())
-    .update(value)
-    .digest("hex");
-};
-
-export const createSessionToken = (email: string) => {
-  const issuedAt = Date.now().toString();
-  const nonce = crypto.randomBytes(8).toString("hex");
-  const payload = `${email}|${issuedAt}|${nonce}`;
-  const signature = sign(payload);
-  return `${payload}|${signature}`;
-};
+export async function createSessionToken(email: string): Promise<string> {
+  const sessionId = newSessionId();
+  try {
+    await insertAuthSession({ id: sessionId, email, kind: "staff" });
+    return buildSessionToken(email, sessionId);
+  } catch (error) {
+    console.error("[session] staff session id not stored; issuing legacy cookie", error);
+    return buildSessionToken(email, null);
+  }
+}
 
 function createTimedStaffToken(email: string, ttlMs: number): string {
   const expiry = (Date.now() + ttlMs).toString();
@@ -75,7 +91,13 @@ function verifyTimedStaffToken(tokenEnc: string): string | null {
   if (parts.length !== 4) return null;
   const [email, expiryStr, nonce, signature] = parts;
   const payload = `${email}|${expiryStr}|${nonce}`;
-  if (sign(payload) !== signature) return null;
+  let expected = "";
+  try {
+    expected = sign(payload);
+  } catch {
+    return null;
+  }
+  if (!signaturesMatch(expected, signature)) return null;
   const expiry = parseInt(expiryStr, 10);
   if (Number.isNaN(expiry) || Date.now() > expiry) return null;
   return email;
@@ -92,19 +114,9 @@ export function verifyAdminBillingReturnToken(tokenEnc: string): string | null {
 
 type CookieRequestHint = Pick<Request, "headers" | "url"> | null | undefined;
 
-function staffCookieSecure(request?: CookieRequestHint): boolean {
+function staffCookieSecure(_request?: CookieRequestHint): boolean {
   if (process.env.COOKIE_INSECURE === "1" || process.env.COOKIE_SECURE === "0") return false;
-  if (process.env.NODE_ENV !== "production") return false;
-  if (request) {
-    const xf = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
-    if (xf === "http") return false;
-    try {
-      if (new URL(request.url).protocol === "http:") return false;
-    } catch {
-      /* ignore */
-    }
-  }
-  return true;
+  return process.env.NODE_ENV === "production";
 }
 
 function staffCookieDomain(request?: CookieRequestHint): string | undefined {
@@ -141,23 +153,32 @@ export const clearSession = () => {
   cookieStore.set(sessionCookie, "", { ...staffSessionCookieOptions(), maxAge: 0 });
 };
 
-export const getSessionEmail = () => {
+function readStaffToken() {
   const cookieStore = cookies();
   const token = cookieStore.get(sessionCookie)?.value;
-  if (!token) {
-    return null;
-  }
-  const parts = token.split("|");
-  if (parts.length !== 4) {
-    return null;
-  }
-  const [email, issuedAt, nonce, signature] = parts;
-  const payload = `${email}|${issuedAt}|${nonce}`;
-  if (sign(payload) !== signature) {
-    return null;
-  }
-  return email;
+  if (!token) return null;
+  return parseSessionToken(token);
+}
+
+export const getSessionEmail = () => {
+  return readStaffToken()?.email ?? null;
 };
+
+export async function staffSessionIsActive(): Promise<boolean> {
+  const parsed = readStaffToken();
+  if (!parsed) return false;
+  if (parsed.sessionId) {
+    return authSessionActive(parsed.sessionId, "staff");
+  }
+  return legacyCredentialAllows(parsed.email, parsed.issuedAt, "staff");
+}
+
+export async function revokeCurrentStaffSession(): Promise<void> {
+  const parsed = readStaffToken();
+  if (parsed?.sessionId) {
+    await deleteAuthSession(parsed.sessionId);
+  }
+}
 
 /** Admin display name plus email for audit fields, or email alone. */
 export const getSessionActorLabel = async () => {
@@ -170,6 +191,9 @@ export const getSessionActorLabel = async () => {
 };
 
 export const getSessionRole = async () => {
+  if (!(await staffSessionIsActive())) {
+    return null;
+  }
   const email = getSessionEmail();
   if (!email) {
     return null;

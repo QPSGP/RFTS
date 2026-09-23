@@ -166,7 +166,14 @@ export async function GET(request: Request) {
     "blob-assets.json",
     {}
   );
-  const hasPrep = !!blobAssets.audios?.[PREP_AUDIO_NAME];
+  const prepInLibrary = library.some((item) =>
+    `${item.fileName || ""} ${item.audioUrl || ""}`.includes(PREP_AUDIO_NAME)
+  );
+  const hasPrep = Boolean(
+    process.env.RFTS_PREP_AUDIO_URL?.trim() ||
+      blobAssets.audios?.[PREP_AUDIO_NAME] ||
+      prepInLibrary
+  );
   const prepAudio = hasPrep
     ? { title: INTRO_RELAXATION_MUSIC_LABEL, url: "/api/stream/audio?prep=1" }
     : null;

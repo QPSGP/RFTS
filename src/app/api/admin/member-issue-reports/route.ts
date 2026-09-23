@@ -112,7 +112,7 @@ export async function POST(request: Request) {
   if (!adminEmail) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-  if (!rateLimit(`admin-report-issue:${adminEmail}`, REPORT_ISSUE_MAX_PER_MINUTE)) {
+  if (!(await rateLimit(`admin-report-issue:${adminEmail}`, REPORT_ISSUE_MAX_PER_MINUTE))) {
     return NextResponse.json({ error: "Too many reports. Please try again in a minute." }, { status: 429 });
   }
 

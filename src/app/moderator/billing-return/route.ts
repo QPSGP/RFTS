@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { consumeAuthToken } from "@/lib/auth-sessions";
 import {
   createSessionToken,
   setSessionCookieOnResponse,
@@ -26,13 +27,13 @@ export async function GET(request: Request) {
   }
 
   const email = verifyAdminBillingReturnToken(token);
-  if (!email) {
+  if (!email || !(await consumeAuthToken(token, "staff-billing-return"))) {
     const loginUrl = new URL("/login", url.origin);
     loginUrl.searchParams.set("next", nextPath);
     return NextResponse.redirect(loginUrl);
   }
 
-  const sessionToken = createSessionToken(email);
+  const sessionToken = await createSessionToken(email);
   const response = NextResponse.redirect(destination);
   setSessionCookieOnResponse(response, sessionToken, request);
   response.headers.set("Cache-Control", "no-store");

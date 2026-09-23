@@ -30,7 +30,8 @@ export async function POST(request: Request) {
       onBeforeGenerateToken: async () => ({
         allowedContentTypes: AUDIO_TYPES,
         maximumSizeInBytes: MAX_SIZE_BYTES,
-        addRandomSuffix: true
+        addRandomSuffix: true,
+        access: "private" as const
       })
     });
     return NextResponse.json(result);

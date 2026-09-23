@@ -9,12 +9,14 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { isAdminSession } from "@/lib/auth";
+import { isVercelBlobUrl, openBlobAudio } from "@/lib/blob-audio";
 import { memberCanStreamLibraryItem } from "@/lib/library-access";
 import { getUserSessionEmail } from "@/lib/user-auth";
 import {
   getLibraryItem,
   getMemberProfileByUserId,
-  getUserProfile
+  getUserProfile,
+  listLibrary
 } from "@/lib/db";
 
 const dataDir = path.join(process.cwd(), "data");
@@ -28,6 +30,25 @@ const readJson = <T>(fileName: string, fallback: T): T => {
   const raw = fs.readFileSync(filePath, "utf8");
   return raw ? (JSON.parse(raw) as T) : fallback;
 };
+
+async function resolvePrepAudioUrl(): Promise<string | null> {
+  const fromEnv = process.env.RFTS_PREP_AUDIO_URL?.trim();
+  if (fromEnv) return fromEnv;
+  const blobAssets = readJson<{ audios?: Record<string, string> }>("blob-assets.json", {});
+  const fromFile = blobAssets.audios?.[PREP_AUDIO_NAME]?.trim();
+  if (fromFile) return fromFile;
+  try {
+    const library = await listLibrary();
+    const match = library.find((item) => {
+      const fileName = `${item.fileName || ""} ${item.audioUrl || ""}`;
+      return fileName.includes(PREP_AUDIO_NAME);
+    });
+    return match?.audioUrl?.trim() || null;
+  } catch (error) {
+    console.error("[stream] prep lookup failed", error);
+    return null;
+  }
+}
 
 const getContentType = (url: string) => {
   const lower = url.toLowerCase();
@@ -70,17 +91,13 @@ export async function GET(request: Request) {
   let audioUrl: string | null = null;
 
   if (prep) {
-    const blobAssets = readJson<{ audios?: Record<string, string> }>(
-      "blob-assets.json",
-      {}
-    );
-    audioUrl = blobAssets.audios?.[PREP_AUDIO_NAME] || null;
+    audioUrl = await resolvePrepAudioUrl();
   } else if (id) {
     const item = await getLibraryItem(id);
     if (!item || !item.audioUrl) {
       const reason = !item ? "item-not-found" : "item-has-no-audio-url";
       return NextResponse.json(
-        { error: "Not found.", debug: reason },
+        { error: "Not found." },
         { status: 404, headers: { "X-Stream-Deny-Reason": reason } }
       );
     }
@@ -159,7 +176,7 @@ export async function GET(request: Request) {
 
   if (!audioUrl) {
     return NextResponse.json(
-      { error: "Not found.", debug: "no-audio-url-or-missing-item" },
+      { error: "Not found." },
       {
         status: 404,
         headers: { "X-Stream-Deny-Reason": "no-audio-url" },
@@ -176,6 +193,23 @@ export async function GET(request: Request) {
   };
 
   if (audioUrl.startsWith("http://") || audioUrl.startsWith("https://")) {
+    if (isVercelBlobUrl(audioUrl)) {
+      const opened = await openBlobAudio(audioUrl, range);
+      if (opened) {
+        const contentType = opened.headers.get("content-type");
+        if (contentType) headers["Content-Type"] = contentType;
+        const contentRange = opened.headers.get("content-range");
+        if (contentRange) headers["Content-Range"] = contentRange;
+        const contentLength = opened.headers.get("content-length");
+        if (contentLength) headers["Content-Length"] = contentLength;
+        const acceptRanges = opened.headers.get("accept-ranges");
+        if (acceptRanges) headers["Accept-Ranges"] = acceptRanges;
+        return new NextResponse(opened.body as unknown as ReadableStream<Uint8Array>, {
+          status: opened.status,
+          headers
+        });
+      }
+    }
     const fetchHeaders: Record<string, string> = {};
     if (range) fetchHeaders["Range"] = range;
     const upstream = await fetch(audioUrl, { headers: fetchHeaders });

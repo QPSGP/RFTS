@@ -282,7 +282,8 @@ export default function MemberOnboarding({ plans, goals }: MemberOnboardingProps
             />
             <div style={{ position: "relative", minWidth: 0 }}>
               <input
-                placeholder="Password *"
+                placeholder="Password (10+ characters) *"
+                minLength={10}
                 type={showSignupPassword ? "text" : "password"}
                 value={profile.password}
                 onChange={(event) => setProfile({ ...profile, password: event.target.value })}

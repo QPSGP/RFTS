@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { NEW_PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 import bcrypt from "bcryptjs";
 import {
   createAdmin,
@@ -11,14 +12,14 @@ import { getSessionEmail, isAdminSession } from "@/lib/auth";
 
 const createSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(NEW_PASSWORD_MIN_LENGTH),
   firstName: z.string().optional(),
   lastName: z.string().optional()
 });
 
 const patchSchema = z.object({
   email: z.string().email(),
-  newPassword: z.string().min(6).optional(),
+  newPassword: z.string().min(NEW_PASSWORD_MIN_LENGTH).optional(),
   firstName: z.string().optional(),
   lastName: z.string().optional()
 });

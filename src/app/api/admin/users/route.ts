@@ -3,6 +3,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { sql } from "@vercel/postgres";
 import { isAdminSession } from "@/lib/auth";
+import { NEW_PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 import {
   canonicalizeUserEmail,
   createUser,
@@ -20,7 +21,7 @@ import {
 
 const createSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(NEW_PASSWORD_MIN_LENGTH),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   tier: z.enum(["platinum", "platinum_managed"]).default("platinum"),
@@ -34,7 +35,7 @@ const updateSchema = z.object({
   status: z.enum(["inactive", "active", "past_due", "canceled"]).optional(),
   goalIds: z.array(z.string()).max(10).optional(),
   playsPerNight: z.number().int().min(1).max(2).optional(),
-  resetPassword: z.string().min(6).optional(),
+  resetPassword: z.string().min(NEW_PASSWORD_MIN_LENGTH).optional(),
   stripeCustomerId: z.string().trim().optional(),
   stripeSubscriptionId: z.string().trim().optional()
 });

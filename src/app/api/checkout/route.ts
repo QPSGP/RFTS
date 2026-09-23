@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSubscriptionStripeIdsForUser, getUserByEmail } from "@/lib/db";
+import { getSubscriptionStripeIdsForUser, getUserByEmail, listSubscriptionPlans } from "@/lib/db";
+import { safeReturnPath } from "@/lib/safe-return-path";
 import { createBillingPortalSessionUrl } from "@/lib/stripe-billing-portal";
 import { getBillingPortalReturnPath } from "@/lib/member-billing";
 import { getStripe } from "@/lib/stripe";
@@ -30,7 +31,14 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-  const { priceId, trialDays, successPath, cancelPath } = parsed.data;
+  const { priceId, successPath, cancelPath } = parsed.data;
+  const plans = await listSubscriptionPlans();
+  const plan = plans.find((item) => item.priceId === priceId);
+  if (!plan?.priceId) {
+    return NextResponse.json({ error: "That plan is not available." }, { status: 400 });
+  }
+  const trialDays =
+    plan.trialDays > 0 ? Math.min(365, Math.max(0, Math.floor(plan.trialDays))) : 0;
   const baseUrl = getPublicSiteUrl();
 
   const memberEmail = await getUserSessionEmail();
@@ -74,11 +82,11 @@ export async function POST(request: Request) {
 
   const session = await createMembershipCheckoutSession(stripe, {
     mode: "subscription",
-    line_items: [{ price: priceId, quantity: 1 }],
+    line_items: [{ price: plan.priceId, quantity: 1 }],
     subscription_data:
-      trialDays && trialDays > 0 ? { trial_period_days: trialDays } : undefined,
-    success_url: `${baseUrl}${successPath}`,
-    cancel_url: `${baseUrl}${cancelPath}`,
+      trialDays > 0 ? { trial_period_days: trialDays } : undefined,
+    success_url: `${baseUrl}${safeReturnPath(successPath)}`,
+    cancel_url: `${baseUrl}${safeReturnPath(cancelPath)}`,
     allow_promotion_codes: true
   });
 

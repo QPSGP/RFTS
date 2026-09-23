@@ -21,13 +21,13 @@ export async function POST(request: Request) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[POST /api/user/login]", message);
-    return apiError("Server error.", 500, message);
+    return apiError("Server error.", 500);
   }
 }
 
 async function doPost(request: Request) {
   const ip = getClientIp(request);
-  if (!rateLimit(`login:${ip}`, LOGIN_MAX_PER_MINUTE)) {
+  if (!(await rateLimit(`login:${ip}`, LOGIN_MAX_PER_MINUTE))) {
     return apiError("Too many login attempts. Please try again in a minute.", 429);
   }
 
@@ -84,7 +84,7 @@ async function doPost(request: Request) {
     return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
   }
 
-  const token = createUserSessionToken(normalizeMemberEmail(user.email));
+  const token = await createUserSessionToken(normalizeMemberEmail(user.email));
   void recordMemberActivity(user.id, "login", loginDetails).catch((err) => {
     console.error("[POST /api/user/login] recordMemberActivity:", err);
   });

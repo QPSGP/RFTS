@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import FormBotFields, { readBotFields } from "@/components/FormBotFields";
 import {
   EXPO_PRACTICE_DEFAULTS,
   LONG_BEACH_EXPO_2026,
@@ -55,7 +56,9 @@ export default function EventLeadPublicForm({
     e.preventDefault();
     setStatus("saving");
     setMessage("");
+    const form = e.currentTarget as HTMLFormElement;
     const body: Record<string, unknown> = {
+      ...readBotFields(form),
       formType,
       eventName: defaults.eventName,
       eventDates: defaults.eventDates || null,
@@ -115,7 +118,8 @@ export default function EventLeadPublicForm({
   }
 
   return (
-    <form className="card" style={{ maxWidth: 520, margin: "0 auto" }} onSubmit={onSubmit}>
+    <form className="card" style={{ maxWidth: 520, margin: "0 auto", position: "relative" }} onSubmit={onSubmit}>
+      <FormBotFields />
       <h2 style={{ marginTop: 0 }}>
         {formType === "practice_survey" ? "Practice survey" : "Lead card"}
       </h2>

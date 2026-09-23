@@ -35,19 +35,9 @@ async function testHealth() {
     return;
   }
   pass("Health endpoint", "ok:true");
-  const s = json.stripe || {};
-  if (s.secretKeyKind !== "sk_live") fail("Stripe live key", s.secretKeyKind);
-  else pass("Stripe live key");
-  if (!s.webhookSecretSet) fail("Stripe webhook secret");
-  else pass("Stripe webhook secret");
-  if (s.demoSkipStripe) fail("DEMO_SKIP_STRIPE", "should be false in production");
-  else pass("DEMO_SKIP_STRIPE off");
-  if (s.publicStripeMode !== "live") fail("NEXT_PUBLIC_STRIPE_MODE", s.publicStripeMode);
-  else pass("NEXT_PUBLIC_STRIPE_MODE live");
-  if (!s.postgresConfigured) fail("Postgres configured");
-  else pass("Postgres configured");
-  if (json.siteUrl !== BASE) fail("NEXT_PUBLIC_SITE_URL", json.siteUrl);
-  else pass("Site URL", json.siteUrl);
+  if (json.stripe || json.siteUrl) {
+    fail("Health endpoint", "public response should not describe server config");
+  }
 }
 
 async function testPages() {

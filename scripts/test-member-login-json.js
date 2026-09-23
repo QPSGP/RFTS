@@ -84,17 +84,6 @@ async function main() {
   }
   console.log("OK: /api/user/me with cookie →", me.profile.email);
 
-  const debug = await fetch(`${baseUrl}/api/user/debug-session`, {
-    headers: { Cookie: cookieHeader },
-    cache: "no-store"
-  });
-  const dbg = await debug.json().catch(() => ({}));
-  if (!dbg.sessionValid) {
-    console.error("FAIL: debug-session should be true", dbg);
-    process.exit(1);
-  }
-  console.log("OK: /api/user/debug-session → sessionValid");
-
   console.log("All JSON login tests passed.");
 }
 

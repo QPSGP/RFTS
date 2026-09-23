@@ -249,38 +249,53 @@ export const deleteUserByEmail = async (email: string) => {
   `;
 };
 
+function hashPasswordResetToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
 export const createPasswordResetToken = async (
   userId: string,
   token: string,
   expiresAt: Date
 ) => {
   const expiresAtStr = expiresAt.toISOString();
+  const tokenHash = hashPasswordResetToken(token);
   await sql`
     INSERT INTO password_reset_tokens (token, user_id, expires_at)
-    VALUES (${token}, ${userId}, ${expiresAtStr})
+    VALUES (${tokenHash}, ${userId}, ${expiresAtStr})
   `;
 };
 
 export const getPasswordResetTokenByToken = async (token: string) => {
+  const tokenHash = hashPasswordResetToken(token);
   const { rows } = await sql<{ user_id: string }>`
     SELECT user_id FROM password_reset_tokens
-    WHERE token = ${token} AND expires_at > now()
+    WHERE (token = ${tokenHash} OR token = ${token}) AND expires_at > now()
     LIMIT 1
   `;
   return rows[0] || null;
 };
 
 export const deletePasswordResetToken = async (token: string) => {
-  await sql`DELETE FROM password_reset_tokens WHERE token = ${token}`;
+  const tokenHash = hashPasswordResetToken(token);
+  await sql`
+    DELETE FROM password_reset_tokens
+    WHERE token = ${tokenHash} OR token = ${token}
+  `;
 };
 
 export const updateUserPassword = async (userId: string, passwordHash: string): Promise<boolean> => {
-  const { rows } = await sql<{ id: string }>`
-    UPDATE users SET password_hash = ${passwordHash}
+  const { ensureAuthHardeningSchema, revokeAuthSessions } = await import("@/lib/auth-sessions");
+  await ensureAuthHardeningSchema();
+  const { rows } = await sql<{ id: string; email: string }>`
+    UPDATE users
+    SET password_hash = ${passwordHash}, password_changed_at = now()
     WHERE id = ${userId}
-    RETURNING id
+    RETURNING id, email
   `;
-  return rows.length > 0;
+  if (!rows[0]) return false;
+  await revokeAuthSessions(rows[0].email, "member");
+  return true;
 };
 
 /** Set `users.email` to lowercase trimmed form (fixes legacy ALL-CAPS rows; safe if already normalized). */
@@ -1139,14 +1154,23 @@ export const updateAdminByEmail = async (
         : payload.lastName.trim()
       : existing.lastName ?? null;
 
+  const { ensureAuthHardeningSchema, revokeAuthSessions } = await import("@/lib/auth-sessions");
+  await ensureAuthHardeningSchema();
   await sql`
     UPDATE admins
     SET
       password_hash = ${nextHash},
       first_name = ${nextFn},
-      last_name = ${nextLn}
+      last_name = ${nextLn},
+      password_changed_at = CASE
+        WHEN ${payload.passwordHash !== undefined} THEN now()
+        ELSE password_changed_at
+      END
     WHERE id = ${existing.id}
   `;
+  if (payload.passwordHash !== undefined) {
+    await revokeAuthSessions(targetEmail, "staff");
+  }
   return true;
 };
 
@@ -3270,6 +3294,15 @@ export const updateModeratorAccount = async (payload: {
   status?: ModeratorAccount["status"];
   passwordHash?: string;
 }) => {
+  let previousEmail: string | null = null;
+  const { ensureAuthHardeningSchema } = await import("@/lib/auth-sessions");
+  await ensureAuthHardeningSchema();
+  if (payload.passwordHash) {
+    const existing = await sql<{ email: string }>`
+      SELECT email FROM moderators WHERE id = ${payload.moderatorId} LIMIT 1
+    `;
+    previousEmail = existing.rows[0]?.email ?? null;
+  }
   const { rows } = await sql<ModeratorAccount>`
     UPDATE moderators
     SET
@@ -3280,7 +3313,11 @@ export const updateModeratorAccount = async (payload: {
         assigned_user_emails
       ),
       status = COALESCE(${payload.status ?? null}, status),
-      password_hash = COALESCE(${payload.passwordHash ?? null}, password_hash)
+      password_hash = COALESCE(${payload.passwordHash ?? null}, password_hash),
+      password_changed_at = CASE
+        WHEN ${payload.passwordHash !== undefined} THEN now()
+        ELSE password_changed_at
+      END
     WHERE id = ${payload.moderatorId}
     RETURNING
       id,
@@ -3291,6 +3328,13 @@ export const updateModeratorAccount = async (payload: {
       status,
       created_at as "createdAt"
   `;
+  if (payload.passwordHash && rows[0]) {
+    const { revokeAuthSessions } = await import("@/lib/auth-sessions");
+    await revokeAuthSessions(rows[0].email, "staff");
+    if (previousEmail && previousEmail.toLowerCase() !== rows[0].email.toLowerCase()) {
+      await revokeAuthSessions(previousEmail, "staff");
+    }
+  }
   return rows[0] || null;
 };
 

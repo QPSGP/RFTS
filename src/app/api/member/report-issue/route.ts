@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   if (!email) {
     return apiError("You must be logged in to report an issue.", 401);
   }
-  if (!rateLimit(`report-issue:${email}`, REPORT_ISSUE_MAX_PER_MINUTE)) {
+  if (!(await rateLimit(`report-issue:${email}`, REPORT_ISSUE_MAX_PER_MINUTE))) {
     return apiError("Too many reports. Please try again in a minute.", 429);
   }
   const user = await getUserByEmail(email);

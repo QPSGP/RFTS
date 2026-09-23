@@ -389,7 +389,7 @@ export default function AdminContent({ openGoals, openLibrary, isFirstAdmin }: A
       throw new Error("No token from server.");
     }
     const blob = await put(pathname, file, {
-      access: "public",
+      access: "private",
       token: clientToken,
       multipart: useMultipart
     });

@@ -17,6 +17,9 @@ const getContentType = (file: string) => {
 };
 
 export async function GET(request: Request) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not found." }, { status: 404 });
+  }
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type");
   const file = searchParams.get("file");

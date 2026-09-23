@@ -946,7 +946,7 @@ export default function FacilitatorMembers() {
         return;
       }
       const blob = await put(pathname, file, {
-        access: "public",
+        access: "private",
         token: clientToken,
         multipart: useMultipart
       });

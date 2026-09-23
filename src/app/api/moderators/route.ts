@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminSession } from "@/lib/auth";
+import { automatedSubmissionError, honeypotTripped } from "@/lib/bot-check";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import {
   createModeratorApplication,
   listModeratorApplications
@@ -32,6 +34,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  if (!(await rateLimit(`moderator-apply:${ip}`, 5))) {
+    return NextResponse.json(
+      { error: "Too many submissions. Please try again in a minute." },
+      { status: 429 }
+    );
+  }
   let body: unknown;
   try {
     body = await request.json();
@@ -40,6 +49,13 @@ export async function POST(request: Request) {
       { error: "Invalid request body. Please check your entries." },
       { status: 400 }
     );
+  }
+  const botError = await automatedSubmissionError(body);
+  if (botError) {
+    if (honeypotTripped(body)) {
+      return NextResponse.json({ ok: true });
+    }
+    return NextResponse.json({ error: botError }, { status: 400 });
   }
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {

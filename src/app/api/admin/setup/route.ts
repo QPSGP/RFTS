@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { createAdmin, getAdminCount } from "@/lib/db";
+import { NEW_PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 import { createSessionToken, setSession } from "@/lib/auth";
 
 const schema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(NEW_PASSWORD_MIN_LENGTH),
   setupToken: z.string().optional()
 });
 
@@ -43,22 +44,17 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid input." }, { status: 400 });
     }
-    const requiredToken = process.env.ADMIN_SETUP_TOKEN;
-    if (requiredToken && parsed.data.setupToken !== requiredToken) {
+    const requiredToken = process.env.ADMIN_SETUP_TOKEN?.trim();
+    if (!requiredToken || parsed.data.setupToken !== requiredToken) {
       return NextResponse.json({ error: "Invalid setup token." }, { status: 401 });
     }
     const passwordHash = await bcrypt.hash(parsed.data.password, 10);
     await createAdmin(parsed.data.email, passwordHash);
-    const token = createSessionToken(parsed.data.email);
+    const token = await createSessionToken(parsed.data.email);
     setSession(token);
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Unknown error while creating admin."
-      },
-      { status: 500 }
-    );
+    console.error("[admin setup]", error);
+    return NextResponse.json({ error: "Could not create the admin account." }, { status: 500 });
   }
 }

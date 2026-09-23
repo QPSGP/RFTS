@@ -134,7 +134,7 @@ export default function LgdCgmrProducePanel({
         return;
       }
       const blob = await put(pathname, file, {
-        access: "public",
+        access: "private",
         token: clientToken,
         multipart: useMultipart
       });

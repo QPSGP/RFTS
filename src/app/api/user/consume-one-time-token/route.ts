@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { buildMemberSessionSetCookieHeader, createUserSessionToken, verifyOneTimeSessionToken } from "@/lib/user-auth";
+import {
+  buildMemberSessionSetCookieHeader,
+  consumeMemberHandoffToken,
+  createUserSessionToken,
+  verifyOneTimeSessionToken
+} from "@/lib/user-auth";
 
 /** Exchange one-time token (from login) for session cookie. Call from play-options so cookie is set from that origin. */
 export async function POST(request: Request) {
@@ -9,10 +14,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing token." }, { status: 400 });
   }
   const email = verifyOneTimeSessionToken(token);
-  if (!email) {
+  if (!email || !(await consumeMemberHandoffToken(token, "member-one-time"))) {
     return NextResponse.json({ error: "Invalid or expired token." }, { status: 401 });
   }
-  const sessionToken = createUserSessionToken(email);
+  const sessionToken = await createUserSessionToken(email);
   const response = NextResponse.json({ ok: true });
   response.headers.set("Set-Cookie", buildMemberSessionSetCookieHeader(sessionToken, request));
   response.headers.set("Cache-Control", "no-store");

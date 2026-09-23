@@ -1,5 +1,6 @@
 import { getMemberProfileByUserId, getUserProfile, listInterests, listLibrary } from "@/lib/db";
 import { memberCanBrowseLibraryItem } from "@/lib/library-access";
+import { libraryItemForBrowser } from "@/lib/public-library";
 import { getUserSessionEmail } from "@/lib/user-auth";
 import LibraryBrowser from "@/components/LibraryBrowser";
 import PlaySecondRecordingCta from "@/components/PlaySecondRecordingCta";
@@ -52,7 +53,7 @@ export default async function LibraryPage() {
           ← Back to Console
         </a>
       </section>
-      <LibraryBrowser interests={interests} library={libraryForMember} />
+      <LibraryBrowser interests={interests} library={libraryForMember.map(libraryItemForBrowser)} />
       <PlaySecondRecordingCta />
       <section style={{ textAlign: "center", paddingTop: 24, marginTop: 24, borderTop: "1px solid #e5e7eb" }}>
         <a className="button button-secondary" href="/play-options">

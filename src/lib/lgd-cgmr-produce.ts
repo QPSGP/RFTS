@@ -313,7 +313,7 @@ async function resolveAudioUrl(input: {
   const mp3 = await synthesizeOpenAiSpeech(script, ttsVoice, voiceId);
   const pathname = `audios/lgd-cgmr/${input.intake.id}-${Date.now()}.mp3`;
   const blob = await put(pathname, mp3, {
-    access: "public",
+    access: "private",
     contentType: "audio/mpeg",
     addRandomSuffix: false
   });

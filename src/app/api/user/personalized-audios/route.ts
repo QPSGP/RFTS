@@ -15,7 +15,7 @@ export async function GET() {
     items: personalized.map((item) => ({
       id: item.id,
       title: item.title,
-      audioUrl: item.audioUrl || "",
+      audioUrl: item.audioUrl?.trim() ? `/api/stream/audio?id=${encodeURIComponent(item.id)}` : "",
       description: item.description || ""
     }))
   });

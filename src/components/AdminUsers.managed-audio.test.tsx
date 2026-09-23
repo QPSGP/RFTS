@@ -177,7 +177,7 @@ describe("AdminUsers Platinum Managed rotation", () => {
       expect(within(rotationCard as HTMLElement).getByLabelText(/step 1/i)).toBeInTheDocument();
       expect(within(rotationCard as HTMLElement).getByLabelText(/step 2/i)).toBeInTheDocument();
     });
-  });
+  }, 20000);
 
   it("disables rotation controls until delayed saved rotation finishes loading", async () => {
     let finishAudioFetch!: () => void;

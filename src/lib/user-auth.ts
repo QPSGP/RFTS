@@ -1,28 +1,46 @@
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import {
+  authSessionActive,
+  consumeAuthToken,
+  deleteAuthSession,
+  insertAuthSession,
+  legacyCredentialAllows,
+  newSessionId
+} from "@/lib/auth-sessions";
 import { getMemberProfileByUserId, getUserProfile, normalizeMemberEmail } from "@/lib/db";
+import {
+  buildSessionToken,
+  getSessionSecret,
+  parseSessionToken,
+  signPayload,
+  signaturesMatch
+} from "@/lib/session-token";
 import { getProductionCookieDomain } from "@/lib/site-url";
 
 const sessionCookie = "rfts_user_session";
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
 
-const getSecret = () => process.env.SESSION_SECRET || "dev-secret";
-
 const sign = (value: string) => {
-  return crypto
-    .createHmac("sha256", getSecret())
-    .update(value)
-    .digest("hex");
+  const secret = getSessionSecret();
+  if (!secret) {
+    throw new Error("SESSION_SECRET is not set.");
+  }
+  return signPayload(value, secret);
 };
 
-export const createUserSessionToken = (email: string) => {
-  const issuedAt = Date.now().toString();
-  const nonce = crypto.randomBytes(8).toString("hex");
-  const payload = `${email}|${issuedAt}|${nonce}`;
-  const signature = sign(payload);
-  return `${payload}|${signature}`;
-};
+export async function createUserSessionToken(email: string): Promise<string> {
+  const normalized = normalizeMemberEmail(email);
+  const sessionId = newSessionId();
+  try {
+    await insertAuthSession({ id: sessionId, email: normalized, kind: "member" });
+    return buildSessionToken(normalized, sessionId);
+  } catch (error) {
+    console.error("[session] member session id not stored; issuing legacy cookie", error);
+    return buildSessionToken(normalized, null);
+  }
+}
 
 const ONE_TIME_TTL_MS = 2 * 60 * 1000; // 2 minutes
 const BILLING_RETURN_TTL_MS = 30 * 60 * 1000; // 30 minutes
@@ -46,7 +64,13 @@ function verifyTimedSessionToken(tokenEnc: string): string | null {
   if (parts.length !== 4) return null;
   const [email, expiryStr, nonce, signature] = parts;
   const payload = `${email}|${expiryStr}|${nonce}`;
-  if (sign(payload) !== signature) return null;
+  let expected = "";
+  try {
+    expected = sign(payload);
+  } catch {
+    return null;
+  }
+  if (!signaturesMatch(expected, signature)) return null;
   const expiry = parseInt(expiryStr, 10);
   if (Number.isNaN(expiry) || Date.now() > expiry) return null;
   return email;
@@ -73,19 +97,9 @@ export function verifyBillingReturnToken(tokenEnc: string): string | null {
 
 type CookieRequestHint = Pick<Request, "headers" | "url"> | null | undefined;
 
-function memberCookieSecure(request?: CookieRequestHint): boolean {
+function memberCookieSecure(_request?: CookieRequestHint): boolean {
   if (process.env.COOKIE_INSECURE === "1" || process.env.COOKIE_SECURE === "0") return false;
-  if (process.env.NODE_ENV !== "production") return false;
-  if (request) {
-    const xf = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
-    if (xf === "http") return false;
-    try {
-      if (new URL(request.url).protocol === "http:") return false;
-    } catch {
-      /* ignore */
-    }
-  }
-  return true;
+  return process.env.NODE_ENV === "production";
 }
 
 function memberCookieDomain(request?: CookieRequestHint): string | undefined {
@@ -136,36 +150,45 @@ export async function setUserSession(token: string, request?: CookieRequestHint)
 
 export async function clearUserSession(request?: CookieRequestHint): Promise<void> {
   const cookieStore = await cookies();
+  const raw = cookieStore.get(sessionCookie)?.value;
+  const parsed = raw ? parseSessionToken(normalizeCookieToken(raw)) : null;
+  if (parsed?.sessionId) {
+    await deleteAuthSession(parsed.sessionId);
+  }
   cookieStore.set(sessionCookie, "", { ...memberSessionCookieOptions(request), maxAge: 0 });
+}
+
+function normalizeCookieToken(token: string): string {
+  let value = token;
+  try {
+    value = decodeURIComponent(value);
+  } catch {
+    // leave as-is if not encoded
+  }
+  if (value.startsWith('"') && value.endsWith('"')) {
+    value = value.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+  }
+  return value.replace(/ /g, "+");
 }
 
 export async function getUserSessionEmail(): Promise<string | null> {
   const cookieStore = await cookies();
-  let token = cookieStore.get(sessionCookie)?.value;
-  if (!token) {
+  const raw = cookieStore.get(sessionCookie)?.value;
+  if (!raw) return null;
+  const parsed = parseSessionToken(normalizeCookieToken(raw));
+  if (!parsed) return null;
+  const email = normalizeMemberEmail(parsed.email);
+  if (parsed.sessionId) {
+    if (!(await authSessionActive(parsed.sessionId, "member"))) return null;
+  } else if (!(await legacyCredentialAllows(email, parsed.issuedAt, "member"))) {
     return null;
   }
-  try {
-    token = decodeURIComponent(token);
-  } catch {
-    // leave as-is if not encoded
-  }
-  if (token.startsWith('"') && token.endsWith('"')) {
-    token = token.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, "\\");
-  }
-  // Some runtimes send + as space in cookie values; restore for email addresses like user+tag@example.com
-  token = token.replace(/ /g, "+");
-  const parts = token.split("|");
-  if (parts.length !== 4) {
-    return null;
-  }
-  const [email, issuedAt, nonce, signature] = parts;
-  const payload = `${email}|${issuedAt}|${nonce}`;
-  if (sign(payload) !== signature) {
-    return null;
-  }
-  return normalizeMemberEmail(email);
-};
+  return email;
+}
+
+export async function consumeMemberHandoffToken(token: string, kind: string): Promise<boolean> {
+  return consumeAuthToken(token, kind);
+}
 
 /** Server-side: get full member profile for current session (same shape as GET /api/user/me). */
 export async function getMemberProfileForSession(): Promise<{
