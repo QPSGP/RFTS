@@ -65,10 +65,40 @@ function relatedBlock(related?: { label: string; path: string }[]): string {
   return `\n\nRelated: ${lines.join(", ")}`;
 }
 
+/** Noun topics take "in". Verb goals stay "to" (interest to Attract Love, interest to Quit Smoking). */
+const INTEREST_IN_LABELS = new Set([
+  "Anger Management",
+  "Coaching",
+  "Confidence",
+  "Creativity",
+  "Energy",
+  "Health & Rejuvenation",
+  "Life Mission",
+  "Marketing",
+  "Memory Excellence",
+  "Motivation",
+  "Psychic Abilities",
+  "Relationship Joy",
+  "Retirement $",
+  "Sales Skills",
+  "Speaking Skills",
+  "Spiritual Growth",
+  "Stress Management",
+  "Time Management",
+  "Travel $",
+  "Vision",
+  "Weight Control"
+]);
+
+export function leadCardInterestOpening(label: string): string {
+  const preposition = INTEREST_IN_LABELS.has(label) ? "in" : "to";
+  return `You showed interest ${preposition} ${label}.`;
+}
+
 function fromSpec(spec: LeadCardInterestSpec): ConversionEmailTemplate {
   const body = `Hello {{firstName}},
 
-You showed interest to ${spec.label}. Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
+${leadCardInterestOpening(spec.label)} Reach For The Stars can put that in your nightly rotation - guided audios while you fall asleep and during sleep, without another daytime chore.
 
 ${spec.paragraphs.join("\n\n")}
 

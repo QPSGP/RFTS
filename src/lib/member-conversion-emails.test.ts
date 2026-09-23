@@ -5,6 +5,7 @@ import {
   MEMBER_CONVERT_LEAD_CARD_INTEREST_EMAILS,
   MEMBER_CONVERT_LEAD_CARD_MENU_EMAIL,
   getLeadCardInterestEmail,
+  leadCardInterestOpening,
   leadCardInterestTemplateName
 } from "@/lib/lead-card-interest-emails";
 import {
@@ -85,9 +86,19 @@ describe("member conversion emails", () => {
     for (const label of EVENT_LEAD_CARD_GOALS) {
       const email = getLeadCardInterestEmail(label);
       expect(email?.name).toBe(leadCardInterestTemplateName(label));
-      expect(email?.bodyText).toContain(`You showed interest to ${label}.`);
+      expect(email?.bodyText).toContain(leadCardInterestOpening(label));
       expect(email?.bodyText).toContain("{{siteUrl}}/signup/step-1-subscription-selection");
     }
+    expect(getLeadCardInterestEmail("Energy")?.bodyText).toContain("You showed interest in Energy.");
+    expect(getLeadCardInterestEmail("Confidence")?.bodyText).toContain(
+      "You showed interest in Confidence."
+    );
+    expect(getLeadCardInterestEmail("Creativity")?.bodyText).toContain(
+      "You showed interest in Creativity."
+    );
+    expect(getLeadCardInterestEmail("Attract Love")?.bodyText).toContain(
+      "You showed interest to Attract Love."
+    );
     expect(MEMBER_CONVERT_LEAD_CARD_MENU_EMAIL.bodyText).toContain(
       "{{siteUrl}}/landing/best-you"
     );
