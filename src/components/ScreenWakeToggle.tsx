@@ -37,7 +37,7 @@ type ScreenWakeToggleProps = {
 export default function ScreenWakeToggle({
   title = "Keep Screen Awake",
   description =
-    "When you start a session, we try to turn on screen wake automatically in Chrome, Safari, and Edge on phones and tablets. If it does not turn on, tap Enable Screen Wake while this page is visible. Your choice is saved to your account and remembered on this device. Screen wake helps the app stay active but may not stop sleep while your phone is locked-unlock and tap Play if the second recording is late. Firefox and some browsers may not support screen wake."
+    "When you start a session, we try to turn on screen wake automatically in Chrome, Safari, and Edge on phones and tablets. If it does not turn on, tap Enable Screen Wake while this page is visible. Your choice is saved to your account and remembered on this device. Screen wake helps playback stay active but may not stop sleep while your phone is locked-unlock and tap Play if the second recording is late. Firefox and some browsers may not support screen wake."
 }: ScreenWakeToggleProps) {
   const [wakeLockSupported, setWakeLockSupported] = useState(true);
   const [wakeLockActive, setWakeLockActive] = useState(false);
@@ -429,7 +429,7 @@ export default function ScreenWakeToggle({
         <p style={{ color: "#4b5563", marginTop: 12 }}>
           Your browser does not support screen wake lock. To keep your phone awake
           while listening, set your device&apos;s auto-lock to &quot;Never&quot; (e.g.
-          Settings → Display → Sleep), or keep this app in the foreground.
+          Settings → Display → Sleep), or keep this page in the foreground.
         </p>
       )}
     </section>

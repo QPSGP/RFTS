@@ -149,7 +149,7 @@ export default function ScheduleAlgorithmTool({
         )}
       </div>
       <p style={{ color: "#4b5563", marginTop: 8, fontSize: embedded ? 13 : undefined }}>
-        Same schedule as <strong>Tonight&apos;s Audio</strong> in the member app: goals (Gold) or assigned audio
+        Same schedule as <strong>Tonight&apos;s Audio</strong> for members: goals (Gold) or assigned audio
         order (Platinum Managed), including their plays-per-night setting.
       </p>
       <div style={{ display: "grid", gap: 12, maxWidth: 480, marginTop: 12 }}>

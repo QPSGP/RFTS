@@ -82,7 +82,7 @@ export default async function HomePage() {
 
       <section className="section">
         <div className="section-head">
-          <span className="eyebrow">How Reach For The Stars Meditation Application Works</span>
+          <span className="eyebrow">How Reach For The Stars Works</span>
           <h2 className="section-title">Personalized sleep sessions, nightly.</h2>
           <p className="section-subtitle">
             Guided meditations cycle through your goals so your subconscious receives
@@ -90,8 +90,8 @@ export default async function HomePage() {
           </p>
         </div>
         <p>
-          The Reach for the Stars application customizes guided meditation
-          recordings to your specific desires. With this application, recordings
+          The Reach for the Stars service customizes guided meditation
+          recordings to your specific desires. Recordings
           to help you with your most important goals will be played in rotation,
           ensuring you hear the messages on the subconscious level while falling
           asleep and during sleep. These quality recordings are scheduled based on your unique
@@ -99,7 +99,7 @@ export default async function HomePage() {
           physical, mental, emotional, spiritual, and financial.
         </p>
         <p>
-          With this application, the meditations play, based upon your choice
+          The meditations play, based upon your choice
           either 1 or 2 in rotation each night over a period of weeks or months,
           21 times each: the required number of repetitions to establish a new
           mindset. These meditations, constantly being created and added to our

@@ -417,7 +417,7 @@ export default function AudioPlayer({
             </p>
           ) : (
             <p style={{ color: "#b45309", fontSize: 13, marginTop: 8 }}>
-              Your browser does not support screen wake lock. Keep the app open
+              Your browser does not support screen wake lock. Keep this page open
               while listening.
             </p>
           )}
