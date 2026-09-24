@@ -438,13 +438,12 @@ function payloadFromForm(form: LeadFormState, existing?: Record<string, unknown>
     return {
       practice: {
         ...prevPractice,
+        ...variant,
         primaryOccupation: form.primaryOccupation.trim() || null,
         incomeGoalAmount: form.incomeGoalAmount.trim() || null,
         incomeGoalYear: form.incomeGoalYear.trim() || null,
-        wantFullTime: form.wantFullTime,
         wantTxt: form.smsOk,
-        goalInterests: form.goalInterests,
-        ...variant
+        goalInterests: form.goalInterests
       },
       consumer: Object.keys(prevConsumer).length ? prevConsumer : null
     };
@@ -453,15 +452,12 @@ function payloadFromForm(form: LeadFormState, existing?: Record<string, unknown>
     practice: Object.keys(prevPractice).length ? prevPractice : null,
     consumer: {
       ...prevConsumer,
-      offerCode:
-        typeof prevConsumer.offerCode === "string" && prevConsumer.offerCode.trim()
-          ? prevConsumer.offerCode
-          : "abundance-magnet",
+      ...variant,
+      offerCode: form.offerCode.trim() || "abundance-magnet",
       goalInterests: form.goalInterests,
       incomeGoalAmount: form.incomeGoalAmount.trim() || null,
       incomeGoalYear: form.incomeGoalYear.trim() || null,
-      position: form.primaryOccupation.trim() || null,
-      ...variant
+      position: form.primaryOccupation.trim() || null
     }
   };
 }
