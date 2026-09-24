@@ -1017,6 +1017,25 @@ button.section-title {
   top: 12px;
 }
 
+.event-lead-goals-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 16px;
+}
+
+.event-lead-goals-row:has(.event-lead-scan-compare) {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 440px);
+}
+
+.event-lead-goals-row .event-lead-scan-compare {
+  position: static;
+  max-width: none;
+  max-height: 520px;
+  overflow: auto;
+}
+
 .event-lead-scan-compare img {
   display: block;
   margin-top: 8px;
@@ -1029,11 +1048,19 @@ button.section-title {
   background: #f9fafb;
 }
 
+.event-lead-goals-row .event-lead-scan-compare img {
+  max-height: none;
+}
+
 @media (max-width: 800px) {
   .event-lead-scan-compare {
     order: -1;
     position: static;
     max-width: none;
+  }
+
+  .event-lead-goals-row:has(.event-lead-scan-compare) {
+    grid-template-columns: 1fr;
   }
 }
 
