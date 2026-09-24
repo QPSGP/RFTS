@@ -56,6 +56,15 @@ type LeadFormState = {
   city: string;
   state: string;
   zip: string;
+  streetAddress: string;
+  gender: string;
+  age: string;
+  incomeLevel: string;
+  incomeVsCurrent: string;
+  relationshipStatus: string;
+  gotHereVia: string;
+  businessName: string;
+  timezone: string;
   persona: string;
   category: string;
   interest: string;
@@ -155,6 +164,20 @@ function ScanReviewBanner({ lead }: { lead: EventLeadRecord }) {
   );
 }
 
+function leadPayloadText(lead: EventLeadRecord, key: string): string {
+  const practice =
+    lead.payload?.practice && typeof lead.payload.practice === "object"
+      ? (lead.payload.practice as Record<string, unknown>)
+      : {};
+  const consumer =
+    lead.payload?.consumer && typeof lead.payload.consumer === "object"
+      ? (lead.payload.consumer as Record<string, unknown>)
+      : {};
+  const value = practice[key] ?? consumer[key];
+  if (value == null || value === "") return "-";
+  return String(value);
+}
+
 function emptyAddForm(): LeadFormState {
   return {
     formType: "practice_survey",
@@ -171,6 +194,15 @@ function emptyAddForm(): LeadFormState {
     city: "",
     state: "",
     zip: "",
+    streetAddress: "",
+    gender: "",
+    age: "",
+    incomeLevel: "",
+    incomeVsCurrent: "",
+    relationshipStatus: "",
+    gotHereVia: "",
+    businessName: "",
+    timezone: "",
     persona: EXPO_PRACTICE_DEFAULTS.persona,
     category: EXPO_PRACTICE_DEFAULTS.category,
     interest: EXPO_PRACTICE_DEFAULTS.interest,
@@ -218,6 +250,15 @@ function formFromLead(lead: EventLeadRecord): LeadFormState {
     city: lead.city || "",
     state: lead.state || "",
     zip: lead.zip || "",
+    streetAddress: String(practice.streetAddress || consumer.streetAddress || ""),
+    gender: String(practice.gender || consumer.gender || ""),
+    age: String(practice.age || consumer.age || ""),
+    incomeLevel: String(practice.incomeLevel || consumer.incomeLevel || ""),
+    incomeVsCurrent: String(practice.incomeVsCurrent || consumer.incomeVsCurrent || ""),
+    relationshipStatus: String(practice.relationshipStatus || consumer.relationshipStatus || ""),
+    gotHereVia: String(practice.gotHereVia || consumer.gotHereVia || ""),
+    businessName: String(practice.businessName || consumer.businessName || ""),
+    timezone: String(practice.timezone || consumer.timezone || ""),
     persona: lead.persona || "",
     category: lead.category || "",
     interest: lead.interest || "",
@@ -235,34 +276,64 @@ function formFromLead(lead: EventLeadRecord): LeadFormState {
   };
 }
 
-function payloadFromForm(form: LeadFormState) {
+function cardVariantFromForm(form: LeadFormState) {
+  return {
+    streetAddress: form.streetAddress.trim() || null,
+    gender: form.gender.trim() || null,
+    age: form.age.trim() || null,
+    incomeLevel: form.incomeLevel.trim() || null,
+    incomeVsCurrent: form.incomeVsCurrent.trim() || null,
+    relationshipStatus: form.relationshipStatus.trim() || null,
+    gotHereVia: form.gotHereVia.trim() || null,
+    businessName: form.businessName.trim() || null,
+    timezone: form.timezone.trim() || null
+  };
+}
+
+function asPayloadRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function payloadFromForm(form: LeadFormState, existing?: Record<string, unknown> | null) {
+  const variant = cardVariantFromForm(form);
+  const prevPractice = asPayloadRecord(existing?.practice);
+  const prevConsumer = asPayloadRecord(existing?.consumer);
   if (form.formType === "practice_survey") {
     return {
       practice: {
+        ...prevPractice,
         primaryOccupation: form.primaryOccupation.trim() || null,
         incomeGoalAmount: form.incomeGoalAmount.trim() || null,
         incomeGoalYear: form.incomeGoalYear.trim() || null,
         wantFullTime: form.wantFullTime,
         wantTxt: form.smsOk,
-        goalInterests: form.goalInterests
+        goalInterests: form.goalInterests,
+        ...variant
       },
-      consumer: null
+      consumer: Object.keys(prevConsumer).length ? prevConsumer : null
     };
   }
   return {
-    practice: null,
+    practice: Object.keys(prevPractice).length ? prevPractice : null,
     consumer: {
-      offerCode: "abundance-magnet",
+      ...prevConsumer,
+      offerCode:
+        typeof prevConsumer.offerCode === "string" && prevConsumer.offerCode.trim()
+          ? prevConsumer.offerCode
+          : "abundance-magnet",
       goalInterests: form.goalInterests,
       incomeGoalAmount: form.incomeGoalAmount.trim() || null,
       incomeGoalYear: form.incomeGoalYear.trim() || null,
-      position: form.primaryOccupation.trim() || null
+      position: form.primaryOccupation.trim() || null,
+      ...variant
     }
   };
 }
 
-function bodyFromForm(form: LeadFormState) {
-  const extras = payloadFromForm(form);
+function bodyFromForm(form: LeadFormState, existing?: Record<string, unknown> | null) {
+  const extras = payloadFromForm(form, existing);
   return {
     formType: form.formType,
     status: form.status,
@@ -278,6 +349,7 @@ function bodyFromForm(form: LeadFormState) {
     city: form.city.trim() || null,
     state: form.state.trim() || null,
     zip: form.zip.trim() || null,
+    streetAddress: form.streetAddress.trim() || null,
     persona: form.persona.trim() || null,
     category: form.category.trim() || null,
     interest: form.interest.trim() || null,
@@ -589,7 +661,7 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
   async function saveForm() {
     setSaving(true);
     setMessage(null);
-    const body = bodyFromForm(form);
+    const body = bodyFromForm(form, selected?.payload ?? null);
     try {
       const res = await fetch("/api/admin/marketing/event-leads", {
         method: mode === "edit" && selectedId ? "PATCH" : "POST",
@@ -986,6 +1058,69 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
               <input
                 value={form.zip}
                 onChange={(e) => setForm((f) => ({ ...f, zip: e.target.value }))}
+              />
+            </label>
+            <label className="event-lead-form-span">
+              Street address
+              <input
+                value={form.streetAddress}
+                onChange={(e) => setForm((f) => ({ ...f, streetAddress: e.target.value }))}
+              />
+            </label>
+            <label>
+              Sex
+              <input
+                value={form.gender}
+                onChange={(e) => setForm((f) => ({ ...f, gender: e.target.value }))}
+              />
+            </label>
+            <label>
+              Age
+              <input
+                value={form.age}
+                onChange={(e) => setForm((f) => ({ ...f, age: e.target.value }))}
+              />
+            </label>
+            <label>
+              Income level
+              <input
+                value={form.incomeLevel}
+                onChange={(e) => setForm((f) => ({ ...f, incomeLevel: e.target.value }))}
+              />
+            </label>
+            <label>
+              Income vs current
+              <input
+                value={form.incomeVsCurrent}
+                onChange={(e) => setForm((f) => ({ ...f, incomeVsCurrent: e.target.value }))}
+              />
+            </label>
+            <label>
+              Relationship
+              <input
+                value={form.relationshipStatus}
+                onChange={(e) => setForm((f) => ({ ...f, relationshipStatus: e.target.value }))}
+              />
+            </label>
+            <label>
+              How they got here
+              <input
+                value={form.gotHereVia}
+                onChange={(e) => setForm((f) => ({ ...f, gotHereVia: e.target.value }))}
+              />
+            </label>
+            <label>
+              Business name
+              <input
+                value={form.businessName}
+                onChange={(e) => setForm((f) => ({ ...f, businessName: e.target.value }))}
+              />
+            </label>
+            <label>
+              Time zone
+              <input
+                value={form.timezone}
+                onChange={(e) => setForm((f) => ({ ...f, timezone: e.target.value }))}
               />
             </label>
             <label className="event-lead-form-span">
@@ -1431,6 +1566,24 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
             <dd>
               {[selected.city, selected.state, selected.zip].filter(Boolean).join(", ") || "-"}
             </dd>
+            <dt>Street address</dt>
+            <dd>{leadPayloadText(selected, "streetAddress")}</dd>
+            <dt>Sex</dt>
+            <dd>{leadPayloadText(selected, "gender")}</dd>
+            <dt>Age</dt>
+            <dd>{leadPayloadText(selected, "age")}</dd>
+            <dt>Income level</dt>
+            <dd>{leadPayloadText(selected, "incomeLevel")}</dd>
+            <dt>Income vs current</dt>
+            <dd>{leadPayloadText(selected, "incomeVsCurrent")}</dd>
+            <dt>Relationship</dt>
+            <dd>{leadPayloadText(selected, "relationshipStatus")}</dd>
+            <dt>How they got here</dt>
+            <dd>{leadPayloadText(selected, "gotHereVia")}</dd>
+            <dt>Business name</dt>
+            <dd>{leadPayloadText(selected, "businessName")}</dd>
+            <dt>Time zone</dt>
+            <dd>{leadPayloadText(selected, "timezone")}</dd>
             <dt>Persona</dt>
             <dd>{selected.persona || "-"}</dd>
             <dt>Category</dt>

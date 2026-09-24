@@ -1,7 +1,10 @@
+import type { EventLeadRecord } from "./event-leads";
 import {
   applyCrmExportQuery,
   buildFlatContactRows,
+  CRM_EXPORT_COLUMNS,
   csvEscapeCell,
+  eventLeadExportRows,
   filterOutreachTargets,
   recordsToCsv,
   type CrmExportTables
@@ -145,5 +148,57 @@ describe("crm-export", () => {
     expect(miss.targets).toHaveLength(0);
     const byEmail = applyCrmExportQuery(tables, { dataset: "contacts", q: "pat@" });
     expect(byEmail.contacts).toHaveLength(1);
+  });
+
+  it("puts street, sex, age, and income level on event-lead export rows", () => {
+    const lead: EventLeadRecord = {
+      id: "lead-1",
+      formType: "consumer_lead",
+      status: "new",
+      eventName: "Expo",
+      eventDates: null,
+      eventKey: null,
+      firstName: "Ada",
+      lastName: "Lovelace",
+      fullName: "Ada Lovelace",
+      email: "ada@example.com",
+      phoneMobile: null,
+      smsOk: false,
+      city: "Long Beach",
+      state: "CA",
+      zip: "90802",
+      country: null,
+      persona: null,
+      category: null,
+      interest: null,
+      entryPath: null,
+      capturedBy: null,
+      notes: null,
+      sourceScanPath: null,
+      payload: {
+        consumer: {
+          streetAddress: "1 Harbor Dr",
+          gender: "F",
+          age: "54",
+          incomeLevel: "75k"
+        }
+      },
+      outreachTargetId: null,
+      autoReplySentAt: null,
+      scanViewedAt: null,
+      scanViewedBy: null,
+      scanCorrectedAt: null,
+      scanCorrectedBy: null,
+      createdAt: "2026-08-01T00:00:00.000Z",
+      updatedAt: "2026-08-01T00:00:00.000Z"
+    };
+    const [row] = eventLeadExportRows([lead]);
+    expect(row.streetAddress).toBe("1 Harbor Dr");
+    expect(row.sex).toBe("F");
+    expect(row.age).toBe("54");
+    expect(row.incomeLevel).toBe("75k");
+    const csv = recordsToCsv([row], CRM_EXPORT_COLUMNS.event_leads);
+    expect(csv.split("\n")[0]).toContain("streetAddress,sex,age,incomeLevel");
+    expect(csv).toContain("1 Harbor Dr");
   });
 });

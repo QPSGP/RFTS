@@ -55,7 +55,10 @@ Rules:
 - Normalize email (remove spaces around @ and .)
 - If staff wrote DN, No Deal, No deals → statusHint paused and include in staffFlags
 - smsOk true only if TXT checked or explicit text OK
-- Keep notes concise`;
+- Keep notes concise
+- Copy every filled line from the card. Card layouts differ.
+- Always include when present: streetAddress, city, state, zip, gender (sex), age, incomeLevel (current income, not the goal), incomeGoalAmount, incomeGoalYear, incomeVsCurrent, relationshipStatus, gotHereVia, businessName, timezone
+- Put those on practice for a practice survey and on consumer for a yellow interests card`;
 
 async function main() {
   const apiKey = process.env.OPENAI_API_KEY?.trim();

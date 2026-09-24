@@ -40,6 +40,10 @@ export default function EventLeadPublicForm({
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneMobile, setPhoneMobile] = useState("");
+  const [streetAddress, setStreetAddress] = useState("");
+  const [gender, setGender] = useState("");
+  const [age, setAge] = useState("");
+  const [incomeLevel, setIncomeLevel] = useState("");
   const [smsOk, setSmsOk] = useState(false);
   const [primaryOccupation, setPrimaryOccupation] = useState("");
   const [incomeGoalAmount, setIncomeGoalAmount] = useState("");
@@ -66,6 +70,7 @@ export default function EventLeadPublicForm({
       fullName: fullName.trim() || null,
       email: email.trim() || null,
       phoneMobile: phoneMobile.trim() || null,
+      streetAddress: streetAddress.trim() || null,
       smsOk,
       notes: notes.trim() || null,
       autoReply
@@ -78,13 +83,21 @@ export default function EventLeadPublicForm({
         wantFullTime,
         wantPacket,
         wantPresentation,
-        wantTxt: smsOk
+        wantTxt: smsOk,
+        streetAddress: streetAddress.trim() || null,
+        gender: gender.trim() || null,
+        age: age.trim() || null,
+        incomeLevel: incomeLevel.trim() || null
       };
     } else {
       body.consumer = {
         offerCode: "abundance-magnet",
         incomeGoalAmount: incomeGoalAmount.trim() || null,
-        incomeGoalYear: incomeGoalYear.trim() || null
+        incomeGoalYear: incomeGoalYear.trim() || null,
+        streetAddress: streetAddress.trim() || null,
+        gender: gender.trim() || null,
+        age: age.trim() || null,
+        incomeLevel: incomeLevel.trim() || null
       };
     }
 
@@ -144,6 +157,22 @@ export default function EventLeadPublicForm({
       <label>
         Cell phone
         <input value={phoneMobile} onChange={(e) => setPhoneMobile(e.target.value)} />
+      </label>
+      <label>
+        Street address
+        <input value={streetAddress} onChange={(e) => setStreetAddress(e.target.value)} />
+      </label>
+      <label>
+        Sex
+        <input value={gender} onChange={(e) => setGender(e.target.value)} />
+      </label>
+      <label>
+        Age
+        <input value={age} onChange={(e) => setAge(e.target.value)} />
+      </label>
+      <label>
+        Income level
+        <input value={incomeLevel} onChange={(e) => setIncomeLevel(e.target.value)} />
       </label>
       <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <input type="checkbox" checked={smsOk} onChange={(e) => setSmsOk(e.target.checked)} />

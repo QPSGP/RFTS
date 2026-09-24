@@ -153,6 +153,7 @@ export async function POST(request: Request) {
         city: row.city,
         state: row.state,
         zip: row.zip,
+        streetAddress: row.streetAddress,
         persona: row.persona,
         category: row.category,
         interest: row.interest,

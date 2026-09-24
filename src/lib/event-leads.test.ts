@@ -66,6 +66,40 @@ describe("event-leads", () => {
     expect(parsed.success).toBe(false);
   });
 
+  it("keeps street, sex, age, and income level on either card type", () => {
+    const shared = {
+      eventName: "Expo",
+      fullName: "Pat Example",
+      email: "pat@example.com",
+      streetAddress: "12 Ocean Ave",
+      practice: null,
+      consumer: {
+        gender: "F",
+        age: "54",
+        incomeLevel: "75k",
+        streetAddress: "12 Ocean Ave"
+      }
+    };
+    const consumer = eventLeadSubmitSchema.safeParse({
+      ...shared,
+      formType: "consumer_lead"
+    });
+    const practice = eventLeadSubmitSchema.safeParse({
+      ...shared,
+      formType: "practice_survey",
+      consumer: null,
+      practice: shared.consumer
+    });
+    expect(consumer.success).toBe(true);
+    expect(practice.success).toBe(true);
+    if (consumer.success) {
+      expect(consumer.data.streetAddress).toBe("12 Ocean Ave");
+      expect(consumer.data.consumer?.gender).toBe("F");
+      expect(consumer.data.consumer?.age).toBe("54");
+      expect(consumer.data.consumer?.incomeLevel).toBe("75k");
+    }
+  });
+
   it("defaults referral code to Terry facilitator for all event leads", () => {
     const practice = applyLeadDefaults({
       formType: "practice_survey",

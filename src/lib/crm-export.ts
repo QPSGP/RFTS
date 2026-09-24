@@ -150,6 +150,15 @@ export const CRM_EXPORT_COLUMNS: Record<Exclude<CrmExportDataset, "all">, string
     "city",
     "state",
     "zip",
+    "streetAddress",
+    "sex",
+    "age",
+    "incomeLevel",
+    "incomeVsCurrent",
+    "relationshipStatus",
+    "gotHereVia",
+    "businessName",
+    "timezone",
     "country",
     "persona",
     "category",
@@ -493,6 +502,38 @@ export function applyCrmExportQuery(
   };
 }
 
+function payloadSide(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+/** Pull card-variant fields out of the JSON payload so the spreadsheet has its own columns. */
+export function eventLeadExportRows(
+  leads: EventLeadRecord[]
+): Array<Record<string, unknown>> {
+  return leads.map((lead) => {
+    const practice = payloadSide(lead.payload?.practice);
+    const consumer = payloadSide(lead.payload?.consumer);
+    const pick = (key: string) => {
+      const value = practice[key] ?? consumer[key];
+      return value == null || value === "" ? null : value;
+    };
+    return {
+      ...lead,
+      streetAddress: pick("streetAddress"),
+      sex: pick("gender"),
+      age: pick("age"),
+      incomeLevel: pick("incomeLevel"),
+      incomeVsCurrent: pick("incomeVsCurrent"),
+      relationshipStatus: pick("relationshipStatus"),
+      gotHereVia: pick("gotHereVia"),
+      businessName: pick("businessName"),
+      timezone: pick("timezone")
+    };
+  });
+}
+
 export function rowsForDataset(
   tables: CrmExportTables,
   dataset: Exclude<CrmExportDataset, "all">
@@ -508,7 +549,7 @@ export function rowsForDataset(
     return tables.activities as unknown as Array<Record<string, unknown>>;
   }
   if (dataset === "event_leads") {
-    return tables.eventLeads as unknown as Array<Record<string, unknown>>;
+    return eventLeadExportRows(tables.eventLeads);
   }
   if (dataset === "email_events") {
     return tables.emailEvents as unknown as Array<Record<string, unknown>>;

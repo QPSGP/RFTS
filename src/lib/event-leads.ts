@@ -173,6 +173,8 @@ export const eventLeadCoreSchema = z.object({
   city: optionalString,
   state: optionalString,
   zip: optionalString,
+  /** Street line when a card variant collects a full address. */
+  streetAddress: optionalString,
   country: optionalString,
   persona: optionalString,
   category: optionalString,
@@ -186,41 +188,61 @@ export const eventLeadCoreSchema = z.object({
   autoReply: z.boolean().optional().nullable()
 });
 
-/** Practice survey extras (Expo healer/coach card). */
-export const practiceSurveyExtrasSchema = z.object({
-  roles: cappedStringArray,
-  primaryOccupation: optionalString,
-  statusFlags: cappedStringArray,
-  otherTraining: optionalString,
-  yearPracticeStarted: optionalString,
-  timezone: optionalString,
-  wantFullTime: z.boolean().optional().nullable(),
-  incomeGoalAmount: optionalString,
-  incomeGoalYear: optionalString,
-  wantPacket: z.boolean().optional().nullable(),
-  wantPresentation: z.boolean().optional().nullable(),
-  wantTxt: z.boolean().optional().nullable(),
-  marginNotes: optionalString,
-  goalInterests: cappedStringArray
-});
-
-/** Consumer / Aisha-style lead card extras. */
-export const consumerLeadExtrasSchema = z.object({
-  gotHereVia: optionalString,
-  topPriorities: optionalString,
-  goalInterests: cappedStringArray,
-  position: optionalString,
-  businessName: optionalString,
-  relationshipStatus: optionalString,
+/**
+ * Fields that show up on some card layouts and not others.
+ * Kept on both form types so a save does not drop them.
+ */
+const cardVariantFieldsSchema = z.object({
+  streetAddress: optionalString,
   gender: optionalString,
   age: optionalString,
-  isHypnotherapist: z.boolean().optional().nullable(),
-  incomeGoalAmount: optionalString,
-  incomeGoalYear: optionalString,
+  incomeLevel: optionalString,
   incomeVsCurrent: optionalString,
-  spokenWith: optionalString,
-  offerCode: optionalString
+  relationshipStatus: optionalString,
+  gotHereVia: optionalString,
+  businessName: optionalString,
+  timezone: optionalString
 });
+
+/** Practice survey extras (Expo healer/coach card). */
+export const practiceSurveyExtrasSchema = z
+  .object({
+    roles: cappedStringArray,
+    primaryOccupation: optionalString,
+    statusFlags: cappedStringArray,
+    otherTraining: optionalString,
+    yearPracticeStarted: optionalString,
+    timezone: optionalString,
+    wantFullTime: z.boolean().optional().nullable(),
+    incomeGoalAmount: optionalString,
+    incomeGoalYear: optionalString,
+    wantPacket: z.boolean().optional().nullable(),
+    wantPresentation: z.boolean().optional().nullable(),
+    wantTxt: z.boolean().optional().nullable(),
+    marginNotes: optionalString,
+    goalInterests: cappedStringArray
+  })
+  .merge(cardVariantFieldsSchema);
+
+/** Consumer / Aisha-style lead card extras. */
+export const consumerLeadExtrasSchema = z
+  .object({
+    gotHereVia: optionalString,
+    topPriorities: optionalString,
+    goalInterests: cappedStringArray,
+    position: optionalString,
+    businessName: optionalString,
+    relationshipStatus: optionalString,
+    gender: optionalString,
+    age: optionalString,
+    isHypnotherapist: z.boolean().optional().nullable(),
+    incomeGoalAmount: optionalString,
+    incomeGoalYear: optionalString,
+    incomeVsCurrent: optionalString,
+    spokenWith: optionalString,
+    offerCode: optionalString
+  })
+  .merge(cardVariantFieldsSchema);
 
 export const eventLeadSubmitSchema = eventLeadCoreSchema
   .extend({
@@ -348,6 +370,8 @@ export function applyLeadDefaults(
     refCode: (base.refCode || "").trim() || TERRY_FACILITATOR_REF_CODE
   };
 
+  const street = (withTerryRef.streetAddress || "").trim() || null;
+
   if (formType === "practice_survey") {
     return {
       ...withTerryRef,
@@ -356,7 +380,13 @@ export function applyLeadDefaults(
       interest: withTerryRef.interest || EXPO_PRACTICE_DEFAULTS.interest,
       entryPath: withTerryRef.entryPath || EXPO_PRACTICE_DEFAULTS.entryPath,
       eventName: withTerryRef.eventName || EXPO_PRACTICE_DEFAULTS.eventName,
-      eventDates: withTerryRef.eventDates || EXPO_PRACTICE_DEFAULTS.eventDates
+      eventDates: withTerryRef.eventDates || EXPO_PRACTICE_DEFAULTS.eventDates,
+      practice: street
+        ? {
+            streetAddress: street,
+            ...withTerryRef.practice
+          }
+        : withTerryRef.practice
     };
   }
 
@@ -365,6 +395,7 @@ export function applyLeadDefaults(
     entryPath: withTerryRef.entryPath || "Facilitator / Managed",
     consumer: {
       offerCode: "abundance-magnet",
+      ...(street ? { streetAddress: street } : {}),
       ...withTerryRef.consumer
     }
   };
