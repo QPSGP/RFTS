@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { WHY_IT_WORKS_VIDEO_SRC, logWhyItWorksVideoStarted } from "@/lib/video-play-log";
+import TerryExplainerVideo from "@/components/TerryExplainerVideo";
 
 export { TERRY_WHY_IT_WORKS_VIDEO_SRC } from "@/lib/video-play-log";
 
 export default function WhyItWorksVideoButton() {
   const [open, setOpen] = useState(false);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const titleId = useId();
 
   useEffect(() => {
@@ -23,21 +22,6 @@ export default function WhyItWorksVideoButton() {
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const video = videoRef.current;
-    if (!video) return;
-    const onStarted = () => {
-      logWhyItWorksVideoStarted();
-    };
-    video.addEventListener("playing", onStarted);
-    video.addEventListener("play", onStarted);
-    return () => {
-      video.removeEventListener("playing", onStarted);
-      video.removeEventListener("play", onStarted);
     };
   }, [open]);
 
@@ -73,18 +57,7 @@ export default function WhyItWorksVideoButton() {
                 Close
               </button>
             </div>
-            <video
-              ref={videoRef}
-              key={WHY_IT_WORKS_VIDEO_SRC}
-              controls
-              playsInline
-              autoPlay
-              preload="metadata"
-              style={{ width: "100%", maxHeight: "70vh", borderRadius: 8, display: "block" }}
-            >
-              <source src={WHY_IT_WORKS_VIDEO_SRC} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+            <TerryExplainerVideo autoPlay />
           </div>
         </div>
       )}

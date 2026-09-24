@@ -1,5 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import SiteFooter from "@/components/SiteFooter";
+import TerryExplainerVideo from "@/components/TerryExplainerVideo";
 import { LandingTrialCtaBand, LandingTrialCtaButtons } from "@/components/LandingTrialCta";
 import { isMemberLoggedIn } from "@/lib/member-session";
 import { HOMEPAGE_GOAL_CARDS } from "@/lib/homepage-goals";
@@ -56,10 +57,13 @@ export default async function HomePage() {
           Overcome present challenges and grow your goals while falling asleep and during sleep -
           personalized guided meditations, nightly.
         </p>
+        <div style={{ maxWidth: 720, margin: "20px auto 0" }}>
+          <TerryExplainerVideo />
+        </div>
         {showSignupCta && (
           <>
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <LandingTrialCtaButtons />
+              <LandingTrialCtaButtons showWhyItWorks={false} />
             </div>
             <p
               style={{
