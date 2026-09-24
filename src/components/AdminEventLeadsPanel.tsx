@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -72,11 +73,26 @@ type LeadFormState = {
   refCode: string;
   capturedBy: string;
   notes: string;
+  country: string;
   primaryOccupation: string;
   incomeGoalAmount: string;
   incomeGoalYear: string;
   wantFullTime: boolean;
+  wantPacket: boolean;
+  wantPresentation: boolean;
   goalInterests: string[];
+  roles: string;
+  statusFlags: string;
+  otherTraining: string;
+  yearPracticeStarted: string;
+  marginNotes: string;
+  topPriorities: string;
+  spokenWith: string;
+  offerCode: string;
+  isHypnotherapist: boolean;
+  isHealer: boolean;
+  isCoach: boolean;
+  studyHypnosis: boolean;
 };
 
 function EventLeadScanHotLink({
@@ -164,7 +180,7 @@ function ScanReviewBanner({ lead }: { lead: EventLeadRecord }) {
   );
 }
 
-function leadPayloadText(lead: EventLeadRecord, key: string): string {
+function leadPayloadValue(lead: EventLeadRecord, key: string): unknown {
   const practice =
     lead.payload?.practice && typeof lead.payload.practice === "object"
       ? (lead.payload.practice as Record<string, unknown>)
@@ -173,9 +189,69 @@ function leadPayloadText(lead: EventLeadRecord, key: string): string {
     lead.payload?.consumer && typeof lead.payload.consumer === "object"
       ? (lead.payload.consumer as Record<string, unknown>)
       : {};
-  const value = practice[key] ?? consumer[key];
+  return practice[key] ?? consumer[key];
+}
+
+function showField(value: unknown): string {
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (Array.isArray(value)) return value.length ? value.join(", ") : "-";
   if (value == null || value === "") return "-";
   return String(value);
+}
+
+function leadDetailRows(lead: EventLeadRecord): { label: string; value: string }[] {
+  const side = (key: string) => showField(leadPayloadValue(lead, key));
+  return [
+    { label: "Form", value: showField(lead.formType) },
+    { label: "Status", value: showField(lead.status) },
+    { label: "Event", value: showField(lead.eventName) },
+    { label: "Event dates", value: showField(lead.eventDates) },
+    { label: "Event key", value: showField(lead.eventKey) },
+    { label: "Full name", value: showField(lead.fullName) },
+    { label: "First name", value: showField(lead.firstName) },
+    { label: "Last name", value: showField(lead.lastName) },
+    { label: "Email", value: showField(lead.email) },
+    { label: "Mobile", value: showField(lead.phoneMobile) },
+    { label: "Text OK", value: showField(lead.smsOk) },
+    { label: "Street address", value: side("streetAddress") },
+    { label: "City", value: showField(lead.city) },
+    { label: "State", value: showField(lead.state) },
+    { label: "Zip", value: showField(lead.zip) },
+    { label: "Country", value: showField(lead.country) },
+    { label: "Sex", value: side("gender") },
+    { label: "Age", value: side("age") },
+    { label: "Income level", value: side("incomeLevel") },
+    { label: "Income vs current", value: side("incomeVsCurrent") },
+    { label: "Income goal $", value: side("incomeGoalAmount") },
+    { label: "Income goal year", value: side("incomeGoalYear") },
+    { label: "Relationship", value: side("relationshipStatus") },
+    { label: "How they got here", value: side("gotHereVia") },
+    { label: "Business name", value: side("businessName") },
+    { label: "Occupation / role", value: showField(leadPayloadValue(lead, "primaryOccupation") ?? leadPayloadValue(lead, "position")) },
+    { label: "Roles", value: side("roles") },
+    { label: "Status flags", value: side("statusFlags") },
+    { label: "Other training", value: side("otherTraining") },
+    { label: "Year practice started", value: side("yearPracticeStarted") },
+    { label: "Time zone", value: side("timezone") },
+    { label: "Want full time", value: side("wantFullTime") },
+    { label: "Packet", value: side("wantPacket") },
+    { label: "Presentation", value: side("wantPresentation") },
+    { label: "Hypnotherapist", value: side("isHypnotherapist") },
+    { label: "Healer", value: side("isHealer") },
+    { label: "Coach", value: side("isCoach") },
+    { label: "Studying hypnosis", value: side("studyHypnosis") },
+    { label: "Top priorities", value: side("topPriorities") },
+    { label: "Spoken with", value: side("spokenWith") },
+    { label: "Offer code", value: side("offerCode") },
+    { label: "Goal interests", value: side("goalInterests") },
+    { label: "Margin notes", value: side("marginNotes") },
+    { label: "Persona", value: showField(lead.persona) },
+    { label: "Category", value: showField(lead.category) },
+    { label: "Interest", value: showField(lead.interest) },
+    { label: "Entry path", value: showField(lead.entryPath) },
+    { label: "Captured by", value: showField(lead.capturedBy) },
+    { label: "Notes", value: showField(lead.notes) }
+  ];
 }
 
 function emptyAddForm(): LeadFormState {
@@ -210,11 +286,26 @@ function emptyAddForm(): LeadFormState {
     refCode: TERRY_FACILITATOR_REF_CODE,
     capturedBy: "",
     notes: "",
+    country: "",
     primaryOccupation: "",
     incomeGoalAmount: "",
     incomeGoalYear: "",
     wantFullTime: false,
-    goalInterests: []
+    wantPacket: false,
+    wantPresentation: false,
+    goalInterests: [],
+    roles: "",
+    statusFlags: "",
+    otherTraining: "",
+    yearPracticeStarted: "",
+    marginNotes: "",
+    topPriorities: "",
+    spokenWith: "",
+    offerCode: "",
+    isHypnotherapist: false,
+    isHealer: false,
+    isCoach: false,
+    studyHypnosis: false
   };
 }
 
@@ -266,14 +357,42 @@ function formFromLead(lead: EventLeadRecord): LeadFormState {
     refCode: TERRY_FACILITATOR_REF_CODE,
     capturedBy: lead.capturedBy || "",
     notes: lead.notes || "",
+    country: lead.country || "",
     primaryOccupation: String(practice.primaryOccupation || consumer.position || ""),
     incomeGoalAmount: String(
       practice.incomeGoalAmount || consumer.incomeGoalAmount || ""
     ),
     incomeGoalYear: String(practice.incomeGoalYear || consumer.incomeGoalYear || ""),
-    wantFullTime: Boolean(practice.wantFullTime),
-    goalInterests
+    wantFullTime: Boolean(practice.wantFullTime || consumer.wantFullTime),
+    wantPacket: Boolean(practice.wantPacket || consumer.wantPacket),
+    wantPresentation: Boolean(practice.wantPresentation || consumer.wantPresentation),
+    goalInterests,
+    roles: listText(practice.roles ?? consumer.roles),
+    statusFlags: listText(practice.statusFlags ?? consumer.statusFlags),
+    otherTraining: String(practice.otherTraining || consumer.otherTraining || ""),
+    yearPracticeStarted: String(practice.yearPracticeStarted || consumer.yearPracticeStarted || ""),
+    marginNotes: String(practice.marginNotes || consumer.marginNotes || ""),
+    topPriorities: String(practice.topPriorities || consumer.topPriorities || ""),
+    spokenWith: String(practice.spokenWith || consumer.spokenWith || ""),
+    offerCode: String(practice.offerCode || consumer.offerCode || ""),
+    isHypnotherapist: Boolean(practice.isHypnotherapist || consumer.isHypnotherapist),
+    isHealer: Boolean(practice.isHealer || consumer.isHealer),
+    isCoach: Boolean(practice.isCoach || consumer.isCoach),
+    studyHypnosis: Boolean(practice.studyHypnosis || consumer.studyHypnosis)
   };
+}
+
+function listText(value: unknown): string {
+  if (!Array.isArray(value)) return value == null ? "" : String(value);
+  return value.map((item) => String(item).trim()).filter(Boolean).join(", ");
+}
+
+function textList(value: string): string[] | null {
+  const items = value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return items.length ? items : null;
 }
 
 function cardVariantFromForm(form: LeadFormState) {
@@ -286,7 +405,22 @@ function cardVariantFromForm(form: LeadFormState) {
     relationshipStatus: form.relationshipStatus.trim() || null,
     gotHereVia: form.gotHereVia.trim() || null,
     businessName: form.businessName.trim() || null,
-    timezone: form.timezone.trim() || null
+    timezone: form.timezone.trim() || null,
+    roles: textList(form.roles),
+    statusFlags: textList(form.statusFlags),
+    otherTraining: form.otherTraining.trim() || null,
+    yearPracticeStarted: form.yearPracticeStarted.trim() || null,
+    wantFullTime: form.wantFullTime,
+    wantPacket: form.wantPacket,
+    wantPresentation: form.wantPresentation,
+    marginNotes: form.marginNotes.trim() || null,
+    topPriorities: form.topPriorities.trim() || null,
+    spokenWith: form.spokenWith.trim() || null,
+    offerCode: form.offerCode.trim() || null,
+    isHypnotherapist: form.isHypnotherapist,
+    isHealer: form.isHealer,
+    isCoach: form.isCoach,
+    studyHypnosis: form.studyHypnosis
   };
 }
 
@@ -349,6 +483,7 @@ function bodyFromForm(form: LeadFormState, existing?: Record<string, unknown> | 
     city: form.city.trim() || null,
     state: form.state.trim() || null,
     zip: form.zip.trim() || null,
+    country: form.country.trim() || null,
     streetAddress: form.streetAddress.trim() || null,
     persona: form.persona.trim() || null,
     category: form.category.trim() || null,
@@ -1123,6 +1258,118 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
                 onChange={(e) => setForm((f) => ({ ...f, timezone: e.target.value }))}
               />
             </label>
+            <label>
+              Country
+              <input
+                value={form.country}
+                onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
+              />
+            </label>
+            <label>
+              Roles
+              <input
+                value={form.roles}
+                onChange={(e) => setForm((f) => ({ ...f, roles: e.target.value }))}
+                placeholder="Healer, Coach"
+              />
+            </label>
+            <label>
+              Status flags
+              <input
+                value={form.statusFlags}
+                onChange={(e) => setForm((f) => ({ ...f, statusFlags: e.target.value }))}
+              />
+            </label>
+            <label>
+              Other training
+              <input
+                value={form.otherTraining}
+                onChange={(e) => setForm((f) => ({ ...f, otherTraining: e.target.value }))}
+              />
+            </label>
+            <label>
+              Year practice started
+              <input
+                value={form.yearPracticeStarted}
+                onChange={(e) => setForm((f) => ({ ...f, yearPracticeStarted: e.target.value }))}
+              />
+            </label>
+            <label>
+              Top priorities
+              <input
+                value={form.topPriorities}
+                onChange={(e) => setForm((f) => ({ ...f, topPriorities: e.target.value }))}
+              />
+            </label>
+            <label>
+              Spoken with
+              <input
+                value={form.spokenWith}
+                onChange={(e) => setForm((f) => ({ ...f, spokenWith: e.target.value }))}
+              />
+            </label>
+            <label>
+              Offer code
+              <input
+                value={form.offerCode}
+                onChange={(e) => setForm((f) => ({ ...f, offerCode: e.target.value }))}
+              />
+            </label>
+            <label className="event-lead-form-span">
+              Margin notes
+              <input
+                value={form.marginNotes}
+                onChange={(e) => setForm((f) => ({ ...f, marginNotes: e.target.value }))}
+              />
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 22 }}>
+              <input
+                type="checkbox"
+                checked={form.wantPacket}
+                onChange={(e) => setForm((f) => ({ ...f, wantPacket: e.target.checked }))}
+              />
+              Packet
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 22 }}>
+              <input
+                type="checkbox"
+                checked={form.wantPresentation}
+                onChange={(e) => setForm((f) => ({ ...f, wantPresentation: e.target.checked }))}
+              />
+              Presentation
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 22 }}>
+              <input
+                type="checkbox"
+                checked={form.isHypnotherapist}
+                onChange={(e) => setForm((f) => ({ ...f, isHypnotherapist: e.target.checked }))}
+              />
+              Hypnotherapist
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 22 }}>
+              <input
+                type="checkbox"
+                checked={form.isHealer}
+                onChange={(e) => setForm((f) => ({ ...f, isHealer: e.target.checked }))}
+              />
+              Healer
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 22 }}>
+              <input
+                type="checkbox"
+                checked={form.isCoach}
+                onChange={(e) => setForm((f) => ({ ...f, isCoach: e.target.checked }))}
+              />
+              Coach
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 22 }}>
+              <input
+                type="checkbox"
+                checked={form.studyHypnosis}
+                onChange={(e) => setForm((f) => ({ ...f, studyHypnosis: e.target.checked }))}
+              />
+              Studying hypnosis
+            </label>
             <label className="event-lead-form-span">
               Persona
               <select
@@ -1218,16 +1465,14 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
                 onChange={(e) => setForm((f) => ({ ...f, incomeGoalYear: e.target.value }))}
               />
             </label>
-            {form.formType === "practice_survey" ? (
-              <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 22 }}>
-                <input
-                  type="checkbox"
-                  checked={form.wantFullTime}
-                  onChange={(e) => setForm((f) => ({ ...f, wantFullTime: e.target.checked }))}
-                />
-                Want full time
-              </label>
-            ) : null}
+            <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 22 }}>
+              <input
+                type="checkbox"
+                checked={form.wantFullTime}
+                onChange={(e) => setForm((f) => ({ ...f, wantFullTime: e.target.checked }))}
+              />
+              Want full time
+            </label>
             <div className="event-lead-form-span">
               <label style={{ display: "grid", gap: 4, margin: 0 }}>
                 Goal &amp; wellness focus (multi-select)
@@ -1548,50 +1793,12 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
               userSelect: "text"
             }}
           >
-            <dt>Form</dt>
-            <dd>{selected.formType}</dd>
-            <dt>Event</dt>
-            <dd>
-              {selected.eventName}
-              {selected.eventDates ? ` (${selected.eventDates})` : ""}
-            </dd>
-            <dt>Email</dt>
-            <dd>{selected.email || "-"}</dd>
-            <dt>Mobile</dt>
-            <dd>
-              {selected.phoneMobile || "-"}
-              {selected.smsOk ? " (TXT OK)" : ""}
-            </dd>
-            <dt>Location</dt>
-            <dd>
-              {[selected.city, selected.state, selected.zip].filter(Boolean).join(", ") || "-"}
-            </dd>
-            <dt>Street address</dt>
-            <dd>{leadPayloadText(selected, "streetAddress")}</dd>
-            <dt>Sex</dt>
-            <dd>{leadPayloadText(selected, "gender")}</dd>
-            <dt>Age</dt>
-            <dd>{leadPayloadText(selected, "age")}</dd>
-            <dt>Income level</dt>
-            <dd>{leadPayloadText(selected, "incomeLevel")}</dd>
-            <dt>Income vs current</dt>
-            <dd>{leadPayloadText(selected, "incomeVsCurrent")}</dd>
-            <dt>Relationship</dt>
-            <dd>{leadPayloadText(selected, "relationshipStatus")}</dd>
-            <dt>How they got here</dt>
-            <dd>{leadPayloadText(selected, "gotHereVia")}</dd>
-            <dt>Business name</dt>
-            <dd>{leadPayloadText(selected, "businessName")}</dd>
-            <dt>Time zone</dt>
-            <dd>{leadPayloadText(selected, "timezone")}</dd>
-            <dt>Persona</dt>
-            <dd>{selected.persona || "-"}</dd>
-            <dt>Category</dt>
-            <dd>{selected.category || "-"}</dd>
-            <dt>Interest</dt>
-            <dd>{selected.interest || "-"}</dd>
-            <dt>Notes</dt>
-            <dd>{selected.notes || "-"}</dd>
+            {leadDetailRows(selected).map((row) => (
+              <Fragment key={row.label}>
+                <dt>{row.label}</dt>
+                <dd>{row.value}</dd>
+              </Fragment>
+            ))}
             <dt>Scan review</dt>
             <dd>{eventLeadScanReviewDetail(selected) || "-"}</dd>
             <dt>Scan</dt>

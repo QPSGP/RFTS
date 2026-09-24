@@ -201,7 +201,22 @@ const cardVariantFieldsSchema = z.object({
   relationshipStatus: optionalString,
   gotHereVia: optionalString,
   businessName: optionalString,
-  timezone: optionalString
+  timezone: optionalString,
+  roles: cappedStringArray,
+  statusFlags: cappedStringArray,
+  otherTraining: optionalString,
+  yearPracticeStarted: optionalString,
+  wantFullTime: z.boolean().optional().nullable(),
+  wantPacket: z.boolean().optional().nullable(),
+  wantPresentation: z.boolean().optional().nullable(),
+  marginNotes: optionalString,
+  topPriorities: optionalString,
+  spokenWith: optionalString,
+  offerCode: optionalString,
+  isHypnotherapist: z.boolean().optional().nullable(),
+  isHealer: z.boolean().optional().nullable(),
+  isCoach: z.boolean().optional().nullable(),
+  studyHypnosis: z.boolean().optional().nullable()
 });
 
 /** Practice survey extras (Expo healer/coach card). */
