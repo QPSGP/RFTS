@@ -991,7 +991,7 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
       </div>
 
       {(mode === "add" || mode === "edit") && (
-        <div className="card" id="event-lead-form" style={{ minWidth: 0, overflow: "hidden" }}>
+        <div className="card" id="event-lead-form" style={{ minWidth: 0 }}>
           <div
             style={{
               display: "flex",
@@ -1470,8 +1470,7 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
               Want full time
             </label>
           </div>
-          <div className="event-lead-goals-row">
-            <div>
+          <div style={{ marginTop: 16 }}>
               <label style={{ display: "grid", gap: 4, margin: 0 }}>
                 Goal &amp; wellness focus (multi-select)
                 <select
@@ -1483,7 +1482,7 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
                     setForm((f) => ({ ...f, goalInterests: selected }));
                   }}
                   aria-label="Goal and wellness focus areas"
-                  style={{ minHeight: 420 }}
+                  style={{ minHeight: 220 }}
                 >
                   <optgroup label="Core goals">
                     {EVENT_LEAD_CORE_GOALS.map((goal) => (
@@ -1524,10 +1523,6 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
                   ? ` Selected: ${form.goalInterests.join(", ")}`
                   : ""}
               </p>
-            </div>
-            {mode === "edit" && selected && eventLeadHasScan(selected) ? (
-              <EventLeadScanCompare lead={selected} />
-            ) : null}
           </div>
           <label style={{ display: "block", marginTop: 12 }}>
             Notes
@@ -1555,6 +1550,9 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
             </button>
           </div>
           </div>
+          {mode === "edit" && selected && eventLeadHasScan(selected) ? (
+            <EventLeadScanCompare lead={selected} />
+          ) : null}
           </div>
         </div>
       )}
