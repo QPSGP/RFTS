@@ -1026,6 +1026,12 @@ button.section-title {
 
 .event-lead-scan-compare {
   min-width: 0;
+  position: sticky;
+  top: 12px;
+  align-self: start;
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .event-lead-scan-compare img {
