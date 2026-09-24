@@ -970,9 +970,11 @@ button.section-title {
 
 .event-lead-form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 12px;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
 }
 
@@ -1009,8 +1011,17 @@ button.section-title {
   align-items: start;
 }
 
-.event-lead-compare > :first-child {
+.event-lead-compare > :first-child,
+.event-lead-fields {
   min-width: 0;
+  max-width: 100%;
+  contain: inline-size;
+}
+
+@media (max-width: 640px) {
+  .event-lead-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .event-lead-scan-compare {

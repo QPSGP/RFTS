@@ -1059,7 +1059,7 @@ export default function AdminEventLeadsPanel({ open, onImported }: Props) {
             </div>
           </div>
           <div className="event-lead-compare">
-          <div>
+          <div className="event-lead-fields">
           <div className="event-lead-form-grid">
             <label>
               Form type
